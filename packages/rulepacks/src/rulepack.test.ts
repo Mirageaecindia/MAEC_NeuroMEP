@@ -53,7 +53,11 @@ describe('rule packs', () => {
     expect(d.supplyVoltagePhaseV?.value).toBe(230);
     expect(d.supplyFrequencyHz?.value).toBe(50);
     expect(d.defaultLoadPowerFactor?.value).toBe(0.85);
-    expect(d.targetPowerFactor?.value).toBe(0.92);
+    expect(d.targetPowerFactor?.value).toBe(0.95);
+    expect(d.voltageFactorCmax?.value).toBe(1.1);
+    expect(d.voltageFactorCmin?.value).toBe(0.95);
+    expect(d.disconnectionTimeDistributionS?.value).toBe(5);
+    expect(d.disconnectionTimeFinalS?.value).toBe(0.4);
     expect(d['voltageDropLimitPct.DB']?.value).toBe(2.5);
     expect(d['voltageDropLimitPct.Motor']?.value).toBe(4);
     expect(d.cableLengthAllowancePct).toMatchObject({ value: null, interimDefault: 10 });

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "region": "dubai",
   "name": "Dubai",
-  "sources": "Design doc v0.7: Section 10.1 (site defaults), 10.1A (calculation defaults), 8.8 (voltage-drop limits), Section 15 (open items and interim defaults).",
+  "sources": "Design doc v0.8: 12.1 (site defaults), 12.2 (calculation defaults), 10.7 (voltage-drop limits), Section 18 (open items and interim defaults). Site design temperatures await engineer sign-off (V-32: DEWA 2017 gives air 48 deg C, ground 40 deg C; ground 35 kept until confirmed).",
   "siteDefaults": {
     "ambientAirC": 50,
     "ambientSoilC": 35,
@@ -58,6 +58,22 @@
       "value": 50
     },
     {
+      "key": "voltageFactorCmax",
+      "group": "Supply",
+      "label": "Voltage factor cmax (maximum fault currents)",
+      "type": "number",
+      "value": 1.1,
+      "note": "V-03, awaiting engineer sign-off"
+    },
+    {
+      "key": "voltageFactorCmin",
+      "group": "Supply",
+      "label": "Voltage factor cmin (minimum fault currents)",
+      "type": "number",
+      "value": 0.95,
+      "note": "V-03, awaiting engineer sign-off"
+    },
+    {
       "key": "defaultLoadPowerFactor",
       "group": "Loads",
       "label": "Default load power factor",
@@ -69,7 +85,8 @@
       "group": "Loads",
       "label": "Target power factor (PFC)",
       "type": "number",
-      "value": 0.92
+      "value": 0.95,
+      "note": "DEWA recommended (design doc 10.15)"
     },
     {
       "key": "defaultDepthOfLayingM",
@@ -165,6 +182,22 @@
       "unit": "%",
       "type": "number",
       "value": 4.0
+    },
+    {
+      "key": "disconnectionTimeDistributionS",
+      "group": "Disconnection times",
+      "label": "Distribution circuits",
+      "unit": "s",
+      "type": "number",
+      "value": 5
+    },
+    {
+      "key": "disconnectionTimeFinalS",
+      "group": "Disconnection times",
+      "label": "Final circuits (Phase 2)",
+      "unit": "s",
+      "type": "number",
+      "value": 0.4
     }
   ]
 }
