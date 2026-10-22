@@ -2,1150 +2,609 @@
 
 **Project Name:** NeuroMEP - Connected MEP Design, Validation & Electrical Calculation Platform
 
-**Release Covered:** Phase 1 - Electrical LV Distribution (Source to Distribution Board incoming feeder)
+**Release Covered:** Phase 1 - Electrical LV distribution, from the supply to the incoming feeder of each Distribution Board (DB)
 
-**Document Version:** v0.4 (Draft for Freeze) \| October 2026
+**Document Version:** v0.8 - Freeze Candidate \| 22 October 2026 (becomes v1.0 when the items in Section 18 marked \"Blocking\" are closed)
 
 **Prepared By:** NeuroMEP Development Team
 
-**Target Environment:** Web application (browser-based, desktop screens); hosting target to be confirmed (OI-27)
+**Target Environment:** Web application (browser, desktop screens); hosting on Netcup VPS
 
-**Document Status:** DRAFT - becomes the frozen baseline once every Blocking item in Section 15 is closed and Section 0 is signed.
+# **0. Document Control**
 
-# **0. Document Control & Sign-off**
+| **Version** | **Date** | **Change Summary** |
+|---------|---------|-------------------------------------------------------|
+| v0.1 | 21-Oct-2026 | Initial draft from CableSizer v1.1 (calculation file + manual), Components for NeuroMEP workbook, Project Set-up slide and UI screens. |
+| v0.2 - v0.4 | 21-Oct-2026 | Live in-canvas calculation with Provisional/Final status and \"Sized by\"; engine as background service; Page 1 inputs reduced to the slide + floor heights; calculation defaults moved to the region rule pack. |
+| v0.5 - v0.6 | 22-Oct-2026 | Floor-plan and calibration fields; altitude optional; only the Electrical engineer mandatory in Phase 1; project picker (D-13); MERN + TypeScript stack (D-14). |
+| v0.8 | 22-Oct-2026 | v0.7 freeze candidate merged into the repository Markdown with: D-13 wording and project access rules (Section 2); FR-02 import by the Technical Lead; Page 1 validation ranges and "TBC does not block Next" (12.1); TBC demand factors taken as 1.0 and marked Provisional (10.3, D-19); Working Directory removed (D-18); load-type labels from the Project Set-up slide (Appendix B); Revit as a future plan source kind (12.1, 16). |
+| v0.7 | 22-Oct-2026 | Independent verification of every calculation (Section 11) with corrected rules in Section 10; #TASK feature codes and error-code convention (Section 4); real-time multi-user collaboration with discipline greying (Section 8); tech stack and Netcup hosting (Section 7); component library from the POWER/LIGHT legend (Section 13); MAEC One and Revit future scope (Section 16); document condensed. |
 
-## **Revision History**
-
-| **Version** | **Date**    | **Author**       | **Change Summary**                                                                                                                                                                                                                                                                                                                                                        |
-|-------------|-------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| v0.1        | 21-Oct-2026 | Development Team | Initial draft built from CableSizer v1.1 calculation file and user manual, Components for NeuroMEP workbook, Project Set-up (Electrical) inputs and current NeuroMEP UI screens.                                                                                                                                                                                          |
-| v0.2        | 21-Oct-2026 | Development Team | Live in-canvas calculation: cable and breaker sizes calculated in the background on every edit and shown in the properties panel with Provisional / Final status and the deciding check ("Sized by"); Architecture page no longer runs a separate calculation; FR-10 expanded (re-calibration and alignment on plan replacement); new FR-47 to FR-50; Section 8.18 added. |
-| v0.3        | 21-Oct-2026 | Development Team | Module E stated explicitly as a background service with no page; FR-51 added (set-up changes recalculate the whole project); architecture layer 04 description updated.                                                                                                                                                                                                   |
-| v0.4        | 21-Oct-2026 | Development Team | Section 10.1 reduced to the Project Set-up slide inputs plus floor levels/heights; calculation defaults moved to new Section 10.1A (rule pack, not user-entered).                                                                                                                                                                                                         |
-| v1.0        | TBD         |                  | Frozen baseline after closure of Blocking open items and sign-off.                                                                                                                                                                                                                                                                                                        |
-
-## **Source Documents**
-
-| **Ref** | **Document**                                                   | **Used For**                                                                                                           |
-|---------|----------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------|
-| SD-01   | Cablesizer_v1.1 - Calculation File (.xls), W S Atkins          | Calculation chain (cal sheet, ~6,100 formulas), panel schedule logic, all back-end lookup tables (34 macro functions). |
-| SD-02   | CABLESIZER VERSION-1.1 USER MANUAL (35 pages)                  | Formulae, design standards (BS 7671 16th Ed., IEC 60781, IEC 60364), input/output conventions.                         |
-| SD-03   | Componentes_for_NeuroMEP.xlsx                                  | Component property model, dropdown values, safety rules, output schedule formats (LV Panel/MDB/SMDB/ACB, Busbar, MCC). |
-| SD-04   | Project Set-up - Electrical (slide)                            | First-page project inputs and calculation set-up.                                                                      |
-| SD-05   | NeuroMEP UI screens (Login, Import Floor Plan, Floor Modeling) | Page structure, existing controls and component library.                                                               |
-
-## **Approval for Freeze**
-
-| **Role**                    | **Name** | **Responsibility in Sign-off**                    | **Signature / Date** |
-|-----------------------------|----------|---------------------------------------------------|----------------------|
-| Technical Lead (Electrical) |          | Scope, workflow and page behaviour                |                      |
-| Senior Electrical Engineer  |          | Calculation method, limits, reference data values |                      |
-| Development Lead            |          | Feasibility, architecture, estimates              |                      |
-| Product Owner               |          | Priorities and acceptance criteria                |                      |
-
-**Freeze criteria:** (1) all items marked Blocking in Section 15 are answered; (2) a hand-checked reference project is received for acceptance testing (OI-04); (3) all four roles above have signed. Any change after freeze follows a change request with impact assessment.
+**Source documents:** CableSizer v1.1 Calculation File and User Manual (W S Atkins, 2008); Components for NeuroMEP workbook; Project Set-up - Electrical slide; POWER/LIGHT legend sheet; NeuroMEP UI screens; DEWA Regulations for Electrical Installations 2017; IEC 60909-0, BS 7671, IEC 60364-5-52, IEC 60947-2 (as cited in Section 11).
 
 # **1. Project Overview & Objectives**
 
-**NeuroMEP** is a web application for MEP (Mechanical, Electrical, Plumbing/PHE) design engineers. Today engineers receive architectural floor plans, manually draw MEP components on them, and size every cable and breaker in spreadsheets such as CableSizer. NeuroMEP replaces this with one connected model: the engineer imports the floor-plan PDFs, drags components from a library onto each floor, connects them by drawing cables (in the style of Cisco Packet Tracer), and the application performs every electrical calculation, sizes and validates each breaker and cable from the supply down to the distribution boards, and produces the fixed-format schedules that contractors build from.
+**NeuroMEP** is a web application for MEP (Mechanical, Electrical, Plumbing/PHE) design engineers. Engineers import floor plans, place components from a library by drag-and-drop, connect them by drawing cables (in the style of Cisco Packet Tracer), and the application calculates, sizes and validates every breaker and cable continuously in the background, then produces the fixed-format panel schedules contractors build from. It replaces manual mark-up of floor plans and the spreadsheet calculation tool CableSizer.
 
-**Phase 1** covers the electrical LV distribution network from the incoming supply (EB utility / RMU, transformer, standby generator, UPS) through the main LV panel / MDB, busbar risers, SMDBs and MCCs, down to the incoming feeder of each Distribution Board (DB). Calculations inside the DB, final circuits, and mechanical / PHE engineering calculations are later phases.
+| **Objective** | **What It Means** |
+|------------------|------------------------------------------------------|
+| Eliminate manual calculation | Load summation, currents, breakers, cables, voltage drop, fault levels and earth-fault checks are calculated automatically from the drawn model. |
+| Verified, standards-based results | Every formula is defined in Section 10 and verified in Section 11 against IEC 60909, BS 7671 / IEC 60364 and DEWA rules. |
+| Live, connected model | Any change (load, length, cable, new upstream panel) re-sizes every affected cable above and below it within half a second. |
+| Multi-discipline collaboration | Electrical, mechanical and PHE engineers work on the same floor at the same time with live sync, Google-Sheets style. |
+| Safety rules enforced | Fire & life-safety (FLS), essential and critical loads checked for correct sources and fire-rated cabling along the whole path. |
+| Traceability | Every feature has a #TASK code; every calculated value shows its inputs, table values and formula; every error carries a code. |
 
-## **Core Objectives**
+## **Product Roadmap**
 
-- **Eliminate Manual Calculation:** Every load summation, current, breaker, cable, voltage-drop, fault-level and earth-fault calculation is performed automatically from the drawn model.
+| **Phase** | **Content** |
+|-----------------|-------------------------------------------------------|
+| Phase 1 (this document) | Electrical LV distribution: transformer / generator / UPS -\> LV panel / MDB -\> busbar risers -\> SMDB / MCC -\> DB incoming feeder. DB is an end point with entered load. |
+| Phase 2 | DB internal circuits and final circuits (lighting, sockets, small power) using the legend devices; mechanical and PHE layers editable with their own calculations. |
+| Future | NeuroMEP as a sub-application of MAEC One; Revit connector and NeuroMEP-inside-Revit plug-in (Section 16). |
 
-- **Precision & Compliance:** Results follow the adopted design standard and the regional authority rules (Dubai / DEWA in v1) using versioned reference tables, with no hand-entered intermediate values.
+# **2. Users, Roles & Discipline Layers**
 
-- **Upstream-Downstream Consistency:** Any change anywhere in the network (a load, a length, a cable) recalculates every affected element above and below it.
+| **Role** | **Access** | **Responsibilities** |
+|-------------------|--------------|----------------------------------------|
+| Technical Lead / Project Admin | Full project access | Creates project, completes Project Set-up, assigns discipline engineers, overrides calculation defaults, approves issue. |
+| Electrical Engineer (required) | Edit Electrical layer | Places electrical components, draws cables, enters DB loads, reviews results, locks sizes, exports schedules. |
+| Mechanical Engineer (optional in Phase 1) | Edit Mechanical layer | Places mechanical equipment and enters its electrical data (kW, phases, pf, load category) which feeds the electrical model. |
+| PHE Engineer (optional in Phase 1) | Edit PHE layer | As above for pumps, fire pumps and PHE equipment. |
+| Checker / Reviewer | Read + comment | Verifies results and signs revisions. |
+| System Administrator | Reference data, users | Maintains rule packs, lookup tables, breaker catalogue, demand-factor defaults, component library and symbols. |
 
-- **Auto-Sizing:** The smallest breaker and cable that pass all checks are proposed automatically; the engineer may lock a choice, which is then validated rather than changed.
+**Discipline layers:** each component belongs to one discipline layer. A user can edit only the layers of their discipline; other layers are visible but greyed out and read-only, and update live as their owners work (Section 8). Authentication sits behind a provider interface so that MAEC One unified login can be plugged in later (Section 16).
 
-- **Safety Rule Enforcement:** Fire & life-safety (FLS), essential and critical loads are checked for correct back-up sources and fire-rated cabling along their entire supply path.
-
-- **Fixed-Format Deliverables:** Panel schedules, cable schedules and calculation reports are generated in agreed templates, ready to issue at each design stage.
-
-- **Traceability:** Every calculated value can be opened to show its inputs, the table values used and the formula applied.
-
-# **2. User Roles & Access Control**
-
-| **Role**                       | **Access Level**                                         | **Primary Responsibilities**                                                                                                          |
-|--------------------------------|----------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| Technical Lead / Project Admin | Full project access, all disciplines                     | Creates the project, completes Project Set-up, assigns discipline engineers, approves issue at each design stage.                     |
-| Electrical Engineer            | Edit - Electrical layer                                  | Places electrical components, draws connections, enters DB loads, reviews results, locks/overrides sizes, exports schedules.          |
-| Mechanical Engineer            | Edit - Mechanical layer (Phase 2); Phase 1 data provider | In Phase 1 supplies electrical data (kW, phases, power factor, load category) for mechanical equipment fed by the electrical network. |
-| PHE Engineer                   | Edit - PHE layer (Phase 2); Phase 1 data provider        | As above for pumps, fire pumps and other PHE equipment.                                                                               |
-| Checker / Reviewer             | Read + comment                                           | Verifies results ("Checked by" in title blocks) and signs off revisions.                                                              |
-| System Administrator           | Reference data & users                                   | Maintains region rule packs, lookup tables, breaker catalogue, demand-factor defaults and user accounts.                              |
-
-- **Discipline locks:** each discipline layer is editable only by its assigned engineers; other layers are shown read-only (the existing "MECH Locked" / "PHE Locked" indicators).
-
-- **Authentication:** company login; integration with the MAEC One unified login and role model to be confirmed (OI-28).
+**Project access (interim until OI-28):** the Technical Lead, Checker and System Administrator see every project; discipline engineers see the projects they created or are assigned to. Only the Technical Lead creates or imports projects and edits Project Set-up (Page 1); other roles see Page 1 read-only.
 
 # **3. Scope & Electrical Hierarchy**
 
-An electrical distribution network is a tree. Power enters at one root and branches until it reaches every board. Every branch is a cable or busbar with a circuit breaker at its upstream end. Phase 1 models the tree down to the DB, which is treated as an end point whose load is entered by the engineer.
-
-| **Level**                   | **Typical Equipment**                                  | **Fed From**                  | **Feeds**                                        |
-|-----------------------------|--------------------------------------------------------|-------------------------------|--------------------------------------------------|
-| L0 - Supply                 | EB Utility / RMU (HV)                                  | Grid (fault level input)      | Transformer                                      |
-| L1 - Source                 | Transformer; Generator (via ATS); UPS (critical loads) | RMU / ATS / panel             | LV Panel / MDB / ACB panel                       |
-| L2 - Main distribution      | LV Panel, MDB, ACB panel, ESMDB                        | Transformer / Generator / ATS | Busbars, SMDBs, MCCs, PFC bank, isolators, DBs   |
-| L3 - Riser                  | Busbar (feeder or tap-off type) with tap-off boxes     | MDB                           | SMDBs, DBs (via tap-off boxes)                   |
-| L4 - Sub-main               | SMDB, ESMDB, MCC, EMCC                                 | MDB / busbar tap-off          | DBs, isolators, motors                           |
-| L5 - Terminal (Phase 1 end) | DB, isolator, connection unit                          | SMDB / MCC / MDB              | Not modelled in Phase 1 (load entered as totals) |
-
-## **In Scope (Phase 1)**
-
-- Project set-up, floor registry and floor-plan import with scale calibration.
-
-- Floor and building modelling of electrical distribution equipment and their interconnections.
-
-- Full LV calculation chain: load aggregation with demand factors, design current, breaker selection, cable ampacity with derating, voltage drop, short-circuit, let-through energy, earth-fault loop impedance, regional minimum sizes.
-
-- Automatic sizing with user locks; normal and standby (generator) supply scenarios.
-
-- Ancillary sizing: power-factor correction bank, cable tray width, generator/UPS rating, transformer loading.
-
-- Generation of panel schedules (MDB/SMDB/ACB, Busbar, MCC), cable schedule, calculation report and single-line diagram.
-
-Out-of-scope items are listed in Section 14.
-
-# **4. Functional Requirements**
-
-## **Module A: Project Set-up**
-
-- **FR-01 (Priority: High):** The application shall capture the project fields defined in Section 10.1 and block progress until all mandatory fields are valid.
-
-- **FR-02 (Priority: High):** Selecting a Region shall load that region's rule pack (reference tables, voltage-drop limits, minimum cable sizes, demand-factor defaults). Only "Dubai" is active in v1; other regions are shown as unavailable until their rule packs exist.
-
-- **FR-03 (Priority: High):** Demand-factor tables (12 load types; category factors Residential / Landlord / Office / Retail) shall be pre-filled from the rule pack, editable per project, and overridable per panel. Every change shall be logged.
-
-- **FR-04 (Priority: High):** Calculation check-boxes (Current Carrying Capacity, Voltage Drop, Short-circuit, Let-through Energy, Earth Fault Loop Impedance) shall control which checks are enforced. Disabled checks are still computed and reported as "Not verified" in all outputs.
-
-- **FR-05 (Priority: High):** The floor registry shall be generated from the floor counts (basements, GF, podiums, typical floors, mechanical floors). Each floor requires a level reference, finished floor level and floor-to-floor height.
-
-- **FR-06 (Priority: Medium):** Plot load allocation shall accept kW or kVA; conversion uses the project default power factor.
-
-- **FR-07 (Priority: High):** Design stage (CD, SD, DD, TD, IFC) and revision shall appear in every export title block and file name.
-
-## **Module B: Floor-Plan Import**
-
-- **FR-08 (Priority: High):** The engineer shall upload one PDF plan per floor; the viewer shall render vector PDFs with zoom and pan.
-
-- **FR-09 (Priority: High):** Each floor shall be scale-calibrated (pick two points and enter the real distance, or enter the drawing scale). Cable lengths shall not be calculated on an uncalibrated floor.
-
-- **FR-10 (Priority: Medium):** Replacing a floor plan shall keep the existing model, require re-calibration and alignment of the new plan to the previous one using a common reference point (for example a grid-line intersection), recalculate all cable lengths on that floor, and flag components that fall outside the new drawing extents for the engineer's review.
-
-## **Module C: Floor Modelling**
-
-- **FR-11 (Priority: High):** A bottom component library with tabs All / Electrical / Mechanical / PHE shall offer only the components the user's discipline permits.
-
-- **FR-12 (Priority: High):** Components shall be placed by drag-and-drop and receive an automatic equipment tag following Section 9.3.
-
-- **FR-13 (Priority: High):** Cables shall be drawn port-to-port with orthogonal multi-point routing. Length = routed plan length x floor scale + vertical allowances + length allowance (OI-17).
-
-- **FR-14 (Priority: High):** Connections shall be validated against the topology rules (Section 9.2); illegal connections are refused with an explanatory message.
-
-- **FR-15 (Priority: High):** Drawing a cable out of a panel creates an outgoing way (breaker slot) with an automatic circuit reference (1RYB, 2R, 3Y ...). A warning appears above 18 outgoing ways and the maximum is 25.
-
-- **FR-16 (Priority: High):** Cable construction properties (conductor, cores, insulation, armour, sheath, installation method, grouping) default from the project and may be changed when drawing. Cable size, number of runs, earth conductor and breaker rating are calculated automatically the moment the cable is drawn and are shown in the properties panel (Section 8.18); the engineer does not pick them.
-
-- **FR-17 (Priority: High):** Each DB shall accept its load either as connected kW per phase (R/Y/B) by load type, or as floor area x W/m2 per phase, together with load category, demand category and power factor.
-
-- **FR-18 (Priority: High):** Selecting any component or cable shall show its properties and live calculation results in the right-hand properties panel (Section 8.18), together with a project summary of connected and maximum-demand load against the plot load allocation and transformer capacity (% loaded).
-
-- **FR-19 (Priority: Medium):** Markup shall be saveable/loadable per floor, independent of the project file.
-
-## **Module D: Building Modelling**
-
-- **FR-20 (Priority: High):** Floors shall be stacked by elevation into a 3D isometric view with discipline colouring for visual validation.
-
-- **FR-21 (Priority: High):** Vertical risers (busbar or cable) shall be defined by shaft position and the floors they serve; riser and tap-off lengths are calculated from floor elevations.
-
-- **FR-22 (Priority: High):** Floor boards shall be connected to riser tap-offs, risers to the MDB, the MDB to its transformer, and the generator through an ATS (normal + standby inputs).
-
-- **FR-23 (Priority: High):** The network shall be validated as complete: every element traces to a source, the network is radial (no loops), and each element has exactly one active supply per scenario.
-
-## **Module E: Calculation Engine (background service - no page of its own)**
-
-Unlike Modules A-D, Module E has no screen. It is a background service that recalculates automatically whenever any of its inputs change - project set-up values (Page 1), components, cables and loads (Page 2), building connections (Page 3) or overrides and locks (Page 4) - and publishes its results to the properties panel, status colours, single-line diagram, schedule grid and exports of the other pages.
-
-- **FR-51 (Priority: High):** The calculation engine shall have no user interface of its own and no manual run step. A change to any project set-up value (ambient or soil temperature, soil resistivity, upstream fault level, demand factors, region, enabled checks) shall recalculate the whole project; a change to the model shall recalculate the affected part of the network.
-
-- **FR-24 (Priority: High):** Loads shall be aggregated bottom-up per phase and per load type with demand factors to give the maximum demand at every panel and source (Section 8.3).
-
-- **FR-25 (Priority: High):** Design current Ib shall be calculated for every cable and busbar run from the maximum demand it carries (Section 8.4).
-
-- **FR-26 (Priority: High):** Protective devices shall be selected automatically: rating, frame, type (MCB/MCCB/ACB), poles, magnetic setting and breaking capacity (Section 8.5).
-
-- **FR-27 (Priority: High):** Cable current-carrying capacity shall be derated for ambient/soil temperature, grouping, soil thermal resistivity and depth of laying (Section 8.7).
-
-- **FR-28 (Priority: High):** Voltage drop shall be calculated per cable and accumulated from the source; limits are applied per level (Section 8.8).
-
-- **FR-29 (Priority: High):** Prospective three-phase short-circuit current shall be calculated at every node, including transformer, generator, busbar, cable and motor contributions (Section 8.9).
-
-- **FR-30 (Priority: High):** Thermal withstand (let-through energy) shall be checked for phase conductors and earth conductors (Section 8.10).
-
-- **FR-31 (Priority: High):** Earth-fault loop impedance shall be calculated at 20 C and at fault temperature and compared with the protective device limit (Section 8.11).
-
-- **FR-32 (Priority: High):** The regional minimum cable size for the breaker rating (DEWA table in v1) shall be enforced (Section 8.12).
-
-- **FR-33 (Priority: High):** An auto-sizing loop shall upsize cables (size, then parallel runs) until all checks pass or a limit is reached; user-locked items are validated only (Section 8.13).
-
-- **FR-34 (Priority: High):** Calculations shall run for the Normal (transformer) and Standby (generator) scenarios; fire-mode demand shall be reported for generator sizing (Section 8.14).
-
-- **FR-35 (Priority: High):** Safety rules: essential and FLS loads must trace to a generator; critical loads to a UPS and a generator; FLS loads default to fire-rated cable and every cable on their path to the generator must be fire-rated (Section 8.16).
-
-- **FR-36 (Priority: Medium):** PFC bank, cable tray width, generator/UPS rating and transformer loading shall be calculated (Section 8.15).
-
-- **FR-37 (Priority: High):** Calculations shall run continuously in the background: every model change (component added or removed, cable drawn or re-routed, load or property edited, upstream or downstream path extended) shall recalculate the affected network without any separate calculate step. Unlocked cables and breakers are re-solved from their minimum size on every run, so sizes move up or down to match the current model. Each element shows OK / Warning / Fail / Not verified.
-
-- **FR-38 (Priority: High):** All failing checks for an element shall be reported (not only the first), each with a plain-language message and suggested action.
-
-- **FR-39 (Priority: High):** Every calculated value shall be traceable: inputs, reference-table values (with table name and version) and formula.
-
-- **FR-47 (Priority: High):** Every cable and breaker shall display a Provisional or Final status. Provisional applies while the element has no complete path to a source or has no load entered; provisional results use the stated assumptions of Section 8.18 and are labelled as such in the panel, schedules and exports.
-
-- **FR-48 (Priority: High):** For every auto-sized cable and breaker the panel shall show the deciding check ("Sized by": current-carrying capacity, voltage drop, let-through energy, earth-fault loop or regional minimum) so the engineer can see why the size was chosen.
-
-- **FR-49 (Priority: High):** The engineer may lock a cable size, number of runs or breaker rating from the properties panel; locked values are never changed by the engine and are validated with all checks on every recalculation.
-
-- **FR-50 (Priority: High):** Background calculation shall not block drawing: it runs separately from the canvas, starts shortly after the user stops editing, and updates the properties panel and status colours without interrupting the user.
-
-## **Module F: Schedules, Reports & Export**
-
-- **FR-40 (Priority: High):** Panel schedules shall be generated automatically in the fixed formats of Section 11; the engineer never uploads a schedule.
-
-- **FR-41 (Priority: High):** In the schedule grid only user-input cells are editable; all other cells are locked. Edits in the grid and on the canvas stay synchronised.
-
-- **FR-42 (Priority: High):** Exports: panel schedules, cable schedule, PFC sheet, tray sizing and calculation report in Excel and PDF; single-line diagram in PDF (DXF to be confirmed, OI-25).
-
-- **FR-43 (Priority: High):** Export files shall never overwrite existing files; an incremental suffix (\_v1, \_v2 ...) is appended on collision.
-
-## **Module G: Reference Data & Project Persistence**
-
-- **FR-44 (Priority: High):** Reference data shall be held in versioned rule packs editable by the System Administrator with an audit log. A project records the rule-pack version it was calculated with.
-
-- **FR-45 (Priority: High):** Lookups for values between table steps (for example 28 C soil, 1.2 K.m/W) shall follow the rule agreed in OI-06; a lookup shall never silently return "no derating".
-
-- **FR-46 (Priority: High):** Projects shall be saved and re-opened as a project file (.json) and in the database, with autosave and undo/redo.
-
-# **5. Non-Functional Requirements (NFRs)**
-
-- **Performance:** Properties panel and status colours updated within 0.5 seconds of an edit; full recalculation of a building network of up to 2,000 elements within 1 second.
-
-- **Canvas Responsiveness:** Smooth zoom/pan with up to 1,000 objects per floor on plans up to A0 size.
-
-- **Calculation Accuracy:** Continuous results (currents, impedances, voltage drop, fault levels) within +/-0.5% of the hand-checked reference project; discrete selections (cable size, runs, breaker rating) identical.
-
-- **Determinism:** The same model and rule-pack version always produce identical results.
-
-- **Traceability & Audit:** Every result explainable from inputs; all reference-data and demand-factor changes logged with user and time.
-
-- **Data Integrity:** Reference data versioned; a project re-opened later recalculates with its recorded rule-pack version unless the user upgrades explicitly.
-
-- **Usability:** Plain-language messages; colour coding always paired with a text label; usable by an electrical engineer after a short walkthrough.
-
-- **Reliability:** Autosave at a fixed interval and on page change; no loss of more than one minute of work on browser failure.
-
-- **Security:** Role-based access per project and discipline; project data stays on company-controlled infrastructure.
-
-- **Compatibility:** Latest Chrome and Edge; minimum screen 1920 x 1080.
-
-- **Maintainability:** Calculation engine delivered as an isolated, fully unit-tested module, independent of the user interface.
-
-- **Extensibility:** New regions, components and disciplines added through rule packs and component definitions without changing the engine core.
-
-# **6. System Architecture Reference**
-
-The application is organised into six layers. User actions flow down from the interface to the model; results flow back up. The calculation engine never reads the interface directly: it receives the network model and a rule-pack version and returns results, which keeps it independently testable.
-
-| **Layer**                   | **Component**                                   | **Responsibility**                                                                                                                                                                    |
-|-----------------------------|-------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 01 - Presentation           | Web UI pages                                    | Login, Project Set-up, Floor Modelling canvas, Building Modelling 3D view, Architecture (SLD + schedule grid), Simulation & Report.                                                   |
-| 02 - Application Controller | Project state service                           | Discipline locks, undo/redo, autosave, change detection that triggers recalculation, routing of results and warnings to the UI.                                                       |
-| 03 - Network Model          | Graph model                                     | Nodes (sources, panels, busbars, tap-offs, DB end-points) and edges (cables, busbar runs); topology rules; tagging; lengths from scale and elevations.                                |
-| 04 - Calculation Engine     | Electrical engine (background service, no page) | Runs automatically on every input change. Load aggregation, Ib, breaker selection, ampacity, voltage drop, short-circuit, let-through, earth-fault loop, auto-sizing loop, scenarios. |
-| 05 - Reference Data         | Rule-pack service                               | Versioned regional tables: cable ampacity, derating, R/X, voltage drop, ECC, armour, busbar, transformer, breaker catalogue, demand factors, limits.                                  |
-| 06 - Persistence & Export   | Storage & export service                        | Project file and database, output versioning, Excel/PDF schedule and report generation, SLD export.                                                                                   |
+| **Level** | **Equipment** | **Fed From** | **Feeds** |
+|--------------|-----------------------|----------------|--------------------|
+| L0 Supply | EB Utility / RMU (HV) | Grid (fault level input) | Transformer |
+| L1 Source | Transformer; Generator via ATS; UPS for critical loads | RMU / ATS / panel | LV Panel / MDB |
+| L2 Main distribution | LV Panel, MDB, ACB panel, ESMDB | Transformer / ATS | Busbars, SMDBs, MCCs, PFC bank, isolators, DBs |
+| L3 Riser | Busbar (feeder or tap-off type), tap-off boxes | MDB | SMDBs, DBs |
+| L4 Sub-main | SMDB, ESMDB, MCC, EMCC | MDB / tap-off box | DBs, isolators, motors |
+| L5 Terminal (Phase 1 end) | DB, isolator, connection unit | SMDB / MCC / MDB | Not modelled in Phase 1 (load entered as totals) |
+
+| **Element** | **Allowed Upstream** | **Allowed Downstream** | **Rules** |
+|---------------|-------------------|--------------------|-------------------|
+| Transformer | RMU | LV Panel / MDB / feeder busbar | 4P incomer |
+| Generator / ATS | Generator: none; ATS: normal + standby input | ESMDB / LV Panel | ATS has exactly two inputs and one output |
+| LV Panel / MDB | Transformer, ATS | Busbar, SMDB, MCC, DB, PFC, UPS, isolator | Max 25 ways, warning above 18; up to 2 incomers |
+| Busbar feeder / tap-off | MDB | Feeder: one panel; tap-off: tap-off boxes only | Tap-offs only on tap-off type |
+| SMDB / MCC | MDB, tap-off box | DB, isolator, connection unit, motors | As panel |
+| DB, isolator, connection unit | SMDB, MDB, MCC, tap-off, UPS | \- (Phase 2) | Terminal in Phase 1 |
+
+The network is radial (no loops); each element has exactly one active supply per scenario; single-phase elements take one phase of a three-phase panel (automatic allocation with manual override).
+
+# **4. Feature Task Codes & Error-Code Convention**
+
+Every feature has a permanent code **#TASK-nn**. The code is used in requirement IDs, backlog tickets, branch names and commit messages (e.g. \"#TASK-22 fix single-phase r/x lookup\"), test names, log lines and error codes, so any failure can be traced to its feature in seconds. Codes are never reused or renumbered; retired features keep their code with status \"Retired\".
+
+| **Code** | **Feature** | **Page / Layer** | **FRs** | **Error Range** |
+|-----------|----------------------------|------------|-----------|-----------|
+| #TASK-01 | Authentication, session, roles | Login | FR-01 | E0101-E0199 |
+| #TASK-02 | Project picker (list, create, import) | After login | FR-02 | E0201-E0299 |
+| #TASK-03 | Project details & site conditions | Page 1 | FR-03 | E0301-E0399 |
+| #TASK-04 | Calculation set-up, region, demand factors, defaults panel | Page 1 | FR-04, FR-05 | E0401-E0499 |
+| #TASK-05 | Floor registry & elevations | Page 1 | FR-06 | E0501-E0599 |
+| #TASK-06 | Floor-plan upload & viewer | Page 1 | FR-07 | E0601-E0699 |
+| #TASK-07 | Scale calibration & plan replacement | Page 1 | FR-08, FR-09 | E0701-E0799 |
+| #TASK-08 | Project persistence, autosave, versioning, optimistic locking | API | FR-10 | E0801-E0899 |
+| #TASK-09 | Real-time sync & presence | All modelling pages | FR-11 | E0901-E0999 |
+| #TASK-10 | Discipline layers, greying, element locks | All modelling pages | FR-12 | E1001-E1099 |
+| #TASK-11 | Component library & legend symbols | Page 2 | FR-13 | E1101-E1199 |
+| #TASK-12 | Placement & auto-tagging | Page 2 | FR-14 | E1201-E1299 |
+| #TASK-13 | Cable drawing, routing & length | Page 2 | FR-15 | E1301-E1399 |
+| #TASK-14 | Topology rules & connection validation | Pages 2-3 | FR-16 | E1401-E1499 |
+| #TASK-15 | DB / equipment load entry | Page 2 | FR-17 | E1501-E1599 |
+| #TASK-16 | Properties panel & live results | Pages 2-4 | FR-18 | E1601-E1699 |
+| #TASK-17 | Floor stacking & 3D view | Page 3 | FR-19 | E1701-E1799 |
+| #TASK-18 | Risers, sources, ATS, network completeness | Page 3 | FR-20 | E1801-E1899 |
+| #TASK-19 | Engine: load aggregation & demand factors | Engine | FR-21 | E1901-E1999 |
+| #TASK-20 | Engine: design current & protective devices | Engine | FR-22 | E2001-E2099 |
+| #TASK-21 | Engine: current-carrying capacity & derating | Engine | FR-23 | E2101-E2199 |
+| #TASK-22 | Engine: voltage drop | Engine | FR-24 | E2201-E2299 |
+| #TASK-23 | Engine: short-circuit (max, min, peak, withstand) | Engine | FR-25 | E2301-E2399 |
+| #TASK-24 | Engine: thermal withstand (let-through) | Engine | FR-26 | E2401-E2499 |
+| #TASK-25 | Engine: earth-fault loop & disconnection | Engine | FR-27 | E2501-E2599 |
+| #TASK-26 | Engine: auto-sizing, live run, provisional mode | Engine | FR-28 | E2601-E2699 |
+| #TASK-27 | Engine: scenarios & safety-category rules | Engine | FR-29 | E2701-E2799 |
+| #TASK-28 | Engine: PFC, generator, transformer loading, tray | Engine | FR-30 | E2801-E2899 |
+| #TASK-29 | Reference data, rule packs & admin | Admin | FR-31 | E2901-E2999 |
+| #TASK-30 | Single-line diagram, schedule grid, overrides | Page 4 | FR-32 | E3001-E3099 |
+| #TASK-31 | Scenario review, exports & output versioning | Page 5 | FR-33 | E3101-E3199 |
+| #TASK-32 | Audit log, error logging & monitoring | API | FR-34 | E3201-E3299 |
+| #TASK-33 | Revit connector (future) | Revit add-in | Section 16 | E3301-E3399 |
+| #TASK-34 | MAEC One integration (future) | Platform | Section 16 | E3401-E3499 |
+
+## **Error & Log Code Convention**
+
+- **Error code:** E + task number (2 digits) + sequence (2 digits), e.g. **E2203** = third error of #TASK-22 (voltage drop). Each code is listed once in the code catalogue (\`packages/shared/errors\`) with message, severity and suggested action.
+
+- **Calculation check codes:** C1-C12 (Section 10.12) identify which check failed on an element; they appear in the properties panel, schedules and reports.
+
+- **Log line format:** \`\[timestamp\] \[level\] \[#TASK-nn\] \[Ennnn\] message {projectId, floorId, elementTag, userId, rulePackVersion}\`. Levels: DEBUG, INFO, WARN, ERROR. The user sees the message and code; support sees the full context.
+
+- **Engine trace:** every engine run carries a run ID; each element result stores the run ID, rule-pack version and the codes of checks evaluated, so a reported result can be replayed exactly.
+
+# **5. Functional Requirements**
+
+| **ID** | **Task** | **Pri.** | **Requirement** |
+|--------|-----------|-------|-----------------------------------------------|
+| FR-01 | #TASK-01 | High | Sign-in with email and password behind an AuthProvider interface (dev provider now, MAEC One later); masked password with show/hide; generic error message; session persists across reloads; protected routes; \"Demo credentials\" shown only in development builds. |
+| FR-02 | #TASK-02 | High | After login, a project picker lists accessible projects (name, client, stage, revision, last modified); the Technical Lead can create a project or import a project file (.json) - an import creates a new project; opening a project goes to the page last used in it (D-13). |
+| FR-03 | #TASK-03 | High | Capture project details and site conditions (Section 12.1) with inline validation; region defaults tagged as such. |
+| FR-04 | #TASK-04 | High | Region selection loads the rule pack (Dubai active; others disabled). Calculation check-boxes control enforcement; disabled checks are still computed and shown \"Not verified\". Read-only \"Calculation defaults\" panel (12.2), overridable by the Technical Lead with audit. |
+| FR-05 | #TASK-04 | High | Demand-factor tables (12 load types; Residential/Landlord/Office/Retail) pre-filled from the rule pack, editable per project and per panel; unknown values shown as \"TBC\", never invented. TBC values do not block Next; while any factor is TBC, Page 1 shows a warning banner (D-19). |
+| FR-06 | #TASK-05 | High | Floor registry generated from floor counts (B1..Bn, GF, P1..Pn, typical, mechanical tags); GF datum level, floor-to-floor heights and cumulative levels; changing counts never deletes floors with plans without confirmation. |
+| FR-07 | #TASK-06 | High | One PDF plan per floor; vector rendering with zoom, fit and pan; plan status No plan / Uncalibrated / Calibrated. |
+| FR-08 | #TASK-07 | High | Two-point scale calibration (or drawing-scale entry, marked less reliable) stored in PDF coordinates as metres per drawing unit; optional verify measurement; lengths are not calculated on uncalibrated floors. |
+| FR-09 | #TASK-07 | Med. | Replacing a plan keeps the model, requires re-calibration and alignment to the previous plan by a common reference point, recalculates lengths, and flags components outside the new extents. |
+| FR-10 | #TASK-08 | High | Projects saved in the database and exportable/importable as .json (schemaVersion, rulePackId/version); autosave; undo/redo of own actions; optimistic locking by element version. |
+| FR-11 | #TASK-09 | High | Real-time collaboration: every change by any user appears for all users on the same project within 1 second, with presence (who is on which floor) and selection highlights (Section 8). |
+| FR-12 | #TASK-10 | High | Discipline greying: components and library tabs of other disciplines are greyed out and read-only; an element being edited by another user shows that user and is locked until released. |
+| FR-13 | #TASK-11 | High | Bottom component library with tabs All / Electrical / Mechanical / PHE using the company legend symbols (Section 13); Phase 2 items visible but disabled. |
+| FR-14 | #TASK-12 | High | Drag-and-drop placement with automatic equipment tags (Section 12.4). |
+| FR-15 | #TASK-13 | High | Port-to-port cable drawing with orthogonal multi-point routing; length = routed length x scale + vertical runs + length allowance. Drawing from a panel creates an outgoing way with circuit reference (1RYB, 2R\...). Cable construction is chosen while drawing (project defaults); size is never picked by the user. |
+| FR-16 | #TASK-14 | High | Topology rules of Section 3 enforced on connect; illegal connections refused with message and code. |
+| FR-17 | #TASK-15 | High | DB load per phase and load type, or area x W/m2 per phase, with load category, demand category and power factor; mechanical/PHE equipment supplies kW, phases, pf, efficiency and starter type. |
+| FR-18 | #TASK-16 | High | Selecting any element shows its properties and live results: size, runs, ECC, breaker, Ib/In/Iz, voltage drop (own and total), fault levels, each check, status Provisional/Final, the deciding check (\"Sized by\"), lock buttons and the full calculation trace. |
+| FR-19 | #TASK-17 | High | Floors stacked by elevation in a 3D isometric view with discipline colours. |
+| FR-20 | #TASK-18 | High | Risers (busbar or cable) defined by shaft and floors served, lengths from elevations; connection of risers, MDB, transformer, generator via ATS, UPS, PFC; network completeness validation. |
+| FR-21 to FR-30 | #TASK-19 to 28 | High | Calculation engine as specified in Section 10: a background service with no page that recalculates the affected network after every change and the whole project after any set-up change; unlocked items re-solved from minimum size each run; locked items validated only; all failing checks reported. |
+| FR-31 | #TASK-29 | High | Versioned rule packs and lookup tables with reference conditions, edited only by the System Administrator with audit; a project records the version it used. |
+| FR-32 | #TASK-30 | High | Architecture page: single-line diagram and schedule grid in the formats of Section 14; only input cells editable; edits synchronised with the canvas; locks and per-panel demand-factor overrides. |
+| FR-33 | #TASK-31 | High | Simulation & Report: normal and standby scenarios, final check list (failures, warnings, Not verified, overrides), exports in Excel/PDF with title block; files never overwritten (\_v1, \_v2). |
+| FR-34 | #TASK-32 | High | Structured logging with task and error codes (Section 4); audit of set-up, demand-factor, default and lock changes. |
+
+# **6. Non-Functional Requirements**
+
+| **Area** | **Requirement** |
+|---------------|---------------------------------------------------------|
+| Performance | Properties panel updated within 0.5 s of an edit; full recalculation of 2,000 elements within 1 s; collaboration updates visible to other users within 1 s. |
+| Calculation accuracy | Continuous results within +/-0.5 % of the hand-checked reference project; discrete selections identical. No result is produced from a missing or out-of-range table value - the element is blocked with a code. |
+| Determinism & traceability | Same model + rule-pack version = identical results on every client and the server; every result replayable from its run ID. |
+| Concurrency | At least 10 simultaneous users per project without conflicts or lost edits. |
+| Reliability | Autosave; no more than 1 minute of work lost on browser failure; daily database backups on the VPS with off-site copy. |
+| Security | Role- and discipline-based access; HTTPS; httpOnly session cookies; audit log; project data stays on company infrastructure. |
+| Usability & compatibility | Plain-language messages with codes; colour always paired with text; latest Chrome/Edge; minimum 1920 x 1080. |
+| Maintainability | Engine is an isolated TypeScript package with pure functions and full unit tests (Appendix C vectors). |
+
+# **7. System Architecture & Technical Stack**
+
+| **Layer** | **Responsibility** |
+|-----------------|-------------------------------------------------------|
+| 01 Presentation | Login, project picker, Pages 1-5, properties panel, schedule grid. |
+| 02 Application controller | Project state, undo/redo, autosave, discipline locks, collaboration client, dispatch of changes to the engine worker. |
+| 03 Network model | Graph of nodes (sources, panels, busbars, tap-offs, DB end points) and edges (cables, busbar runs); topology rules; tags; lengths. |
+| 04 Calculation engine | Background service, no page: aggregation, Ib, devices, ampacity, voltage drop, faults, withstand, earth-fault, auto-size, scenarios. Same package runs in a browser Web Worker and on the server. |
+| 05 Reference data | Versioned rule packs and lookup tables with reference conditions. |
+| 06 Persistence, sync & export | REST API, real-time socket server, MongoDB, file storage, exports. |
+
+| **Area** | **Choice (D-14)** |
+|---------------|---------------------------------------------------------|
+| Repository | One TypeScript repository with npm workspaces: apps/web, apps/api, packages/engine, packages/shared, packages/rulepacks; revit-addin/ (future, C#). |
+| Front end | React + TypeScript (Vite); Zustand state; Konva canvas; PDF.js for plans; three.js for the 3D view; Zod forms; Socket.IO client; engine in a Web Worker. |
+| Back end | Node.js (current LTS) + Express in TypeScript; Socket.IO for real-time sync and presence; Zod validation shared with the front end. |
+| Database | MongoDB as a replica set (needed for transactions and change streams) with the official driver; collections: projects, floors, elements, rulepacks, auditLog, exports, sessions. PDFs and exports in GridFS (object storage later). |
+| Calculation engine | packages/engine - pure TypeScript, no UI or database imports; identical results in browser and server. |
+| Exports | ExcelJS for schedules; HTML-to-PDF renderer for reports (library chosen at implementation). |
+| Testing & quality | Vitest (unit), mongodb-memory-server (database), Playwright (end-to-end, collaboration with two browsers); ESLint + Prettier; CI on every push. |
+| Hosting | Netcup VPS: Nginx reverse proxy with HTTPS (WebSocket upgrade enabled), Node API under PM2 or Docker, MongoDB replica set on the VPS (or Atlas), nightly backups; staging and production environments. |
+| Future | Revit add-in in C# .NET (Section 16); MAEC One authentication via the AuthProvider interface. |
 
 ![System architecture](media/architecture.png)
 
-# **7. Implementation & Execution Workflow**
+# **8. Real-Time Collaboration Design**
 
-The application has a login screen followed by five working pages, shown as the left-hand navigation. Each page has entry and exit conditions so that later pages always receive complete data.
+Several engineers (for example electrical and mechanical) can work on the same project and the same floor at the same time. Every change appears for everyone almost immediately, like Google Sheets, and nobody can overwrite another discipline\'s work.
 
-| **Page** | **Name**                           | **Purpose**                                               | **Main Outputs**                                              |
-|----------|------------------------------------|-----------------------------------------------------------|---------------------------------------------------------------|
-| 0        | Login                              | Authenticate the engineer                                 | User session and role                                         |
-| 1        | Project Set-up & Import Floor Plan | Project data, calculation set-up, floors, plans, scale    | Project record, floor registry, calibrated plans              |
-| 2        | Floor Modelling                    | Place components, draw connections; sizes calculated live | Floor network, cable lengths, DB loads, live sizes and checks |
-| 3        | Building Modelling                 | Stack floors, define risers, connect to sources           | Complete building network                                     |
-| 4        | Architecture                       | Single-line diagram, schedule review, locks and overrides | Reviewed network, schedules                                   |
-| 5        | Simulation & Report                | Scenario runs, final checks, exports                      | Issued schedules, reports, SLD                                |
+| **Topic** | **Design** |
+|---------------|---------------------------------------------------------|
+| Channels | Each open project is a Socket.IO room; each floor a sub-room. Clients send operations (add, move, delete, connect, edit property); the server validates permission and version, stores the change in MongoDB and broadcasts it to the room. The server is the single source of truth. |
+| Discipline greying | Each element and library tab belongs to a discipline layer. For an electrical engineer, mechanical and PHE elements and tabs are greyed out and read-only (and vice versa); they still move, appear and disappear live as their owners work. |
+| Presence | Avatars show who is on which floor; each user\'s current selection is outlined in their colour with their name. |
+| Element locks | Selecting an element for editing takes a soft lock: other users see it greyed with \"Being edited by \<name\>\". The lock is released on deselect, after 60 s idle, or on disconnect. |
+| Conflicts | Every element carries a version number; an operation based on an old version is rejected (E0902) and the client reloads that element. Locks make this rare. |
+| Cross-discipline data | When a mechanical engineer changes an AHU\'s kW, the electrical model updates for everyone and the engine re-sizes affected cables; the electrical engineer gets a notice listing the changed elements. |
+| Calculation consistency | Each client runs the same engine version on the same synchronised model and rule-pack version, so all users see identical results; the server re-runs the engine on save/export and logs any mismatch (E2690). |
+| Disconnection | On connection loss the canvas becomes read-only with a \"Reconnecting\" banner; after reconnection missed operations are replayed. No offline editing in Phase 1. |
+| Undo / redo | Per user, own operations only. |
+| Scaling | One API instance is sufficient for Phase 1; a Redis adapter for Socket.IO is added if the API is scaled to several instances. |
 
-## **Page 1 - Project Set-up & Import Floor Plan**
+# **9. Pages & End-to-End Workflow**
 
-**1. Project Details**
+| **Page** | **Purpose** | **Main Steps** | **Exit Condition** |
+|--------------|--------------|--------------------------------|--------------|
+| Login | Authenticate | Email + password; roles loaded. | Valid session |
+| Project picker | Choose or create project | Open (goes to the project's last page); create or import .json (Technical Lead). | Project selected |
+| 1 Project Set-up & Import Floor Plan | Project data, calculation set-up, floors, plans | Details and site conditions; region, fault level, checks, demand factors; floor counts -\> registry with levels and heights; discipline assignment; PDF per floor and calibration. | Required fields valid; registry complete; at least one floor calibrated |
+| 2 Floor Modelling | Model each floor | Place components; draw cables (construction only); enter DB and equipment loads; live sizes and checks in the properties panel (Provisional until the path reaches a source). | No unconnected components or rule violations on the floor |
+| 3 Building Modelling | Complete the building network | Stack floors in 3D; define risers and tap-offs; connect to MDB, transformer, generator (ATS), UPS, PFC; results turn Final. | Network complete and valid |
+| 4 Architecture | Review and override | Single-line diagram; schedule grid; lock sizes; per-panel demand factors; phase allocation. No separate calculation step. | Reviewed |
+| 5 Simulation & Report | Issue | Standby (generator) scenario; final check list; exports with title block and versioned names. | Issued |
 
-The Technical Lead enters project name, location, design stage, revision, client, plot reference, project category, plot load allocation and site conditions (ambient air temperature, soil temperature, soil thermal resistivity, altitude). Field definitions are in Section 10.1.
+# **10. Electrical Calculation Specification (Verified)**
 
-**2. Calculation Set-up**
+This section defines the engine. It follows the CableSizer method where that method was verified correct, and applies the corrections found in the independent verification (Section 11, items V-nn). Items marked **\[ENG\]** need confirmation by the Senior Electrical Engineer before v1.0.
 
-Region is selected (loads the rule pack), the upstream short-circuit capacity is entered (for example 350 MVA), the calculation checks are ticked, and the demand-factor tables are reviewed - pre-filled from the region defaults and editable.
+## **10.1 Conventions**
 
-**3. Floors & Elevations**
+| **Item** | **Rule** |
+|-----------------|-------------------------------------------------------|
+| Units | V (400 three-phase / 230 single-phase), A, kW, kVA, kVAr, mOhm (per metre: mOhm/m), kA, mm2, m, deg C, K.m/W. Full precision internally; rounding only for display (currents 1 dp, % 2 dp, kA 2 dp, mOhm 3 dp). |
+| Voltage factor (V-03) | Maximum fault currents use cmax = 1.10; minimum fault currents use cmin = 0.95 (BS 7671 Cmin for Zs) - DEWA declares 230/400 V +/-10 %. \[ENG\] |
+| Missing data | A missing, blank or out-of-range table value never becomes 0 or 1: the element is blocked with an error code (V-14). |
+| Between table steps | Temperature, soil resistivity and depth factors are interpolated linearly inside the table range; outside the range the element is blocked. \[ENG\] |
 
-Floor counts generate the floor registry (B1..Bn, GF, P1..Pn, typical floors, mechanical floors 1-3). For each floor the finished floor level and floor-to-floor height are entered; these produce riser lengths later.
+## **10.2 Calculation Order (runs after every change)**
 
-**4. Working Directory & Discipline Assignment**
+1\. Identify supply paths; elements without a path to a source run in Provisional mode (10.13). 2. Pass 1 (bottom-up): connected load per phase and load type, demand factors, maximum demand. 3. Ib for every cable and busbar run; device selection. 4. Starting cable size: locked size, else the regional minimum for the breaker. 5. Pass 2 (top-down): impedances, maximum and minimum fault currents, peak current, cumulative voltage drop, earth-fault loop. 6. Checks C1-C12 on every element; upsize failing unlocked cables; repeat steps 3-6 until nothing changes (all checks re-run each iteration, because a larger upstream cable raises downstream fault levels). 7. Standby scenario and ancillary results.
 
-The working directory is set and engineers are assigned for Electrical, Mechanical and PHE; this drives discipline locks.
+## **10.3 Load Aggregation & Demand Factors**
 
-**5. Floor-Plan Upload & Scale Calibration**
+DB: connected load per phase and load type (entered, or area x W/m2). Panel: connected load = sum of downstream connected loads per phase and type; demand = connected x demand factor of the type, applied once at each panel to the downstream connected load (factors are never multiplied down the tree); maximum demand = sum over types. How load-type and category factors combine is open (OI-02). **Until OI-01 is closed (D-19):** a missing (TBC) demand factor is taken as 1.0 (no diversity - conservative) and every result that depends on it is labelled \"Provisional - demand factors TBC\" and never becomes Final. This is the only exception to the missing-data rule of 10.1 (V-14). Transformer MD = MD of the panels it feeds; generator MD calculated per standby scenario (10.14).
 
-A PDF plan is uploaded for each floor in the registry and calibrated. A previously saved project (.json) can be imported instead. Exit condition: mandatory fields valid; every floor to be modelled has a calibrated plan.
+## **10.4 Design Current Ib**
 
-## **Page 2 - Floor Modelling**
-
-**1. Place Components**
-
-The engineer drags SMDBs, DBs, MCCs, isolators and other components from the bottom library onto the plan. Each receives an automatic tag and opens its property panel on the right.
-
-**2. Draw Connections**
-
-The engineer draws a cable from the source panel to the target. Routing is orthogonal with multiple bend points; the length is calculated from the calibrated scale. The source panel gains an outgoing way.
-
-**3. Set Cable Construction**
-
-Conductor, cores, insulation, armour, sheath, installation method and grouping are confirmed (project defaults apply). FLS loads default to fire-rated cable. The engineer does not choose the size.
-
-**4. Enter DB Loads**
-
-For each DB the connected load is entered per phase and load type (or area x W/m2), with load category, demand category and power factor.
-
-**5. Live Calculation & Properties Panel**
-
-As soon as a cable is drawn the engine calculates its current, breaker, cross-sectional area, runs, earth conductor, voltage drop and fault values in the background and shows them in the right-hand panel, with Provisional / Final status and the deciding check. Adding loads, extending the path upstream or downstream, or editing any property re-sizes affected cables up or down automatically.
-
-**6. Save**
-
-Markup and project are saved. Exit condition: no unconnected components and no rule violations on the floor.
-
-## **Page 3 - Building Modelling**
-
-**1. Stack Floors**
-
-Floors are stacked by elevation into a 3D isometric view with discipline colours for visual validation.
-
-**2. Define Risers**
-
-Busbar or cable risers are placed in their shafts; tap-off positions are defined per floor; lengths come from floor elevations.
-
-**3. Connect to Sources**
-
-Floor boards connect to riser tap-offs; risers to the MDB; the MDB to the transformer; the generator through the ATS; UPS for critical loads; PFC bank on the MDB. As each connection completes a path to a source, the affected cables change from Provisional to Final and are re-sized with real fault levels and cumulative voltage drop.
-
-**4. Network Validation**
-
-The network is checked for completeness, radial structure, single active source per scenario and safety-category source requirements. Exit condition: validation passes.
-
-## **Page 4 - Architecture**
-
-**1. Generate Single-Line Diagram**
-
-The model is drawn as a single-line diagram (tree from source to DBs).
-
-**2. Review Calculated Network**
-
-No separate calculation is run - results are already current from the live engine. Elements still Provisional are listed with the reason (no source path, no load).
-
-**3. Review Results**
-
-Each cable and panel shows OK / Warning / Fail / Not verified. Clicking an element opens its calculation trace.
-
-**4. Review Schedules**
-
-Panel schedules are shown in grid form in the output formats of Section 11. Only input cells (tags, locations, meters, remarks, ELCB choice, starter type, manual loads) are editable.
-
-**5. Override & Lock**
-
-The engineer may override and lock a cable size, number of runs or breaker; adjust demand factors per panel; and assign single-phase loads to phases. The engine re-runs and validates locked items without changing them.
-
-## **Page 5 - Simulation & Report**
-
-**1. Scenario Runs**
-
-Normal (transformer) and Standby (generator: power-failure and fire-mode demand) are run and compared.
-
-**2. Final Check List**
-
-Outstanding warnings, failures, "Not verified" checks and user overrides are listed for sign-off.
-
-**3. Export**
-
-Panel schedules, cable schedule, PFC sheet, tray sizing, calculation report and SLD are exported with title blocks (design stage, revision, prepared/checked by) and versioned file names.
-
-![Calculation pipeline](media/calc_pipeline.png)
-
-# **8. Electrical Calculation Specification**
-
-This section is the authoritative definition of the calculation engine. It reproduces the CableSizer v1.1 method (SD-01, SD-02) with the corrections listed in Appendix E. Symbols follow the CableSizer manual.
-
-## **8.1 Conventions**
-
-| **Quantity**                                   | **Symbol**     | **Unit**                                                                  | **Display Rounding** |
-|------------------------------------------------|----------------|---------------------------------------------------------------------------|----------------------|
-| Nominal voltage                                | Vn             | V (400 three-phase / 230 single-phase; 380/220 where the supply is 380 V) | Integer              |
-| Active power / apparent power / reactive power | P / S / Q      | kW / kVA / kVAr                                                           | 1 decimal            |
-| Current                                        | Ib, In, Iz, Im | A                                                                         | 1 decimal            |
-| Impedance, resistance, reactance               | Z, R, X        | milliohm (mOhm); per-metre values in mOhm/m                               | 3 decimals           |
-| Prospective fault current                      | Isc, Ief       | kA                                                                        | 2 decimals           |
-| Voltage drop                                   | Vc, Vt         | V and % of Vn                                                             | 2 decimals           |
-| Cross-section                                  | S, A           | mm2                                                                       | Standard size        |
-| Length                                         | L              | m                                                                         | 1 decimal            |
-| Temperature / soil thermal resistivity         | \-             | deg C / K.m/W (deg C.m/W)                                                 | 1 decimal            |
-
-Internal calculations use full floating-point precision; rounding is applied only for display and export.
-
-## **8.2 Calculation Order**
-
-This sequence runs automatically in the background after every model change (Section 8.18).
-
-1.  Identify supply paths; elements without a complete path to a source are calculated in Provisional mode (Section 8.18).
-
-2.  Pass 1 (bottom-up): aggregate connected load per phase and load type; apply demand factors; obtain maximum demand per panel and source.
-
-3.  Calculate Ib for every cable/busbar run; select breakers.
-
-4.  Assign starting cable size: user-locked size, else the regional minimum for the breaker rating.
-
-5.  Pass 2 (top-down): accumulate R and X from the upstream network; calculate Isc, cumulative voltage drop and earth-fault loop impedance at every node.
-
-6.  Evaluate all checks for every cable; upsize failing cables; repeat from step 3 until no change (Section 8.13).
-
-7.  Run the standby scenario; calculate ancillary outputs; produce results and schedules.
-
-## **8.3 Load Aggregation & Demand Factors**
-
-- **DB (terminal):** connected load C(type, phase) entered by the engineer, or C = area x W/m2 per phase.
-
-- **Panel:** C_panel(type, phase) = sum of C of all downstream elements; Demand(type, phase) = C_panel(type, phase) x DF(type) \[x category factor, OI-02\]; Maximum Demand MD = sum of Demand over all types.
-
-- **Source:** transformer MD = MD of the panels it feeds; generator MD calculated separately for power-failure mode (normal + essential + critical + FLS loads it backs up, as agreed in OI-11) and fire mode (FLS loads).
-
-- **Open decision (OI-02):** CableSizer applies demand factors at every panel to the sum of downstream connected loads; whether factors compound across levels or apply once must be confirmed.
-
-## **8.4 Design Current Ib**
-
-| **Case**                      | **Formula (P in kW, Q in kVAr, V in volts)**                                                 |
-|-------------------------------|----------------------------------------------------------------------------------------------|
-| Three-phase load              | Ib = P x 1000 / (sqrt(3) x V x pf)                                                           |
-| Single-phase load             | Ib = P x 1000 / (V x pf)                                                                     |
-| Two-phase load (legacy)       | Ib = P x 1000 / (2 x V x pf) x 1.732 - confirm (OI-23)                                       |
-| Motor with star-delta starter | Ib = P x 1000 / (3 x V x pf) per cable set; two cable sets are installed                     |
-| Capacitor (PFC) bank          | Ib = Q x 1000 / (sqrt(3) x V); CableSizer additionally divides by sin(phi) - confirm (OI-23) |
-| Panel / busbar feeder         | Ib from the maximum demand of the downstream panel and its power factor                      |
-
-## **8.5 Protective Device Selection**
-
-- **Rating In:** lowest standard rating \>= Ib (Appendix C); user may lock a higher value.
-
-- **Frame:** lowest frame \>= In from 100, 160, 250, 400, 630, 800, 1000, 1250, 1600, 2000, 2500, 3200, 4000, 6300 A.
-
-- **Type:** MCB / MCCB below 800 A; ACB automatically at 800 A and above; MCP for motor circuits.
-
-- **Poles:** 1P for single-phase, 3P (TP) for three-phase loads, 4P for sources (transformer, generator, UPS) and main incomers.
-
-- **Magnetic threshold Im:** Im = n x frame for thermal-magnetic frames up to 250 A (fixed threshold); Im = n x In above 250 A (adjustable); n default 10.
-
-- **Breaking capacity:** lowest catalogue value \>= Isc at the panel where the breaker is installed (catalogue values, OI-03). CableSizer used fixed 50 kA (MDB/SMDB/MCC) and 35 kA (others); this is replaced.
-
-- **Earth leakage:** 30 mA ELCB, 100 mA ELCB, 0-300 mA ELS or 0-500 mA ELS; acquired from the downstream isolator/load or selected; displayed in the Remarks column.
-
-## **8.6 Cable Construction Defaults**
-
-- **Cores:** single-phase feeders 3C; main transformer-to-MDB feeders 1C; motors 3C; other three-phase feeders 4C; user may change.
-
-- **Armour:** single-core cables only AWA; multicore XLPE cables SWA; unarmoured where selected.
-
-- **Sheath:** PVC or LSZH; **voltage grade:** 450/750 V (single-core wires), 300/500 V (3-core flexible), 600/1000 V (single or multicore cables).
-
-- **Earth conductor (ECC):** sized from the phase size, conductor material and insulation using the CPC table; above 600 mm2 total the ECC becomes 2 x 150 mm2.
-
-- **Size range:** 1.5 - 630 mm2; multicore up to 300 mm2; larger loads use parallel runs (maximum runs OI-21).
-
-## **8.7 Current-Carrying Capacity (Check 1)**
-
-| **Factor**                    | **Applies To** | **Lookup Keys**                                                                                                             | **Reference Table**      |
-|-------------------------------|----------------|-----------------------------------------------------------------------------------------------------------------------------|--------------------------|
-| It - nominal rating           | All cables     | Material, phases, cores, installation method, insulation, size                                                              | NOMRATCU / NOMRATAL      |
-| K1 - temperature              | All cables     | Method, insulation, temperature (air for B/J, soil for D)                                                                   | TEMPDE                   |
-| K2 - grouping                 | All cables     | B: no. of circuits; J: cores, circuits, spacing (touching / D / 2D), no. of trays; D: cores, direct/duct, circuits, spacing | GROUPB / GROUPJ / GROUPD |
-| Kr - soil thermal resistivity | Buried (D)     | Direct/duct, cores, size, resistivity                                                                                       | STR                      |
-| K3 - depth of laying          | Buried (D)     | Direct/duct, cores, size, depth                                                                                             | DLAY                     |
-
-**Ktot** = K1 x K2 (in air) or K1 x K2 x Kr x K3 (buried). **Iz** = It x Ktot x number of runs. **Pass condition:** Iz \>= In. Installation methods: B = conduit/trunking, J = tray/trench, D = direct buried or duct.
-
-## **8.8 Voltage Drop (Check 2)**
-
-- **Unit drop:** Vu = VDr x cos(phi) + VDx x sin(phi) mV/A/m for XLPE cables above 16 mm2 (tables RESIS/REACT); otherwise the tabulated unit drop VU(size, insulation, phases); busbars use Vubd(rating).
-
-- **Circuit drop:** Vc = Ib x L x Vu / (runs x 1000) V; **cumulative:** Vt = Vc + Vt(upstream); **%Vt** = Vt / Vn x 100.
-
-- Spare ways and control circuits are excluded.
-
-| **Network Point (cumulative from source)** | **Maximum Total Voltage Drop - Dubai rule pack** |
-|--------------------------------------------|--------------------------------------------------|
-| MDB                                        | 2.0 %                                            |
-| SMDB                                       | 2.0 %                                            |
-| Busduct                                    | 2.0 %                                            |
-| MCC                                        | 2.0 %                                            |
-| DB                                         | 2.5 %                                            |
-| Motor loads                                | 4.0 %                                            |
-| Final circuits (future phase)              | 4.0 %                                            |
-
-## **8.9 Short-Circuit Current (Check 3)**
-
-| **Element**              | **Resistance R (mOhm)**                                     | **Reactance X (mOhm)**                                                                                   |
-|--------------------------|-------------------------------------------------------------|----------------------------------------------------------------------------------------------------------|
-| Upstream network         | R = 0.1 x X                                                 | Z = Vn^2 / (Sup x 1000) with Sup in MVA; X = 0.995 x Z                                                   |
-| Transformer              | R = Ur x Vn^2 / (S x 100)                                   | X = Ux x Vn^2 / (S x 100); Ux = sqrt(Uz^2 - Ur^2); Uz, Ur from datasheet, else Appendix C defaults       |
-| Generator                | R = 0.1 x X                                                 | X = X"d x Vn^2 / (S x 100); X"d default 14 %                                                             |
-| Cable                    | R = rho x L / (A x N); rho = 18.32 (Cu), 30.34 (Al) at 20 C | X = 0.1 x L / N (A \< 120 mm2); 0.09 x L / N (A \>= 120 mm2)                                             |
-| Busbar                   | R = Rbd(rating) x L                                         | X = Xbd(rating) x L                                                                                      |
-| Motor group (main panel) | R'm = 0.42 x Z'm                                            | X'm = 0.91 x Z'm; Z'm = Vn^2 / (Sm x IL/IF); combined in parallel with the network by adding admittances |
-
-**Accumulation:** Rkt = sum of R from the source to the point; Xkt likewise; Zkt = sqrt(Rkt^2 + Xkt^2). **Isc** = c x Vn / (sqrt(3) x Zkt) kA with c = 1.0 for 230/400 V. **Pass condition:** breaking capacity of each breaker \>= Isc at the panel where it is installed. The main panel is calculated with and without motor contribution and the higher value is used downstream.
-
-## **8.10 Let-through Energy / Thermal Withstand (Check 4)**
-
-- **Phase conductor:** S1 = Isc x 1000 x sqrt(t1) / k1 must not exceed installed area (size x runs).
-
-- **Earth conductor:** S2 = Ief x 1000 x sqrt(t2) / k2 must not exceed installed ECC area.
-
-- **k factors:** Cu/XLPE 143; Cu/PVC 115 (\<= 300 mm2), 103 (\> 300 mm2); Al/XLPE 94; Al/PVC 76 (\<= 300 mm2), 68 (\> 300 mm2); bare Cu 115/103; bare Al 76/68.
-
-- **Disconnection time t:** 0.05 s default (CableSizer value); to be confirmed or taken from the trip-curve table (OI-12).
-
-## **8.11 Earth-Fault Loop Impedance (Check 5)**
-
-- **Per-metre values (20 C):** Rc = rho / (A x N); Recc = rho / (Aecc x Necc); Ra = armour resistance table / N (single-core AWA bonded: table value / 3); Rp = Recc x Ra / (Recc + Ra); reactance Xc+Xp = 0.3 mOhm/m for multicore armoured cables, average of conductor and ECC values for single-core, Xbd for busbars.
-
-- **Loop:** Zu = sqrt((Rc + Rp)^2 + (Xc + Xp)^2); Zc = Zu x L; Zt = Zc + Zup (upstream loop impedance); Ief = (Vn / sqrt(3)) / Zt kA.
-
-- **At fault temperature:** resistances multiplied by 1.38 (PVC) or 1.60 (XLPE); armour by 1.19 (PVC) or 1.28 (XLPE), with an extra 1.1 for steel wire armour; reactance unchanged; gives Z't.
-
-- **Limit:** Zm = (Vn / sqrt(3)) / Im x 1000 mOhm. **Pass condition:** Z't \<= Zm.
-
-- **Magnetic setting check:** Im must be below both Isc and Ief at the load end, so the breaker trips instantaneously for both fault types.
-
-## **8.12 Regional Minimum Cable Size (Check 6)**
-
-For the Dubai rule pack the installed size x runs must be at least the DEWA minimum for the breaker rating (Appendix D). This is the starting size of the auto-sizing loop.
-
-## **8.13 Auto-Sizing Algorithm**
-
-1.  Start every unlocked cable at the regional minimum for its breaker rating.
-
-2.  Run Pass 2 and evaluate Checks 1-6 for every cable.
-
-3.  For each failing unlocked cable: move to the next standard size; when the maximum size for the construction is reached, add a parallel run and restart from the smallest size meeting the regional minimum per run.
-
-4.  If a breaker fails its breaking-capacity check, raise its breaking capacity (the cable is not changed for this reason).
-
-5.  Repeat from step 2 until no element changes (upsizing only lowers impedance, so the loop converges); stop after 50 iterations and report non-convergence.
-
-6.  Locked cables and breakers are never changed; their failures are reported to the engineer.
-
-## **8.14 Supply Scenarios**
-
-| **Scenario**            | **Source**        | **Loads Included**                    | **Used For**                                                                                  |
-|-------------------------|-------------------|---------------------------------------|-----------------------------------------------------------------------------------------------|
-| Normal                  | Transformer(s)    | All loads                             | Maximum fault levels (breaker duty, let-through); voltage drop; earth-fault loop              |
-| Standby - power failure | Generator via ATS | Loads backed by the generator (OI-11) | Generator rating; voltage drop and earth-fault loop on generator supply (lower fault current) |
-| Standby - fire mode     | Generator         | FLS loads (and others per OI-11)      | Generator rating; FLS circuit checks                                                          |
-
-## **8.15 Ancillary Calculations**
-
-- **PFC bank:** kVAr = sum over load types of Demand(type) x \[tan(acos(pf_load)) - tan(acos(pf_target))\]; pf_target default 0.92; default load pf: lighting 0.85, sockets 0.80, HVAC 0.80, water heater 1.00, laundry 0.85, kitchen 0.85, special equipment 0.80, spare 0.80 (hand dryer, pumps, fire pumps, lifts - OI-20); rating selected from the standard bank list (OI-20).
-
-- **Transformer loading:** % = MD (kVA) / rating x 100; warning above the agreed limit (OI-16); total MD compared with plot load allocation.
-
-- **Generator / UPS rating:** kVA = MD / 0.8, rounded up to the next standard size (OI-10); full-load current and fault duty reported.
-
-- **Cable tray width:** per cable width = overall diameter x runs (single-core: (runs x 3 + neutral runs) x diameter x 2/3); total + 50 % spare; tray selected from 100, 150, 200, 300, 450, 600, 750, 900, 1000 mm.
-
-## **8.16 Safety-Category Rules**
-
-- Load categories: normal, essential, critical, FLS.
-
-- Essential and FLS loads: the supply path must include a generator (through an ATS). Critical loads: the path must include a UPS and a generator.
-
-- FLS loads: cable insulation defaults to fire-rated; selecting another type raises a warning but is allowed.
-
-- When an element is fire-rated, every cable on its path back to the generator must be fire-rated; a busbar becomes fire-rated by default if any downstream load is FLS.
-
-## **8.17 Check Results & Messages**
-
-| **Code** | **Check**           | **Fail Condition**               | **Message Shown**                                                      | **Severity** |
-|----------|---------------------|----------------------------------|------------------------------------------------------------------------|--------------|
-| C1       | Ampacity            | Iz \< In                         | Cable rating below breaker setting - increase size or runs             | Fail         |
-| C2       | Voltage drop        | %Vt \> level limit               | Voltage drop exceeds limit at this point                               | Fail         |
-| C3       | Fault duty          | Isc \> breaker breaking capacity | Breaker breaking capacity below fault level                            | Fail         |
-| C4a      | Let-through (phase) | S1 \> installed area             | Phase conductor cannot withstand fault energy                          | Fail         |
-| C4b      | Let-through (ECC)   | S2 \> installed ECC area         | Earth conductor cannot withstand fault energy                          | Fail         |
-| C5a      | Magnetic setting    | Im \> Isc or Im \> Ief           | Breaker will not trip instantaneously - check magnetic setting         | Fail         |
-| C5b      | Earth-fault loop    | Z't \> Zm                        | Earth-fault loop impedance too high for protective device              | Fail         |
-| C6       | Regional minimum    | Size x runs \< minimum           | Below authority minimum cable size for breaker                         | Fail         |
-| S1       | Safety category     | Required source missing on path  | Essential/FLS load not backed by generator (critical: UPS + generator) | Fail         |
-| S2       | Fire rating         | Non-fire-rated cable on FLS path | Non fire-rated cable on fire & life-safety circuit                     | Warning      |
-| T1       | Panel ways          | \> 18 outgoing ways              | Check local authority limit on outgoing ways                           | Warning      |
-| L1       | Transformer loading | Loading \> limit                 | Transformer loading above design limit                                 | Warning      |
-| N1       | Not verified        | Check disabled in set-up         | Check not verified (disabled in project set-up)                        | Info         |
-
-## **8.18 Live Calculation & Provisional Mode**
-
-The calculation engine runs continuously in the background on the modelling pages. There is no calculate button and no separate calculation page. The sequence of Section 8.2 is re-run for the affected part of the network after every edit; unlocked cables are re-solved from their minimum size each time, so a cable can become larger or smaller as the model changes.
-
-**When an element is Provisional**
-
-| **Situation**                                   | **What Is Calculated**                                   | **Assumption Used**                                                                                                                                       | **Shown As**                         |
-|-------------------------------------------------|----------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------|
-| Cable drawn, downstream load not yet entered    | Nothing sized                                            | \-                                                                                                                                                        | Awaiting load                        |
-| Load known, no path to a source yet             | Ib, breaker, current-carrying capacity, own voltage drop | Upstream voltage drop = the allowance of the levels above (rule pack); fault level = transformer-terminal value for the plot load allocation (worst case) | Provisional - upstream not connected |
-| Complete path to a source                       | All checks with real cumulative values                   | None                                                                                                                                                      | Final                                |
-| Source exists but some downstream loads missing | All checks on entered loads                              | Missing loads = 0; panel flagged                                                                                                                          | Final - incomplete loads (warning)   |
-
-**Properties panel for a cable**
-
-| **Group**    | **Content**                                                                                                                                                        |
-|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Result       | Cross-sectional area and construction (e.g. 1 x 4C 16 mm2 Cu/XLPE/SWA/PVC), number of runs, earth conductor, breaker rating and type, status (Provisional / Final) |
-| Sized by     | The deciding check, e.g. "Voltage drop" or "Current-carrying capacity"                                                                                             |
-| Current      | Ib (design current), In (breaker), Iz (corrected cable capacity) with derating factors                                                                             |
-| Voltage drop | This cable % and total from source % against the limit for its level                                                                                               |
-| Faults       | Short-circuit current at both ends; earth-fault loop impedance against the limit                                                                                   |
-| Checks       | Each check with pass / fail / provisional / not verified                                                                                                           |
-| Actions      | Lock size / runs / breaker; open full calculation working                                                                                                          |
-
-Note: the size shown is the conductor cross-sectional area in mm2. The cable overall diameter is used only for cable-tray sizing. A larger cross-section does not increase the load current, which is set by the load; it carries that current with less heating and less voltage drop.
-
-# **9. Network Model & Topology Rules**
-
-## **9.1 Element Types**
-
-| **Element**                | **Role**                            | **Allowed Upstream**                | **Allowed Downstream**                             |
-|----------------------------|-------------------------------------|-------------------------------------|----------------------------------------------------|
-| EB Utility / RMU           | HV supply point                     | \-                                  | Transformer                                        |
-| Transformer                | Main source                         | RMU                                 | LV Panel / MDB / ACB panel, feeder busbar          |
-| Generator                  | Standby source                      | \-                                  | ATS, ESMDB, LV Panel                               |
-| ATS                        | Changeover (normal + standby input) | Transformer-fed panel and generator | LV Panel / MDB / ESMDB                             |
-| UPS                        | Source for critical loads           | MDB / SMDB / MCC                    | Panel, DB                                          |
-| LV Panel / MDB             | Main distribution                   | Transformer, ATS                    | Busbar, SMDB, MCC, DB, PFC, UPS, isolator, tap-off |
-| ACB panel                  | One incomer, one outgoing           | Transformer / MDB                   | Panel or busbar                                    |
-| Busbar - feeder type       | Point-to-point busbar run           | Transformer / MDB                   | One panel (no tap-offs)                            |
-| Busbar - tap-off type      | Riser with tap-off boxes            | MDB                                 | Tap-off boxes only                                 |
-| Tap-off box                | Outlet on riser                     | Tap-off busbar                      | SMDB, DB, isolator                                 |
-| SMDB / ESMDB               | Sub-main distribution               | MDB, tap-off box                    | DB, MCC, isolator, connection unit                 |
-| MCC / EMCC                 | Motor control centre                | MDB, SMDB                           | Motor isolators / motor loads                      |
-| PFC bank                   | Capacitor bank                      | MDB                                 | \-                                                 |
-| DB                         | Terminal in Phase 1 (load entered)  | SMDB, MDB, tap-off box, UPS         | \- (future phase)                                  |
-| Isolator / Connection unit | Terminal for directly fed equipment | MDB, SMDB, MCC, DB                  | \-                                                 |
-
-## **9.2 Rules**
-
-- The network is radial: no loops; each element has exactly one active supply in each scenario.
-
-- An ATS has exactly two inputs (normal, standby) and one output.
-
-- Tap-off boxes may only be connected to tap-off type busbars; feeder busbars have no tap-offs.
-
-- Every panel has at most 25 outgoing ways (warning above 18) and up to two incomers.
-
-- Connecting a cable creates the outgoing way on the upstream element; deleting it removes the way and renumbers circuit references.
-
-- Phase compatibility: single-phase elements may only be fed from a single phase of a three-phase panel; phase allocation is automatic with manual override (OI-14).
-
-## **9.3 Tagging Conventions (from SD-03, to be confirmed in OI-24)**
-
-| **Element**     | **Tag Pattern**                     | **Example**          |
-|-----------------|-------------------------------------|----------------------|
-| Transformer     | Tx\_\<floor ref\>\_\<running no.\>  | Tx_B1_01             |
-| Generator       | Gen\_\<floor ref\>\_\<running no.\> | Gen_GF_01            |
-| UPS             | UPS\_\<floor ref\>\_\<running no.\> | UPS_B1_01            |
-| Isolator        | Iso\_\<floor ref\>\_\<load ref\>    | Iso_RF_AHU01         |
-| Connection unit | cu\_\<floor ref\>\_\<load ref\>     | cu_GF_HD01           |
-| Tap-off box     | TPB-\<floor ref\>-\<load ref\>      | TPB-05-SMDB05        |
-| PFC bank        | PFC-\<Tx ref\>-\<running no.\>      | PFC-Tx01-01          |
-| Busbar, panels  | User defined                        | BB-T1-01, SMDB-T1-05 |
-| Cable           | F\<floor\>-\<hierarchy levels\>     | F2-3-1-1             |
-
-# **10. Data Dictionary**
-
-**Source codes:** U = user input; D = dropdown; A = acquired from the connected model; C = calculated by the engine; R = from the region rule pack (editable default). Fields marked NEW are proposed additions not present in SD-03/SD-04.
-
-## **10.1 Project Set-up**
-
-| **Field**                                       | **Type / Unit** | **Req.** | **Source** | **Values / Validation**                                                                             |
-|-------------------------------------------------|-----------------|----------|------------|-----------------------------------------------------------------------------------------------------|
-| Project Name                                    | Text            | Yes      | U          | Non-empty                                                                                           |
-| Location                                        | Text            | Yes      | U          | Non-empty                                                                                           |
-| Design Stage                                    | Enum            | Yes      | D          | CD, SD, DD, TD, IFC                                                                                 |
-| Revision                                        | Text            | Yes      | U          | e.g. A, B, 0, 1                                                                                     |
-| Client Name                                     | Text            | Yes      | U          | Non-empty                                                                                           |
-| Plot ref                                        | Text            | Yes      | U          | Non-empty                                                                                           |
-| Project Category                                | Enum            | Yes      | D          | Residential, hotel, mixed-use, office, mall, hospital, school, industrial, aircraft hangars, others |
-| Plot load allocation                            | Number + unit   | Yes      | U          | kW or kVA, \> 0                                                                                     |
-| Ambient air temperature                         | deg C           | Yes      | U / R      | Dubai default 50                                                                                    |
-| Ambient soil temperature                        | deg C           | Yes      | U / R      | Dubai default 35                                                                                    |
-| Soil thermal resistivity                        | deg C.m/W       | Yes      | U / R      | Dubai default 2.0                                                                                   |
-| Altitude                                        | m               | Yes      | U          | Use in calculations to be confirmed (OI-26)                                                         |
-| No. of basements / GF / podium / typical floors | Integer         | Yes      | U          | \>= 0; generates floor registry                                                                     |
-| Mechanical floor 1-3 ref                        | Text            | No       | U          | Must match a registry floor                                                                         |
-| Region                                          | Enum            | Yes      | D          | Dubai (v1), Abu Dhabi, others (inactive until rule pack exists)                                     |
-| Upstream short-circuit capacity                 | MVA             | Yes      | U          | e.g. 350, 500                                                                                       |
-| Calculations enabled                            | 5 check-boxes   | Yes      | U          | Ampacity, voltage drop, short-circuit, let-through, earth-fault loop                                |
-| Demand factors - load type                      | 12 x factor     | Yes      | R / U      | 0 - 1.0 per load type (Appendix B)                                                                  |
-| Demand factors - category                       | 4 x factor      | Yes      | R / U      | Residential, Landlord, Office, Retail (Dubai)                                                       |
-| Working directory                               | Path            | Yes      | U          | Existing location                                                                                   |
-| Discipline engineers                            | User list x 3   | Yes      | D          | Electrical, Mechanical, PHE                                                                         |
-| NEW Floor level & floor-to-floor height         | m per floor     | Yes      | U          | Only new user input; required for riser lengths (OI-05)                                             |
-
-## **10.1A Calculation Defaults (from rule pack - not entered by the user)**
-
-These values are required by the calculation engine but are not asked of the engineer. They are stored in the region rule pack, maintained by the System Administrator, and applied automatically when the Region is selected. Page 1 may show them read-only in a collapsed "Calculation defaults" section; only the Technical Lead may override them for a specific project, and any override is logged.
-
-| **Default**                   | **Meaning**                                                     | **Used For**                            | **Dubai Value**   |
-|-------------------------------|-----------------------------------------------------------------|-----------------------------------------|-------------------|
-| Supply voltage / frequency    | Nominal system voltage and frequency                            | All current and fault calculations      | 400/230 V, 50 Hz  |
-| Default load power factor     | pf assumed when a load has none entered                         | kW to current conversion                | 0.85              |
-| Default depth of laying       | Burial depth of underground cables                              | Depth derating (K3)                     | TBC (0.6 - 2.5 m) |
-| Target power factor           | pf the capacitor bank corrects to                               | PFC bank sizing                         | 0.92              |
-| Cable length allowance        | Extra length for bends, terminations, vertical drops            | Cable lengths                           | TBC (OI-17)       |
-| Transformer loading limit     | Maximum design loading of a transformer                         | Overload warning                        | TBC (OI-16)       |
-| Default cable construction    | Usual cable type per feeder type (e.g. Cu/XLPE/SWA/PVC on tray) | Pre-filling cable properties when drawn | TBC               |
-| Voltage-drop limits per level | Maximum cumulative drop at MDB, SMDB, busduct, MCC, DB          | Voltage-drop check                      | Section 8.8       |
-
-## **10.2 Common Fields (all equipment)**
-
-| **Field**             | **Type**  | **Source** | **Rule**                                   |
-|-----------------------|-----------|------------|--------------------------------------------|
-| equipment_tag         | String    | U / auto   | Unique in project; pattern per Section 9.3 |
-| equipment_description | String    | U          | Optional                                   |
-| fed_from              | Reference | A          | Upstream element (from connection)         |
-| feeding_to            | Reference | A          | Downstream element(s)                      |
-| location_room / floor | String    | U / A      | Floor acquired from the canvas             |
-| poles_config          | Enum      | A / D      | SP, TP, TPN, TPN+E                         |
-| secondary_voltage_v   | Number    | R / U      | 400 or 230                                 |
-| frequency_hz          | Enum      | R          | 50 / 60                                    |
-| enclosure_ip_rating   | Enum      | D          | IP23, IP42, IP54, IP55, IP65               |
-| fire_rated            | Boolean   | U / C      | Default true where FLS rules apply         |
-
-## **10.3 Equipment-Specific Fields**
-
-| **Element**                 | **Field**                                                     | **Source** | **Values / Rule**                                                                    |
-|-----------------------------|---------------------------------------------------------------|------------|--------------------------------------------------------------------------------------|
-| Transformer                 | primary_voltage_v / secondary_voltage_v                       | U          | e.g. 11000 / 400                                                                     |
-|                             | capacity_kva                                                  | D          | Standard list (OI-09)                                                                |
-|                             | impedance_pct (Uz), resistance_pct (Ur)                       | U / R      | Datasheet; defaults Appendix C                                                       |
-|                             | vector_group                                                  | U          | e.g. Dyn11                                                                           |
-|                             | Isc at terminals, TCL, MD, standby load, loading %            | C          | Tooltip values                                                                       |
-| Generator                   | capacity_kva                                                  | C / D      | From demand of panel fed; standard size (OI-10)                                      |
-|                             | sub-transient reactance X"d %                                 | U / R      | Default 14 %                                                                         |
-|                             | power_factor                                                  | R          | 0.8                                                                                  |
-|                             | full-load current, fault duty, MD (power failure / fire mode) | C          |                                                                                      |
-| UPS                         | capacity_kva, X"d %, pf                                       | C / U      | As generator; fed from MDB / SMDB / MCC                                              |
-| LV Panel / MDB / SMDB / MCC | capacity_kva, incomer rating, busbar rating                   | C          | Busbar typical ranges: LV 2500-4000 A, MDB 1600-2500 A, SMDB 250-630 A, DB 100-250 A |
-|                             | incomer_device_type                                           | C / D      | ACB / MCCB / MCB                                                                     |
-|                             | fault_duty_ka                                                 | C          | From short-circuit result                                                            |
-|                             | earth_leakage_protection                                      | D          | Optional                                                                             |
-|                             | power_factor, diversity_factor                                | R / U      | 0.85; panel demand-factor overrides                                                  |
-|                             | mounting_type, cable_entry, applicable_standard               | D          | Floor/Wall/Plinth; Top/Bottom; IEC 61439-2 / 61439-3                                 |
-| DB (Phase 1 terminal)       | connected load R/Y/B per load type                            | U          | kW, or area (m2) x W/m2 per phase                                                    |
-|                             | load category / demand category                               | D          | Normal, essential, critical, FLS / Residential, Landlord, Office, Retail             |
-|                             | phases, power factor                                          | D / R      | 1 or 3; default 0.85                                                                 |
-| Busbar                      | busbar type                                                   | D          | Feeder or tap-off                                                                    |
-|                             | conductor, voltage grade                                      | D          | Cu / Al; 600/1000 V                                                                  |
-|                             | rating, length                                                | C          | From MD; length from elevations                                                      |
-|                             | load category                                                 | A          | Feeder busbar: acquired from load                                                    |
-| Tap-off box / Isolator      | load type, load category, demand category                     | D          | Appendix B load types                                                                |
-|                             | load kW, standby load kW                                      | A / U      | Acquired from equipment; manual where no equipment is connected                      |
-|                             | earth leakage rating                                          | D / A      | Displayed in remarks of feeding panel                                                |
-|                             | total voltage drop                                            | A          | From the feeding cable                                                               |
-| Connection unit             | load kW, load category, load type                             | A / D      | Single-phase, 230 V                                                                  |
-| PFC bank                    | capacity_kvar, incomer device                                 | C / D      | From category-wise demand; MCCB / ACB / isolator                                     |
-| ATS (NEW)                   | rating, poles, normal/standby source                          | C / A      | Specification to be provided (OI-15)                                                 |
-
-## **10.4 Cable (Connection) Fields**
-
-| **Field**                                    | **Source**     | **Values / Rule**                                                                                      |
-|----------------------------------------------|----------------|--------------------------------------------------------------------------------------------------------|
-| Cable tag, from / to                         | auto / A       | Section 9.3; from connection                                                                           |
-| No. of cores                                 | D              | 1C, 2C, 3C, 4C                                                                                         |
-| Conductor                                    | D              | Cu, Al                                                                                                 |
-| Insulation                                   | D              | PVC, XLPE, FR (fire-rated); warning if FLS and not FR                                                  |
-| Armour                                       | D              | SWA, AWA, none; single-core: AWA only                                                                  |
-| Sheath                                       | D              | PVC, LSZH, none                                                                                        |
-| Voltage grade                                | D              | 450/750 V, 300/500 V, 600/1000 V                                                                       |
-| Installation method                          | D              | B - conduit/trunking; J - tray/trench; D - direct buried; D - duct                                     |
-| No. of trays                                 | D              | 1, 2, 3 (method J)                                                                                     |
-| Depth of laying                              | D / R          | 0.6, 0.8, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5 m (method D)                                                  |
-| Separation                                   | D              | Direct buried: touching, 0.15, 0.30, 0.45, 0.60 m; duct: touching, 0.45, 0.60 m; tray: touching, D, 2D |
-| Grouping (circuits together)                 | U              | Integer \>= 1                                                                                          |
-| Ambient / soil temperature, soil resistivity | A              | From project set-up (air for B/J, soil for D)                                                          |
-| Length                                       | C              | Drawing x scale + vertical + allowance                                                                 |
-| Size, runs, neutral runs, ECC size           | C / U (locked) | Auto-sized; engineer may lock                                                                          |
-| Ib, In, Iz, Vc, Vt, Isc, Ief, Z't, status    | C              | Calculation results                                                                                    |
-
-## **10.5 Tooltip (Hover) Content**
-
-| **Element**        | **Tooltip Content**                                                                                                                           |
-|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| Transformer        | Rating kVA; %Z; short-circuit current kA; primary/secondary voltage; total connected load; maximum demand; standby load                       |
-| Generator / UPS    | Rating kVA; %X"d; short-circuit current; voltage; total connected load; MD - power failure; MD - fire mode                                    |
-| Isolator / tap-off | Rating A, poles, fire rated / IP rating, load served; fed from; total voltage drop %                                                          |
-| Connection unit    | Connected equipment; fed from; total voltage drop %                                                                                           |
-| Cable              | Size (e.g. 2 x 4C 300 mm2 + 2 x 1C 150 mm2); upstream breaker rating; corrected ampacity; from / to; length; circuit and total voltage drop % |
-| Busbar             | Tag, rating A TPN+E, IP rating; fed from; total voltage drop %                                                                                |
-| PFC bank           | Rating kVAr; fed from                                                                                                                         |
-
-# **11. Output Formats & Schedule Blueprints**
-
-Schedules are generated by NeuroMEP from the model in fixed formats derived from SD-03. Each schedule has a title block (project, client, plot, location, design stage, revision, prepared by, checked by, date), an incomer section (up to two incomers) and an outgoing section (1 to 25 ways).
-
-## **11.1 LV Panel / MDB / SMDB / ACB Schedule**
-
-| **Column**                                            | **Incomer Row Source**                       | **Outgoing Row Source**           | **In Final Output**   |
-|-------------------------------------------------------|----------------------------------------------|-----------------------------------|-----------------------|
-| Equipment tag, location                               | U                                            | U                                 | Yes (title block)     |
-| Feeder / load reference                               | A - source tag feeding the panel             | A - connected load                | Yes                   |
-| Circuit reference (1RYB, 2R ...)                      | \-                                           | Auto                              | No (internal)         |
-| No. of poles                                          | D - 3P, 1P, 4P for sources                   | A - from load                     | Yes                   |
-| Protective device type                                | D - MCB/MCCB/ACB (ACB auto \>= 800 A)        | Same                              | No (internal)         |
-| Protective device rating (A)                          | C - standard ratings 6 - 10000 A             | C                                 | Yes                   |
-| Earth leakage device rating                           | D - 30/100 mA ELCB, 0-300/0-500 mA ELS       | A - from downstream isolator/load | No - shown in Remarks |
-| Fault duty (kA)                                       | C                                            | C                                 | Yes                   |
-| Cable: runs x cores \| type \| size                   | A - from cable                               | A - from cable                    | Yes                   |
-| ECC: runs x size                                      | A                                            | A                                 | Yes                   |
-| Cable length (m)                                      | A                                            | A                                 | Yes                   |
-| Connected load kW - R / Y / B                         | A                                            | A                                 | Yes                   |
-| Total connected load (kW)                             | C - sum of phases                            | C                                 | Yes                   |
-| Maximum demand load (kW)                              | C - demand factors                           | C                                 | Yes                   |
-| Proposed type & no. of meters: 1-Ph / 3-Ph / LV-HV CT | U, or A when a downstream panel is connected | Same                              | Yes                   |
-| Remarks                                               | U + ELP selection                            | U + ELP selection                 | Yes                   |
-
-## **11.2 Busbar Schedule - differences**
-
-- Adds **Busbar Description** = "\<tag\> - \<rating\> A TPN+E".
-
-- Outgoing protective device ratings are acquired from the tap-off boxes; maximum demand is calculated from demand load.
-
-## **11.3 MCC Schedule - differences**
-
-- Adds **Starter Type** (internal, shown in Remarks): DOL, Star-Delta (two cable sets), Soft Starter, VFD.
-
-- Remarks combine user text, starter type and earth-leakage selection.
-
-## **11.4 Further Outputs**
-
-| **Output**                      | **Content**                                                                                                               | **Format**        |
-|---------------------------------|---------------------------------------------------------------------------------------------------------------------------|-------------------|
-| Cable schedule                  | Tag, from, to, construction, size, runs, ECC, length, method, Ib, In, Iz, Vc %, Vt %, Isc, status                         | Excel, PDF        |
-| Calculation report              | Per cable: all inputs, table values, intermediate results and checks (equivalent to the CableSizer cal sheet, Steps 1-12) | PDF, Excel        |
-| PFC sheet                       | Demand per load type, load pf, target pf, required kVAr, selected rating                                                  | Excel, PDF        |
-| Cable tray sizing               | Source, destination, tray ref, size, cores, runs, diameter, width, total, +50 %, selected tray                            | Excel, PDF        |
-| Single-line diagram             | Tree from source to DBs with ratings, sizes and tags                                                                      | PDF (DXF - OI-25) |
-| Transformer / generator summary | Connected load, MD per scenario, loading %, fault levels                                                                  | PDF               |
-| Project file                    | Full model, set-up, overrides, rule-pack version                                                                          | .json             |
-
-**File naming (proposed):** \<ProjectCode\>\_\<Output\>\_\<Tag\>\_\<DesignStage\>\_Rev\<Revision\>.xlsx, with \_v1, \_v2 ... appended on collision.
-
-# **12. Reference Data (Back-end Lookup Tables)**
-
-All tables below were extracted from the CableSizer macros into a machine-readable file (cablesizer_lookup_rules.json, 2,800+ rules). They form the initial Dubai rule pack and must be verified by the Senior Electrical Engineer before freeze.
-
-| **Table**                                                         | **Purpose**                        | **Keys**                                      | **Status**                                       |
-|-------------------------------------------------------------------|------------------------------------|-----------------------------------------------|--------------------------------------------------|
-| NOMRATCU / NOMRATAL                                               | Nominal current rating, Cu / Al    | Phases, cores, method B/J/D, insulation, size | Available; Al partial                            |
-| TEMPDE                                                            | Temperature derating               | Method, insulation, temperature               | Available; fixed steps only                      |
-| GROUPB / GROUPJ / GROUPD                                          | Grouping factors                   | Method-specific                               | Available                                        |
-| STR / DLAY                                                        | Soil resistivity / depth factors   | Direct/duct, cores, size, value               | Available; fixed steps only                      |
-| VU, RESIS, REACT, RESISPVC, REACTPVC                              | Voltage drop                       | Size, insulation, phases                      | Available - corrections needed (Appendix E)      |
-| CPC                                                               | Earth conductor size               | Size, conductor, insulations                  | Available                                        |
-| RXLPE, RPVC, RPVC85, RESC, Rs, Xs, X                              | Conductor resistance and reactance | Material, cores, insulation, armour, size     | Available                                        |
-| RSWA, Ra                                                          | Armour resistance                  | Material, cores, insulation, armour, size     | Available                                        |
-| Vubd, Rbd, Xbd                                                    | Busbar voltage drop, R, X          | Rating 800 - 6300 A                           | Available; \< 800 A and Al missing               |
-| Uz, Ur                                                            | Transformer impedance defaults     | kVA                                           | Available up to 3150 kVA                         |
-| FactorK, FactorR, FactorRa                                        | k factors, hot-resistance factors  | Size, conductor, insulation, armour           | Available                                        |
-| DEWA                                                              | Minimum cable per breaker          | Breaker rating                                | Available (Appendix D)                           |
-| AVD                                                               | Voltage-drop limits                | Network point                                 | Available                                        |
-| CabDia, CT                                                        | Cable diameters, tray sizes        | Size; width                                   | Available; 4 and 6 mm2 diameters missing         |
-| Trip-time table                                                   | Disconnection times                | Frame, trip, magnetic multiple                | Available; not linked in CableSizer              |
-| IM                                                                | Magnetic thresholds                | Merlin Gerin NS breaker models                | Obsolete - replace with chosen catalogue (OI-03) |
-| Demand factors                                                    | Load-type and category factors     | Load type, category                           | MISSING (OI-01)                                  |
-| Breaking capacities, standard transformer / generator / PFC sizes | Equipment catalogues               | \-                                            | MISSING (OI-03, 09, 10, 20)                      |
-
-# **13. System Dependencies & Technical Stack**
-
-The existing NeuroMEP interface is web-based. The stack below is proposed and is to be confirmed by the Development Lead before freeze (OI-27).
-
-- **Front end:** existing NeuroMEP web UI (framework as currently implemented, e.g. React + TypeScript).
-
-- **Drawing canvas:** 2D vector canvas library for components, orthogonal routing and markup; PDF.js for plan rendering.
-
-- **3D view:** WebGL (e.g. three.js) for the stacked-floor isometric view.
-
-- **Calculation engine:** standalone module with pure functions and no UI dependency; complete unit tests against Appendix F vectors.
-
-- **Back end & storage:** API service with a relational database for projects, users and versioned rule packs.
-
-- **Export:** Excel generation library and PDF renderer using fixed templates.
-
-- **Authentication & hosting:** company login (MAEC One integration TBC); hosting on company server or Azure (the existing "Upload / Azure Config" control suggests Azure - TBC).
-
-# **14. Assumptions & Out of Scope**
-
-## **Assumptions**
-
-- LV system 400/230 V, 50 Hz, radial, TN-S earthing (to be confirmed, OI-22).
-
-- Floor plans are vector PDFs drawn to a known scale.
-
-- One region (rule pack) per project; Dubai in v1.
-
-- Loads below each DB are provided as totals by the engineer in Phase 1.
-
-- Design basis follows CableSizer v1.1: BS 7671 (IEE Wiring Regulations), IEC 60364 installation methods and grouping, IEC 60781 short-circuit method, DEWA regulations. The edition to apply is to be confirmed (OI-19).
-
-- Copper conductors are the default; aluminium only where table data exists.
-
-## **Out of Scope (Phase 1)**
-
-- Distribution-board internal circuits and final circuits (lighting, sockets, small power), MCB curve selection for final circuits.
-
-- Lighting and small-power layout design, lux calculations.
-
-- Mechanical and PHE engineering calculations (thermal distribution, pressure drop) beyond capturing their electrical loads.
-
-- HV network calculations beyond the upstream fault-level input.
-
-- Protection coordination / discrimination studies and time-current curve plotting.
-
-- Harmonic analysis, arc-flash studies, earthing-pit and lightning-protection design.
-
-- Cost estimation, BOQ, BIM/IFC/Revit export, automatic room recognition from PDFs.
-
-- Rule packs for regions other than Dubai.
-
-# **15. Information Required Before Freeze (Open Items)**
-
-Blocking items must be answered before development of the affected module starts; others can use the stated interim default.
-
-| **ID** | **Information Needed**                                                                             | **Why It Is Needed**                                                  | **Owner**          | **Blocking?**             |
-|--------|----------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|--------------------|---------------------------|
-| OI-01  | Demand-factor values: 12 load types and Residential / Landlord / Office / Retail (Dubai)           | Maximum demand drives every breaker, cable, transformer and generator | Sr. Elec. Engineer | Yes                       |
-| OI-02  | How load-type and category factors combine, and whether factors apply once or at every panel level | Changes all demand results                                            | Sr. Elec. Engineer | Yes                       |
-| OI-03  | Breaker catalogue: manufacturer, frames, magnetic settings, breaking capacities (kA)               | Breaker selection, fault duty, earth-fault check                      | Sr. Elec. Engineer | Yes                       |
-| OI-04  | One hand-checked reference project (inputs + issued schedules)                                     | Acceptance test; CableSizer sample outputs are unusable               | Technical Lead     | Yes                       |
-| OI-05  | Floor-to-floor heights / levels on Page 1 (confirm addition)                                       | Riser lengths, voltage drop, impedance                                | Technical Lead     | Yes                       |
-| OI-06  | Rule for values between table steps (round to worse value or interpolate)                          | Avoid blank or unsafe derating                                        | Sr. Elec. Engineer | Yes                       |
-| OI-07  | Sign-off of legacy table corrections (Appendix E)                                                  | Data correctness                                                      | Sr. Elec. Engineer | Yes                       |
-| OI-08  | DB load entry method(s) and fields                                                                 | Phase 1 terminal input                                                | Technical Lead     | Yes                       |
-| OI-09  | Transformer standard sizes and datasheet %Z / %R (incl. \> 3150 kVA)                               | Short-circuit levels                                                  | Sr. Elec. Engineer | No - use Appendix C       |
-| OI-10  | Generator and UPS standard sizes and sizing rule                                                   | Source sizing                                                         | Sr. Elec. Engineer | No - kVA = MD / 0.8       |
-| OI-11  | Loads included in power-failure and fire-mode scenarios                                            | Generator MD and standby checks                                       | Sr. Elec. Engineer | Yes (scenarios)           |
-| OI-12  | Disconnection time for let-through checks (fixed 0.05 s or from trip curves)                       | Thermal withstand                                                     | Sr. Elec. Engineer | No - 0.05 s               |
-| OI-13  | Busbar data below 800 A, aluminium busbars, tap-off box ratings, manufacturer                      | Riser calculations                                                    | Sr. Elec. Engineer | Partly                    |
-| OI-14  | Phase allocation of single-phase loads: automatic balancing or manual                              | Per-phase loads and currents                                          | Technical Lead     | No - automatic + override |
-| OI-15  | ATS specification and how dual sources are drawn                                                   | Standby scenario, safety rules                                        | Technical Lead     | Yes                       |
-| OI-16  | Transformer loading limit (%)                                                                      | Warning threshold                                                     | Sr. Elec. Engineer | No - 80 %                 |
-| OI-17  | Cable length allowance (%, termination lengths, vertical drops at panels)                          | Cable lengths                                                         | Sr. Elec. Engineer | No - 10 %                 |
-| OI-18  | Mapping of SD-03 cable dropdowns (PVC / XLPE / FR, LSZH, Al) to table data; FR cable data source   | Ampacity and voltage-drop lookups                                     | Sr. Elec. Engineer | Yes                       |
-| OI-19  | Standard edition to apply (CableSizer uses BS 7671 16th Ed., 2001)                                 | Compliance basis                                                      | Sr. Elec. Engineer | Yes                       |
-| OI-20  | PFC standard bank ratings and load pf for hand dryers, pumps, fire pumps, lifts                    | PFC sizing                                                            | Sr. Elec. Engineer | No                        |
-| OI-21  | Maximum parallel runs and maximum size per construction                                            | Auto-sizing limits                                                    | Sr. Elec. Engineer | No - 4 runs               |
-| OI-22  | Earthing system (TN-S / TN-C-S)                                                                    | Earth-fault loop method                                               | Sr. Elec. Engineer | No - TN-S                 |
-| OI-23  | Confirm legacy current formulas for two-phase loads and PFC banks                                  | Ib correctness                                                        | Sr. Elec. Engineer | No                        |
-| OI-24  | Confirm tagging conventions and cable hierarchy numbering                                          | Schedules and SLD                                                     | Technical Lead     | No                        |
-| OI-25  | Schedule Excel templates with title block / logo; SLD symbol standard; DXF needed?                 | Export layout                                                         | Technical Lead     | Yes (exports)             |
-| OI-26  | Use of altitude (derating of transformers/generators above 1000 m?)                                | Possible derating                                                     | Sr. Elec. Engineer | No                        |
-| OI-27  | Technology stack, hosting (company server / Azure), purpose of "Upload / Azure Config"             | Architecture                                                          | Development Lead   | Yes                       |
-| OI-28  | User list, roles, MAEC One login integration, concurrent editing rules                             | Access control                                                        | Technical Lead     | No                        |
-| OI-29  | Mapping of Project Category to demand categories for mixed-use projects                            | Default categories                                                    | Sr. Elec. Engineer | No                        |
-| OI-30  | Motor data defaults (locked-rotor ratio IL/IF, starter rules) for MCC loads                        | Motor contribution, MCC schedule                                      | Sr. Elec. Engineer | No - IL/IF 6.45           |
-
-## **Decisions Already Taken**
-
-| **ID** | **Decision**                                                                                                                                                                                                                                                  |
-|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| D-01   | Phase 1 ends at the incoming feeder of each DB; the DB is a terminal node with entered load.                                                                                                                                                                  |
-| D-02   | Schedules are generated by NeuroMEP in fixed formats; engineers do not upload schedules.                                                                                                                                                                      |
-| D-03   | Demand factors are entered on Project Set-up (region defaults) and may be overridden per panel.                                                                                                                                                               |
-| D-04   | Cable size and breaker rating are never picked by the engineer while drawing; the engine calculates them live in the background and shows them in the properties panel (Provisional until the path reaches a source, then Final). The engineer may lock them. |
-| D-12   | There is no separate calculation page or step; the Architecture page is for the single-line diagram, schedule review and overrides.                                                                                                                           |
-| D-05   | Cable construction (type) is chosen while drawing, with project defaults.                                                                                                                                                                                     |
-| D-06   | Ib is calculated for every cable from the maximum demand it carries.                                                                                                                                                                                          |
-| D-07   | All failing checks are reported, not only the first.                                                                                                                                                                                                          |
-| D-08   | Disabled checks are still computed and shown as "Not verified".                                                                                                                                                                                               |
-| D-09   | Region rule packs; Dubai only in v1.                                                                                                                                                                                                                          |
-| D-10   | Calculations are run for both transformer and generator supply.                                                                                                                                                                                               |
-| D-11   | CableSizer sample outputs are not used as test answers (they contain calculation errors).                                                                                                                                                                     |
-
-# **16. Acceptance Criteria & Test Plan**
-
-| **Test** | **Description**                                                                                                   | **Pass Criterion**                                                                           |
-|----------|-------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
-| AT-01    | Worked example 1 (Appendix F): 1500 kVA transformer to main LV panel                                              | All values match Appendix F within 0.5 %                                                     |
-| AT-02    | Worked example 2 (Appendix F): 20 kW DB feeder                                                                    | Selected sizes and percentages match                                                         |
-| AT-03    | Reference project from OI-04 modelled in NeuroMEP                                                                 | Continuous values within 0.5 %; all sizes, runs and ratings identical                        |
-| AT-04    | Topology rules (Section 9.2)                                                                                      | Every illegal connection refused with message                                                |
-| AT-05    | Safety rules: FLS load without generator; non-FR cable on FLS path                                                | Fail S1 and Warning S2 raised                                                                |
-| AT-06    | Off-grid lookup values (28 C soil, 1.2 K.m/W)                                                                     | Behaves per OI-06; never returns no derating                                                 |
-| AT-07    | Locked cable that fails a check                                                                                   | Not changed; failure reported                                                                |
-| AT-08    | Export of every schedule type                                                                                     | Matches agreed template; version suffix on collision                                         |
-| AT-09    | Performance on a 2,000-element building                                                                           | Properties panel updated \<= 0.5 s after an edit; full recalculation \<= 1 s                 |
-| AT-10    | Live re-sizing: draw SMDB-DB cable, then increase DB load, lengthen the cable, connect upstream path, reduce load | Size moves up and down accordingly; status changes Provisional to Final on reaching a source |
-| AT-11    | Sized-by indicator on Appendix F example 2                                                                        | Shows Voltage drop as the deciding check for 10 mm2                                          |
+| **Case** | **Rule** |
+|----------------------|--------------------------------------------------|
+| Three-phase balanced | Ib = P x 1000 / (sqrt3 x 400 x pf) |
+| Single-phase (L-N) | Ib = P x 1000 / (230 x pf) |
+| Line-to-line load (V-04) | Ib = P x 1000 / (400 x pf). The legacy \"two-phase\" formula is removed; the connection type is modelled explicitly. |
+| Panel / feeder with unbalanced phases (V-05) | Ib = largest phase current = max(P_phase x 1000 / (230 x pf)); neutral current reported. |
+| Motor (V-06) | Ib = P_out x 1000 / (sqrt3 x 400 x pf x efficiency), or nameplate full-load current if entered. Default efficiency by motor class. \[ENG\] |
+| Star-delta starter (V-07) | Supply cable and breaker: line current as above. Two motor-side cable sets: line current / sqrt3. Overload relay set at 0.58 x full-load current. |
+| Capacitor (PFC) bank (V-08) | Ib = 1.5 x Q x 1000 / (sqrt3 x 400) (minimum factor 1.43, IEC 60831); detuned banks use the manufacturer factor. The legacy division by sin(phi) is removed. |
+
+## **10.5 Protective Devices**
+
+| **Item** | **Rule** |
+|-------------------|-----------------------------------------------------|
+| Rating | Ib \<= In \<= Iz (BS 7671 433.1.1). In = lowest standard rating \>= Ib (Appendix B); for adjustable trip units In = the Ir setting. Breakers in panels at 50 deg C are derated per manufacturer (V-22). |
+| Type & poles | MCB/MCCB below 800 A, ACB at 800 A and above; MCP for motors. 1P single-phase, 3P three-phase, 4P sources and main incomers. |
+| Magnetic threshold Im (V-09) | Taken from the breaker catalogue for the selected trip unit and setting (OI-03). The legacy rule \"Im = n x frame\" is removed. For checks use Ia = 1.2 x Im (IEC 60947-2 +/-20 % tolerance) unless the manufacturer states another tolerance. |
+| Breaking & making capacity (V-10) | Icu (or Ics if specified) \>= maximum Ik at the panel where the breaker is installed; Icm \>= peak current ip. |
+| Earth leakage | 30 mA / 100 mA ELCB, 0-300 / 0-500 mA ELS - shown in Remarks. |
+
+## **10.6 Current-Carrying Capacity (C1)**
+
+Iz = It x K1 x K2 (x Kr x K3 for buried) x number of runs; pass if Iz \>= In. Every rating table is stored with its reference conditions (air temperature, ground temperature, soil resistivity, depth, installation arrangement) and derating factors are taken only from tables with the same reference (V-11). The CableSizer ampacity tables contain data errors (method B equal to free air, 300 mm2 rated below 240 mm2, single-core columns spliced and buried single-core copied from four-core) and **must be replaced by verified manufacturer (Ducab) or BS 7671 Appendix 4 tables before release (V-12, OI-07)**. Grouping factors outside the tabulated range (e.g. more than 3 trefoil circuits) block the result (V-13). Parallel runs must be identical in type, length and arrangement; otherwise an unequal-sharing derating applies (V-23).
+
+## **10.7 Voltage Drop (C2)**
+
+Unit drop Vu = r x cos(phi) + x x sin(phi) (mV/A/m), with r and x taken from tables keyed by phases, cores, arrangement (trefoil / flat / spaced), insulation and size (V-15); single-phase values are the two-conductor values (= 2/sqrt3 x three-phase). Circuit drop Vc = Ib x L x Vu / (1000 x runs); cumulative Vt = Vc + upstream Vt; %Vt = Vt / Vn. Busbars use R and X per metre with the load power factor (V-16). Cumulative limits (Dubai rule pack): MDB, SMDB, busduct, MCC 2.0 %; DB 2.5 %; motors and final circuits 4.0 % (DEWA 4 % total).
+
+## **10.8 Short-Circuit Current (C3) - IEC 60909**
+
+| **Element** | **Impedance (mOhm)** |
+|-----------------|-------------------------------------------------------|
+| Upstream network (V-17) | ZQ = cQ x Vn\^2 / (S\"kQ x 1000), cQ = 1.1; XQ = 0.995 ZQ; RQ = 0.1 XQ. DEWA maximum S\"k for duty checks, minimum for protection checks. |
+| Transformer (V-18) | ZT = uk x Vn\^2 / (S x 100); RT = ur x Vn\^2 / (S x 100); XT = sqrt(ZT\^2 - RT\^2); multiplied by KT = 0.95 x cmax / (1 + 0.6 xT). uk, ur from datasheet; default uk = IEC 60076-5 minimum (\<=630 kVA 4 %, 631-1250 5 %, 1251-2500 6 %, 2501-6300 7 %). |
+| Generator (V-19) | Maximum: X\"d with RG = 0.15 X\"d and KG (IEC 60909). Minimum (protection checks on standby supply): the sustained short-circuit current from the generator datasheet. |
+| Cable (V-20) | R from IEC 60228 resistance at 20 deg C per size / runs (maximum); at end-of-fault temperature for minimum. X from the manufacturer per arrangement (typical multicore 0.08, trefoil 0.085, flat 0.095 mOhm/m). |
+| Busbar | R and X per metre from the busbar manufacturer datasheet. |
+| Motor group (V-21) | ZM = Vn\^2 / (IL/IF x SrM); XM = 0.922 ZM; RM = 0.42 XM (IEC 60909; the CableSizer sheet was right, the manual wrong). SrM = sum P / (efficiency x pf). Combined in parallel with the network. |
+
+Ik\"max = cmax x Vn / (sqrt3 x Zk) at every node; Ik\"min with cmin, hot conductors and minimum source. Peak ip = kappa x sqrt2 x Ik\", kappa = 1.02 + 0.98 e\^(-3R/X). Single-phase circuits also get the line-to-neutral fault. **Checks:** breaker Icu \>= Ik\"max and Icm \>= ip at the installation point; switchboard and busbar short-time withstand Icw (1 s) \>= Ik\"max and Ipk \>= ip (DEWA 40 kA / 1 s minimum) (V-10).
+
+## **10.9 Thermal Withstand / Let-Through (C4)**
+
+k\^2 x S\^2 \>= I\^2t, checked at both ends (V-24): (i) at the cable origin with the maximum fault current and the device let-through I\^2t from the catalogue (or Ik\"max\^2 x t, where t is the actual clearing time including any short-time delay); (ii) at the far end with the minimum fault current and its clearing time from the trip curve. The legacy fixed 0.05 s at the far-end current is removed. The transformer-to-MDB cable uses the clearing time of the MV protection (OI-31). k values (BS 7671 Table 43.1): Cu/XLPE 143; Cu/PVC 115 (\<=300 mm2), 103 (\>300); Al/XLPE 94; Al/PVC 76 / 68. Earth conductors use the k table for their type (Tables 54.2-54.4).
+
+## **10.10 Earth-Fault Loop & Disconnection (C5)**
+
+Loop per metre: Rc (phase) + Rp (ECC in parallel with armour) and loop reactance = sum of phase and protective-conductor reactance (V-25; the legacy average is removed). Zs = upstream loop + loop per metre x L. Hot values use the factors 1.38 (PVC) / 1.60 (XLPE), armour 1.19 / 1.28, x1.1 for steel wire (conservative). **Pass if Zs(hot) \<= 0.95 x 230 / Ia** (V-26), where Ia is the current that disconnects within the required time: 5 s for distribution circuits (all Phase 1 feeders), 0.4 s for final circuits (Phase 2). Ia comes from the device curve; if only the instantaneous threshold is known, Ia = 1.2 x Im. The minimum earth-fault and line-to-line currents (cmin, hot) must reach Ia (V-27). Checked for both normal and standby supply; failure on generator supply suggests an earth-fault relay or RCD.
+
+## **10.11 Regional Minimum Size (C6)**
+
+Installed size x runs \>= the DEWA minimum for the breaker rating (Appendix B). This is also the starting size of the auto-sizing loop.
+
+## **10.12 Check Codes**
+
+| **Code** | **Check** | **Fail Condition** | **Severity** |
+|-------|------------------|---------------------------------------|----------|
+| C1 | Current-carrying capacity | Iz \< In | Fail |
+| C2 | Voltage drop | Cumulative %Vt \> limit of the level | Fail |
+| C3 | Breaking / making capacity | Ik\"max \> Icu or ip \> Icm | Fail |
+| C4 | Thermal withstand | I\^2t \> k\^2 S\^2 at origin or far end (phase or ECC) | Fail |
+| C5 | Earth-fault loop / disconnection | Zs \> 0.95 x 230 / Ia, or minimum fault current \< Ia | Fail |
+| C6 | Regional minimum size | Size x runs \< minimum | Fail |
+| C7 | Switchboard / busbar withstand | Icw \< Ik\"max or Ipk \< ip | Fail |
+| C8 | Safety category | Essential / FLS without generator; critical without UPS + generator | Fail |
+| C9 | Fire-rated path | Non-fire-rated cable on an FLS path | Warning |
+| C10 | Neutral / harmonics | Third-harmonic content \> 15 % without neutral derating (input per load type) (V-28) | Warning |
+| C11 | Motor / fire-pump starting | Starting voltage dip above limit (fire pumps: 15 % at start) (V-29) | Warning |
+| C12 | Loading | Transformer / generator loading above limit; panel ways \> 18 | Warning |
+
+## **10.13 Live Calculation, Provisional Mode & Auto-Sizing**
+
+The engine runs in the background after every change; there is no calculate button. Unlocked cables restart from the regional minimum each run, so sizes go up or down with the model; locked items are validated only. Upsizing order: next standard size; at the maximum size for the construction, add a parallel run (maximum runs OI-21). A breaker failing C3 gets a higher breaking capacity, not a larger cable. Stop after 50 iterations and report non-convergence (E2601). **Provisional**: no load entered -\> \"Awaiting load\"; no path to a source -\> sized with the known checks plus stated assumptions (upstream voltage drop = allowance of the levels above; fault level = transformer terminal value) and labelled \"Provisional - upstream not connected\"; complete path -\> **Final**. The properties panel shows the deciding check (\"Sized by\").
+
+## **10.14 Scenarios & Safety Rules**
+
+**Normal** (transformer): maximum fault levels, voltage drop, earth-fault loop. **Standby - power failure** (generator via ATS, loads per OI-11) and **Standby - fire mode** (FLS loads): generator rating, voltage drop and earth-fault checks with generator minimum fault current. FLS loads default to fire-rated cable; every cable and busbar on the path from an FLS load to the generator must be fire-rated (whether the transformer path must also be fire-rated is OI-32); essential/FLS loads need a generator on their path, critical loads a UPS and a generator.
+
+## **10.15 Ancillary Calculations**
+
+| **Item** | **Rule** |
+|---------------|---------------------------------------------------------|
+| PFC bank | kVAr = sum of Demand(type) x \[tan(acos pf_load) - tan(acos pf_target)\]; target 0.95 (DEWA recommended); standard bank sizes OI-20; harmonic loads flagged for a detuned bank. |
+| Transformer loading | MD (kVA) / rating; warning above the limit (OI-16); MD compared with the plot load allocation. |
+| Generator / UPS | Indicative kVA = MD / 0.8, next standard size, plus a reported largest step load / motor start; final sizing confirmed with the manufacturer for site derating (50 deg C, altitude) and transient dip (V-30). \[ENG\] |
+| Cable tray width | Sum of cable widths plus the spacing assumed by the grouping factor (D or 2D), + 50 % spare; next standard tray width (V-31). |
+
+# **11. Calculation Verification Log**
+
+Every formula, factor and table in CableSizer v1.1 and the earlier drafts was independently checked against IEC 60909-0:2016, BS 7671:2018, IEC 60364-5-52, IEC 60947-2, IEC 60831-1, IEC 60076-5 and the DEWA Regulations 2017. **Unsafe** = the old rule could pass an undersized or unsafe design. Clause references not checked against licensed copies must be confirmed by the Senior Electrical Engineer (OI-07).
+
+| **ID** | **Item** | **Old Rule (CableSizer / draft)** | **NeuroMEP Rule** | **Verdict** |
+|------|----------------|-----------------|---------------------|-------------|
+| V-01 | Ib \<= In \<= Iz; Vd formula r cos + x sin; k values; PFC kVAr formula | As standard | Kept | Correct |
+| V-02 | Breaking-capacity location | Isc at installation panel | Kept, value now Ik\"max | Correct |
+| V-03 | Voltage factor c | c = 1.0 | cmax 1.10 / cmin 0.95 | Unsafe - corrected \[ENG\] |
+| V-04 | Two-phase load current | P/(2 x 230 pf) | Connection modelled; L-L uses 400 V | Unsafe for L-L - corrected |
+| V-05 | Unbalanced boards | Total / sqrt3 | Largest phase current | Unsafe - corrected |
+| V-06 | Motor current | Efficiency ignored | Efficiency or nameplate FLC | Unsafe - corrected |
+| V-07 | Star-delta | Winding current for breaker | Line current for breaker and supply cable | Unsafe - corrected |
+| V-08 | Capacitor bank current | Q / (sqrt3 V sin phi) | 1.5 x Q / (sqrt3 V) | Wrong - corrected |
+| V-09 | Magnetic threshold | n x frame (\<=250 A) | Catalogue trip unit; Ia = 1.2 Im | Wrong - corrected |
+| V-10 | Peak current, making capacity, switchboard/busbar withstand | Not checked | Checks C3, C7 | Missing - added |
+| V-11 | Derating reference conditions | XLPE ground factors on 15 deg C basis, PVC on 20 deg C | Factors tied to table reference | Inconsistent - corrected \[ENG\] |
+| V-12 | Ampacity tables | Several data errors | Replace with verified Ducab / BS 7671 tables | Unsafe - blocking (OI-07) |
+| V-13 | Grouping beyond table | Extrapolated | Blocked / warned | Unsafe - corrected |
+| V-14 | Missing table values | Blank -\> 0 or row error | Block with code | Unsafe - corrected |
+| V-15 | Voltage-drop r/x | Three-phase multicore values for all XLPE \> 16 mm2 | Keyed by phases, cores, arrangement | Unsafe (1-phase -13 %) - corrected |
+| V-16 | Busbar voltage drop | Fixed mV/A/m | R, X with load pf | Improved |
+| V-17 | Upstream network | No cQ | cQ = 1.1; max / min S\"k | Corrected |
+| V-18 | Transformer | No KT; 6.25 % default 1251-2500 kVA | KT; IEC 60076-5 minimum uk | Unsafe - corrected |
+| V-19 | Generator | R = 0.1 X\"d; X\"d for protection checks | RG = 0.15 X\"d + KG; sustained current for minimum | Unsafe - corrected |
+| V-20 | Cable R and X | rho 18.32 / 30.34; X 0.1 / 0.09 | IEC 60228 R per size; X per arrangement | Improved |
+| V-21 | Motor contribution | Draft: R = 0.42 Z, X = 0.91 Z | X = 0.922 Z, R = 0.42 X (sheet was right) | Draft wrong - corrected |
+| V-22 | Breaker ambient derating in panels | Not considered | Manufacturer derating at 50 deg C | Missing - added \[ENG\] |
+| V-23 | Parallel cable sharing | Not considered | Identical runs or derating | Missing - added |
+| V-24 | Let-through check | Far-end current, fixed 0.05 s | Origin max with device I\^2t; far end min with curve time; MV time for Tx cable | Unsafe - corrected |
+| V-25 | Single-core loop reactance | Average of phase and ECC | Sum | Unsafe - corrected |
+| V-26 | Zs limit | Uo / Im | 0.95 Uo / Ia, Ia = 1.2 Im or curve value | Unsafe (\~26 %) - corrected |
+| V-27 | Magnetic-setting check | Maximum (cold) currents | Minimum currents (cmin, hot) | Unsafe - corrected |
+| V-28 | Neutral sizing / harmonics | Not considered | Warning C10; IEC 60364-5-52 Annex E | Missing - added |
+| V-29 | Motor / fire-pump starting dip | Not considered | Warning C11 | Missing - added |
+| V-30 | Generator sizing | MD / 0.8 | Indicative + step load; manufacturer confirmation | Incomplete - flagged \[ENG\] |
+| V-31 | Tray width | Diameter only | Includes grouping spacing | Inconsistent - corrected |
+| V-32 | Site design conditions | Air 50 deg C, ground 35 deg C | DEWA 2017: air 48 deg C, ground 40 deg C at 2.0 K.m/W | Ground non-conservative - \[ENG\] |
+| V-33 | Discrimination between series devices | Not considered | Flag in Phase 1; full check Phase 2 | Flagged |
+
+# **12. Data Dictionary**
+
+Source: U = user; D = dropdown; A = acquired from the model; C = calculated; R = region rule pack.
+
+## **12.1 Project Set-up (Page 1 user inputs)**
+
+| **Field** | **Unit** | **Req.** | **Src** | **Values / Validation** |
+|-----------------------|---------|-------|------|----------------------------|
+| Project name, location, client name, plot ref | Text | Yes | U | Non-empty |
+| Design stage | Enum | Yes | D | CD, SD, DD, TD, IFC (shown in every title block and file name) |
+| Revision | Text | Yes | U | e.g. A, B, 0, 1 |
+| Project category | Enum | Yes | D | Residential, hotel, mixed-use, office, mall, hospital, school, industrial, aircraft hangars, others |
+| Plot load allocation | kW / kVA | Yes | U | \> 0 |
+| Ambient air temperature | deg C | Yes | U / R | 0-60; Dubai default 50 (V-32) |
+| Ambient soil temperature | deg C | Yes | U / R | 0-50; Dubai default to be confirmed: 35 (CableSizer) or 40 (DEWA) (V-32) |
+| Soil thermal resistivity | K.m/W | Yes | U / R | 0.5-3.0; Dubai default 2.0 |
+| Altitude | m | No | U | 0-5000; not used in Phase 1 (OI-26) |
+| Region | Enum | Yes | D | Dubai active; Abu Dhabi, others disabled |
+| Upstream short-circuit capacity | MVA | Yes | U | \> 0, e.g. 350, 500 (maximum; minimum value OI-33) |
+| Calculations enabled | 5 check-boxes | Yes | U | Ampacity, voltage drop, short-circuit, let-through, earth-fault loop |
+| Demand factors by load type / by category | 12 / 4 factors | Yes | R / U | 0-1 (optional % display); TBC until OI-01 - TBC does not block Next (D-19) |
+| No. of basements, podium levels, typical floors; mechanical floor 1-3 | Integer / ref | Yes / No | U | Whole numbers \>= 0 (ground floor always 1); mechanical floors chosen from the registry; generates the registry B\<n\>..B1, GF, P1..P\<n\>, 1..\<n\> |
+| GF datum level | m | Yes | U | Default 0.00 |
+| Per floor: code, name, floor-to-floor height, level | Text / m | Yes | U / C | Height 2.5-10 m; level cumulative from GF, basements negative |
+| Per floor: plan source, plan status | PDF / enum | Yes | U / C | Plan source is a typed kind: PDF upload now; Revit import later (#TASK-33, no calibration needed). Status No plan / Uncalibrated / Calibrated |
+| Per floor: calibration | Points + m | Yes | U / C | Point A, point B (PDF coordinates), real distance, metres per drawing unit, method (two-point / drawing scale), date |
+| Discipline engineers | Users | Elec. yes; Mech./PHE no | D | At least one Electrical engineer |
+
+**Validation (Page 1):** messages appear under each field once it has been left, or for all fields after Next is pressed, and never block typing. Next is enabled only when every required field is valid, the registry has heights for every floor and at least one floor is Calibrated; when disabled, hovering lists what is missing and clicking scrolls to the first problem. The Working Directory field was removed (D-18): exports download through the browser; a server-side export location may be added by the administrator later.
+
+## **12.2 Calculation Defaults (rule pack, not entered by the user)**
+
+| **Default** | **Dubai Value** |
+|------------------------------------|------------------------------------|
+| Supply voltage / frequency; voltage factors | 400/230 V, 50 Hz; cmax 1.10, cmin 0.95 |
+| Default load power factor; PFC target power factor | 0.85; 0.95 |
+| Default depth of laying; cable length allowance; transformer loading limit | TBC; 10 % (interim); 80 % (interim) |
+| Voltage-drop limits (cumulative) | MDB / SMDB / busduct / MCC 2.0 %; DB 2.5 %; motors and final circuits 4.0 % |
+| Default cable construction per feeder type | TBC (e.g. Cu/XLPE/SWA/PVC on tray) |
+| Required disconnection times | Distribution circuits 5 s; final circuits 0.4 s |
+
+## **12.3 Equipment & Cable Fields (summary)**
+
+| **Element** | **Key Fields (source)** |
+|------------------|------------------------------------------------------|
+| All equipment | tag (auto/U), description (U), fed_from / feeding_to (A), floor & location (A/U), poles (A/D), voltage (R), IP rating (D), fire rated (U/C), discipline layer (A) |
+| Transformer | kVA (D), primary/secondary V (U), uk % and ur % (U/R), vector group (U); results: Ik\", ip, MD, loading % |
+| Generator / UPS | kVA (C/D), X\"d % (U, default 14), sustained short-circuit current (U, datasheet), pf 0.8 (R); results: MD power failure / fire mode |
+| Panels (LV/MDB/SMDB/MCC) | incomer device (C/D), busbar rating (C), Icw / Ipk (U/D), demand-factor overrides (U), mounting, cable entry, standard (D) |
+| DB (terminal) | connected kW per phase per load type or area x W/m2 (U), load and demand category (D), pf (R/U), third-harmonic content (D) |
+| Busbar / tap-off box | type feeder/tap-off (D), conductor Cu/Al (D), rating (C), R/X/Icw from datasheet (R), length (C), fire rated (C) |
+| Isolator / connection unit / motor | load type and category (D), kW (A/U), efficiency, starter type DOL / star-delta / soft / VFD (D), earth-leakage rating (D) |
+| PFC bank | kVAr (C), incomer device (D), detuned yes/no (D) |
+| Cable | cores 1C-4C, conductor, insulation PVC/XLPE/FR, armour SWA/AWA/none (1C: AWA only), sheath PVC/LSZH, voltage grade, method B/J/D-direct/D-duct, trays, depth, separation, grouping (D/U); length (C); size, runs, ECC (C or U-locked); results and status (C) |
+
+## **12.4 Tagging Conventions**
+
+Transformer Tx\_\<floor\>\_\<n\>; Generator Gen\_\<floor\>\_\<n\>; UPS UPS\_\<floor\>\_\<n\>; Isolator Iso\_\<floor\>\_\<load\>; Connection unit cu\_\<floor\>\_\<load\>; Tap-off box TPB-\<floor\>-\<load\>; PFC PFC-\<Tx\>-\<n\>; panels and busbars user defined; cable F\<floor\>-\<hierarchy\> (e.g. F2-3-1-1). To be confirmed (OI-24).
+
+# **13. Component Library & Legend Symbols**
+
+The modelling canvas uses the company POWER / LIGHTING legend symbols. Each library item has a permanent code **CMP-nnn**. Phase 1 items are active; Phase 2 items are visible in the library but disabled. Symbols are supplied as SVG traced from the company CAD blocks (OI-34).
+
+| **Codes** | **Legend Items** | **Phase** |
+|------------------|------------------------------------------|------------|
+| CMP-001 - 006 | Distribution Board; Sub-Main Distribution Board; MCC / EMCC; Control Panel; single-phase isolator; three-phase isolator | Phase 1 |
+| CMP-007 - 015 (no legend symbol yet) | EB utility / RMU, transformer, generator, ATS, LV panel / MDB, ACB panel, busbar (feeder / tap-off), tap-off box, UPS, PFC bank | Phase 1 - symbols to be supplied (OI-34) |
+| CMP-016 - 019 | Home automation / lighting control panel; DDC; emergency lighting monitoring panel; electrical manhole | Phase 1 as loads / items on DB or SMDB |
+| CMP-101 - 124 | Power devices: 13 A switched socket single / twin; 13 A switched spur with 20 A DP switch for FCU; 20 A flex outlets (C, SD, M, W); 13 / 20 / 32 / 45 A unswitched spurs; 20 A industrial socket; 20/32/45 A DP switch; emergency push button; RCD weather-proof; weather-proof IP65 marker; floor boxes (single, twin); bollard maintenance socket; pop-up socket; shaver socket | Phase 2 (final circuits) |
+| CMP-201 - 212 | Lighting: SL71 37 W linear, SL11 18 W recessed, LTB 3.2 20 W wall/ceiling; 10 A one-way / two-way switches; PIR sensor (standard / weather-proof); lighting control pad | Phase 2 |
+| CMP-221 - 260 | Luminaires from lighting consultant: F1-F10, D1-D5, X1-X8 (wattages to be supplied) | Phase 2 |
+| CMP-301 - 305 | Emergency lighting E1, E2, E3, exit signage, emergency lighting monitoring panel (FLS category) | Phase 2 (FLS) |
+
+Observations: the legend has no symbols for the main distribution equipment that Phase 1 needs; consultant luminaires have no wattages (needed for Phase 2 load calculation); \"Distribuition\" is misspelled on two legend entries.
+
+# **14. Output Formats**
+
+| **Output** | **Content** | **Format** |
+|------------------|--------------------------------------------|-----------|
+| LV Panel / MDB / SMDB / ACB schedule | Title block; incomers 1-2; outgoing ways 1-25 with: feeder/load ref, poles, device rating, fault duty, cable runs x cores / type / size, ECC, length, connected kW R/Y/B, total connected, maximum demand, meters (1-Ph / 3-Ph / LV-HV CT), remarks (incl. ELCB/ELS). Internal-only columns: circuit ref, device type, ELCB rating. | Excel, PDF |
+| Busbar schedule | As above plus busbar description \"\<tag\> - \<A\> TPN+E\"; outgoing ratings from tap-off boxes. | Excel, PDF |
+| MCC schedule | As above plus starter type (DOL, star-delta (two cable sets), soft starter, VFD) in remarks. | Excel, PDF |
+| Cable schedule | Tag, from, to, construction, size, runs, ECC, length, method, Ib, In, Iz, Vd %, Ik\", status, check codes. | Excel, PDF |
+| Calculation report | Per element: inputs, table values with reference, formulas, results, check codes, run ID, rule-pack version. | PDF, Excel |
+| PFC, tray, transformer / generator summary | Per Section 10.15. | Excel, PDF |
+| Single-line diagram | Tree from source to DBs with ratings, sizes, tags. | PDF (DXF OI-25) |
+| Project file | Full model, set-up, overrides, rule-pack version. | .json |
+
+File names: \<ProjectCode\>\_\<Output\>\_\<Tag\>\_\<Stage\>\_Rev\<Revision\>.xlsx; \_v1, \_v2 \... appended on collision; never overwritten.
+
+# **15. Reference Data**
+
+| **Data** | **Status** |
+|----------------------------------------------|--------------------------|
+| CableSizer lookup tables (2,800+ rules) - archived source record in docs/reference; converted to typed tables in packages/rulepacks with a test that every original rule is reproduced | Available |
+| Cable ampacity tables | To be replaced by verified Ducab / BS 7671 tables with reference conditions (V-12) - Blocking |
+| Derating factors (temperature, grouping, soil, depth) | Available; must match the reference of the ampacity tables (V-11) |
+| Voltage-drop r/x by phases, cores, arrangement | Partly available; single-core and single-phase tables needed (V-15) |
+| Conductor resistance IEC 60228; cable reactance per arrangement | To be added (V-20) |
+| Busbar R, X, Icw, Ipk, ratings \< 800 A and aluminium | Missing - manufacturer datasheet (OI-13) |
+| Breaker catalogue: ratings, trip units, Im, curves, I\^2t, Icu/Ics/Icm, ambient derating | Missing - Blocking (OI-03) |
+| Transformer and generator datasheets; standard sizes | Missing (OI-09, OI-10) |
+| DEWA minimum cable per breaker; voltage-drop limits | Available (Appendix B) |
+| Demand factors | Missing - Blocking (OI-01) |
+
+# **16. Future Scope: MAEC One & Revit**
+
+## **MAEC One Integration (#TASK-34)**
+
+NeuroMEP is planned to become a sub-application of **MAEC One**, the company umbrella platform with unified login, role-based access control and a global admin panel. To make this a configuration change rather than a rewrite: authentication sits behind the AuthProvider interface (switch to MAEC One single sign-on); NeuroMEP roles map to MAEC One roles; user and project membership can be read from MAEC One; the UI follows a shared design system; NeuroMEP keeps its own database and API; deep links open a project directly from MAEC One.
+
+## **Revit Integration (#TASK-33)**
+
+NeuroMEP is intended to bridge architects working in Revit and the Revit MEP modellers who use NeuroMEP\'s results. Revit is automated only through the Revit API (C# .NET, inside Revit desktop on Windows), so the integration is a separate add-in; the web application and engine do not change.
+
+| **Step** | **Content** |
+|------------------|------------------------------------------------------|
+| 1 Revit connector (import) | Add-in \"Export to NeuroMEP\" writes a versioned JSON package: levels and elevations, rooms with names and areas, grids, shafts, plan views. Floors, heights and real coordinates come from the model, so scale calibration is not needed; PDF import remains the fallback. The floor registry already stores each floor's plan as a typed source (`pdf` now), so the connector adds a `revit` kind without changing the registry. |
+| 2 Revit connector (export) | Add-in \"Import from NeuroMEP\" places or updates the company\'s electrical families at the right level and location and fills shared parameters (tag, rating, fault level, cable size, runs) and schedules. Revit unique element IDs are stored so re-imports update instead of duplicate. |
+| 3 NeuroMEP inside Revit | A Revit plug-in with a dockable panel (WebView2) that hosts the NeuroMEP web app, so engineers model and see live calculations without leaving Revit, with the add-in synchronising elements in both directions. |
+| 4 Cloud option | Autodesk Platform Services (Design Automation for Revit, Viewer) for plug-in-free processing - later, subject to licence cost. |
+
+Information needed from the Revit team (OI-35): Revit versions in use (Revit 2025+ uses .NET 8, older .NET Framework 4.8), model location (local / Autodesk Construction Cloud), family library and shared-parameter file, and exactly what the modellers need back (equipment, cable trays, circuits, schedules).
+
+# **17. Assumptions & Out of Scope**
+
+**Assumptions:** LV system 400/230 V, 50 Hz, radial, TN-S earthing (OI-22); vector PDF floor plans to a known scale; one region per project (Dubai in v1); loads below each DB entered as totals; copper conductors by default; standards IEC 60909-0, BS 7671:2018, IEC 60364-5-52 and DEWA Regulations 2017 (edition confirmation OI-19).
+
+**Out of scope in Phase 1:** DB internal and final circuits; lighting/small-power layout and lux; mechanical and PHE calculations (thermal, pressure drop) beyond their electrical data; HV calculations beyond the fault-level input; full discrimination studies and time-current plotting (flagged only); harmonic analysis beyond C10; arc flash; earthing-pit and lightning-protection design; BOQ and costing; automatic room recognition from PDFs; regions other than Dubai; offline editing.
+
+# **18. Open Items & Decisions**
+
+| **ID** | **Information Needed** | **Owner** | **Blocking** |
+|-----------|---------------------------------------|------------|-----------|
+| OI-01 / 02 | Demand-factor values (12 load types, 4 categories) and how they combine | Sr. Elec. Eng. | Yes |
+| OI-03 | Breaker catalogue with trip units, Im, curves, I\^2t, Icu/Ics/Icm, ambient derating | Sr. Elec. Eng. | Yes |
+| OI-04 | One hand-checked reference project (inputs + issued schedules) for acceptance | Technical Lead | Yes |
+| OI-07 | Sign-off of Section 11 items marked \[ENG\]; verified ampacity tables (V-12) | Sr. Elec. Eng. | Yes |
+| OI-08 | DB load entry method confirmation | Technical Lead | Yes |
+| OI-11 | Loads included in power-failure and fire-mode scenarios | Sr. Elec. Eng. | Yes |
+| OI-15 | ATS specification and dual-source drawing convention | Technical Lead | Yes |
+| OI-18 | Mapping of cable dropdowns (PVC / XLPE / FR, LSZH, Al) to verified tables; fire-rated cable data | Sr. Elec. Eng. | Yes |
+| OI-19 | Standard editions to apply | Sr. Elec. Eng. | Yes |
+| OI-25 | Schedule Excel templates with title block; SLD symbols; DXF needed? | Technical Lead | Yes (exports) |
+| OI-34 | SVG symbols for Phase 1 equipment missing from the legend; luminaire wattages (Phase 2) | Technical Lead | Yes (Page 2) |
+| OI-09 / 10 / 13 | Transformer, generator, busbar datasheets and standard sizes | Sr. Elec. Eng. | No - IEC defaults |
+| OI-12 / 31 | Clearing times: device curves; MV protection time for transformer-to-MDB cable | Sr. Elec. Eng. | No - flagged |
+| OI-14 | Phase allocation automatic or manual | Technical Lead | No - automatic + override |
+| OI-16 / 17 / 20 / 21 | Transformer loading limit; length allowance; PFC bank sizes and load pf; maximum parallel runs | Sr. Elec. Eng. | No - 80 %, 10 %, -, 4 runs |
+| OI-22 / 23 / 24 / 26 | Earthing system; legacy formula confirmation; tagging; altitude use | Sr. Elec. Eng. / TL | No |
+| OI-28 / 29 / 30 | MAEC One login timing; category mapping for mixed-use; motor defaults (IL/IF, efficiency) | TL / Sr. Elec. Eng. | No |
+| OI-32 | Must the transformer-side path of FLS loads also be fire-rated? | Sr. Elec. Eng. | No - generator path enforced |
+| OI-33 | DEWA minimum upstream fault level for minimum-fault checks | Sr. Elec. Eng. | No - minimum-fault checks flagged until provided |
+| OI-35 | Revit versions, model location, families, shared parameters, required outputs | Revit team | No (future) |
+
+| **ID** | **Decision Taken** |
+|-----------|-------------------------------------------------------------|
+| D-01 / 02 | Phase 1 ends at the DB incoming feeder; schedules are generated by NeuroMEP in fixed formats, never uploaded. |
+| D-03 / 05 | Demand factors set on Page 1 (region defaults) and overridable per panel; cable construction chosen while drawing. |
+| D-04 / 12 | Sizes and breakers are calculated live by a background engine with Provisional/Final status; no calculation page; users may lock values. |
+| D-06 / 07 / 08 | Ib per cable from the demand it carries; all failing checks reported; disabled checks computed and shown \"Not verified\". |
+| D-09 / 10 / 11 | Region rule packs (Dubai v1); normal and standby scenarios; CableSizer outputs are not a test oracle. |
+| D-13 | A project picker follows Login: accessible projects (name, client, stage, revision, last modified), New Project and Import Project (.json) for the Technical Lead; opening a project goes to its last page. |
+| D-14 | MERN + TypeScript monorepo, MongoDB, Netcup VPS hosting (Section 7). |
+| D-15 | Calculation rules of Section 10 (verified) replace the CableSizer rules where they differ (Section 11). |
+| D-16 | Real-time collaboration with discipline greying and element locks (Section 8). |
+| D-17 | Every feature carries a #TASK code; errors use the E-code convention (Section 4). |
+| D-18 | No Working Directory field: exports download through the browser; the administrator may add a server-side export location later. |
+| D-19 | Demand factors: labels follow the Project Set-up slide; TBC values do not block Page 1 but show a warning banner; the engine takes a missing factor as 1.0 and marks dependent results \"Provisional - demand factors TBC\". |
+
+# **19. Acceptance Criteria**
+
+| **Test** | **Description** | **Pass Criterion** |
+|----------|---------------------------------|-----------------------------|
+| AT-01 / 02 | Worked examples 1 and 2 (Appendix C) | Engine reproduces every value and flag |
+| AT-03 | Reference project (OI-04) | Continuous values within 0.5 %; sizes, runs, ratings identical |
+| AT-04 | Topology and safety rules | Illegal connections refused; C8 / C9 raised correctly |
+| AT-05 | Missing or out-of-range table value | Element blocked with code; never 0 or \"no derating\" |
+| AT-06 | Live re-sizing up and down; Provisional -\> Final; locked item not changed | As specified in 10.13 |
+| AT-07 | Two users (electrical + mechanical) on one floor | Changes visible to the other within 1 s; other discipline greyed; element lock shown; no lost edits |
+| AT-08 | Error tracing | A forced failure shows its #TASK and E-code in UI and log |
+| AT-09 | Exports | Match templates; version suffix on collision |
+| AT-10 | Performance | 0.5 s panel update; 1 s full recalculation of 2,000 elements |
 
 # **Appendix A - Glossary**
 
-| **Term**                        | **Meaning**                                                                                                             |
-|---------------------------------|-------------------------------------------------------------------------------------------------------------------------|
-| MEP / PHE                       | Mechanical, Electrical, Plumbing / Public Health Engineering (water, drainage, pumps)                                   |
-| RMU                             | Ring Main Unit - HV switchgear feeding the transformer                                                                  |
-| Transformer                     | Steps 11 kV down to 400 V                                                                                               |
-| Generator / ATS                 | Standby source / Automatic Transfer Switch that changes over between normal and standby supply                          |
-| UPS                             | Uninterruptible Power Supply for critical loads                                                                         |
-| LV Panel / MDB                  | Main Low-Voltage panel / Main Distribution Board                                                                        |
-| SMDB / ESMDB                    | Sub-Main Distribution Board / Emergency SMDB (generator-backed)                                                         |
-| MCC / EMCC                      | Motor Control Centre / Emergency MCC                                                                                    |
-| DB                              | Distribution Board feeding final circuits                                                                               |
-| Busbar / busduct / riser        | Rigid metal conductor system, usually running vertically through the building                                           |
-| Tap-off box                     | Outlet unit on a busbar riser feeding a floor board                                                                     |
-| Isolator / connection unit      | Local switch for a piece of equipment / fused outlet for a small fixed appliance                                        |
-| PFC bank                        | Power-factor correction capacitor bank                                                                                  |
-| MCB / MCCB / ACB / MCP          | Miniature / Moulded-Case / Air Circuit Breaker / Motor Circuit Protector                                                |
-| ELCB / ELS                      | Earth Leakage Circuit Breaker / Earth Leakage Sensing relay                                                             |
-| In, Ib, Iz                      | Breaker setting / design current / corrected cable rating                                                               |
-| Im                              | Magnetic (instantaneous) trip current of the breaker                                                                    |
-| Isc / Ief                       | Prospective three-phase short-circuit current / earth-fault current                                                     |
-| Ampacity                        | Current a cable can carry continuously without overheating                                                              |
-| Derating factor                 | Reduction of catalogue ampacity for real site conditions                                                                |
-| Demand factor                   | Fraction of connected load expected to run at the same time                                                             |
-| Connected load / maximum demand | Sum of all loads / sum after demand factors                                                                             |
-| Power factor (pf)               | Ratio of useful power to apparent power (kW / kVA)                                                                      |
-| Voltage drop                    | Loss of voltage along a cable, limited to protect equipment                                                             |
-| ECC / CPC                       | Earth Continuity Conductor / Circuit Protective Conductor (earth wire)                                                  |
-| XLPE / PVC / LSZH / FR          | Cable insulation and sheath types: cross-linked polyethylene / polyvinyl chloride / low-smoke zero-halogen / fire-rated |
-| SWA / AWA                       | Steel / Aluminium Wire Armour                                                                                           |
-| Earth-fault loop impedance      | Impedance of the path a fault current takes back to the source; must be low enough to trip the breaker quickly          |
-| Let-through energy              | Heat energy passed during a fault before the breaker opens                                                              |
-| FLS                             | Fire & Life Safety loads (fire pumps, smoke extract, emergency lighting, fire lifts)                                    |
-| SLD                             | Single-Line Diagram of the distribution network                                                                         |
-| DEWA                            | Dubai Electricity & Water Authority                                                                                     |
-| CD / SD / DD / TD / IFC         | Concept / Schematic / Design Development / Tender Design / Issued for Construction                                      |
+| **Term** | **Meaning** | **Term** | **Meaning** |
+|-------------|------------------------|------------|-------------------------|
+| MDB / SMDB / DB | Main / sub-main / distribution board | Ib / In / Iz | Design current / breaker setting / corrected cable rating |
+| MCC / EMCC | Motor control centre / emergency MCC | Im / Ia | Instantaneous trip current / current for required disconnection |
+| RMU / ATS / UPS | Ring main unit / automatic transfer switch / uninterruptible power supply | Ik\" / ip | Initial symmetrical fault current / peak fault current |
+| MCB / MCCB / ACB | Miniature / moulded-case / air circuit breaker | Icu / Icm / Icw | Breaking / making / short-time withstand capacity |
+| ELCB / ELS / RCD | Earth-leakage breaker / sensing relay / residual-current device | Zs | Earth-fault loop impedance |
+| ECC / CPC | Earth conductor (protective conductor) | I\^2t, k | Let-through energy; conductor material constant |
+| XLPE / PVC / LSZH / FR | Insulation / sheath types; fire-rated | Demand factor | Share of connected load running together |
+| SWA / AWA | Steel / aluminium wire armour | pf | Power factor (kW / kVA) |
+| FLS | Fire & life-safety loads | SLD | Single-line diagram |
+| PFC | Power-factor correction capacitor bank | CD/SD/DD/TD/IFC | Concept / schematic / design development / tender / issued for construction |
 
-# **Appendix B - Load Type Codes**
+# **Appendix B - Codes, Ratings & DEWA Minimum Sizes**
 
-| **Code** | **Load Type**                           | **Code** | **Load Type**      |
-|----------|-----------------------------------------|----------|--------------------|
-| 1        | Lighting                                | 7        | Hand dryer         |
-| 2        | Power (socket outlets)                  | 8        | Pumps              |
-| 3        | AC / HVAC                               | 9        | Fire pumps         |
-| 4        | Heater (water heater)                   | 10       | Special equipment  |
-| 5        | Laundry                                 | 11       | Lifts & escalators |
-| 6        | Kitchen                                 | 12       | Spare              |
-| 13       | Power-factor correction (internal code) |          |                    |
+| **Item** | **Values** |
+|-------------------|-----------------------------------------------------|
+| Load type codes (labels as on the Project Set-up slide, D-19) | 1 Lighting, 2 Power, 3 AC, 4 Heater, 5 Laundry, 6 Kitchen, 7 Hand Dryer, 8 Pumps, 9 Fire Pumps, 10 Special Equipment, 11 Lifts & Equipment, 12 Spare, 13 PFC (internal) |
+| Breaker ratings (A) | 6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 225, 250, 300, 320, 350, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3200, 4000, 5000, 6300, 8000, 10000 |
+| Cable sizes (mm2) | 1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240, 300, 400, 500, 630 |
+| DEWA minimum cable (breaker A : mm2 x runs) | 16:4, 20:4, 25:6, 32:6, 40:10, 50:10, 63:16, 80:25, 100:35, 125:50, 150:70, 160:70, 200:95, 225:120, 250:150, 300:185, 350:240, 400:300, 630:185x2, 800:300x2, 1000:630, 1200:630x2, 1250:630x2, 1600:630x2, 2000:630x3, 2250:630x3, 2500:630x3 |
+| Tray widths (mm) | 100, 150, 200, 300, 450, 600, 750, 900, 1000 |
 
-# **Appendix C - Standard Ratings, Sizes & Defaults**
+# **Appendix C - Worked Example Test Vectors (verified method)**
 
-| **Item**                     | **Values**                                                                                                                                                                |
-|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Breaker ratings (A)          | 6, 10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 225, 250, 300, 320, 350, 400, 500, 630, 800, 1000, 1250, 1600, 2000, 2500, 3200, 4000, 5000, 6300, 8000, 10000 |
-| Breaker frames (A)           | 100, 160, 250, 400, 630, 800, 1000, 1250, 1600, 2000, 2500, 3200, 4000, 6300                                                                                              |
-| Cable sizes (mm2)            | 1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240, 300, 400, 500, 630                                                                                        |
-| Busbar ratings with data (A) | 800, 1000, 1250, 1350, 1600, 2000, 2500, 3200, 4000, 5000, 6300                                                                                                           |
-| Transformer Uz default       | \<= 630 kVA: 4 %; 631 - 1250 kVA: 5 %; 1251 - 3150 kVA: 6.25 %; above: datasheet                                                                                          |
-| Transformer Ur default       | \<= 1000 kVA: 1.2 %; 1001 - 1250 kVA: 1.0 %; 1251 - 1600 kVA: 1.2 %; above: datasheet                                                                                     |
-| Generator X"d default        | 14 %                                                                                                                                                                      |
-| Motor IL/IF default          | 6.45                                                                                                                                                                      |
-| Cable tray widths (mm)       | 100, 150, 200, 300, 450, 600, 750, 900, 1000                                                                                                                              |
+**Example 1 - 1500 kVA transformer to main LV panel.** 400 V, upstream 350 MVA (cQ 1.1); uk 6.25 %, ur 1.2 %, KT applied; 3 x 1C 630 mm2 Cu/XLPE/AWA trefoil on tray, 15 m, 50 deg C, 6 circuits 2D; ACB 2250 A, Im 22.5 kA; pf 0.92; cmax 1.10, cmin 0.95.
 
-# **Appendix D - DEWA Minimum Cable Size per Breaker (Dubai rule pack)**
+| **Quantity** | **Old Method** | **Verified Method** |
+|------------------|---------------------|----------------------------------|
+| Upstream Z | 0.4571 mOhm | 0.5029 mOhm |
+| Transformer terminals Z / Ik\" / ip | 7.1219 mOhm / 32.43 kA / - | 7.2202 mOhm / 35.18 kA / 78.4 kA |
+| At LV panel Z / Ik\" | 7.5914 mOhm / 30.42 kA | 7.6643 mOhm / 33.15 kA (breaker Icu \>= 50 kA ok; Icm \>= 78.4 kA required) |
+| Iz (3 runs) | 2400 A \>= 2250 A | 2400 A - provisional until verified tables (V-12) and grouping beyond 3 trefoil circuits (V-13) |
+| Voltage drop at 2250 A | 0.34 % | 0.34 % (subject to single-core r/x confirmation) |
+| Thermal withstand, phase | 48 mm2 (far end, 0.05 s) | At origin 35.18 kA: 55 / 156 / 246 mm2 for t = 0.05 / 0.4 / 1.0 s - pass (1890 mm2 installed) |
+| Zs (hot) / limit | 7.833 / 10.264 mOhm - pass | 8.213 (loop X summed) / 8.093 mOhm (0.95 x 230 / 1.2 Im) - instantaneous trip NOT proven; must pass via short-time element within 5 s from the ACB curve (C5 flagged) |
 
-| **Breaker (A)** | **Cable (mm2)** | **Cables / phase** | **Breaker (A)** | **Cable (mm2)** | **Cables / phase** |
-|-----------------|-----------------|--------------------|-----------------|-----------------|--------------------|
-| 16              | 4               | 1                  | 250             | 150             | 1                  |
-| 20              | 4               | 1                  | 300             | 185             | 1                  |
-| 25              | 6               | 1                  | 350             | 240             | 1                  |
-| 32              | 6               | 1                  | 400             | 300             | 1                  |
-| 40              | 10              | 1                  | 630             | 185             | 2                  |
-| 50              | 10              | 1                  | 800             | 300             | 2                  |
-| 63              | 16              | 1                  | 1000            | 630             | 1                  |
-| 80              | 25              | 1                  | 1200            | 630             | 2                  |
-| 100             | 35              | 1                  | 1250            | 630             | 2                  |
-| 125             | 50              | 1                  | 1600            | 630             | 2                  |
-| 150             | 70              | 1                  | 2000            | 630             | 3                  |
-| 160             | 70              | 1                  | 2250            | 630             | 3                  |
-| 200             | 95              | 1                  | 2500            | 630             | 3                  |
-| 225             | 120             | 1                  |                 |                 |                    |
+**Example 2 - 20 kW DB feeder.** 4C Cu/XLPE on tray, 6 circuits spaced D, 1 tray, 50 deg C, 40 m, pf 0.85, upstream voltage drop 1.0 %, DB limit 2.5 %.
 
-# **Appendix E - Legacy CableSizer Issues (do not port)**
-
-- Sample file outputs are invalid: macros did not run (most results are errors), the transformer impedance is missing (505 kA shown at the transformer) and DB loads are zero because the DB workbook (Db-rev.xls) is absent.
-
-- PVC voltage-drop table lists 90 mm2 instead of 95 mm2, so 95 mm2 PVC returns no value.
-
-- XLPE voltage-drop values for 500 and 630 mm2 are higher than for 400 mm2 (0.25 / 0.24 against 0.165 mV/A/m, three-phase) - suspected data error.
-
-- Motor resistance uses 0.42 x X'm instead of 0.42 x Z'm; motor reactance factor 0.922 against 0.91 in the manual.
-
-- Voltage factor c (1.05 / 1.1 for higher voltages) is never applied; acceptable at 400 V.
-
-- Lookups between table steps return blank (for example 28 C soil, 1.2 K.m/W, 37 C air), which breaks the row; a naive port could silently apply no derating.
-
-- Disconnection time hard-coded at 0.05 s although a trip-time table exists; breaker fault duty hard-coded at 50 / 35 kA.
-
-- Demand factors inconsistent between sheets (flat 0.8 on MDB; 0 / 0.6 / 1.0 / 0.4 on SMDBs).
-
-- Breaker magnetic data is for the discontinued Merlin Gerin NS range; the final-circuit breaker helper has gaps at 8 A and 13-14 A.
-
-- Motor apparent power for the main-panel motor contribution is taken from a fixed cell range of the transformer schedule; NeuroMEP must take it from modelled motor loads.
-
-- Element links rely on text names ("Upstream Network", "Tx-" prefix, sheet names); NeuroMEP uses graph references.
-
-- Only the first failing check is reported; NeuroMEP reports all.
-
-# **Appendix F - Worked Example Test Vectors**
-
-## **Example 1 - 1500 kVA transformer to main LV panel**
-
-Inputs: 400 V, upstream 350 MVA; transformer 1500 kVA (Uz 6.25 %, Ur 1.2 %); feeder 3 runs x 1C 630 mm2 Cu/XLPE/AWA on tray (method J), 6 circuits grouped, spacing 2D, 1 tray, 15 m, ambient 50 C; ACB 2250 A on 2500 A frame, magnetic multiplier 10; pf 0.92.
-
-| **Quantity**                        | **Expected Value**                                 |
-|-------------------------------------|----------------------------------------------------|
-| Upstream impedance Z                | 0.4571 mOhm                                        |
-| Transformer Ux                      | 6.134 %                                            |
-| At transformer terminals: R / X / Z | 1.3255 / 6.9975 / 7.1219 mOhm                      |
-| Isc at transformer terminals        | 32.43 kA                                           |
-| It per run / K1 / K2 / Ktot         | 1027 A / 0.82 / 0.95 / 0.779                       |
-| Iz (3 runs)                         | 2400 A \>= 2250 A - pass                           |
-| Cable R / X                         | 0.1454 / 0.4500 mOhm                               |
-| At LV panel: Z / Isc                | 7.5914 mOhm / 30.42 kA (50 kA breaker - pass)      |
-| Unit voltage drop / drop at 2250 A  | 0.1210 mV/A/m / 1.36 V = 0.34 % (limit 2 %) - pass |
-| Adiabatic minimum (k 143, t 0.05 s) | 48 mm2 against 1890 mm2 installed - pass           |
-| Im / Zs maximum                     | 22,500 A / 10.264 mOhm                             |
-
-## **Example 2 - 20 kW DB feeder**
-
-Inputs: 20 kW three-phase, pf 0.85, 400 V; 4C Cu/XLPE on tray (J), 6 circuits, spacing D, 1 tray, 50 C; 40 m; upstream cumulative voltage drop 1.0 %; DB limit 2.5 %.
-
-| **Step**                     | **Expected Result**                                                                                       |
-|------------------------------|-----------------------------------------------------------------------------------------------------------|
-| Ib                           | 34.0 A                                                                                                    |
-| Breaker In                   | 40 A                                                                                                      |
-| 4 mm2: Iz = 44 x 0.82 x 0.90 | 32.5 A \< 40 A - fail (ampacity)                                                                          |
-| 6 mm2: Iz = 56 x 0.82 x 0.90 | 41.3 A - pass; voltage drop 2.31 % + 1.0 % = 3.31 % \> 2.5 % - fail                                       |
-| 10 mm2                       | Iz 57.6 A - pass; voltage drop 1.36 % + 1.0 % = 2.36 % - pass; selected (DEWA minimum for 40 A is 10 mm2) |
+| **Case** | **Result** |
+|------------------------|------------------------------------------------|
+| Balanced: Ib 34.0 A, In 40 A | 4 mm2: Iz 32.5 A fail (C1). 6 mm2: Iz 41.3 A pass, Vd 2.31 % + 1.0 % = 3.31 % fail (C2). 10 mm2: Iz 57.6 A, Vd 1.36 % + 1.0 % = 2.36 % pass - selected; Sized by: voltage drop. |
+| Unbalanced 8 / 6 / 6 kW: Ib 40.9 A (largest phase), In 50 A | 10 mm2: Iz 57.6 A pass, Vd 1.64 % + 1.0 % = 2.64 % fail (C2). 16 mm2: Iz 73.1 A, Vd 1.02 % + 1.0 % = 2.02 % pass - selected. (The old total/sqrt3 method would have chosen 10 mm2.) |
+| Thermal withstand at origin (fed from Example 1 MDB, 33.15 kA) | Simple I\^2t with 0.05 s needs 52 mm2; the result must use the MCCB let-through I\^2t from the catalogue (pass if \<= 2.04 x 10\^6 A\^2s for 10 mm2). Without catalogue data the check shows \"Device data required\" (E2402). |
