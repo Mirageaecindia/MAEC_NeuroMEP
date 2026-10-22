@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": ".",
+    "outDir": "dist",
+    "customConditions": []
+  },
+  "include": ["src", "cablesizer/*.json", "dubai/*.json"],
+  "exclude": ["src/**/*.test.ts"]
+}

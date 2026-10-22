@@ -1,0 +1,19 @@
+{
+  "name": "@neuromep/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Calculation engine (design doc Section 10): pure functions, no UI, database or network imports.",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@neuromep/rulepacks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Versioned region rule packs and the CableSizer lookup tables (design doc Section 15).",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./cablesizer": {
+      "source": "./src/cablesizer/index.ts",
+      "types": "./dist/src/cablesizer/index.d.ts",
+      "default": "./dist/src/cablesizer/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "convert:cablesizer": "tsx scripts/convert-cablesizer.ts"
+  },
+  "dependencies": {
+    "@neuromep/shared": "0.1.0",
+    "zod": "^4.6.7"
+  }
+}
