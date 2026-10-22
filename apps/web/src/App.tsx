@@ -6,6 +6,7 @@ import { ProtectedRoute } from './auth/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { ProjectPickerPage } from './pages/ProjectPickerPage';
+import { SetupPage } from './pages/setup/SetupPage';
 
 export const routes: RouteObject[] = [
   { path: '/login', element: <LoginPage /> },
@@ -13,7 +14,7 @@ export const routes: RouteObject[] = [
     element: <ProtectedRoute />,
     children: [
       { path: '/projects', element: <ProjectPickerPage /> },
-      { path: '/projects/:projectId/setup', element: <PlaceholderPage pageKey="setup" /> },
+      { path: '/projects/:projectId/setup', element: <SetupPage /> },
       {
         path: '/projects/:projectId/floor-modelling',
         element: <PlaceholderPage pageKey="floor-modelling" />,

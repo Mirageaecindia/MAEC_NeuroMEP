@@ -1,0 +1,107 @@
+.viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 520px;
+}
+.viewer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.viewer-title {
+  font-size: 13px;
+}
+.viewer-file {
+  font-size: 11px;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.viewer-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border-radius: var(--radius);
+  background: var(--primary-soft);
+}
+.viewer-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 440px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #eef1f5;
+  user-select: none;
+}
+.viewer-canvas.picking {
+  cursor: crosshair;
+}
+.viewer-page {
+  position: absolute;
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+}
+.viewer-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.cal-line {
+  stroke: var(--primary);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+}
+.cal-line.saved {
+  stroke: var(--success);
+}
+.cal-point circle {
+  fill: var(--primary);
+  stroke: #fff;
+  stroke-width: 2;
+}
+.cal-point.saved circle {
+  fill: var(--success);
+}
+.cal-point text {
+  font-weight: 800;
+  font-size: 12px;
+  fill: var(--text);
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 3;
+}
+.viewer-hint {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #555;
+}
+.viewer-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+.viewer-error {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 2;
+}
+.viewer-status {
+  font-size: 12px;
+  margin-top: 8px;
+}

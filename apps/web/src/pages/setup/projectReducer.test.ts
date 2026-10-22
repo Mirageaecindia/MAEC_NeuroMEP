@@ -1,0 +1,128 @@
+import { createEmptyProject, generateRegistry } from '@neuromep/shared';
+import { completeProject, FIXED_NOW, sequentialIds } from '@neuromep/shared/testing';
+import { describe, expect, it } from 'vitest';
+import { projectReducer, withUploadedPlan, type AuditMeta } from './projectReducer';
+
+const audit: AuditMeta = { id: 'a1', at: FIXED_NOW, userId: 'u-lead' };
+const empty = () => createEmptyProject({ id: 'p', userId: 'u-lead', now: FIXED_NOW });
+
+describe('Page 1 project reducer', () => {
+  it('selecting Dubai loads the rule pack defaults without overwriting edited fields', () => {
+    let p = projectReducer(empty(), { type: 'site', key: 'ambientSoilC', value: 28 });
+    p = projectReducer(p, { type: 'region', region: 'dubai' });
+    expect(p.rulePackId).toBe('dubai');
+    expect(p.site.ambientAirC).toEqual({ value: 50, source: 'rulepack' });
+    expect(p.site.ambientSoilC).toEqual({ value: 28, source: 'user' });
+  });
+
+  it('a region without a rule pack changes nothing else', () => {
+    const p = projectReducer(empty(), { type: 'region', region: 'abu-dhabi' });
+    expect(p.rulePackId).toBeNull();
+    expect(p.site.ambientAirC.value).toBeNull();
+  });
+
+  it('logs demand-factor changes in the audit log', () => {
+    const p = projectReducer(empty(), {
+      type: 'demandFactor',
+      table: 'byLoadType',
+      key: '1',
+      value: 0.8,
+      audit,
+    });
+    expect(p.calculation.demandFactors.byLoadType['1']).toEqual({ value: 0.8, source: 'user' });
+    expect(p.auditLog).toEqual([
+      { ...audit, area: 'demandFactor', key: 'byLoadType.1', from: null, to: 0.8 },
+    ]);
+    // unchanged value: no new entry
+    expect(
+      projectReducer(p, { type: 'demandFactor', table: 'byLoadType', key: '1', value: 0.8, audit })
+        .auditLog,
+    ).toHaveLength(1);
+  });
+
+  it('logs calculation-default overrides and their reset', () => {
+    let p = projectReducer(empty(), {
+      type: 'defaultOverride',
+      key: 'targetPowerFactor',
+      value: 0.95,
+      ruleValue: 0.92,
+      audit,
+    });
+    expect(p.calculation.defaultOverrides).toEqual({ targetPowerFactor: 0.95 });
+    p = projectReducer(p, {
+      type: 'defaultOverride',
+      key: 'targetPowerFactor',
+      value: undefined,
+      ruleValue: 0.92,
+      audit: { ...audit, id: 'a2' },
+    });
+    expect(p.calculation.defaultOverrides).toEqual({});
+    expect(p.auditLog.map((e) => [e.key, e.from, e.to])).toEqual([
+      ['targetPowerFactor', 0.92, 0.95],
+      ['targetPowerFactor', 0.95, 0.92],
+    ]);
+  });
+
+  it('fills all floor heights', () => {
+    const counts = { basements: 1, podiums: 0, typicals: 2 };
+    let p = projectReducer(empty(), {
+      type: 'applyRegistry',
+      counts,
+      change: generateRegistry(counts, [], sequentialIds()),
+    });
+    p = projectReducer(p, { type: 'fillHeights', value: 3.6 });
+    expect(p.building.floors.map((f) => f.heightM)).toEqual([3.6, 3.6, 3.6, 3.6]);
+    expect(p.building.counts).toEqual(counts);
+  });
+
+  it('replacing a calibrated plan resets it to Uncalibrated and keeps the old plan for alignment', () => {
+    const p = completeProject();
+    const gf = p.building.floors.find((f) => f.code === 'GF')!;
+    const next = projectReducer(p, {
+      type: 'planUploaded',
+      floorId: gf.id,
+      plan: {
+        kind: 'pdf',
+        fileId: 'file-2',
+        fileName: 'GF rev B.pdf',
+        uploadedAt: FIXED_NOW,
+        uploadedBy: 'u-lead',
+        page: { widthPt: 2384, heightPt: 1684 },
+      },
+      now: FIXED_NOW,
+    });
+    const plan = next.building.floors.find((f) => f.id === gf.id)!.plan!;
+    expect(plan.fileId).toBe('file-2');
+    expect(plan.calibration).toBeNull();
+    expect(plan.replaced).toMatchObject({
+      fileId: 'file-1',
+      alignment: 'pending',
+      calibration: gf.plan!.calibration,
+    });
+  });
+
+  it('a first upload has no replaced plan', () => {
+    const plan = withUploadedPlan(
+      null,
+      {
+        kind: 'pdf',
+        fileId: 'f',
+        fileName: 'a.pdf',
+        uploadedAt: FIXED_NOW,
+        uploadedBy: 'u',
+        page: { widthPt: 1, heightPt: 1 },
+      },
+      FIXED_NOW,
+    );
+    expect(plan).not.toHaveProperty('replaced');
+  });
+
+  it('importing a file keeps the open project identity and version', () => {
+    const current = { ...empty(), id: 'open', version: 7 };
+    const next = projectReducer(current, { type: 'replaceContent', source: completeProject() });
+    expect(next.id).toBe('open');
+    expect(next.version).toBe(7);
+    expect(next.details.name).toBe('NeoTower');
+    expect(next.meta).toEqual(current.meta);
+  });
+});
