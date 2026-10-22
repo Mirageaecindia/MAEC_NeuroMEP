@@ -105,3 +105,23 @@
   font-size: 12px;
   margin-top: 8px;
 }
+.viewer-guidance {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+  font-size: 12px;
+}
+.viewer-guidance.low-zoom {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+.snap-ring {
+  fill: none;
+  stroke: #f59e0b;
+  stroke-width: 2.5;
+}

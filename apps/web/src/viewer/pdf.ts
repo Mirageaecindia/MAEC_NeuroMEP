@@ -1,4 +1,5 @@
 import type { PDFDocumentProxy, PDFPageProxy } from 'pdfjs-dist';
+import { extractSnapPoints, SnapIndex } from './snap';
 
 /** pdf.js is loaded on first use so it stays out of the main bundle. */
 async function pdfjs() {
@@ -14,6 +15,13 @@ async function pdfjs() {
 export async function openPdf(data: ArrayBuffer): Promise<PDFDocumentProxy> {
   const lib = await pdfjs();
   return lib.getDocument({ data: new Uint8Array(data) }).promise;
+}
+
+/** Snap targets for calibration: endpoints of the page's vector lines (#TASK-07). */
+export async function loadSnapIndex(page: PDFPageProxy): Promise<SnapIndex> {
+  const lib = await pdfjs();
+  const list = await page.getOperatorList();
+  return new SnapIndex(extractSnapPoints(list.fnArray, list.argsArray, lib.OPS));
 }
 
 /** Page 1 size in PDF units (points). Throws if the file is not a readable PDF. */

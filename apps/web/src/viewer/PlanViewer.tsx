@@ -19,7 +19,8 @@ import {
 } from 'react';
 import { useApi } from '../auth/AuthContext';
 import { NumberInput } from '../components/fields';
-import { openPdf } from './pdf';
+import { loadSnapIndex, openPdf } from './pdf';
+import { snapTolerance, type SnapIndex } from './snap';
 import {
   fitToView,
   pdfToScreen,
@@ -36,7 +37,8 @@ const MAX_CANVAS_PIXELS = 16_000_000;
 /**
  * Floor-plan viewer (FR-07) with two-point and drawing-scale calibration (FR-08).
  * Renders page 1 with pdf.js; wheel zooms, Shift + right-drag pans. Picked points are converted
- * to PDF page units, so zoom and pan never change a calibration.
+ * to PDF page units, so zoom and pan never change a calibration. Clicks snap to the nearest
+ * vector line endpoint within 10 screen pixels (can be turned off).
  */
 export function PlanViewer(props: {
   projectId: string;
@@ -65,6 +67,10 @@ export function PlanViewer(props: {
   const [scaleDen, setScaleDen] = useState<number | null>(100);
   const [sheet, setSheet] = useState<SheetSize>('A1');
   const pan = useRef<{ x: number; y: number; view: ViewState } | null>(null);
+  const [snapIndex, setSnapIndex] = useState<SnapIndex | null>(null);
+  const [snapOn, setSnapOn] = useState(true);
+  /** Snap target under the cursor while picking points. */
+  const [hover, setHover] = useState<PdfPoint | null>(null);
 
   // Load the PDF.
   useEffect(() => {
@@ -85,6 +91,10 @@ export function PlanViewer(props: {
         });
         const el = container.current;
         if (el) setView(fitToView(vp, { width: el.clientWidth, height: el.clientHeight }));
+        loadSnapIndex(proxy).then(
+          (index) => live && setSnapIndex(index),
+          () => undefined, // snapping is optional; free clicks still work
+        );
       } catch (e) {
         if (live) setError(e instanceof Error ? e.message : 'The plan could not be opened.');
       }
@@ -162,6 +172,10 @@ export function PlanViewer(props: {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  const picking = mode === 'calibrate' || mode === 'verify';
+  const snapTarget = (p: PdfPoint): PdfPoint | null =>
+    snapOn && snapIndex ? snapIndex.nearest(p, snapTolerance(view.zoom)) : null;
+
   const local = (e: ReactMouseEvent) => {
     const r = container.current!.getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
@@ -172,12 +186,18 @@ export function PlanViewer(props: {
       pan.current = { ...local(e), view };
       return;
     }
-    if (e.button !== 0 || !page || (mode !== 'calibrate' && mode !== 'verify')) return;
+    if (e.button !== 0 || !page || !picking) return;
     if (points.length >= 2) return;
-    setPoints((p) => [...p, screenToPdf(local(e), view, page.transform)]);
+    const free = screenToPdf(local(e), view, page.transform);
+    setPoints((p) => [...p, snapTarget(free) ?? free]);
   }
   function onMouseMove(e: ReactMouseEvent) {
-    if (!pan.current) return;
+    if (!pan.current) {
+      if (picking && page && points.length < 2) {
+        setHover(snapTarget(screenToPdf(local(e), view, page.transform)));
+      }
+      return;
+    }
     const p = local(e);
     const start = pan.current;
     setView({
@@ -191,6 +211,7 @@ export function PlanViewer(props: {
     setMode(m);
     setPoints([]);
     setDistance(null);
+    setHover(null);
   }
 
   const calibration = plan.calibration;
@@ -300,6 +321,26 @@ export function PlanViewer(props: {
         )}
       </div>
 
+      {picking && (
+        <div className={`viewer-guidance${view.zoom < 1 ? ' low-zoom' : ''}`}>
+          <span>
+            <strong>Zoom in for accurate calibration.</strong> At {Math.round(view.zoom * 100)} %
+            one screen pixel is about {(25.4 / 72 / view.zoom).toFixed(2)} mm on the sheet.
+          </span>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={snapOn}
+              onChange={(e) => {
+                setSnapOn(e.target.checked);
+                setHover(null);
+              }}
+            />
+            Snap to line ends{snapIndex ? '' : ' (loading…)'}
+          </label>
+          {hover && <span className="tag tag-ok">Snapped to a line end</span>}
+        </div>
+      )}
       {mode === 'calibrate' && (
         <div className="viewer-panel">
           {points.length < 2 ? (
@@ -438,6 +479,9 @@ export function PlanViewer(props: {
                 </g>
               );
             })}
+            {picking && hover && (
+              <circle className="snap-ring" cx={toScreen(hover).x} cy={toScreen(hover).y} r={9} />
+            )}
           </svg>
         )}
         <span className="viewer-hint">Wheel to zoom · Shift + Right-Click to pan</span>
