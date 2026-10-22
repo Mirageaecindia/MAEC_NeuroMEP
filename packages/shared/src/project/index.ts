@@ -1,4 +1,5 @@
 export * from './calibration.js';
+export * from './demand.js';
 export * from './enums.js';
 export * from './factory.js';
 export * from './file.js';

@@ -98,8 +98,8 @@ export function CalculationCard(props: CardProps) {
             </label>
           </div>
           <p className="field-hint">
-            Values are not confirmed yet (OI-01); empty factors are shown as TBC. How the two tables
-            combine is open (OI-02).
+            Values are not confirmed yet (OI-01); empty factors are shown as TBC and taken as 1.0 by
+            the calculations until entered (D-19). How the two tables combine is open (OI-02).
           </p>
           <div className="grid grid-2">
             <DemandTable

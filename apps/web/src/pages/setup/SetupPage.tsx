@@ -1,4 +1,4 @@
-import { page1Issues } from '@neuromep/shared';
+import { page1Issues, PROVISIONAL_DEMAND_FACTORS_TBC, tbcDemandFactors } from '@neuromep/shared';
 import { ACTIVE_REGIONS } from '@neuromep/rulepacks';
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
@@ -113,6 +113,15 @@ export function SetupPage() {
             ' Only the Technical Lead can change this page; you are viewing it read-only.'}
         </p>
       </div>
+      {tbcDemandFactors(project).length > 0 && (
+        <div className="banner banner-warning setup-banner" role="status">
+          <span>
+            <strong>Demand factors TBC:</strong> {tbcDemandFactors(project).length} of 16 factors
+            have no value yet (OI-01). You can continue; calculations take them as 1.0 and mark the
+            affected results “{PROVISIONAL_DEMAND_FACTORS_TBC}” (D-19).
+          </span>
+        </div>
+      )}
       {editor.saveState === 'conflict' && (
         <div className="banner banner-error setup-banner" role="alert">
           {editor.saveError}{' '}

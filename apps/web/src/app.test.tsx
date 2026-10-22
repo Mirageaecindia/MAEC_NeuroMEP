@@ -161,6 +161,15 @@ describe('Page 1 Next button', () => {
     expect(screen.getByRole('heading', { name: /Project Set-up/ })).toBeInTheDocument();
   });
 
+  it('shows the TBC demand-factor warning without blocking Next (D-19)', async () => {
+    renderAt('/projects/p-1/setup', new FakeAuth(LEAD), fakeApi(completeProject()));
+    expect(await screen.findByText(/16 of 16 factors have/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Next →' })).toHaveAttribute(
+      'aria-disabled',
+      'false',
+    );
+  });
+
   it('is enabled when everything required is valid and a floor is calibrated', async () => {
     renderAt('/projects/p-1/setup', new FakeAuth(LEAD), fakeApi(completeProject()));
     expect(await screen.findByRole('button', { name: 'Next →' })).toHaveAttribute(

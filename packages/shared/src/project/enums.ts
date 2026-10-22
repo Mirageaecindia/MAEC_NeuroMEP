@@ -47,7 +47,10 @@ export const REGION_LABELS: Record<Region, string> = {
   others: 'Others',
 };
 
-/** Load type codes 1-12 (design doc Appendix B). Code 13 (PFC) is internal and not listed here. */
+/**
+ * Load type codes 1-12 (design doc Appendix B); labels as on the Project Set-up slide (D-19).
+ * Code 13 (PFC) is internal and not listed here.
+ */
 export const LoadTypeCodeSchema = z.enum([
   '1',
   '2',
@@ -65,16 +68,16 @@ export const LoadTypeCodeSchema = z.enum([
 export type LoadTypeCode = z.infer<typeof LoadTypeCodeSchema>;
 export const LOAD_TYPE_LABELS: Record<LoadTypeCode, string> = {
   '1': 'Lighting',
-  '2': 'Power (socket outlets)',
-  '3': 'AC / HVAC',
-  '4': 'Heater (water heater)',
+  '2': 'Power',
+  '3': 'AC',
+  '4': 'Heater',
   '5': 'Laundry',
   '6': 'Kitchen',
-  '7': 'Hand dryer',
+  '7': 'Hand Dryer',
   '8': 'Pumps',
-  '9': 'Fire pumps',
-  '10': 'Special equipment',
-  '11': 'Lifts & escalators',
+  '9': 'Fire Pumps',
+  '10': 'Special Equipment',
+  '11': 'Lifts & Equipment',
   '12': 'Spare',
 };
 
