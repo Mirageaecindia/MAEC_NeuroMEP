@@ -1,0 +1,170 @@
+{
+  "id": "dubai",
+  "version": "1.0.0",
+  "region": "dubai",
+  "name": "Dubai",
+  "sources": "Design doc v0.7: Section 10.1 (site defaults), 10.1A (calculation defaults), 8.8 (voltage-drop limits), Section 15 (open items and interim defaults).",
+  "siteDefaults": {
+    "ambientAirC": 50,
+    "ambientSoilC": 35,
+    "soilResistivity": 2.0
+  },
+  "demandFactors": {
+    "note": "Values not yet provided (OI-01); combination rule open (OI-02). null = TBC.",
+    "byLoadType": {
+      "1": null,
+      "2": null,
+      "3": null,
+      "4": null,
+      "5": null,
+      "6": null,
+      "7": null,
+      "8": null,
+      "9": null,
+      "10": null,
+      "11": null,
+      "12": null
+    },
+    "byCategory": {
+      "residential": null,
+      "landlord": null,
+      "office": null,
+      "retail": null
+    }
+  },
+  "calculationDefaults": [
+    {
+      "key": "supplyVoltageLineV",
+      "group": "Supply",
+      "label": "Supply voltage (line)",
+      "unit": "V",
+      "type": "number",
+      "value": 400
+    },
+    {
+      "key": "supplyVoltagePhaseV",
+      "group": "Supply",
+      "label": "Supply voltage (phase)",
+      "unit": "V",
+      "type": "number",
+      "value": 230
+    },
+    {
+      "key": "supplyFrequencyHz",
+      "group": "Supply",
+      "label": "Frequency",
+      "unit": "Hz",
+      "type": "number",
+      "value": 50
+    },
+    {
+      "key": "defaultLoadPowerFactor",
+      "group": "Loads",
+      "label": "Default load power factor",
+      "type": "number",
+      "value": 0.85
+    },
+    {
+      "key": "targetPowerFactor",
+      "group": "Loads",
+      "label": "Target power factor (PFC)",
+      "type": "number",
+      "value": 0.92
+    },
+    {
+      "key": "defaultDepthOfLayingM",
+      "group": "Cables",
+      "label": "Default depth of laying",
+      "unit": "m",
+      "type": "number",
+      "value": null,
+      "interimDefault": null,
+      "note": "TBC (0.6 - 2.5 m)"
+    },
+    {
+      "key": "cableLengthAllowancePct",
+      "group": "Cables",
+      "label": "Cable length allowance",
+      "unit": "%",
+      "type": "number",
+      "value": null,
+      "interimDefault": 10,
+      "openItem": "OI-17"
+    },
+    {
+      "key": "defaultCableConstruction",
+      "group": "Cables",
+      "label": "Default cable construction",
+      "type": "text",
+      "value": null,
+      "interimDefault": null,
+      "note": "TBC"
+    },
+    {
+      "key": "transformerLoadingLimitPct",
+      "group": "Sources",
+      "label": "Transformer loading limit",
+      "unit": "%",
+      "type": "number",
+      "value": null,
+      "interimDefault": 80,
+      "openItem": "OI-16"
+    },
+    {
+      "key": "voltageDropLimitPct.MDB",
+      "group": "Voltage-drop limits (cumulative)",
+      "label": "MDB",
+      "unit": "%",
+      "type": "number",
+      "value": 2.0
+    },
+    {
+      "key": "voltageDropLimitPct.SMDB",
+      "group": "Voltage-drop limits (cumulative)",
+      "label": "SMDB",
+      "unit": "%",
+      "type": "number",
+      "value": 2.0
+    },
+    {
+      "key": "voltageDropLimitPct.Busduct",
+      "group": "Voltage-drop limits (cumulative)",
+      "label": "Busduct",
+      "unit": "%",
+      "type": "number",
+      "value": 2.0
+    },
+    {
+      "key": "voltageDropLimitPct.MCC",
+      "group": "Voltage-drop limits (cumulative)",
+      "label": "MCC",
+      "unit": "%",
+      "type": "number",
+      "value": 2.0
+    },
+    {
+      "key": "voltageDropLimitPct.DB",
+      "group": "Voltage-drop limits (cumulative)",
+      "label": "DB",
+      "unit": "%",
+      "type": "number",
+      "value": 2.5
+    },
+    {
+      "key": "voltageDropLimitPct.Motor",
+      "group": "Voltage-drop limits (cumulative)",
+      "label": "Motor loads",
+      "unit": "%",
+      "type": "number",
+      "value": 4.0
+    },
+    {
+      "key": "voltageDropLimitPct.FinalCircuits",
+      "group": "Voltage-drop limits (cumulative)",
+      "label": "Final circuits (future phase)",
+      "unit": "%",
+      "type": "number",
+      "value": 4.0
+    }
+  ]
+}
