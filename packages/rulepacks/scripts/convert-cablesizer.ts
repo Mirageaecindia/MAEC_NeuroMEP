@@ -9,7 +9,7 @@
  * Each source rule `{ when: "<expression>", value }` becomes a row whose conditions are keyed by
  * field name, so nothing is evaluated from strings at runtime. Expressions that do not fit the
  * row shape stop the conversion with an error rather than being approximated.
- * Rows that match a design doc Appendix E issue are flagged for engineer sign-off (OI-07); their
+ * Rows with a known legacy error (design doc Section 11, V-nn) are flagged for engineer sign-off (OI-07); their
  * values are NOT corrected here.
  */
 import { createHash } from 'node:crypto';
@@ -183,7 +183,8 @@ function convertValue(
 }
 
 // ---------------------------------------------------------------------------------------------
-// Appendix E flags (values are NOT corrected; engineer sign-off pending, OI-07)
+// Known legacy errors, referenced to design doc Section 11 (V-nn); originally listed in v0.4 Appendix E.
+// Values are NOT corrected; engineer sign-off pending (OI-07).
 // ---------------------------------------------------------------------------------------------
 const flag = (reference: string, note: string): ReviewFlag => ({
   status: REVIEW_STATUS,
@@ -200,36 +201,33 @@ const DERATING_FUNCTIONS = new Set(['TEMPDE', 'STR', 'DLAY', 'GROUPD', 'GROUPJ']
 function reviewFor(fn: string, row: Row): ReviewFlag | undefined {
   if (fn === 'VU' && eq(row, 'TYP') === 'PVC' && eq(row, 'CAB') === 90) {
     return flag(
-      'Appendix E item 2',
-      'PVC voltage-drop table lists 90 mm2 instead of 95 mm2, so 95 mm2 PVC returns no value.',
+      'V-15',
+      'PVC voltage-drop table lists 90 mm2 instead of 95 mm2, so 95 mm2 PVC returns no value (legacy issue, v0.4 Appendix E item 2).',
     );
   }
   if (fn === 'VU' && eq(row, 'TYP') === 'XLPE' && [500, 630].includes(eq(row, 'CAB') as number)) {
     return includesEq(row, 'PHASES', 3)
       ? flag(
-          'Appendix E item 3',
-          'XLPE voltage-drop values for 500 and 630 mm2 are higher than for 400 mm2 (three-phase) - suspected data error.',
+          'V-15',
+          'XLPE voltage-drop values for 500 and 630 mm2 are higher than for 400 mm2 (three-phase) - suspected data error (legacy issue, v0.4 Appendix E item 3).',
         )
       : flag(
-          'Appendix E item 3 (same pattern)',
-          'Single/two-phase XLPE 500 and 630 mm2 values are also higher than 400 mm2; not named in Appendix E - confirm.',
+          'V-15 (same pattern)',
+          'Single/two-phase XLPE 500 and 630 mm2 values are also higher than 400 mm2; not named in the legacy issue list - confirm.',
         );
   }
   if (DERATING_FUNCTIONS.has(fn) && row.fallback) {
     return flag(
-      'Appendix E item 6 / OI-06',
-      'CableSizer "else" value 1 (no derating) for inputs between table steps; must not be applied silently (FR-45).',
+      'V-14',
+      'CableSizer "else" value 1 (no derating) for inputs between table steps; a missing value must block the element, never become 1 (V-14).',
     );
   }
   if (fn === 'IM' && String(eq(row, 'MCCB') ?? '').startsWith('NS')) {
-    return flag(
-      'Appendix E item 9',
-      'Breaker magnetic data is for the discontinued Merlin Gerin NS range.',
-    );
+    return flag('V-09', 'Breaker magnetic data is for the discontinued Merlin Gerin NS range.');
   }
   if (fn === 'breaker' && [1, 2, 6, 8].includes(row.source)) {
     return flag(
-      'Appendix E item 9',
+      'V-14',
       'Final-circuit breaker helper has gaps at 8 A and 13-14 A next to this row.',
     );
   }
@@ -239,11 +237,11 @@ function reviewFor(fn: string, row: Row): ReviewFlag | undefined {
 const FUNCTION_ISSUES: Record<string, ReviewFlag[]> = {
   breaker: [
     flag(
-      'Appendix E item 9',
+      'V-14',
       'No row covers 8 A (code 1) or 13-14 A (codes 1, 3-10); those inputs return not found.',
     ),
   ],
-  IM: [flag('Appendix E item 9', 'Magnetic data for the discontinued Merlin Gerin NS range.')],
+  IM: [flag('V-09', 'Magnetic data for the discontinued Merlin Gerin NS range.')],
 };
 
 // ---------------------------------------------------------------------------------------------

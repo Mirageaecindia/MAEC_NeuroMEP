@@ -192,20 +192,20 @@ describe('CableSizer conversion', () => {
   }
 
   it('returns not found (never a silent default) where CableSizer has no row', () => {
-    // Appendix E item 2: the PVC table has 90 mm2 instead of 95 mm2.
+    // V-15 (legacy): the PVC table has 90 mm2 instead of 95 mm2.
     expect(lookup(cableSizerTables, 'VU', { TYP: 'PVC', PHASES: 3, CAB: 95 })).toEqual({
       found: false,
     });
-    // Appendix E item 9: final-circuit helper gap at 8 A.
+    // V-14 (legacy): final-circuit helper gap at 8 A.
     expect(lookup(cableSizerTables, 'breaker', { code: 1, Amp: 8 })).toEqual({ found: false });
   });
 
-  it('flags Appendix E rows for engineer sign-off without changing their values', () => {
+  it('flags known legacy errors for engineer sign-off without changing their values', () => {
     const vu = cableSizerTables.functions.VU!.rows;
     const xlpe630 = vu.find((r) => r.source === 79)!;
     expect(xlpe630.value).toBe(0.24);
     expect(xlpe630.review?.status).toBe(REVIEW_STATUS);
-    expect(vu.find((r) => r.source === 42)!.review?.reference).toBe('Appendix E item 2');
+    expect(vu.find((r) => r.source === 42)!.review?.reference).toBe('V-15');
   });
 });
 
