@@ -29,7 +29,6 @@ describe('Page 1 readiness (Next button gating)', () => {
       'calculation.region',
       'calculation.upstreamFaultMva',
       'building.registry',
-      'workingDirectory',
       'disciplines.electrical',
     ]);
     const cards = issues.map((i) => i.card);

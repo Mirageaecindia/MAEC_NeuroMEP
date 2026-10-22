@@ -1,7 +1,7 @@
 import { ROLE_LABELS, type Role, type UserSummary } from '@neuromep/shared';
 import { useEffect, useId, useState } from 'react';
 import { useApi } from '../../auth/AuthContext';
-import { Card, fieldDomId, TextField } from '../../components/fields';
+import { Card, fieldDomId } from '../../components/fields';
 import type { CardProps } from './cardProps';
 
 const DISCIPLINES = [
@@ -22,7 +22,7 @@ const DISCIPLINES = [
   { key: 'phe', label: 'PHE Eng.', role: 'PHE_ENGINEER', required: false, color: 'var(--phe)' },
 ] as const;
 
-/** Card 5 - Working Directory & Discipline Assignment (drives discipline locks). */
+/** Card 5 - Discipline Assignment (drives discipline locks). No working directory (D-18). */
 export function DisciplinesCard({ project, dispatch, readOnly, errorFor, touch }: CardProps) {
   const api = useApi();
   const [users, setUsers] = useState<UserSummary[]>([]);
@@ -33,46 +33,9 @@ export function DisciplinesCard({ project, dispatch, readOnly, errorFor, touch }
     );
   }, [api]);
 
-  async function browse() {
-    // Browsers only reveal the chosen folder's name, not its full path.
-    const picker = (window as unknown as { showDirectoryPicker?: () => Promise<{ name: string }> })
-      .showDirectoryPicker;
-    if (!picker) return;
-    try {
-      const dir = await picker();
-      dispatch({ type: 'workingDirectory', value: dir.name });
-    } catch {
-      /* cancelled */
-    }
-  }
-
   return (
-    <Card n={5} title="Working Directory & Discipline Assignment">
-      <div className="disciplines-layout">
-        <TextField
-          field="workingDirectory"
-          label="Working directory"
-          required
-          value={project.workingDirectory}
-          placeholder="e.g. C:/NeuroMEP_Projects/LiveWorkspace"
-          disabled={readOnly}
-          hint="Browse fills in the folder name only; browsers do not reveal full paths."
-          error={errorFor('workingDirectory')}
-          onBlur={() => touch('workingDirectory')}
-          onChange={(value) => dispatch({ type: 'workingDirectory', value })}
-        />
-        <div className="field">
-          <span className="field-label">&nbsp;</span>
-          <button
-            className="btn"
-            disabled={readOnly || !('showDirectoryPicker' in window)}
-            onClick={browse}
-          >
-            Browse…
-          </button>
-        </div>
-      </div>
-      <div className="grid grid-3" style={{ marginTop: 12 }}>
+    <Card n={5} title="Discipline Assignment">
+      <div className="grid grid-3">
         {DISCIPLINES.map((d) => (
           <UserMultiSelect
             key={d.key}

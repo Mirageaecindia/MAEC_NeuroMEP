@@ -19,6 +19,12 @@ describe('project file (.json)', () => {
     expect(parseProjectFile(serializeProject(p))).toEqual({ ok: true, project: p });
   });
 
+  it('still reads files saved before D-18 (the working directory is ignored)', () => {
+    const old = { ...completeProject(), workingDirectory: 'C:/NeuroMEP_Projects/NeoTower' };
+    const result = parseProjectFile(JSON.stringify(old));
+    expect(result).toEqual({ ok: true, project: completeProject() });
+  });
+
   it('rejects a wrong schemaVersion', () => {
     const text = JSON.stringify({ ...completeProject(), schemaVersion: 2 });
     expect(parseProjectFile(text)).toEqual({

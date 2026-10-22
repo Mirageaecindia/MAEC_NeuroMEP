@@ -184,7 +184,7 @@ export const ProjectSchema = z.object({
     floors: z.array(FloorSchema),
   }),
 
-  workingDirectory: z.string(),
+  // No working directory (D-18): exports download through the browser.
   disciplines: z.object({
     electrical: z.array(Id),
     mechanical: z.array(Id),

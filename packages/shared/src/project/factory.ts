@@ -49,7 +49,6 @@ export function createEmptyProject(args: { id: string; userId: string; now: stri
       mechanicalFloorIds: [null, null, null],
       floors: [],
     },
-    workingDirectory: '',
     disciplines: { electrical: [], mechanical: [], phe: [] },
     auditLog: [],
     meta: { createdAt: args.now, createdBy: args.userId, updatedAt: args.now, lastPage: 'setup' },

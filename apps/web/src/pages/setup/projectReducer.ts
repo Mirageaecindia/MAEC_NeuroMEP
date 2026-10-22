@@ -57,7 +57,6 @@ export type ProjectAction =
   | { type: 'floor'; floorId: string; patch: { name?: string; heightM?: number | null } }
   | { type: 'fillHeights'; value: number }
   | { type: 'mechanicalFloor'; index: 0 | 1 | 2; floorId: string | null }
-  | { type: 'workingDirectory'; value: string }
   | { type: 'disciplines'; discipline: Discipline; userIds: string[] }
   | {
       type: 'planUploaded';
@@ -180,8 +179,6 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
       ids[a.index] = a.floorId;
       return { ...p, building: { ...p.building, mechanicalFloorIds: ids } };
     }
-    case 'workingDirectory':
-      return { ...p, workingDirectory: a.value };
     case 'disciplines':
       return { ...p, disciplines: { ...p.disciplines, [a.discipline]: a.userIds } };
     case 'planUploaded':

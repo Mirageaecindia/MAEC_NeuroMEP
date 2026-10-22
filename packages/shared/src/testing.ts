@@ -55,7 +55,6 @@ export function completeProject(): Project {
       calibratedBy: 'u-lead',
     },
   };
-  p.workingDirectory = 'C:/NeuroMEP_Projects/NeoTower';
   p.disciplines.electrical = ['u-elec'];
   return p;
 }

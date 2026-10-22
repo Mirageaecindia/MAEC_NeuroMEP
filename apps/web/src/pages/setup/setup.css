@@ -99,11 +99,6 @@
 }
 
 /* card 5 */
-.disciplines-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
-}
 .discipline-box {
   border: 1px solid var(--border);
   border-radius: var(--radius);

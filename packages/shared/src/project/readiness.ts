@@ -118,8 +118,7 @@ export function page1Issues(
     });
   }
 
-  // Card 5 - Working directory & disciplines
-  if (blank(project.workingDirectory)) add(5, 'workingDirectory', 'Enter the working directory.');
+  // Card 5 - Discipline assignment (no working directory, D-18)
   if (project.disciplines.electrical.length === 0) {
     add(5, 'disciplines.electrical', 'Assign at least one Electrical engineer.');
   }
