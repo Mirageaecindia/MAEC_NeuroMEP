@@ -4,8 +4,10 @@ import { AuthProviderBoundary } from './auth/AuthContext';
 import type { AuthProvider } from './auth/AuthProvider';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { LoginPage } from './pages/LoginPage';
-import { PlaceholderPage } from './pages/PlaceholderPage';
+import { ArchitecturePage } from './pages/architecture/ArchitecturePage';
+import { ModellingPage } from './pages/modelling/ModellingPage';
 import { ProjectPickerPage } from './pages/ProjectPickerPage';
+import { ReportPage } from './pages/report/ReportPage';
 import { SetupPage } from './pages/setup/SetupPage';
 
 export const routes: RouteObject[] = [
@@ -15,18 +17,9 @@ export const routes: RouteObject[] = [
     children: [
       { path: '/projects', element: <ProjectPickerPage /> },
       { path: '/projects/:projectId/setup', element: <SetupPage /> },
-      {
-        path: '/projects/:projectId/modelling',
-        element: <PlaceholderPage pageKey="modelling" />,
-      },
-      {
-        path: '/projects/:projectId/architecture',
-        element: <PlaceholderPage pageKey="architecture" />,
-      },
-      {
-        path: '/projects/:projectId/simulation-report',
-        element: <PlaceholderPage pageKey="simulation-report" />,
-      },
+      { path: '/projects/:projectId/modelling', element: <ModellingPage /> },
+      { path: '/projects/:projectId/architecture', element: <ArchitecturePage /> },
+      { path: '/projects/:projectId/simulation-report', element: <ReportPage /> },
     ],
   },
   { path: '*', element: <Navigate to="/projects" replace /> },

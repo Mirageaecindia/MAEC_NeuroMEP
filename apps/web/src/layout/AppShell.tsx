@@ -9,7 +9,7 @@ export const PAGES = [
   { key: 'setup', label: 'Import Floor Plan', title: 'Project Set-up & Import Floor Plan' },
   { key: 'modelling', label: 'Floor & Building Modelling', title: 'Floor & Building Modelling' },
   { key: 'architecture', label: 'Architecture', title: 'Architecture' },
-  { key: 'simulation-report', label: 'Simulation and Report', title: 'Simulation & Report' },
+  { key: 'simulation-report', label: 'Simulation & Report', title: 'Simulation & Report' },
 ] as const;
 
 function useTheme() {
@@ -51,17 +51,19 @@ export function AppShell(props: { projectId?: string; children: ReactNode; actio
           <div className="brand-tagline">DESIGN. VALIDATE. DELIVER.</div>
         </NavLink>
         <nav className="nav" aria-label="Pages">
-          {PAGES.map((p) =>
+          {PAGES.map((p, i) =>
             props.projectId ? (
               <NavLink
                 key={p.key}
                 to={`/projects/${props.projectId}/${p.key}`}
                 className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
               >
+                <span className="nav-no">{i + 1}</span>
                 {p.label}
               </NavLink>
             ) : (
               <span key={p.key} className="nav-item disabled" title="Open a project first">
+                <span className="nav-no">{i + 1}</span>
                 {p.label}
               </span>
             ),
