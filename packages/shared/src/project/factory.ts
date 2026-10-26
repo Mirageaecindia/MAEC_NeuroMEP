@@ -1,4 +1,4 @@
-import { CalculationCheckSchema, DemandCategorySchema, LoadTypeCodeSchema } from './enums.js';
+import { DemandCategorySchema, LoadTypeCodeSchema } from './enums.js';
 import { PROJECT_SCHEMA_VERSION, type DefaultableNumber, type Project } from './schema.js';
 
 const untouched = (): DefaultableNumber => ({ value: null, source: 'rulepack' });
@@ -30,9 +30,14 @@ export function createEmptyProject(args: { id: string; userId: string; now: stri
     calculation: {
       region: null,
       upstreamFaultMva: null,
-      checks: Object.fromEntries(
-        CalculationCheckSchema.options.map((c) => [c, true]),
-      ) as Project['calculation']['checks'],
+      system: { voltageLineV: untouched(), voltagePhaseV: untouched(), frequencyHz: untouched() },
+      checks: {
+        currentCarryingCapacity: true,
+        voltageDrop: true,
+        shortCircuit: true,
+        letThroughEnergy: true,
+        earthFaultLoopImpedance: true,
+      },
       demandFactors: {
         byLoadType: Object.fromEntries(
           LoadTypeCodeSchema.options.map((c) => [c, untouched()]),
@@ -49,7 +54,9 @@ export function createEmptyProject(args: { id: string; userId: string; now: stri
       mechanicalFloorIds: [null, null, null],
       floors: [],
     },
+    workingDirectory: '',
     disciplines: { electrical: [], mechanical: [], phe: [] },
+    model: { elements: [], cables: [] },
     auditLog: [],
     meta: { createdAt: args.now, createdBy: args.userId, updatedAt: args.now, lastPage: 'setup' },
   };

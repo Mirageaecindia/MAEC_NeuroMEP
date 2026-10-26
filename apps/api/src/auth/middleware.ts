@@ -1,5 +1,6 @@
 import type { UserSummary } from '@neuromep/shared';
 import type { NextFunction, Request, Response } from 'express';
+import { sendError } from '../errors.js';
 import type { AuthProvider } from './provider.js';
 
 declare module 'express-serve-static-core' {
@@ -15,7 +16,7 @@ export function requireUser(auth: AuthProvider) {
     const token = header.startsWith('Bearer ') ? header.slice(7) : '';
     const user = token ? await auth.verify(token) : null;
     if (!user) {
-      res.status(401).json({ error: 'Please sign in.' });
+      sendError(res, 401, 'E0102');
       return;
     }
     req.user = user;

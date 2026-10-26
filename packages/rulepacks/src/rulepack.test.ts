@@ -25,6 +25,11 @@ describe('rule packs', () => {
     expect(p.site.ambientAirC).toEqual({ value: 50, source: 'rulepack' });
     expect(p.site.ambientSoilC).toEqual({ value: 35, source: 'rulepack' });
     expect(p.site.soilResistivity).toEqual({ value: 2, source: 'rulepack' });
+    expect(p.calculation.system).toEqual({
+      voltageLineV: { value: 400, source: 'rulepack' },
+      voltagePhaseV: { value: 230, source: 'rulepack' },
+      frequencyHz: { value: 50, source: 'rulepack' },
+    });
   });
 
   it('applies defaults only to fields the user has not edited', () => {

@@ -1,3 +1,4 @@
+import { migrateProjectData } from './migrate.js';
 import { PROJECT_SCHEMA_VERSION, ProjectSchema, type Project } from './schema.js';
 
 /** Project file (.json) contents - the project document itself (FR-10). */
@@ -18,6 +19,7 @@ export function parseProjectFile(text: string): ProjectFileResult {
   if (typeof data !== 'object' || data === null || !('schemaVersion' in data)) {
     return { ok: false, error: 'This file is not a NeuroMEP project file (no schemaVersion).' };
   }
+  data = migrateProjectData(data);
   const v = (data as { schemaVersion: unknown }).schemaVersion;
   if (v !== PROJECT_SCHEMA_VERSION) {
     return {

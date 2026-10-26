@@ -77,8 +77,8 @@ export function SetupPage() {
 
   async function next() {
     if (issues.length) return goToFirstIssue();
-    editor.dispatch({ type: 'lastPage', page: 'floor-modelling' });
-    navigate(`/projects/${project!.id}/floor-modelling`);
+    editor.dispatch({ type: 'lastPage', page: 'modelling' });
+    navigate(`/projects/${project!.id}/modelling`);
   }
 
   const actions = (

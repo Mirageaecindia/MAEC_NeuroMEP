@@ -6,6 +6,7 @@ export class ApiError extends Error {
     readonly status: number,
     message: string,
     readonly body: Record<string, unknown> = {},
+    readonly code: string | null = null,
   ) {
     super(message);
   }
@@ -42,9 +43,15 @@ export class ApiClient {
     }
     if (!res.ok) {
       const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-      const message =
-        typeof body.error === 'string' ? body.error : `Request failed (${res.status}).`;
-      throw new ApiError(res.status, message, body);
+      const text = typeof body.error === 'string' ? body.error : `Request failed (${res.status}).`;
+      const code = typeof body.code === 'string' ? body.code : null;
+      // Plain-language message with its code (design doc Section 6 Usability).
+      throw new ApiError(
+        res.status,
+        code ? `${text.replace(/\.$/, '')} (${code})` : text,
+        body,
+        code,
+      );
     }
     if (res.status === 204) return undefined as T;
     return (res.headers.get('content-type') ?? '').includes('application/json')

@@ -15,10 +15,15 @@ function fillRecord<K extends string>(
 
 /**
  * Loads a rule pack into a project (FR-04): records the pack id and version, and pre-fills site
- * defaults and demand factors - only fields the user has not edited. TBC values stay null.
+ * defaults, system voltage / frequency and demand factors - only fields the user has not edited. TBC values stay null.
  */
 export function applyRulePackDefaults(project: Project, pack: RulePack): Project {
   const df = project.calculation.demandFactors;
+  const sys = project.calculation.system;
+  const num = (key: string) => {
+    const v = pack.calculationDefaults.find((d) => d.key === key)?.value;
+    return typeof v === 'number' ? v : null;
+  };
   return {
     ...project,
     rulePackId: pack.id,
@@ -31,6 +36,12 @@ export function applyRulePackDefaults(project: Project, pack: RulePack): Project
     },
     calculation: {
       ...project.calculation,
+      // System voltage / frequency on Page 1 default from the rule pack (12.1, 12.2).
+      system: {
+        voltageLineV: fill(sys.voltageLineV, num('supplyVoltageLineV')),
+        voltagePhaseV: fill(sys.voltagePhaseV, num('supplyVoltagePhaseV')),
+        frequencyHz: fill(sys.frequencyHz, num('supplyFrequencyHz')),
+      },
       demandFactors: {
         byLoadType: fillRecord(df.byLoadType, pack.demandFactors.byLoadType),
         byCategory: fillRecord(df.byCategory, pack.demandFactors.byCategory),

@@ -1,6 +1,7 @@
 import { z } from 'zod';
+import { CableSchema } from '../model/cable.js';
+import { ElementSchema } from '../model/elements.js';
 import {
-  CalculationCheckSchema,
   DemandCategorySchema,
   DesignStageSchema,
   LoadTypeCodeSchema,
@@ -11,7 +12,7 @@ import {
 } from './enums.js';
 
 /** Version of the project file / document shape. Bump on breaking change and add a migration. */
-export const PROJECT_SCHEMA_VERSION = 1;
+export const PROJECT_SCHEMA_VERSION = 2;
 
 const IsoDate = z.iso.datetime({ offset: true });
 const Id = z.string().min(1);
@@ -160,8 +161,26 @@ export const ProjectSchema = z.object({
 
   calculation: z.object({
     region: RegionSchema.nullable(),
+    /** System voltage and frequency (12.1), inherited by every component; rule-pack defaults. */
+    system: z.object({
+      voltageLineV: DefaultableNumberSchema,
+      voltagePhaseV: DefaultableNumberSchema,
+      frequencyHz: DefaultableNumberSchema.refine(
+        (f) => f.value === null || [50, 60].includes(f.value),
+        {
+          message: 'Frequency is 50 or 60 Hz.',
+        },
+      ),
+    }),
     upstreamFaultMva: z.number().nullable(),
-    checks: z.record(CalculationCheckSchema, z.boolean()),
+    /** Ticked checks are calculated; ampacity is always calculated (FR-04). */
+    checks: z.object({
+      currentCarryingCapacity: z.literal(true),
+      voltageDrop: z.boolean(),
+      shortCircuit: z.boolean(),
+      letThroughEnergy: z.boolean(),
+      earthFaultLoopImpedance: z.boolean(),
+    }),
     demandFactors: z.object({
       byLoadType: z.record(LoadTypeCodeSchema, DefaultableNumberSchema),
       byCategory: z.record(DemandCategorySchema, DefaultableNumberSchema),
@@ -184,11 +203,17 @@ export const ProjectSchema = z.object({
     floors: z.array(FloorSchema),
   }),
 
-  // No working directory (D-18): exports download through the browser.
+  workingDirectory: z.string(),
   disciplines: z.object({
     electrical: z.array(Id),
     mechanical: z.array(Id),
     phe: z.array(Id),
+  }),
+
+  /** Network model (Page 2): elements and cables, positions in metres (1.1.4). */
+  model: z.object({
+    elements: z.array(ElementSchema),
+    cables: z.array(CableSchema),
   }),
 
   auditLog: z.array(AuditEntrySchema),

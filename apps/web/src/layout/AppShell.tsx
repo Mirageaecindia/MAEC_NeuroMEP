@@ -4,11 +4,10 @@ import { NavLink, useNavigate } from 'react-router';
 import { useAuth, useUser } from '../auth/AuthContext';
 import './layout.css';
 
-/** Working pages in navigation order (design doc Section 9). */
+/** Working pages 1-4 in navigation order (design doc Section 9, D-20). */
 export const PAGES = [
   { key: 'setup', label: 'Import Floor Plan', title: 'Project Set-up & Import Floor Plan' },
-  { key: 'floor-modelling', label: 'Floor Modeling', title: 'Floor Modelling' },
-  { key: 'building-modelling', label: 'Building Modeling', title: 'Building Modelling' },
+  { key: 'modelling', label: 'Floor & Building Modelling', title: 'Floor & Building Modelling' },
   { key: 'architecture', label: 'Architecture', title: 'Architecture' },
   { key: 'simulation-report', label: 'Simulation and Report', title: 'Simulation & Report' },
 ] as const;

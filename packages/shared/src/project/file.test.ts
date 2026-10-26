@@ -19,17 +19,38 @@ describe('project file (.json)', () => {
     expect(parseProjectFile(serializeProject(p))).toEqual({ ok: true, project: p });
   });
 
-  it('still reads files saved before D-18 (the working directory is ignored)', () => {
-    const old = { ...completeProject(), workingDirectory: 'C:/NeuroMEP_Projects/NeoTower' };
-    const result = parseProjectFile(JSON.stringify(old));
-    expect(result).toEqual({ ok: true, project: completeProject() });
+  it('upgrades version-1 files to version 2 (v0.3 baseline)', () => {
+    const v2 = completeProject();
+    const { workingDirectory: _w, model: _m, ...rest } = v2;
+    const v1 = {
+      ...rest,
+      schemaVersion: 1,
+      calculation: {
+        ...v2.calculation,
+        system: undefined,
+        checks: { ...v2.calculation.checks, currentCarryingCapacity: false },
+      },
+      meta: { ...v2.meta, lastPage: 'building-modelling' },
+    };
+    const result = parseProjectFile(JSON.stringify(v1));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.project.schemaVersion).toBe(2);
+    expect(result.project.calculation.checks.currentCarryingCapacity).toBe(true);
+    expect(result.project.calculation.system.frequencyHz).toEqual({
+      value: null,
+      source: 'rulepack',
+    });
+    expect(result.project.workingDirectory).toBe('');
+    expect(result.project.model).toEqual({ elements: [], cables: [] });
+    expect(result.project.meta.lastPage).toBe('modelling');
   });
 
   it('rejects a wrong schemaVersion', () => {
-    const text = JSON.stringify({ ...completeProject(), schemaVersion: 2 });
+    const text = JSON.stringify({ ...completeProject(), schemaVersion: 3 });
     expect(parseProjectFile(text)).toEqual({
       ok: false,
-      error: 'Unsupported project file version 2. This version of NeuroMEP reads version 1.',
+      error: 'Unsupported project file version 3. This version of NeuroMEP reads version 2.',
     });
   });
 

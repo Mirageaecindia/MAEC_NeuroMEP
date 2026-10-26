@@ -16,12 +16,8 @@ export const routes: RouteObject[] = [
       { path: '/projects', element: <ProjectPickerPage /> },
       { path: '/projects/:projectId/setup', element: <SetupPage /> },
       {
-        path: '/projects/:projectId/floor-modelling',
-        element: <PlaceholderPage pageKey="floor-modelling" />,
-      },
-      {
-        path: '/projects/:projectId/building-modelling',
-        element: <PlaceholderPage pageKey="building-modelling" />,
+        path: '/projects/:projectId/modelling',
+        element: <PlaceholderPage pageKey="modelling" />,
       },
       {
         path: '/projects/:projectId/architecture',

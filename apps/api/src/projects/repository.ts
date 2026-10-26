@@ -1,19 +1,26 @@
 import {
+  migrateProjectData,
   ProjectSchema,
   summarizeProject,
   type AuditEntry,
+  type Cable,
+  type Element,
   type Floor,
   type Project,
   type ProjectSummary,
 } from '@neuromep/shared';
-import type { Collection, Db, MongoClient } from 'mongodb';
+import type { ClientSession, Collection, Db, MongoClient } from 'mongodb';
 
-/** `projects` collection: the project without its floors (they live in `floors`). */
-type ProjectDoc = Omit<Project, 'id' | 'building'> & {
+/** `projects` collection: the project without floors and network model (stored separately). */
+type ProjectDoc = Omit<Project, 'id' | 'building' | 'model'> & {
   _id: string;
   building: Omit<Project['building'], 'floors'> & { floorIds: string[] };
 };
 type FloorDoc = Floor & { _id: string; projectId: string };
+/** `elements` collection: network elements and cables of a project, in model order. */
+type ElementDoc =
+  | { _id: string; projectId: string; order: number; docType: 'element'; data: Element }
+  | { _id: string; projectId: string; order: number; docType: 'cable'; data: Cable };
 type AuditDoc = AuditEntry & { _id: string; projectId: string };
 
 export type SaveResult =
@@ -21,16 +28,17 @@ export type SaveResult =
   | { ok: false; reason: 'not-found' }
   | { ok: false; reason: 'conflict'; currentVersion: number };
 
-const floorKey = (projectId: string, floorId: string) => `${projectId}/${floorId}`;
+const key = (projectId: string, id: string) => `${projectId}/${id}`;
 
 /**
- * Projects across the `projects`, `floors` and `auditLog` collections. Saves use optimistic
- * locking: a save names the version it started from and fails with a conflict if someone else
- * saved in between. The project and its floors are written in one transaction.
+ * Projects across the `projects`, `floors`, `elements` and `auditLog` collections. Saves use
+ * optimistic locking: a save names the version it started from and fails with a conflict if
+ * someone else saved in between. Everything is written in one transaction.
  */
 export class ProjectRepository {
   private readonly projects: Collection<ProjectDoc>;
   private readonly floors: Collection<FloorDoc>;
+  private readonly elements: Collection<ElementDoc>;
   private readonly audit: Collection<AuditDoc>;
 
   constructor(
@@ -39,11 +47,13 @@ export class ProjectRepository {
   ) {
     this.projects = db.collection('projects');
     this.floors = db.collection('floors');
+    this.elements = db.collection('elements');
     this.audit = db.collection('auditLog');
   }
 
   async init(): Promise<void> {
     await this.floors.createIndex({ projectId: 1 });
+    await this.elements.createIndex({ projectId: 1, order: 1 });
     await this.audit.createIndex({ projectId: 1, at: 1 });
   }
 
@@ -67,7 +77,7 @@ export class ProjectRepository {
     await this.client.withSession((session) =>
       session.withTransaction(async () => {
         await this.projects.insertOne(this.toDoc(toStore), { session });
-        await this.writeFloorsAndAudit(toStore, session);
+        await this.writeChildren(toStore, session);
       }),
     );
     return toStore;
@@ -102,38 +112,64 @@ export class ProjectRepository {
           await session.abortTransaction();
           return;
         }
-        await this.writeFloorsAndAudit(next, session);
+        await this.writeChildren(next, session);
         result = { ok: true, project: next };
       }),
     );
     return result;
   }
 
-  private async writeFloorsAndAudit(
-    project: Project,
-    session: import('mongodb').ClientSession,
-  ): Promise<void> {
-    const keys = project.building.floors.map((f) => floorKey(project.id, f.id));
-    await this.floors.deleteMany({ projectId: project.id, _id: { $nin: keys } }, { session });
-    if (project.building.floors.length) {
+  private async writeChildren(project: Project, session: ClientSession): Promise<void> {
+    const pid = project.id;
+    const floorKeys = project.building.floors.map((f) => key(pid, f.id));
+    await this.floors.deleteMany({ projectId: pid, _id: { $nin: floorKeys } }, { session });
+    if (floorKeys.length) {
       await this.floors.bulkWrite(
         project.building.floors.map((f) => ({
           replaceOne: {
-            filter: { _id: floorKey(project.id, f.id) },
-            replacement: { ...f, _id: floorKey(project.id, f.id), projectId: project.id },
+            filter: { _id: key(pid, f.id) },
+            replacement: { ...f, _id: key(pid, f.id), projectId: pid },
             upsert: true,
           },
         })),
         { session },
       );
     }
+
+    const docs: ElementDoc[] = [
+      ...project.model.elements.map((data, order): ElementDoc => ({
+        _id: key(pid, data.id),
+        projectId: pid,
+        order,
+        docType: 'element',
+        data,
+      })),
+      ...project.model.cables.map((data, order): ElementDoc => ({
+        _id: key(pid, data.id),
+        projectId: pid,
+        order,
+        docType: 'cable',
+        data,
+      })),
+    ];
+    await this.elements.deleteMany(
+      { projectId: pid, _id: { $nin: docs.map((d) => d._id) } },
+      { session },
+    );
+    if (docs.length) {
+      await this.elements.bulkWrite(
+        docs.map((d) => ({ replaceOne: { filter: { _id: d._id }, replacement: d, upsert: true } })),
+        { session },
+      );
+    }
+
     if (project.auditLog.length) {
       // The audit log is append-only: existing entries are never rewritten.
       await this.audit.bulkWrite(
         project.auditLog.map((e) => ({
           updateOne: {
-            filter: { _id: `${project.id}/${e.id}` },
-            update: { $setOnInsert: { ...e, projectId: project.id } },
+            filter: { _id: key(pid, e.id) },
+            update: { $setOnInsert: { ...e, projectId: pid } },
             upsert: true,
           },
         })),
@@ -143,20 +179,30 @@ export class ProjectRepository {
   }
 
   private toDoc(p: Project): ProjectDoc {
-    const { id, building, ...rest } = p;
+    const { id, building, model: _model, ...rest } = p;
     const { floors, ...b } = building;
     return { ...rest, _id: id, building: { ...b, floorIds: floors.map((f) => f.id) } };
   }
 
   private async assemble(doc: ProjectDoc): Promise<Project> {
-    const floorDocs = await this.floors.find({ projectId: doc._id }).toArray();
+    const [floorDocs, elementDocs] = await Promise.all([
+      this.floors.find({ projectId: doc._id }).toArray(),
+      this.elements.find({ projectId: doc._id }).sort({ order: 1 }).toArray(),
+    ]);
     const byId = new Map(floorDocs.map(({ _id: _key, projectId: _p, ...f }) => [f.id, f as Floor]));
     const { _id, building, ...rest } = doc;
     const { floorIds, ...b } = building;
-    return ProjectSchema.parse({
-      ...rest,
-      id: _id,
-      building: { ...b, floors: floorIds.map((id) => byId.get(id)).filter(Boolean) },
-    });
+    // Stored documents from older schema versions are upgraded on read.
+    return ProjectSchema.parse(
+      migrateProjectData({
+        ...rest,
+        id: _id,
+        building: { ...b, floors: floorIds.map((id) => byId.get(id)).filter(Boolean) },
+        model: {
+          elements: elementDocs.filter((d) => d.docType === 'element').map((d) => d.data),
+          cables: elementDocs.filter((d) => d.docType === 'cable').map((d) => d.data),
+        },
+      }),
+    );
   }
 }

@@ -63,7 +63,7 @@ describe('authentication', () => {
       .send({ email: 'no@x.dev', password: DEV_PASSWORD });
     expect(wrong.status).toBe(401);
     expect(unknown.status).toBe(401);
-    expect(wrong.body).toEqual({ error: 'Email or password is incorrect.' });
+    expect(wrong.body).toEqual({ code: 'E0101', error: 'Email or password is incorrect.' });
     expect(unknown.body).toEqual(wrong.body);
   });
 
@@ -89,7 +89,7 @@ describe('projects', () => {
       .set('authorization', await tokenFor(LEAD))
       .send({});
     expect(lead.status).toBe(201);
-    expect(lead.body.project).toMatchObject({ id: 'proj-1', version: 1, schemaVersion: 1 });
+    expect(lead.body.project).toMatchObject({ id: 'proj-1', version: 1, schemaVersion: 2 });
     const elec = await request(app)
       .post('/api/projects')
       .set('authorization', await tokenFor(ELEC))
@@ -142,7 +142,7 @@ describe('projects', () => {
       .set('authorization', auth)
       .send({ project: { ...edited, details: { ...edited.details, name: 'Other' } } });
     expect(stale.status).toBe(409);
-    expect(stale.body.currentVersion).toBe(2);
+    expect(stale.body).toMatchObject({ code: 'E0802', currentVersion: 2 });
     const after = (await request(app).get(`/api/projects/${created.id}`).set('authorization', auth))
       .body.project;
     expect(after.details.name).toBe('NeoTower');
@@ -258,5 +258,55 @@ describe('floor-plan PDFs', () => {
       .set('content-type', 'application/pdf')
       .send(Buffer.from('hello'));
     expect(notPdf.status).toBe(400);
+  });
+});
+
+describe('#TASK-08 network model persistence', () => {
+  it('stores elements and cables in the elements collection and reads them back in order', async () => {
+    const auth = await tokenFor(LEAD);
+    const created = (await request(app).post('/api/projects').set('authorization', auth).send({}))
+      .body.project;
+    const base = {
+      version: 0,
+      description: '',
+      floorId: 'f-1',
+      location: '',
+      discipline: 'electrical',
+      ipRating: null,
+      fireRated: false,
+    };
+    const project = {
+      ...created,
+      model: {
+        elements: [
+          {
+            ...base,
+            id: 'tx',
+            tag: 'Tx_GF_1',
+            kind: 'transformer',
+            position: { x: 1, y: 1 },
+            kva: 1500,
+            primaryV: 11000,
+            ukPct: 6.25,
+            urPct: 1.2,
+            vectorGroup: 'Dyn11',
+          },
+          { ...base, id: 'ats', tag: 'ATS-1', kind: 'ats', position: { x: 3, y: 1 } },
+        ],
+        cables: [],
+      },
+    };
+    const saved = await request(app)
+      .put(`/api/projects/${created.id}`)
+      .set('authorization', auth)
+      .send({ project });
+    expect(saved.status).toBe(200);
+    expect(await database.db.collection('elements').countDocuments({ projectId: created.id })).toBe(
+      2,
+    );
+    const loaded = (
+      await request(app).get(`/api/projects/${created.id}`).set('authorization', auth)
+    ).body.project;
+    expect(loaded.model.elements.map((e: { tag: string }) => e.tag)).toEqual(['Tx_GF_1', 'ATS-1']);
   });
 });

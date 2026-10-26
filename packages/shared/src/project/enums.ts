@@ -119,12 +119,6 @@ export const SHEET_SIZES_MM: Record<SheetSize, { w: number; h: number }> = {
   A4: { w: 210, h: 297 },
 };
 
-/** Working pages, used to reopen a project on its last page (D-13). */
-export const PageKeySchema = z.enum([
-  'setup',
-  'floor-modelling',
-  'building-modelling',
-  'architecture',
-  'simulation-report',
-]);
+/** Working pages 1-4 (D-20), used to reopen a project on its last page (D-13). */
+export const PageKeySchema = z.enum(['setup', 'modelling', 'architecture', 'simulation-report']);
 export type PageKey = z.infer<typeof PageKeySchema>;
