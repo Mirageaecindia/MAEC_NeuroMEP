@@ -24,15 +24,15 @@ export async function loadSnapIndex(page: PDFPageProxy): Promise<SnapIndex> {
   return new SnapIndex(extractSnapPoints(list.fnArray, list.argsArray, lib.OPS));
 }
 
-/** Page 1 size in PDF units (points). Throws if the file is not a readable PDF. */
+/** Page 1 size in PDF units (points) and the page count. Throws if the file is not a readable PDF. */
 export async function readFirstPageSize(
   file: Blob,
-): Promise<{ widthPt: number; heightPt: number }> {
+): Promise<{ widthPt: number; heightPt: number; pages: number }> {
   const doc = await openPdf(await file.arrayBuffer());
   try {
     const page: PDFPageProxy = await doc.getPage(1);
     const [x0, y0, x1, y1] = page.view as [number, number, number, number];
-    return { widthPt: x1 - x0, heightPt: y1 - y0 };
+    return { widthPt: x1 - x0, heightPt: y1 - y0, pages: doc.numPages };
   } finally {
     void doc.loadingTask.destroy();
   }

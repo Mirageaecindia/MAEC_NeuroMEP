@@ -1,0 +1,141 @@
+/* Import File (Figma screen 2). */
+.import-panel {
+  padding: 12px 14px;
+}
+.save-banner {
+  margin-bottom: 8px;
+}
+.import-form {
+  display: grid;
+  grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
+  gap: 0;
+}
+.import-left {
+  padding-right: 22px;
+  border-right: 1.5px solid #374151;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.import-right {
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.import-heading {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 2px 0 6px;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 170px;
+  align-items: center;
+  gap: 10px;
+}
+.import-right .form-row {
+  grid-template-columns: 1fr 155px;
+}
+.form-label {
+  font-size: 11px;
+  font-weight: 700;
+}
+.req {
+  color: var(--danger);
+}
+.form-control {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.pill-input {
+  height: 22px;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background: #ebebeb;
+  padding: 0 10px;
+  font-size: 11px;
+}
+.pill-input.center {
+  text-align: center;
+}
+.pill-input.invalid {
+  outline: 1.5px solid var(--danger);
+}
+.pill-select {
+  text-align: center;
+  text-align-last: center;
+}
+.pill-pair {
+  display: flex;
+  gap: 4px;
+}
+.pill-pair .unit {
+  width: 64px;
+  flex: none;
+}
+.checks-row {
+  grid-template-columns: auto 1fr !important;
+}
+.checks-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 11px;
+}
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.df-grid {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: 0;
+}
+.df-col h3,
+.disciplines h3 {
+  font-size: 11px;
+  font-weight: 700;
+  margin: 4px 0 8px;
+}
+.df-types {
+  border-left: 1.5px solid #374151;
+  padding-left: 10px;
+}
+.df-types h3 {
+  text-align: right;
+  padding-right: 50px;
+}
+.df-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+}
+.df-row {
+  display: grid;
+  grid-template-columns: 1fr 70px;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.df-type-grid .df-row {
+  margin-bottom: 0;
+}
+.df-input {
+  text-align: center;
+}
+.disciplines {
+  background: var(--surface-muted);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 420px;
+}

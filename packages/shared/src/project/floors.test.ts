@@ -46,7 +46,23 @@ describe('floor registry generation', () => {
       'B1|basement|Basement 1',
       'GF|ground|Ground Floor',
       'P1|podium|Podium 1',
-      '1|typical|Typical Floor 1',
+      '1|typical|First Floor',
+    ]);
+  });
+
+  it('names upper floors First Floor, Second Floor ... as in the Building tab (A-05)', () => {
+    const { floors } = generateRegistry(
+      { basements: 0, podiums: 0, typicals: 5 },
+      [],
+      sequentialIds(),
+    );
+    expect(floors.map((f) => f.name)).toEqual([
+      'Ground Floor',
+      'First Floor',
+      'Second Floor',
+      'Third Floor',
+      'Fourth Floor',
+      'Fifth Floor',
     ]);
   });
 

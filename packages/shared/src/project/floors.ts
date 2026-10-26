@@ -1,6 +1,9 @@
 import type { Floor, FloorType, Project } from './schema.js';
 
-/** Floor counts entered on Page 1 (FR-06). Ground floor is always exactly one. */
+/**
+ * Floor counts entered on Import File (FR-06, A-05): No of Basements and No of Floors (the upper
+ * floors, stored as `typicals`). Ground floor is always exactly one; podiums are not asked (0).
+ */
 export interface FloorCounts {
   basements: number;
   podiums: number;
@@ -13,6 +16,33 @@ export function planStatus(floor: Pick<Floor, 'plan'>): PlanStatus {
   if (!floor.plan) return 'No plan';
   return floor.plan.calibration ? 'Calibrated' : 'Uncalibrated';
 }
+
+const ORDINALS = [
+  'First',
+  'Second',
+  'Third',
+  'Fourth',
+  'Fifth',
+  'Sixth',
+  'Seventh',
+  'Eighth',
+  'Ninth',
+  'Tenth',
+  'Eleventh',
+  'Twelfth',
+  'Thirteenth',
+  'Fourteenth',
+  'Fifteenth',
+  'Sixteenth',
+  'Seventeenth',
+  'Eighteenth',
+  'Nineteenth',
+  'Twentieth',
+];
+
+/** "First Floor", "Second Floor" ... as in the Building tab (Figma); "Floor 21" beyond twenty. */
+export const upperFloorName = (n: number) =>
+  n >= 1 && n <= ORDINALS.length ? `${ORDINALS[n - 1]} Floor` : `Floor ${n}`;
 
 interface FloorSlot {
   code: string;
@@ -31,7 +61,7 @@ export function floorSlots(counts: FloorCounts): FloorSlot[] {
     slots.push({ code: `P${p}`, name: `Podium ${p}`, type: 'podium' });
   }
   for (let t = 1; t <= counts.typicals; t++) {
-    slots.push({ code: String(t), name: `Typical Floor ${t}`, type: 'typical' });
+    slots.push({ code: String(t), name: upperFloorName(t), type: 'typical' });
   }
   return slots;
 }

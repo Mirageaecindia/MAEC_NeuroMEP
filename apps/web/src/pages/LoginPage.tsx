@@ -3,20 +3,19 @@ import { Navigate, useLocation, useNavigate } from 'react-router';
 import { useAuth } from '../auth/AuthContext';
 import './login.css';
 
-/** Workflow steps, named after the pages in the left navigation. */
+/** Workflow card exactly as in the Figma login screen (A-03). */
 const STEPS = [
-  ['Import Floor Plan', 'Set up the project, upload floor-plan PDFs and calibrate scale.'],
-  ['Floor Modeling', 'Place electrical components and draw connections; cables are sized live.'],
-  [
-    'Building Modeling',
-    'Stack floors in 3D, define risers and connect to transformer and generator.',
-  ],
-  ['Architecture', 'Review the single-line diagram and panel schedules; lock or override sizes.'],
-  ['Simulation & Report', 'Run generator scenarios, clear warnings and export schedules.'],
+  ['Import Floor Plan', 'Upload master PDF blueprints & define exact elevation data.'],
+  ['Modeling Lab', 'Place electrical, mechanical, and PHE modules with smart wiring.'],
+  ['Visual Validation', 'Inspect true 3D BIM isometric viewports with discipline coloring.'],
+  ['Architecture', 'Generate system hierarchy and circuit protection layouts.'],
+  ['Simulation', 'Run thermal distribution and pressure drop analytics natively.'],
 ] as const;
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const showDemoCredentials = import.meta.env.VITE_SHOW_DEMO_CREDENTIALS === 'true';
+/** Demo-credentials line is part of the design (A-03); the account shown comes from the environment. */
+const DEMO_EMAIL = import.meta.env.VITE_DEMO_EMAIL ?? 'lead@neuromep.dev';
+const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD ?? 'neuromep-dev';
 
 export function LoginPage() {
   const { user, signIn } = useAuth();
@@ -24,11 +23,9 @@ export function LoginPage() {
   const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [forgot, setForgot] = useState(false);
 
   const from = (location.state as { from?: string } | null)?.from ?? '/projects';
   if (user) return <Navigate to={from} replace />;
@@ -106,24 +103,14 @@ export function LoginPage() {
               <label className="field-label" htmlFor="password">
                 Password
               </label>
-              <div className="input-group">
-                <input
-                  id="password"
-                  className="input"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="btn"
-                  onClick={() => setShowPassword((s) => !s)}
-                  aria-pressed={showPassword}
-                >
-                  {showPassword ? 'Hide' : 'Show'}
-                </button>
-              </div>
+              <input
+                id="password"
+                className="input"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
             <button className="btn btn-primary login-submit" type="submit" disabled={submitting}>
               {submitting && <span className="spinner" aria-hidden />}
@@ -134,18 +121,9 @@ export function LoginPage() {
                 {error}
               </div>
             )}
-            <div className="login-links">
-              <button type="button" className="btn-link" onClick={() => setForgot(true)}>
-                Forgot password?
-              </button>
-              {forgot && <span className="muted">Contact your administrator.</span>}
-            </div>
-            {showDemoCredentials && (
-              <p className="muted login-demo">
-                Development users: <strong>lead@neuromep.dev</strong> (or electrical@, mechanical@,
-                phe@, checker@, admin@) / <strong>neuromep-dev</strong>
-              </p>
-            )}
+            <p className="muted login-demo">
+              Demo Credentials: <strong>{DEMO_EMAIL}</strong> / <strong>{DEMO_PASSWORD}</strong>
+            </p>
           </form>
         </section>
       </div>

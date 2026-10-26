@@ -1,65 +1,10 @@
 import { ROLE_LABELS, type Role, type UserSummary } from '@neuromep/shared';
-import { useEffect, useId, useState } from 'react';
-import { useApi } from '../../auth/AuthContext';
-import { Card, fieldDomId } from '../../components/fields';
-import type { CardProps } from './cardProps';
-
-const DISCIPLINES = [
-  {
-    key: 'electrical',
-    label: 'Electrical Eng.',
-    role: 'ELECTRICAL_ENGINEER',
-    required: true,
-    color: 'var(--elec)',
-  },
-  {
-    key: 'mechanical',
-    label: 'Mechanical Eng.',
-    role: 'MECHANICAL_ENGINEER',
-    required: false,
-    color: 'var(--mech)',
-  },
-  { key: 'phe', label: 'PHE Eng.', role: 'PHE_ENGINEER', required: false, color: 'var(--phe)' },
-] as const;
-
-/** Card 5 - Discipline Assignment (drives discipline locks). No working directory (D-18). */
-export function DisciplinesCard({ project, dispatch, readOnly, errorFor, touch }: CardProps) {
-  const api = useApi();
-  const [users, setUsers] = useState<UserSummary[]>([]);
-  useEffect(() => {
-    api.users().then(
-      (r) => setUsers(r.users),
-      () => setUsers([]),
-    );
-  }, [api]);
-
-  return (
-    <Card n={5} title="Discipline Assignment">
-      <div className="grid grid-3">
-        {DISCIPLINES.map((d) => (
-          <UserMultiSelect
-            key={d.key}
-            field={`disciplines.${d.key}`}
-            label={d.label}
-            color={d.color}
-            required={d.required}
-            hint={d.required ? 'At least one required.' : 'Optional in Phase 1.'}
-            users={users.filter((u) => u.role === d.role || u.role === 'TECHNICAL_LEAD')}
-            allUsers={users}
-            selected={project.disciplines[d.key]}
-            disabled={readOnly}
-            error={errorFor(`disciplines.${d.key}`)}
-            onBlur={() => touch(`disciplines.${d.key}`)}
-            onChange={(userIds) => dispatch({ type: 'disciplines', discipline: d.key, userIds })}
-          />
-        ))}
-      </div>
-    </Card>
-  );
-}
+import { useId, useState } from 'react';
+import { fieldDomId } from './fields';
+import './userMultiSelect.css';
 
 /** Searchable multi-select shown as chips. */
-function UserMultiSelect(props: {
+export function UserMultiSelect(props: {
   field: string;
   label: string;
   color: string;

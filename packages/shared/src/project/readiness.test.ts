@@ -20,7 +20,6 @@ describe('Page 1 readiness (Next button gating)', () => {
       'details.clientName',
       'details.plotRef',
       'details.designStage',
-      'details.revision',
       'details.category',
       'details.plotLoad',
       'site.ambientAirC',
@@ -28,7 +27,7 @@ describe('Page 1 readiness (Next button gating)', () => {
       'site.soilResistivity',
       'calculation.region',
       'calculation.upstreamFaultMva',
-      'building.registry',
+      'building.counts.typicals',
       'disciplines.electrical',
     ]);
     const cards = issues.map((i) => i.card);
@@ -72,12 +71,16 @@ describe('Page 1 readiness (Next button gating)', () => {
     ]);
   });
 
-  it('needs every floor height within 2.5-10 m', () => {
+  it('needs the number of floors; basements and floor heights are optional (A-05)', () => {
     const p = completeProject();
-    const [b1, gf] = p.building.floors;
-    b1!.heightM = null;
-    gf!.heightM = 12;
-    expect(fields(p)).toEqual([`floor.${b1!.id}.height`, `floor.${gf!.id}.height`]);
+    p.building.floors.forEach((f) => (f.heightM = null));
+    p.building.counts.basements = null;
+    expect(fields(p)).toEqual([]);
+    p.building.counts.typicals = null;
+    expect(fields(p)).toEqual(['building.counts.typicals']);
+    p.building.counts.typicals = 2.5;
+    p.building.counts.basements = -1;
+    expect(fields(p)).toEqual(['building.counts.typicals', 'building.counts.basements']);
   });
 
   it('only the Electrical engineer assignment is required', () => {
@@ -88,10 +91,9 @@ describe('Page 1 readiness (Next button gating)', () => {
     expect(fields(p)).toEqual(['disciplines.electrical']);
   });
 
-  it('needs at least one calibrated floor', () => {
+  it('does not require calibrated plans on Import File (checked on Floor Setup, A-04)', () => {
     const p = completeProject();
-    const gf = p.building.floors.find((f) => f.code === 'GF')!;
-    if (gf.plan) gf.plan.calibration = null;
-    expect(fields(p)).toEqual(['plans']);
+    p.building.floors.forEach((f) => (f.plan = null));
+    expect(fields(p)).toEqual([]);
   });
 });

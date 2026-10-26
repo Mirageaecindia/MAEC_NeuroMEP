@@ -125,3 +125,8 @@
   stroke: #f59e0b;
   stroke-width: 2.5;
 }
+.viewer-actions {
+  margin-left: 10px;
+  display: inline-flex;
+  gap: 10px;
+}

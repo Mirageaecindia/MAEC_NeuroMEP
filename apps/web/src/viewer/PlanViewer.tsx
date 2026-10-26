@@ -13,9 +13,11 @@ import type { PDFDocumentProxy, PDFPageProxy, RenderTask } from 'pdfjs-dist';
 import {
   useCallback,
   useEffect,
+  useImperativeHandle,
   useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
+  type Ref,
 } from 'react';
 import { useApi } from '../auth/AuthContext';
 import { NumberInput } from '../components/fields';
@@ -32,6 +34,13 @@ import {
 import './viewer.css';
 
 type Mode = 'view' | 'calibrate' | 'verify' | 'scale';
+
+/** Driven from the shared toolbar (Zoom In / Zoom Out / Reset). */
+export interface ViewerControls {
+  zoomIn(): void;
+  zoomOut(): void;
+  fit(): void;
+}
 const MAX_CANVAS_PIXELS = 16_000_000;
 
 /**
@@ -47,6 +56,7 @@ export function PlanViewer(props: {
   readOnly: boolean;
   userId: string;
   onCalibration: (c: Calibration) => void;
+  controls?: Ref<ViewerControls>;
 }) {
   const { plan } = props;
   const api = useApi();
@@ -61,7 +71,9 @@ export function PlanViewer(props: {
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<ViewState>({ zoom: 1, panX: 0, panY: 0 });
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [mode, setMode] = useState<Mode>('view');
+  const [mode, setMode] = useState<Mode>(
+    props.plan.calibration || props.readOnly ? 'view' : 'calibrate',
+  );
   const [points, setPoints] = useState<PdfPoint[]>([]);
   const [distance, setDistance] = useState<number | null>(null);
   const [scaleDen, setScaleDen] = useState<number | null>(100);
@@ -119,6 +131,17 @@ export function PlanViewer(props: {
   const fit = useCallback(() => {
     if (page && size.width > 0) setView(fitToView(page, size));
   }, [page, size]);
+
+  useImperativeHandle(
+    props.controls,
+    () => ({
+      zoomIn: () => setView((v) => zoomAround(v, 1.25, { x: size.width / 2, y: size.height / 2 })),
+      zoomOut: () =>
+        setView((v) => zoomAround(v, 1 / 1.25, { x: size.width / 2, y: size.height / 2 })),
+      fit,
+    }),
+    [fit, size],
+  );
 
   // Render at the current zoom (debounced) - vector, so it stays sharp when zoomed.
   useEffect(() => {
@@ -271,56 +294,6 @@ export function PlanViewer(props: {
 
   return (
     <div className="viewer">
-      <div className="viewer-toolbar">
-        <strong className="viewer-title">{props.floorLabel}</strong>
-        <span className="muted viewer-file">{plan.fileName}</span>
-        <span style={{ flex: 1 }} />
-        <button
-          className="btn btn-sm"
-          aria-label="Zoom out"
-          onClick={() =>
-            setView((v) => zoomAround(v, 1 / 1.25, { x: size.width / 2, y: size.height / 2 }))
-          }
-        >
-          −
-        </button>
-        <span className="tag" aria-live="polite">
-          Zoom: {Math.round(view.zoom * 100)}%
-        </span>
-        <button
-          className="btn btn-sm"
-          aria-label="Zoom in"
-          onClick={() =>
-            setView((v) => zoomAround(v, 1.25, { x: size.width / 2, y: size.height / 2 }))
-          }
-        >
-          +
-        </button>
-        <button className="btn btn-sm" onClick={fit}>
-          Fit
-        </button>
-        {!props.readOnly && (
-          <>
-            <button
-              className={`btn btn-sm${mode === 'calibrate' ? ' btn-primary' : ''}`}
-              onClick={() => startMode('calibrate')}
-            >
-              Calibrate scale
-            </button>
-            <button
-              className="btn btn-sm"
-              disabled={!calibration}
-              onClick={() => startMode('verify')}
-            >
-              Verify
-            </button>
-            <button className="btn btn-sm" onClick={() => startMode('scale')}>
-              Drawing scale…
-            </button>
-          </>
-        )}
-      </div>
-
       {picking && (
         <div className={`viewer-guidance${view.zoom < 1 ? ' low-zoom' : ''}`}>
           <span>
@@ -345,8 +318,12 @@ export function PlanViewer(props: {
         <div className="viewer-panel">
           {points.length < 2 ? (
             <span>
-              Click point <strong>{points.length === 0 ? 'A' : 'B'}</strong> on a known dimension
-              (for example the distance between two grid lines). Esc cancels.
+              <strong>Calibrate this plan</strong> - components can be placed only on a calibrated
+              plan (E0701). Click point <strong>{points.length === 0 ? 'A' : 'B'}</strong> on a
+              known dimension (for example the distance between two grid lines).{' '}
+              <button className="btn-link" onClick={() => startMode('scale')}>
+                Use the drawing scale instead
+              </button>
             </span>
           ) : (
             <>
@@ -484,7 +461,9 @@ export function PlanViewer(props: {
             )}
           </svg>
         )}
-        <span className="viewer-hint">Wheel to zoom · Shift + Right-Click to pan</span>
+        <span className="viewer-hint">
+          Zoom: {Math.round(view.zoom * 100)}% · Wheel to zoom · Shift + Right-Click to pan
+        </span>
       </div>
       <div className="viewer-status">
         {calibration ? (
@@ -498,11 +477,26 @@ export function PlanViewer(props: {
             {calibration.method === 'two-point' && calibration.verification && (
               <> · checked: {calibration.verification.measuredM.toFixed(3)} m</>
             )}
+            {!props.readOnly && mode === 'view' && (
+              <span className="viewer-actions">
+                <button className="btn-link" onClick={() => startMode('verify')}>
+                  Verify
+                </button>
+                <button className="btn-link" onClick={() => startMode('calibrate')}>
+                  Recalibrate
+                </button>
+              </span>
+            )}
           </>
         ) : (
           <>
             <span className="tag tag-tbc">Uncalibrated</span> Calibrate the scale before modelling
             this floor.
+            {!props.readOnly && mode === 'view' && (
+              <button className="btn-link viewer-actions" onClick={() => startMode('calibrate')}>
+                Calibrate
+              </button>
+            )}
             {plan.replaced &&
               ' The plan was replaced – re-calibrate it; alignment to the previous plan follows in Floor Modelling (FR-09).'}
           </>

@@ -1,0 +1,36 @@
+.project-cards {
+  list-style: none;
+  margin: 50px 0 0 30px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 360px);
+  gap: 32px 40px;
+}
+.project-card {
+  width: 100%;
+  min-height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: none;
+  border-radius: 10px;
+  background: #dadada;
+  padding: 10px 16px 10px 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.project-card:hover {
+  background: #cfd2d6;
+}
+.project-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+}
+.projects-empty {
+  margin: 50px 30px;
+}

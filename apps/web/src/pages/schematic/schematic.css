@@ -1,0 +1,96 @@
+/* Schematic and Output pages (Figma 4, 5). */
+.check-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 10px;
+}
+.check-list label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.drawing-area {
+  position: relative;
+  height: calc(100vh - 150px);
+  min-height: 480px;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+.sample-note {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 10px;
+  color: var(--text-faint);
+}
+.sld-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: center;
+}
+.sld-bus,
+.sld-line {
+  stroke: #1f2937;
+  stroke-width: 1;
+  fill: none;
+}
+.sld-bus {
+  stroke-width: 2;
+}
+.sld-breaker,
+.sld-panel {
+  fill: #fff;
+  stroke: #1f2937;
+}
+.sld-text {
+  font-size: 8px;
+  fill: #1f2937;
+}
+.sld-small {
+  font-size: 6px;
+  fill: #4b5563;
+}
+.schedule-type {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+}
+.schedule-type select {
+  border: none;
+  background: transparent;
+  font-size: 10px;
+}
+.schedule-sheet {
+  border: 2px solid #1e3a8a;
+  border-collapse: collapse;
+  font-size: 7px;
+  background: #fff;
+  height: fit-content;
+}
+.schedule-sheet th,
+.schedule-sheet td {
+  border: 1px solid #6b7280;
+  padding: 3px 4px;
+  text-align: center;
+}
+.schedule-sheet .left {
+  text-align: left;
+}
+.schedule-sheet .logo {
+  font-size: 22px;
+  font-weight: 800;
+  color: #134e6f;
+}
+.schedule-sheet .strong {
+  font-weight: 700;
+}

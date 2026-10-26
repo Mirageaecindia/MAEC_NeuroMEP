@@ -1,5 +1,4 @@
 import { DEMAND_CATEGORY_LABELS, LOAD_TYPE_LABELS, type Region } from './enums.js';
-import { planStatus } from './floors.js';
 import type { DefaultableNumber, Project } from './schema.js';
 
 /** Validation ranges for Page 1 inputs (design doc 12.1). */
@@ -45,7 +44,6 @@ export function page1Issues(
   if (blank(d.clientName)) add(1, 'details.clientName', 'Enter the client name.');
   if (blank(d.plotRef)) add(1, 'details.plotRef', 'Enter the plot reference.');
   if (!d.designStage) add(1, 'details.designStage', 'Choose the design stage.');
-  if (blank(d.revision)) add(1, 'details.revision', 'Enter the revision.');
   if (!d.category) add(1, 'details.category', 'Choose the project category.');
   if (d.plotLoad.value === null) add(1, 'details.plotLoad', 'Enter the plot load allocation.');
   else if (!(d.plotLoad.value > 0)) add(1, 'details.plotLoad', 'Plot load must be greater than 0.');
@@ -93,40 +91,33 @@ export function page1Issues(
     }
   }
 
-  // Card 4 - Floors & elevations
+  // Floors (A-05): No of Floors required, No of Basements optional (0); no floor heights.
   const b = project.building;
-  if (b.floors.length === 0) {
-    add(4, 'building.registry', 'Generate the floor registry.');
-  } else {
-    const h = PAGE1_LIMITS.floorHeightM;
-    for (const f of b.floors) {
-      if (f.heightM === null)
-        add(4, `floor.${f.id}.height`, `${f.code}: enter the floor-to-floor height.`);
-      else if (!inRange(f.heightM, h)) {
-        add(4, `floor.${f.id}.height`, `${f.code}: height must be ${h.min}-${h.max} m.`);
-      }
-    }
-    const ids = new Set(b.floors.map((f) => f.id));
-    b.mechanicalFloorIds.forEach((id, i) => {
-      if (id !== null && !ids.has(id)) {
-        add(
-          4,
-          `building.mechanicalFloor${i + 1}`,
-          `Mechanical floor ${i + 1} is not in the registry.`,
-        );
-      }
-    });
+  const { typicals, basements } = b.counts;
+  if (typicals === null) add(4, 'building.counts.typicals', 'Enter the number of floors.');
+  else if (!Number.isInteger(typicals) || typicals < 0 || typicals > 200) {
+    add(4, 'building.counts.typicals', 'Number of floors must be a whole number from 0 to 200.');
   }
+  if (basements !== null && (!Number.isInteger(basements) || basements < 0 || basements > 20)) {
+    add(4, 'building.counts.basements', 'Number of basements must be a whole number from 0 to 20.');
+  }
+  const ids = new Set(b.floors.map((f) => f.id));
+  b.mechanicalFloorIds.forEach((id, i) => {
+    if (id !== null && !ids.has(id)) {
+      add(
+        4,
+        `building.mechanicalFloor${i + 1}`,
+        `Mechanical floor ${i + 1} is not in the registry.`,
+      );
+    }
+  });
 
-  // Card 5 - Discipline assignment (no working directory, D-18)
+  // Discipline assignment: only the Electrical engineer is required (A-10)
   if (project.disciplines.electrical.length === 0) {
     add(5, 'disciplines.electrical', 'Assign at least one Electrical engineer.');
   }
 
-  // Card 6 - Floor plans
-  if (b.floors.length > 0 && !b.floors.some((f) => planStatus(f) === 'Calibrated')) {
-    add(6, 'plans', 'Upload and calibrate the plan of at least one floor.');
-  }
+  // Plans and calibration are checked on Floor Setup (A-04, E0701), not on Import File.
 
   return issues;
 }

@@ -5,7 +5,7 @@
 }
 .login-hero {
   text-align: center;
-  max-width: 760px;
+  max-width: 980px;
   margin: 0 auto 40px;
 }
 .login-kicker {
@@ -15,12 +15,13 @@
 }
 .login-hero h1 {
   font-size: 30px;
-  font-weight: 800;
+  font-weight: 700;
   margin: 6px 0 14px;
 }
 .login-hero p {
   color: var(--text-muted);
-  margin: 0;
+  max-width: 640px;
+  margin: 0 auto;
 }
 .login-cards {
   display: grid;

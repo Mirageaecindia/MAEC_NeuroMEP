@@ -1,0 +1,71 @@
+/* Searchable multi-select with chips (discipline assignment). */
+.discipline-box {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.discipline-box.invalid {
+  border-color: var(--danger);
+}
+.combo {
+  position: relative;
+}
+.combo-list {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  max-height: 200px;
+  overflow: auto;
+}
+.combo-list li {
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.combo-list li:hover {
+  background: var(--primary-soft);
+}
+.combo-empty {
+  cursor: default !important;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 22px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 2px 4px 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border);
+  font-size: 11px;
+}
+.chip-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.chip button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0 4px;
+  color: var(--text-muted);
+}

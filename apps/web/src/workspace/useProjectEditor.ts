@@ -1,8 +1,8 @@
 import { canEditProjectSetup, type Project } from '@neuromep/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useBlocker } from 'react-router';
-import { ApiError } from '../../api/client';
-import { useApi, useUser } from '../../auth/AuthContext';
+import { ApiError } from '../api/client';
+import { useApi, useUser } from '../auth/AuthContext';
 import { projectReducer, type ProjectAction } from './projectReducer';
 
 export type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
