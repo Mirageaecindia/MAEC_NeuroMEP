@@ -3,7 +3,8 @@ import type { UserSummary } from '@neuromep/shared';
 import type { AuthProvider } from './provider.js';
 
 /** Shared password of the seeded development users. Development only. */
-export const DEV_PASSWORD = 'neuromep-dev';
+// Temporary until WBS 1.2.2 (hashed passwords): development-only seeded password.
+export const DEV_PASSWORD = 'neuromep-dev'; // nosemgrep: ajinabraham.njsscan.generic.hardcoded_secrets.node_password
 
 /** One seeded user per role of design doc Section 2 (plus a second Electrical engineer). */
 export const DEV_USERS: readonly UserSummary[] = [

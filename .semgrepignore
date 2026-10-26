@@ -1,0 +1,11 @@
+# Code analysis (WBS 1.1.3) covers application code only.
+node_modules/
+dist/
+coverage/
+docs/
+prompts/
+NeuroMEP UI/
+packages/rulepacks/cablesizer/lookup-tables.json
+**/*.test.ts
+**/*.test.tsx
+packages/shared/src/testing.ts

@@ -21,6 +21,8 @@ export async function connectMongo(uri: string, dbName: string): Promise<Databas
 export async function startDevMongo(dataDir: string, dbName: string): Promise<Database> {
   const { MongoMemoryReplSet } = await import('mongodb-memory-server');
   const dbPath = resolve(dataDir, 'mongo');
+  // Development only: dbPath comes from the DATA_DIR setting, not from a request.
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
   mkdirSync(dbPath, { recursive: true });
   const replSet = await MongoMemoryReplSet.create({
     replSet: { count: 1, storageEngine: 'wiredTiger' },

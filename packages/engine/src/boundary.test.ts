@@ -15,3 +15,10 @@ describe('engine boundary', () => {
     expect(disallowed).toEqual([]);
   });
 });
+
+describe('engine package', () => {
+  it('exposes its version (recorded with every Cable Size run)', async () => {
+    const { ENGINE_VERSION } = await import('./index.js');
+    expect(ENGINE_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+});

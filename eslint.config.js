@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
 import { defineConfig } from 'eslint/config';
 import reactHooks from 'eslint-plugin-react-hooks';
+import security from 'eslint-plugin-security';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -18,6 +19,8 @@ export default defineConfig(
   },
   js.configs.recommended,
   tseslint.configs.recommended,
+  // Security lint rules (design doc Section 6 Maintainability, WBS 1.1.3).
+  security.configs.recommended,
   {
     languageOptions: { globals: { ...globals.node } },
     rules: {
@@ -25,6 +28,19 @@ export default defineConfig(
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
       ],
+      // Flags every obj[key]; with TypeScript-typed keys this is almost always a false positive.
+      // Untrusted input is validated with Zod at the API boundary instead.
+      'security/detect-object-injection': 'off',
+    },
+  },
+  {
+    // Tests and the one-time CableSizer converter read trusted local files with fixed regexes.
+    files: ['**/*.test.{ts,tsx}', 'packages/rulepacks/scripts/**/*.ts'],
+    rules: {
+      'security/detect-non-literal-fs-filename': 'off',
+      'security/detect-non-literal-regexp': 'off',
+      'security/detect-unsafe-regex': 'off',
+      'security/detect-possible-timing-attacks': 'off',
     },
   },
   {
