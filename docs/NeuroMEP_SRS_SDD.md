@@ -20,12 +20,22 @@
 
 ## Approved amendments to this baseline
 
-The baseline is v0.3 exactly as issued (WBS 1.1.1), with only these amendments approved by the Technical Lead on 26-Oct-2026:
+The baseline is v0.3 exactly as issued (WBS 1.1.1), with only these amendments approved by the Technical Lead (A-01, A-02 on 26-Oct-2026; A-03 to A-10 on 27-Oct-2026 with the Figma UI design):
 
 | **ID** | **Amends** | **Amendment** |
 |------|---------|-------------------------------------------------------|
 | A-01 | FR-02 | Only the Technical Lead creates or imports a project (.json); an import creates a new project. Other users get projects by being assigned. |
 | A-02 | FR-07, Section 7 "Floor-Plan Handling" | Prototype plan pipeline: plan PDFs are stored on the server disk (not in MongoDB); upload accepts PDF only, single page, up to 20 MB. No image converter for now: the browser renders the PDF with PDF.js, caches each PDF and keeps only the open floor (plus the previous one) rendered. All plan access goes through one small plan interface so a tile converter can be added later without changing the pages. |
+| A-03 | Section 9, Figure 7.1, D-20 | The Figma front-end design (27-Oct-2026, `NeuroMEP UI/`) is the UI to follow, first priority. Page structure: Login, then five top tabs - All Projects, Import File, Floor Setup (Floor view + Building tab), Schematic, Output - with a shared toolbar (Open, Save, floor picker, discipline-lock chips, Clear, Zoom In/Out, Reset, Bot, Smart-AI, Building, Sync, Status, Back, Next, User Guide) and a left context panel. Only frontend features change: the calculations of Section 10 are not changed. The login screen stays exactly as designed, including the demo-credentials line. |
+| A-04 | FR-07, FR-08, FR-09 | Floor plans and calibration are kept although not drawn in Figma: the toolbar Open button uploads the PDF of the floor selected in the floor picker; when an uncalibrated plan is first shown on Floor Setup, a calibration prompt appears over the canvas (two points, real distance, Verify; drawing-scale alternative); placing components is blocked until the plan is calibrated (E0701). |
+| A-05 | FR-06, FR-15, FR-20, 12.1 | Floors: Import File asks No of Floors (Ground + N upper floors) and No of Basements; GF datum level and floor-to-floor heights are not entered. Riser lengths are entered per riser in the Building tab (Riser Design: length and width, m). Cable length = routed length on the plan x scale + 1 m per cable for the vertical (Z) direction; the length allowance of 12.2 is unchanged. |
+| A-06 | FR-04, 12.1 | All five checks are kept. Current Carrying Capacity and Voltage Drop are always calculated (cannot be unticked); Short-circuit, Let-through Energy and Earth Fault Loop Impedance can be ticked or unticked (ticked by default); unticked checks are "Not calculated". |
+| A-07 | FR-18, FR-21 to FR-30, D-21 | Cable sizing is started from a Cable Size button in the Floor Setup right panel (that floor) and from the Cable Size Calculator in the Building tab (whole building). Both are enabled only once the transformer (power source) is connected to the risers in the Building tab; without a source no cable can be sized. After a successful run the Building Summary Save button is enabled. |
+| A-08 | FR-11, FR-12, Section 8 | Floor status per discipline (Building Summary, project cards, toolbar Status button): "in progress" (pill icon) when a floor has been opened; the engineer flags the floor when it is done - flag = saved and locked, cannot be undone, only the Lead can reopen it; X = the floor has not been opened yet. |
+| A-09 | Section 7 | Bot and Smart-AI buttons are shown but not active in this release; they will be specified and added to the design document later. |
+| A-10 | 12.1, FR-05 | Required fields follow the baseline, not the Figma asterisks: Altitude and floor height are optional; Mechanical and PHE engineers are optional. Demand factors stay TBC (the example values in Figma are not used). Fields of 12.1 that are not in Figma are not shown; calculation inputs among them (system voltage, frequency) take the rule-pack defaults of 12.2. |
+
+**Open UI questions (27-Oct-2026):** Riser / transformer cost in AED (Building tab "Cost") - scope and price source (Technical Lead (manager)); "Demand Factors" button shown in the Building Summary after Cable Size - its purpose (Technical Lead (manager)).
 
 **Source documents:** CableSizer v1.1 Calculation File and User Manual; Components for NeuroMEP workbook; Project Set-up - Electrical slide; POWER/LIGHT legend sheet; NeuroMEP UI screens; IEC 60909-0, BS 7671, IEC 60364-5-52, IEC 60947-2.
 
