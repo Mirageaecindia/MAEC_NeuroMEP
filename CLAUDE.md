@@ -6,89 +6,67 @@ When something here changes, update this file in the same task and add a line to
 ## What NeuroMEP is
 A web application for MEP (Mechanical, Electrical, Plumbing/PHE) design engineers.
 Engineers upload architectural floor-plan PDFs, drag components onto each floor, connect
-them by drawing cables (like Cisco Packet Tracer), and the app calculates, sizes and validates
-every breaker and cable, then produces fixed-format panel schedules that contractors build from.
+them by drawing cables (like Cisco Packet Tracer), press **Cable Size** to size and validate
+every breaker and cable, then produce fixed-format panel schedules that contractors build from.
 It replaces manual drawing plus the CableSizer v1.1 Excel workbook.
 
 ## Source of truth
-- **Design document:** `docs/NeuroMEP_SRS_SDD.md` (version in its header; v0.8 freeze candidate).
-  - Section 4: #TASK feature codes and error codes. Section 5: FRs. Section 8: real-time collaboration.
-  - Section 10: calculation specification (verified); Section 11: verification log (V-nn). Items marked [ENG] await the Senior Electrical Engineer.
-  - Section 12: data dictionary (12.1 Page 1 inputs, 12.2 rule-pack defaults). Section 18: open items (OI-xx) and decisions (D-xx).
+- **Design document (baseline):** `docs/NeuroMEP_SRS_SDD.md` = **v0.3 freeze candidate (25 Oct 2026)**, frozen as baseline under WBS 1.1.1, plus approved amendments **A-01** and **A-02** listed in its Section 0. The original Word file is in `docs/Design doc and WBS/`.
+  - Section 4: #TASK codes and error-code convention. Section 5: FRs. Section 7: architecture (Figures 7.1–7.4, floor-plan handling). Section 8: collaboration. Section 9: pages and "changes to earlier pages".
+  - Section 10: calculation specification (verified); Section 11: verification log (V-nn); [ENG] = awaits Senior Electrical Engineer.
+  - Section 12: data dictionary (12.1 Page 1, 12.2 rule-pack defaults, 12.3 equipment fields, 12.5 tooltips). Section 18: open items and decisions. Appendix D: errors engineers meet.
   - **Never invent a value for an open item.** Use the stated interim default or a clearly labelled placeholder.
-- **Reference data (two files, same content):**
-  - `docs/reference/cablesizer_lookup_rules.json` — the **source record**: every lookup table extracted from CableSizer as `when` expression strings. Never edit it.
-  - `packages/rulepacks/cablesizer/lookup-tables.json` — the **runtime form**, generated once by `npm run convert:cablesizer -w @neuromep/rulepacks`: typed rows keyed by named fields, no expressions evaluated at runtime. A test proves every source rule returns the same value. Rows with known legacy errors are flagged "awaiting engineer sign-off (OI-07)" and are **not corrected**.
-  - **These converted tables are the archived starting point only.** Per V-12 the engine must **never mark a result Final** when it used these CableSizer ampacity tables; such results stay Provisional until verified Ducab / BS 7671 tables (with reference conditions, V-11) replace them.
+- **Project schedule (WBS):** `docs/Design doc and WBS/NeuroMEP_Project_Gantt_Schedule (1).xlsx` — 26 Oct to 10 Nov 2026. **Develop in WBS order** (1.1 → 1.8); each commit names its WBS item and #TASK code.
+- **Reference data:**
+  - `docs/reference/cablesizer_lookup_rules.json` — source record of the CableSizer lookup tables. Never edit it.
+  - `packages/rulepacks/cablesizer/lookup-tables.json` — typed runtime form (`npm run convert:cablesizer -w @neuromep/rulepacks`), tested against every source rule (WBS 1.5.4). Known legacy errors flagged "awaiting engineer sign-off (OI-07)", not corrected.
+  - **Archived starting point only (V-12):** a result that used these CableSizer ampacity tables is never Final until verified Ducab / BS 7671 tables replace them.
 - **Change history:** `docs/CHANGELOG.md`.
 - If the design doc and this file disagree, the design doc wins; flag the conflict to the user.
 
 ## Phase 1 scope
-Electrical LV distribution only: supply (EB utility/RMU, transformer, generator via ATS, UPS) → LV Panel/MDB → busbar risers / tap-offs → SMDB / MCC → **incoming feeder of each DB**.
-The DB is a terminal node; its load is entered by the engineer. DB internals, final circuits, mechanical and PHE calculations are out of scope (mechanical/PHE components exist in the UI but are locked).
+Electrical LV distribution only: supply (EB utility/RMU, transformer, generator via ATS, UPS) → LV Panel/MDB/EMDB → busbar risers / tap-offs → SMDB / MCC → **incoming feeder of each DB**. The DB is a terminal node with entered load. Mechanical/PHE components exist but only supply electrical data.
 
-## Pages (left navigation)
-0. Login → Project picker (D-13)
-1. Project Set-up & Import Floor Plan (project "kickoff")
-2. Floor Modelling — canvas, component library at bottom, properties panel on the right
-3. Building Modelling — stack floors (3D isometric), risers, connect to sources
-4. Architecture — single-line diagram, schedule review, locks/overrides (no separate calculation step)
-5. Simulation & Report — generator scenario, final check list, exports
+## Pages (D-20) — Figure 7.1
+Login → Project picker → **1** Project Set-up & Import Floor Plan → **2** Floor & Building Modelling (top-right toggle Floor view / Building view, riser on the left; right panel with live load table and Cable Size) → **3** Architecture → **4** Simulation & Report.
+Going back and changing an earlier page asks for confirmation listing what is affected, then marks results "Out of date" and writes the audit log (Section 9).
 
-## #TASK and error codes (design doc Section 4, D-17)
-- Every feature has a permanent code `#TASK-nn` (never reused or renumbered). Use it in branch names, **commit messages** (e.g. `#TASK-22 fix single-phase r/x lookup`), test names, log lines and error codes.
-- Built so far: #TASK-01 auth/session/roles · #TASK-02 project picker · #TASK-03 project details & site · #TASK-04 calculation set-up, demand factors, defaults · #TASK-05 floor registry & elevations · #TASK-06 plan upload & viewer · #TASK-07 calibration & plan replacement · #TASK-08 persistence, autosave, optimistic locking · #TASK-29 reference data & rule packs. Full list in Section 4.
-- **Error code** `E` + task (2 digits) + sequence (2 digits), e.g. `E2203` = third error of #TASK-22. Each code is listed once in the catalogue `packages/shared/errors` (message, severity, action) — **not created yet**: errors from #TASK-01 to #TASK-08 still carry plain messages without E-codes. Calculation check codes C1–C12 (Section 10.12) are separate.
+## #TASK and error codes (Section 4, D-17)
+- Permanent codes `#TASK-01` … `#TASK-34`; use them in commit messages, test names, log lines and error codes. Never reuse or renumber.
+- **Error code** `E` + task (2 digits) + sequence (2 digits). Catalogue: `packages/shared/errors` (message, severity Blocks/Warning, action). Appendix D lists the 22 engineer-facing codes; developer-only codes are added to the catalogue too. Check codes C1–C12 (10.12) are not errors.
 - **Log line:** `[timestamp] [level] [#TASK-nn] [Ennnn] message {projectId, floorId, elementTag, userId, rulePackVersion}`.
 
-## Key decisions (design doc Section 18)
-- D-01 Phase 1 ends at the DB incoming feeder.
-- D-02 Schedules are generated by NeuroMEP in fixed formats; users never upload schedules.
-- D-03 Demand factors are entered on Page 1 (region defaults) and can be overridden per panel.
-- D-04 Cable size, runs, earth conductor and breaker are never picked by the user while drawing; the engine calculates them live (Provisional until the path reaches a source, then Final). The user may lock them.
-- D-05 Cable construction is chosen while drawing, pre-filled from project defaults.
-- D-06 Ib is calculated per cable from the maximum demand it carries.
-- D-07 All failing checks are reported, not only the first.
-- D-08 Disabled checks are still computed and shown as "Not verified".
-- D-09 Region rule packs; only Dubai is active in v1.
-- D-10 Calculations run for transformer and generator supply.
-- D-11 CableSizer sample outputs are NOT a test oracle (they contain errors).
-- D-12 There is no calculation page: the **calculation engine is a background service** that recalculates whenever its inputs change.
-- D-13 A project picker follows Login: accessible projects, New Project and Import Project (.json) for the Technical Lead (an import creates a new project); opening a project goes to its last page.
-- D-14 MERN + TypeScript monorepo, MongoDB, Netcup VPS hosting. Details under "Stack".
-- D-15 The verified calculation rules of Section 10 replace the CableSizer rules where they differ (Section 11).
-- D-16 Real-time collaboration with discipline greying and element locks (Section 8).
-- D-17 Every feature carries a #TASK code; errors use the E-code convention (see above).
-- D-18 No Working Directory field: exports download through the browser; an admin may add a server-side export location later.
-- D-19 Demand factors: labels follow the Project Set-up slide (Lighting, Power, AC, Heater, Laundry, Kitchen, Hand Dryer, Pumps, Fire Pumps, Special Equipment, Lifts & Equipment, Spare). TBC factors do not block Next but Page 1 shows a warning banner; the engine takes a missing factor as 1.0 and marks dependent results "Provisional – demand factors TBC".
-- Page 1: Altitude optional, not used in Phase 1 (OI-26); only the Electrical engineer is required. Calculation defaults (voltage, pf, voltage factors, depth, length allowance, loading limit, cable construction, voltage-drop limits, disconnection times) come from the rule pack (12.2), not the user.
-- Access (Section 2, interim until OI-28): Technical Lead, Checker, System Administrator see all projects; engineers see projects they created or are assigned to; only the Technical Lead creates/imports projects and edits Page 1.
+## Key decisions (Section 18) and amendments
+- D-01/02 Phase 1 ends at the DB incoming feeder; schedules generated by NeuroMEP, never uploaded.
+- D-03/05 Demand factors on Page 1, overridable per panel; cable construction chosen while drawing.
+- D-04/12 Sizes calculated by a background engine **when the user presses Cable Size** (and before export); Provisional/Final status and "Out of date" marking; no calculation page; users may lock values.
+- D-06/07/08 Ib per cable from the demand it carries; all failing checks reported; **checks not ticked on Page 1 are not calculated** and shown "Not calculated - not selected on Page 1"; **ampacity is always calculated** (FR-04).
+- D-09/10/11 Dubai rule pack v1; normal + standby scenarios; CableSizer outputs are not a test oracle.
+- D-13/14 Project picker after login; MERN + TypeScript monorepo, MongoDB, Netcup VPS.
+- D-15 Verified rules of Section 10 replace CableSizer rules. D-16 Real-time collaboration (Section 8). D-17 #TASK / E-codes.
+- D-20 Floor and building modelling share Page 2 (toggle); pages renumbered 1-4. D-21 Cable sizing on demand (Cable Size button), live load table always shown.
+- **A-01** Only the Technical Lead creates or imports projects (amends FR-02).
+- **A-02** Prototype plans: PDF on server disk; PDF only, single page, ≤ 20 MB; PDF.js renders in the browser; cache keeps the open floor + previous one; one plan interface so a tile converter can be added later (amends FR-07 / Section 7).
+- TBC demand factors: E1901 "Demand factor not confirmed" (Warning) — 1.0 is used and the result is Provisional. Load-type labels as Appendix B.
 
-## Stack (D-14, design doc Section 7)
-- Single repository, TypeScript everywhere, npm workspaces: `apps/web` (React + Vite), `apps/api` (Node + Express), `packages/engine` (pure TS; web worker + api), `packages/shared` (Zod schemas, types, Page 1 rules), `packages/rulepacks` (Dubai pack, CableSizer tables), `revit-addin/` (C# .NET, future).
-- Section 7 also names Zustand, Konva, three.js, Socket.IO, ExcelJS for later pages — not installed yet; add them with the feature that needs them.
-- Database: MongoDB replica set (transactions, change streams) with the official driver; collections `projects`, `floors`, `elements`, `rulepacks`, `auditLog`, `exports`, `sessions`. PDFs in GridFS; MongoDB stores references only. Optimistic locking via a `version` field.
-- Hosting: Netcup VPS (Nginx + HTTPS, Node under PM2/Docker, MongoDB replica set on the VPS or Atlas).
-- Tooling: Node 24 LTS (`.nvmrc`); ESLint + Prettier; Vitest everywhere, mongodb-memory-server for database tests, Playwright end-to-end later. Root scripts: `npm run dev` (api + web), `test`, `typecheck`, `lint`, `build`.
-- Internal packages expose a `source` export condition, so dev, tests and typecheck use TypeScript source; `build` emits `dist/` for Node.
-- Floors are not tied to PDFs: a floor's `plan` is a discriminated union (`kind: 'pdf'` now, `'revit'` later, #TASK-33). Calibration lives on the PDF plan, in PDF page units.
-- Development: `npm run dev` starts an in-process MongoDB replica set (data in `apps/api/.data`) when `MONGODB_URI` is unset. Copy `.env.example` to `.env`.
-- Auth: `AuthProvider` interface on web and api; only the dev provider exists (seeded users `lead@ / electrical@ / electrical2@ / mechanical@ / phe@ / checker@ / admin@neuromep.dev`, password `neuromep-dev`). **Known gap:** sessions use a bearer token in localStorage; NFR Security asks for httpOnly session cookies — fix under #TASK-01 before release.
+## Stack (D-14, Section 7)
+- npm workspaces: `apps/web` (React + Vite), `apps/api` (Node + Express), `packages/engine` (pure TS; web worker + api), `packages/shared` (Zod schemas, types, Page 1 rules, error catalogue), `packages/rulepacks` (Dubai pack, CableSizer tables), `revit-addin/` (future).
+- Section 7 also names Zustand, Konva, three.js, Socket.IO, ExcelJS — add each with the WBS item that needs it.
+- MongoDB replica set, official driver; collections `projects`, `floors`, `elements`, `rulepacks`, `auditLog`, `exports`, `sessions`. Plan files on disk (A-02). Optimistic locking via `version`.
+- Hosting: Netcup VPS (Nginx + TLS, PM2, MongoDB, nightly backup); staging demo on 10 Nov (WBS 1.8.3).
+- Tooling: Node 24 LTS; ESLint (+ security rules) + Prettier; Vitest, mongodb-memory-server, Playwright (WBS 1.5.2); CI on every push with tests, code analysis and dependency audit (WBS 1.1.3).
+- Internal packages expose a `source` export condition (dev/tests use TS source; `build` emits `dist/`).
+- A floor's `plan` is a discriminated union (`kind: 'pdf'`; `'revit'` later, #TASK-33). Calibration stored in PDF page units; the model is stored in metres.
+- Dev: `npm run dev` starts an in-process MongoDB replica set when `MONGODB_URI` is unset. Dev users `lead@ / electrical@ / electrical2@ / mechanical@ / phe@ / checker@ / admin@neuromep.dev`, password `neuromep-dev`.
 
 ## Architecture rules
-- Six layers (design doc Section 7): Presentation → Application controller → Network model → Calculation engine → Reference data → Persistence, sync & export.
-- The calculation engine stays an isolated package with pure functions, no UI/DB imports, fully unit-tested (Appendix C vectors). It receives the network model + rule-pack version and returns results.
-- Background calculation must never block the canvas. A project records the rule-pack version it used.
-- A missing or out-of-range table value never becomes 0 or 1 — the element is blocked with a code (V-14). Only exception: TBC demand factors (D-19).
-- Export files never overwrite: append `_v1`, `_v2` on collision.
+- Layers 01–06 (Section 7, Figure 7.2). The engine is an isolated package with pure functions, no UI/DB imports, unit-tested (engine coverage ≥ 90 %, Appendix C vectors).
+- The engine runs off the screen thread (Web Worker); the live load table uses aggregation only (10.2 step 2).
+- A missing or out-of-range table value never becomes 0 or 1 — the element is blocked with a code (V-14). TBC demand factors are the stated exception (E1901).
+- A project records its rule-pack version. Export files never overwrite (`_v1`, `_v2`).
 
 ## Working rules
+- Follow the WBS order; if the design doc or WBS is unclear, ask before building.
 - Use the stack in D-14. If a choice is not obvious (e.g. a library), propose it and wait for approval.
-- Keep terminology from the design doc glossary (Appendix A).
-- Every shell command you show the user gets a one-line comment explaining it.
+- Keep terminology from the glossary (Appendix A). Every shell command shown to the user gets a one-line comment.
 - Before finishing a task: run tests, update this file if any decision changed, add a CHANGELOG line.
-
-## Open items that affect UI work now
-- OI-01/02 demand-factor values and combination rule — TBC handling per D-19.
-- OI-28 login integration (MAEC One) — keep authentication behind the provider interface.
-- OI-34 SVG symbols for Phase 1 equipment missing from the legend (blocks Page 2 library).
