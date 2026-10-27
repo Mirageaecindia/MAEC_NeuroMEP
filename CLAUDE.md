@@ -16,7 +16,7 @@ It replaces manual drawing plus the CableSizer v1.1 Excel workbook.
   - Section 10: calculation specification (verified); Section 11: verification log (V-nn); [ENG] = awaits Senior Electrical Engineer.
   - Section 12: data dictionary (12.1 Page 1, 12.2 rule-pack defaults, 12.3 equipment fields, 12.5 tooltips). Section 18: open items and decisions. Appendix D: errors engineers meet.
   - **Never invent a value for an open item.** Use the stated interim default or a clearly labelled placeholder.
-- **UI design (Figma, received 27 Oct 2026):** `NeuroMEP UI/*.png` — 14 screens: Login, then 5 pages as top tabs (All Projects, Import File, Floor Setup with Building tab, Schematic, Output). **Follow these screens strictly.** They replace all earlier UI screenshots and the WBS 1.2.1 layout previews. Conflicts with the design document are resolved by amendments A-03 to A-10 (design doc Section 0): Figma wins for frontend features; the calculations of Section 10 never change. Ask the user about anything new.
+- **UI design (Figma, received 27 Oct 2026):** `NeuroMEP UI/*.png` — 14 screens: Login, then 5 pages as top tabs (All Projects, Import File, Floor Setup with Building tab, Schematic, Output). **Follow these screens strictly.** They replace all earlier UI screenshots and the WBS 1.2.1 layout previews. Conflicts with the design document are resolved by amendments A-03 to A-14 (design doc Section 0): Figma wins for frontend features; the calculations of Section 10 never change. Ask the user about anything new.
 - **Project schedule (WBS):** `docs/Design doc and WBS/NeuroMEP_Project_Gantt_Schedule (1).xlsx` — 26 Oct to 10 Nov 2026. **Develop in WBS order** (1.1 → 1.8); each commit names its WBS item and #TASK code.
 - **Reference data:**
   - `docs/reference/cablesizer_lookup_rules.json` — source record of the CableSizer lookup tables. Never edit it.
@@ -35,6 +35,9 @@ Login → five top tabs: **All Projects** (project cards with status) → **Impo
 - Floors: No of Floors (Ground + N) and No of Basements; no floor heights; riser lengths typed in the Building tab; cable length = routed length x scale + 1 m per cable (A-05).
 - Cable Size: right-panel button (floor) and Building-tab Cable Size Calculator (building), enabled only after the transformer is connected to the risers (A-07).
 - Floor status per discipline: pill = in progress, flag = saved and locked (only the Lead reopens), X = not opened (A-08).
+- Component library = the Figma items, all enabled incl. Cable and Lighting; legend symbols (SVG + CMP code) kept in a server-side symbol catalogue for drag-and-drop, drafts marked for approval (A-11, WBS 1.3.1).
+- Tabs open in order: later tabs greyed until Next; earlier tabs always reopenable; the project stores the furthest page reached (A-12).
+- Building tab lists floors top-down, Ground then basements at the bottom (A-13); Building Summary "Demand Factors" reopens the 12 load-type factors, a change marks sizes out of date (A-14).
 - Going back and changing an earlier page asks for confirmation listing what is affected (Section 9).
 
 ## #TASK and error codes (Section 4, D-17)
@@ -52,8 +55,8 @@ Login → five top tabs: **All Projects** (project cards with status) → **Impo
 - D-15 Verified rules of Section 10 replace CableSizer rules. D-16 Real-time collaboration (Section 8). D-17 #TASK / E-codes.
 - D-20 / D-21 superseded in the UI by A-03 (Figma page structure) and A-07 (Cable Size triggers); sizing stays on demand.
 - **A-01** Only the Technical Lead creates or imports projects (amends FR-02).
-- **A-03..A-10** (27 Oct, Figma design): see design doc Section 0 and the Pages section above. A-10: Altitude, floor height, Mechanical and PHE engineers optional; demand factors TBC; 12.1 fields not in Figma are not shown (voltage / frequency from the rule pack).
-- **Open (manager to confirm):** riser / transformer cost in AED; purpose of the Building Summary "Demand Factors" button.
+- **A-03..A-14** (27 Oct, Figma design and follow-up answers): see design doc Section 0 and the Pages section above. A-10: Altitude, floor height, Mechanical and PHE engineers optional; demand factors TBC; 12.1 fields not in Figma are not shown (voltage / frequency from the rule pack).
+- **Open (manager to confirm):** riser / transformer cost in AED.
 - **A-02** Prototype plans: PDF on server disk; PDF only, single page, ≤ 20 MB; PDF.js renders in the browser; cache keeps the open floor + previous one; one plan interface so a tile converter can be added later (amends FR-07 / Section 7).
 - User accounts (prototype, 26 Oct): stored in a server-side config file / environment with password hashes — no users collection; MAEC One replaces it later via the AuthProvider interface.
 - Project access (26 Oct, unchanged): Technical Lead, Checker and System Administrator see all projects; engineers see projects they created or are assigned to.

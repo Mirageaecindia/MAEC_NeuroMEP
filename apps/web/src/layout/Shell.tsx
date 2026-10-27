@@ -1,4 +1,4 @@
-import { initials, ROLE_LABELS } from '@neuromep/shared';
+import { canCreateProject, initials, ROLE_LABELS } from '@neuromep/shared';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { NavLink, useNavigate } from 'react-router';
 import { useAuth, useUser } from '../auth/AuthContext';
@@ -20,6 +20,10 @@ export function tabPath(tab: TabKey, projectId: string | null): string | null {
   if (tab === 'import') return projectId ? `/projects/${projectId}/import` : '/projects/new';
   return projectId ? `/projects/${projectId}/${tab}` : null;
 }
+
+/** Furthest tab the open project has reached (A-12); provided by the project workspace. */
+export const ReachedTabContext = createContext<TabKey | null>(null);
+const tabIndex = (t: TabKey) => TABS.findIndex((x) => x.key === t);
 
 // ----- small notices (e.g. "Bot comes in a later release") -----
 const NoticeContext = createContext<(text: string) => void>(() => undefined);
@@ -61,6 +65,13 @@ export function Shell(props: {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const [theme, setTheme] = useTheme();
+  const reached = useContext(ReachedTabContext);
+  // Tabs open in order (A-12): earlier tabs any time, later ones only through Next.
+  const canOpen = (t: TabKey) =>
+    t === 'projects' ||
+    (props.projectId
+      ? tabIndex(t) <= tabIndex(reached ?? 'import')
+      : t === 'import' && canCreateProject(user));
   const [notice, setNotice] = useState<string | null>(null);
   const showNotice = useCallback((text: string) => setNotice(text), []);
   useEffect(() => {
@@ -102,7 +113,7 @@ export function Shell(props: {
           <header className="topbar">
             <nav className="tabs" aria-label="Pages">
               {TABS.map((t) => {
-                const to = tabPath(t.key, props.projectId);
+                const to = canOpen(t.key) ? tabPath(t.key, props.projectId) : null;
                 const active = t.key === props.tab;
                 return to ? (
                   <NavLink
@@ -114,7 +125,12 @@ export function Shell(props: {
                     {t.label}
                   </NavLink>
                 ) : (
-                  <span key={t.key} className="tab disabled" title="Open a project first">
+                  <span
+                    key={t.key}
+                    className="tab disabled"
+                    aria-disabled="true"
+                    title={props.projectId ? 'Use Next to move on' : 'Open a project first'}
+                  >
                     {t.label}
                   </span>
                 );

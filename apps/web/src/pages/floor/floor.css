@@ -229,5 +229,19 @@
   min-width: 52px;
 }
 .demand-btn {
-  opacity: 0.8;
+  display: block;
+  margin: 10px auto 0;
+}
+.df-dialog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 16px;
+  margin-top: 10px;
+}
+.df-dialog-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
 }

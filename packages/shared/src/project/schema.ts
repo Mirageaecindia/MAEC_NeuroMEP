@@ -223,6 +223,8 @@ export const ProjectSchema = z.object({
     createdBy: Id,
     updatedAt: IsoDate,
     lastPage: PageKeySchema,
+    /** Furthest page reached; later tabs stay closed until Next (A-12). */
+    reachedPage: PageKeySchema.optional(),
   }),
 });
 export type Project = z.infer<typeof ProjectSchema>;

@@ -1,5 +1,7 @@
 import {
   applyRegistryChange,
+  laterPage,
+  reachedPage,
   type Calibration,
   type CalculationCheck,
   type DemandCategory,
@@ -196,6 +198,9 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
     case 'saved':
       return { ...p, version: a.version, meta: { ...p.meta, updatedAt: a.updatedAt } };
     case 'lastPage':
-      return { ...p, meta: { ...p.meta, lastPage: a.page } };
+      return {
+        ...p,
+        meta: { ...p.meta, lastPage: a.page, reachedPage: laterPage(reachedPage(p.meta), a.page) },
+      };
   }
 }

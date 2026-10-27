@@ -24,8 +24,8 @@ import { UserMultiSelect } from '../../components/UserMultiSelect';
 import { newAudit, type CardProps } from '../../workspace/formProps';
 import './import.css';
 
-/** Load types in the order of the Figma grid (two columns). */
-const LOAD_TYPE_GRID: LoadTypeCode[] = [
+/** Load types in the order of the Figma grid (Import File and the Building tab dialog). */
+export const LOAD_TYPE_GRID: LoadTypeCode[] = [
   '1',
   '2',
   '10',

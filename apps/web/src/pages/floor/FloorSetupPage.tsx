@@ -12,7 +12,10 @@ import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/Pro
 import { BuildingTab } from './BuildingTab';
 import './floor.css';
 
-/** Component library (Figma 3.1 / 3.2; design doc Section 13). Placement arrives in WBS 1.3.1. */
+/**
+ * Component library: the Figma items (A-11). Legend symbols and drag-and-drop placement arrive with
+ * WBS 1.3.1; Cable is the cable-drawing tool.
+ */
 const LIBRARY: Record<'Electrical' | 'Mechanical' | 'PHE', string[]> = {
   Electrical: [
     'ATS',
@@ -27,13 +30,12 @@ const LIBRARY: Record<'Electrical' | 'Mechanical' | 'PHE', string[]> = {
     'MCC',
     'DB',
     'Busbar',
-    'Connection Unit',
+    'Cable',
     'Lighting',
   ],
   Mechanical: [],
   PHE: [],
 };
-const PHASE_2 = new Set(['Lighting']);
 const MAX_PLAN_BYTES = 20 * 1024 * 1024; // A-02
 
 /** Floor Setup (Figma 3.1 - 3.8): floor plan canvas, and the Building tab via the toolbar. */
@@ -142,10 +144,8 @@ export function FloorSetupPage() {
               <button
                 key={item}
                 className="lib-chip"
-                disabled={building || PHASE_2.has(item)}
-                title={
-                  PHASE_2.has(item) ? 'Phase 2' : 'Drag-and-drop placement comes with WBS 1.3.1'
-                }
+                disabled={building}
+                title="Drag-and-drop placement comes with WBS 1.3.1"
                 onClick={() => notice('Drag-and-drop placement comes with WBS 1.3.1.')}
               >
                 {item}

@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { NumberInput } from '../../components/fields';
 import { StatusMark, type StatusIcon } from '../../layout/icons';
 import { useNotice } from '../../layout/Shell';
+import { DemandFactorsDialog } from './DemandFactorsDialog';
 
 interface Riser {
   lengthM: number | null;
@@ -30,8 +31,10 @@ export function BuildingTab(props: { floors: Floor[]; zoom: number; readOnly: bo
   /** floorId -> riser index. */
   const [links, setLinks] = useState<Record<string, number>>({});
   const [sized, setSized] = useState(false);
+  const [dfOpen, setDfOpen] = useState(false);
 
-  const rows = useMemo(() => [...props.floors].reverse(), [props.floors]); // top first
+  // Top floor first, then Ground, basements at the bottom - as in the building section (A-13).
+  const rows = useMemo(() => [...props.floors].reverse(), [props.floors]);
   const bottomY = TOP + (rows.length - 1) * ROW + 40;
   const maxLen = Math.max(0, ...risers.map((r) => r.lengthM ?? 0));
   const riserTop = (r: Riser) =>
@@ -145,7 +148,7 @@ export function BuildingTab(props: { floors: Floor[]; zoom: number; readOnly: bo
             </tr>
           </thead>
           <tbody>
-            {props.floors.map((f) => (
+            {rows.map((f) => (
               <tr key={f.id}>
                 <th scope="row">{f.name} :</th>
                 <td>
@@ -229,13 +232,12 @@ export function BuildingTab(props: { floors: Floor[]; zoom: number; readOnly: bo
           </button>
         </div>
         {sized && (
-          <button
-            className="summary-btn demand-btn"
-            disabled
-            title="Purpose to be confirmed by the Technical Lead"
-          >
+          <button className="summary-btn demand-btn" onClick={() => setDfOpen(true)}>
             Demand Factors
           </button>
+        )}
+        {dfOpen && (
+          <DemandFactorsDialog onClose={() => setDfOpen(false)} onChanged={() => setSized(false)} />
         )}
       </aside>
     </div>

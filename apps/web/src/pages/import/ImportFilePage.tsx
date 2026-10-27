@@ -90,9 +90,7 @@ export function ImportFilePage() {
   const v = useValidation(project);
   const importer = useImportProject();
   const valid = v.issues.length === 0;
-  const toolbar = useProjectToolbar('import', {
-    next: () => (valid ? undefined : v.showAll()),
-  });
+  const toolbar = useProjectToolbar('import');
   const openMenu: OpenMenuItem[] = [
     {
       label: 'Open project file (.json)…',
@@ -124,8 +122,9 @@ export function ImportFilePage() {
             'open',
             'back',
             'guide',
+            // Next stays enabled: on an incomplete form it shows every missing field.
+            'next',
             ...(editor.dirty && !editor.readOnly ? (['save'] as const) : []),
-            ...(valid ? (['next'] as const) : []),
           ]}
           hidden={['status']}
           openMenu={openMenu}

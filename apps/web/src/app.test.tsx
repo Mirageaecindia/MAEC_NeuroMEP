@@ -177,17 +177,40 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
     expect(tool('Next')).toBeEnabled();
   });
 
-  it('keeps Next disabled for an incomplete project and shows inline errors', async () => {
+  it('Next on an incomplete project shows inline errors and keeps Floor Setup closed', async () => {
     const empty = {
       ...createEmptyProject({ id: 'p-2', userId: 'u-lead', now: FIXED_NOW }),
       version: 1,
     };
-    renderAt('/projects/p-2/import', new FakeAuth(LEAD), fakeApi(empty));
-    const name = await screen.findByLabelText(/Project Name/);
-    expect(tool('Next')).toBeDisabled();
-    await userEvent.click(name);
-    await userEvent.tab();
+    const router = renderAt('/projects/p-2/import', new FakeAuth(LEAD), fakeApi(empty));
+    await screen.findByLabelText(/Project Name/);
+    expect(screen.queryByRole('link', { name: 'Floor Setup' })).not.toBeInTheDocument();
+    await userEvent.click(tool('Next'));
     expect(await screen.findByText('Enter the project name.')).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/projects/p-2/import');
+  });
+
+  it('tabs open in order: Next opens the following tab, earlier tabs stay open (A-12)', async () => {
+    const router = renderAt('/projects/p-1/import', new FakeAuth(LEAD), fakeApi(completeProject()));
+    await screen.findByLabelText(/Project Name/);
+    const tabs = screen.getByRole('navigation', { name: 'Pages' });
+    expect(within(tabs).getByRole('link', { name: 'Floor Setup' })).toBeInTheDocument();
+    expect(within(tabs).queryByRole('link', { name: 'Schematic' })).not.toBeInTheDocument();
+    await userEvent.click(tool('Next'));
+    await screen.findByText('TRANSFORMER CAPACITY & CONNECTED LOAD SCHEDULE');
+    await userEvent.click(tool('Next'));
+    await screen.findByText('Architecture Details');
+    expect(router.state.location.pathname).toBe('/projects/p-1/schematic');
+    await userEvent.click(screen.getByRole('link', { name: 'Floor Setup' }));
+    await screen.findByText('TRANSFORMER CAPACITY & CONNECTED LOAD SCHEDULE');
+    expect(router.state.location.pathname).toBe('/projects/p-1/floor');
+    expect(screen.getByRole('link', { name: 'Schematic' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Output' })).not.toBeInTheDocument();
+  });
+
+  it('a link to a tab not reached yet opens the furthest tab reached (A-12)', async () => {
+    const router = renderAt('/projects/p-1/output', new FakeAuth(LEAD), fakeApi(completeProject()));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/projects/p-1/floor'));
   });
 
   it('No of Floors builds the floor list Ground + First ... (A-05)', async () => {
@@ -198,7 +221,6 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
     renderAt('/projects/p-2/import', new FakeAuth(LEAD), fakeApi(empty));
     await userEvent.type(await screen.findByLabelText(/No of Floors/), '2');
     await userEvent.tab();
-    await userEvent.click(screen.getByRole('link', { name: 'Floor Setup' }));
     const picker = await screen.findByRole('combobox', { name: 'Floor' });
     expect(
       within(picker)
@@ -250,11 +272,47 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(within(summary).getByRole('button', { name: 'Save' })).toBeEnabled();
     expect(within(summary).getByRole('button', { name: 'Demand Factors' })).toBeInTheDocument();
   });
+
+  it('Building Summary lists the floors top-down with basements at the bottom (A-13)', async () => {
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(completeProject()));
+    const summary = await screen.findByRole('complementary', { name: 'Building Summary' });
+    const names = within(summary)
+      .getAllByRole('rowheader')
+      .map((h) => h.textContent)
+      .filter((t) => t?.endsWith(' :'));
+    expect(names[0]).toMatch(/^Second Floor/);
+    expect(names.indexOf('Ground Floor :')).toBe(names.length - 2);
+    expect(names.at(-1)).toMatch(/^Basement/);
+  });
+
+  it('Demand Factors reopens the 12 load-type factors; a change needs a new Cable Size run (A-14)', async () => {
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(completeProject()));
+    const summary = await screen.findByRole('complementary', { name: 'Building Summary' });
+    await userEvent.type(within(summary).getByLabelText('Riser 1 length'), '26');
+    for (const board of screen.getAllByRole('button', { name: / board$/ }))
+      await userEvent.click(board);
+    await userEvent.click(within(summary).getByRole('button', { name: 'Cable Size Calculator' }));
+    await userEvent.click(within(summary).getByRole('button', { name: 'Demand Factors' }));
+    const dialog = screen.getByRole('dialog', { name: 'Demand Factors' });
+    expect(within(dialog).getAllByPlaceholderText('TBC')).toHaveLength(12);
+    await userEvent.type(within(dialog).getByLabelText('Lighting demand factor'), '1.5');
+    expect(within(dialog).getByRole('button', { name: 'Save' })).toBeDisabled();
+    await userEvent.clear(within(dialog).getByLabelText('Lighting demand factor'));
+    await userEvent.type(within(dialog).getByLabelText('Lighting demand factor'), '0.8');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(within(summary).getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(
+      within(summary).queryByRole('button', { name: 'Demand Factors' }),
+    ).not.toBeInTheDocument();
+  });
 });
 
 describe('#TASK-30 / #TASK-31 Schematic and Output (Figma 4, 5)', () => {
   it('Schematic lists transformers; Output shows a preview once a schedule is ticked', async () => {
-    renderAt('/projects/p-1/schematic', new FakeAuth(LEAD), fakeApi(completeProject()));
+    const project = completeProject();
+    project.meta.reachedPage = 'simulation-report';
+    renderAt('/projects/p-1/schematic', new FakeAuth(LEAD), fakeApi(project));
     expect(await screen.findByRole('checkbox', { name: 'All Transformer' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('link', { name: 'Output' }));
     const second = await screen.findByRole('checkbox', { name: 'Second Level Schedule' });

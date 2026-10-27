@@ -1,8 +1,8 @@
-import type { PageKey, Project } from '@neuromep/shared';
+import { canOpenPage, reachedPage, type PageKey, type Project } from '@neuromep/shared';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Outlet, useNavigate, useParams } from 'react-router';
 import { Modal } from '../components/fields';
-import { tabPath, useNotice, type TabKey } from '../layout/Shell';
+import { ReachedTabContext, tabPath, useNotice, type TabKey } from '../layout/Shell';
 import type { ToolKey, ToolbarProps } from '../layout/Toolbar';
 import { useProjectEditor } from './useProjectEditor';
 
@@ -73,7 +73,9 @@ export function ProjectWorkspace() {
 
   return (
     <WorkspaceContext.Provider value={{ editor, project, floorId, setFloorId }}>
-      <Outlet />
+      <ReachedTabContext.Provider value={TAB_OF_PAGE[reachedPage(project.meta)]}>
+        <Outlet />
+      </ReachedTabContext.Provider>
       {editor.leavePrompt && (
         <Modal
           title="Leave without saving?"
@@ -133,18 +135,31 @@ export function useProjectToolbar(
   const navigate = useNavigate();
   const notice = useNotice();
 
-  // Remember the page for "open on its last page" (D-13).
+  // A tab not reached yet (e.g. an old link) falls back to the furthest one reached (A-12);
+  // otherwise remember the page for "open on its last page" (D-13).
   const page = PAGE_OF_TAB[tab];
+  const allowed = !page || canOpenPage(project.meta, page);
   useEffect(() => {
-    if (page && !editor.readOnly && project.meta.lastPage !== page) {
+    if (!allowed) {
+      void navigate(tabPath(TAB_OF_PAGE[reachedPage(project.meta)], project.id)!, {
+        replace: true,
+      });
+    } else if (page && !editor.readOnly && project.meta.lastPage !== page) {
       editor.dispatch({ type: 'lastPage', page });
     }
-  }, [page, editor, project.meta.lastPage]);
+  }, [allowed, page, editor, project.meta, project.id, navigate]);
 
   const go = (step: number) => {
     const next = ORDER[ORDER.indexOf(tab) + step];
     const to = next ? tabPath(next, project.id) : null;
-    if (to) navigate(to);
+    if (!next || !to) return;
+    const nextPage = PAGE_OF_TAB[next];
+    // Next opens the following tab (A-12); a read-only user can only follow the editors.
+    if (step > 0 && nextPage && !canOpenPage(project.meta, nextPage)) {
+      if (editor.readOnly) return notice('The Technical Lead has not opened the next page yet.');
+      editor.dispatch({ type: 'lastPage', page: nextPage });
+    }
+    void navigate(to);
   };
 
   return {

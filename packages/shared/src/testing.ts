@@ -56,5 +56,6 @@ export function completeProject(): Project {
     },
   };
   p.disciplines.electrical = ['u-elec'];
+  p.meta.reachedPage = 'modelling'; // Page 1 complete: Floor Setup is open (A-12)
   return p;
 }
