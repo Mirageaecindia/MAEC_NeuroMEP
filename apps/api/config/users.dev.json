@@ -1,0 +1,53 @@
+{
+  "users": [
+    {
+      "id": "u-lead",
+      "name": "Alex Morgan",
+      "email": "lead@neuromep.dev",
+      "role": "TECHNICAL_LEAD",
+      "passwordHash": "scrypt$16384$8$1$yEe9xr0oyeUEVvH1h9PVBw$w3oh-vLK36rVx8r5qe5nePVw7dZ-yCv2OUfTHyfrKqA"
+    },
+    {
+      "id": "u-elec",
+      "name": "Sam Patel",
+      "email": "electrical@neuromep.dev",
+      "role": "ELECTRICAL_ENGINEER",
+      "passwordHash": "scrypt$16384$8$1$beGRhXjM0ux3NhKjk1bPAg$NYLmG3G95kXAFgC-yKLa6WlapcDbhpkBOQVapgrZmKU"
+    },
+    {
+      "id": "u-elec2",
+      "name": "Priya Nair",
+      "email": "electrical2@neuromep.dev",
+      "role": "ELECTRICAL_ENGINEER",
+      "passwordHash": "scrypt$16384$8$1$jEFV2qfhgy9wsxUF0kKx0A$GqHmbM7V62XdQTFE2AtlCfOgM7vQCt3h9MBtDmD9L_o"
+    },
+    {
+      "id": "u-mech",
+      "name": "Jordan Lee",
+      "email": "mechanical@neuromep.dev",
+      "role": "MECHANICAL_ENGINEER",
+      "passwordHash": "scrypt$16384$8$1$p-QumjvqceYnVvSKNSLTag$GRtHlgROh_ckIu_5DZjrcy288kg1r7vWw4lGISHfRj8"
+    },
+    {
+      "id": "u-phe",
+      "name": "Rana Haddad",
+      "email": "phe@neuromep.dev",
+      "role": "PHE_ENGINEER",
+      "passwordHash": "scrypt$16384$8$1$B4HYVpT8zkdpIS3HALy4kQ$4Q39HzQ9qgF1Um4G_n1YQVAw5OKqvMcATssUhMs2NKI"
+    },
+    {
+      "id": "u-check",
+      "name": "Noor Khan",
+      "email": "checker@neuromep.dev",
+      "role": "CHECKER",
+      "passwordHash": "scrypt$16384$8$1$ERL5d4-oFEgCL0Us5Yrzww$JlKcRpxteQPKfjrk9XWrWuP2hpjfEQifA4DvhYc9xqg"
+    },
+    {
+      "id": "u-admin",
+      "name": "Dana Smith",
+      "email": "admin@neuromep.dev",
+      "role": "SYSTEM_ADMINISTRATOR",
+      "passwordHash": "scrypt$16384$8$1$L1Krjzz5w6nV2crwkgkLhg$WCwOIkyqCgZntk4gT5_6tiRGDWlsosxoBEEBZXvj-ko"
+    }
+  ]
+}

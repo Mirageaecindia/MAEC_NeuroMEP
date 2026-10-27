@@ -58,7 +58,7 @@ Login → five top tabs: **All Projects** (project cards with status) → **Impo
 - **A-03..A-14** (27 Oct, Figma design and follow-up answers): see design doc Section 0 and the Pages section above. A-10: Altitude, floor height, Mechanical and PHE engineers optional; demand factors TBC; 12.1 fields not in Figma are not shown (voltage / frequency from the rule pack).
 - **Open (manager to confirm):** riser / transformer cost in AED.
 - **A-02** Prototype plans: PDF on server disk; PDF only, single page, ≤ 20 MB; PDF.js renders in the browser; cache keeps the open floor + previous one; one plan interface so a tile converter can be added later (amends FR-07 / Section 7).
-- User accounts (prototype, 26 Oct): stored in a server-side config file / environment with password hashes — no users collection; MAEC One replaces it later via the AuthProvider interface.
+- User accounts (prototype, 26 Oct; built in WBS 1.2.2): JSON user file (`USERS_FILE`, scrypt hashes from `npm run hash-password -w @neuromep/api`) — no users collection; MAEC One replaces it later via the AuthProvider interface. Sessions: random token in an httpOnly, SameSite=Strict cookie (Secure in production), SHA-256 stored in `sessions` (TTL, 12 h), Sign Out deletes it; 5 failed sign-ins per email (20 per address) in 15 min → E0103.
 - Project access (26 Oct, unchanged): Technical Lead, Checker and System Administrator see all projects; engineers see projects they created or are assigned to.
 - TBC demand factors: E1901 "Demand factor not confirmed" (Warning) — 1.0 is used and the result is Provisional. Load-type labels as Appendix B.
 
@@ -70,7 +70,7 @@ Login → five top tabs: **All Projects** (project cards with status) → **Impo
 - Tooling: Node 24 LTS; ESLint (+ security rules) + Prettier; Vitest, mongodb-memory-server, Playwright (WBS 1.5.2); CI on every push with tests, code analysis and dependency audit (WBS 1.1.3).
 - Internal packages expose a `source` export condition (dev/tests use TS source; `build` emits `dist/`).
 - A floor's `plan` is a discriminated union (`kind: 'pdf'`; `'revit'` later, #TASK-33). Calibration stored in PDF page units; the model is stored in metres.
-- Dev: `npm run dev` starts an in-process MongoDB replica set when `MONGODB_URI` is unset. Dev users `lead@ / electrical@ / electrical2@ / mechanical@ / phe@ / checker@ / admin@neuromep.dev`, password `neuromep-dev`.
+- Dev: `npm run dev` starts an in-process MongoDB replica set when `MONGODB_URI` is unset. Dev users (`apps/api/config/users.dev.json`) `lead@ / electrical@ / electrical2@ / mechanical@ / phe@ / checker@ / admin@neuromep.dev`, password `neuromep-dev`.
 
 ## Architecture rules
 - Layers 01–06 (Section 7, Figure 7.2). The engine is an isolated package with pure functions, no UI/DB imports, unit-tested (engine coverage ≥ 90 %, Appendix C vectors).

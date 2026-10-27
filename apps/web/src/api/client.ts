@@ -12,26 +12,30 @@ export class ApiError extends Error {
   }
 }
 
-export type TokenSource = () => string | null;
-
-/** Typed calls to apps/api. */
+/** Typed calls to apps/api. The session cookie (httpOnly) goes with every same-origin request. */
 export class ApiClient {
-  constructor(
-    private readonly getToken: TokenSource,
-    private readonly baseUrl = '',
-  ) {}
+  private onUnauthorized: (() => void) | null = null;
+
+  constructor(private readonly baseUrl = '') {}
+
+  /** Called when a request is refused because the session ended (401); returns an unsubscribe. */
+  setUnauthorizedHandler(handler: () => void): () => void {
+    this.onUnauthorized = handler;
+    return () => {
+      if (this.onUnauthorized === handler) this.onUnauthorized = null;
+    };
+  }
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
-    const token = this.getToken();
     let res: Response;
     try {
       res = await fetch(`${this.baseUrl}${path}`, {
         ...init,
+        credentials: 'same-origin',
         headers: {
           ...(init.body && typeof init.body === 'string'
             ? { 'content-type': 'application/json' }
             : {}),
-          ...(token ? { authorization: `Bearer ${token}` } : {}),
           ...init.headers,
         },
       });
@@ -41,6 +45,7 @@ export class ApiClient {
         'Cannot reach the NeuroMEP server. Check your connection and try again.',
       );
     }
+    if (res.status === 401 && !path.startsWith('/api/auth/')) this.onUnauthorized?.();
     if (!res.ok) {
       const body = (await res.json().catch(() => ({}))) as Record<string, unknown>;
       const text = typeof body.error === 'string' ? body.error : `Request failed (${res.status}).`;
@@ -60,10 +65,13 @@ export class ApiClient {
   }
 
   signIn(email: string, password: string) {
-    return this.request<{ token: string; user: UserSummary }>('/api/auth/sign-in', {
+    return this.request<{ user: UserSummary }>('/api/auth/sign-in', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
+  }
+  signOut() {
+    return this.request<void>('/api/auth/sign-out', { method: 'POST' });
   }
   me() {
     return this.request<{ user: UserSummary }>('/api/auth/me');

@@ -6,9 +6,8 @@ import { App, routes } from './App';
 import { HttpAuthProvider } from './auth/AuthProvider';
 import './styles/global.css';
 
-const auth = new HttpAuthProvider();
-const api = new ApiClient(() => auth.getToken());
-auth.attach(api);
+const api = new ApiClient();
+const auth = new HttpAuthProvider(api);
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

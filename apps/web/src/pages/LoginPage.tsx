@@ -13,9 +13,15 @@ const STEPS = [
 ] as const;
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-/** Demo-credentials line is part of the design (A-03); the account shown comes from the environment. */
-const DEMO_EMAIL = import.meta.env.VITE_DEMO_EMAIL ?? 'lead@neuromep.dev';
-const DEMO_PASSWORD = import.meta.env.VITE_DEMO_PASSWORD ?? 'neuromep-dev';
+/**
+ * Demo-credentials line of the design (A-03). Development shows the seeded Technical Lead; a
+ * deployed build shows it only when VITE_DEMO_EMAIL / VITE_DEMO_PASSWORD are set (e.g. staging).
+ */
+const DEMO = import.meta.env.DEV
+  ? { email: 'lead@neuromep.dev', password: 'neuromep-dev' }
+  : import.meta.env.VITE_DEMO_EMAIL && import.meta.env.VITE_DEMO_PASSWORD
+    ? { email: import.meta.env.VITE_DEMO_EMAIL, password: import.meta.env.VITE_DEMO_PASSWORD }
+    : null;
 
 export function LoginPage() {
   const { user, signIn } = useAuth();
@@ -121,9 +127,11 @@ export function LoginPage() {
                 {error}
               </div>
             )}
-            <p className="muted login-demo">
-              Demo Credentials: <strong>{DEMO_EMAIL}</strong> / <strong>{DEMO_PASSWORD}</strong>
-            </p>
+            {DEMO && (
+              <p className="muted login-demo">
+                Demo Credentials: <strong>{DEMO.email}</strong> / <strong>{DEMO.password}</strong>
+              </p>
+            )}
           </form>
         </section>
       </div>

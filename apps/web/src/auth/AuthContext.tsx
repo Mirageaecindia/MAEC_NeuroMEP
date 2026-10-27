@@ -43,6 +43,9 @@ export function AuthProviderBoundary(props: {
     };
   }, [auth]);
 
+  // A request refused because the session ended (expired, signed out elsewhere): back to Login.
+  useEffect(() => api.setUnauthorizedHandler(() => setUser(null)), [api]);
+
   const signIn = useCallback(
     async (email: string, password: string) => setUser(await auth.signIn(email, password)),
     [auth],

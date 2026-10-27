@@ -9,7 +9,8 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node --env-file-if-exists=../../.env dist/server.js",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "hash-password": "tsx --conditions=source src/auth/hash-password.ts"
   },
   "dependencies": {
     "@neuromep/rulepacks": "0.1.0",

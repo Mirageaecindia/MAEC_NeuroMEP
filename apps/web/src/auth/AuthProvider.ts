@@ -11,32 +11,18 @@ export interface AuthProvider {
   signOut(): Promise<void>;
   /** The signed-in user, or null (also after the session expired). */
   getCurrentUser(): Promise<UserSummary | null>;
-  /** Token for API calls, or null. */
-  getToken(): string | null;
 }
 
-const STORAGE_KEY = 'neuromep.session';
-
-/** Signs in against apps/api (dev provider there today) and keeps the session across reloads. */
+/**
+ * Signs in against apps/api. The session lives in an httpOnly cookie set by the server (WBS
+ * 1.2.2), so the browser code never sees or stores a token.
+ */
 export class HttpAuthProvider implements AuthProvider {
-  private api: ApiClient | null = null;
-
-  constructor(private readonly storage: Storage = window.localStorage) {}
-
-  /** The client needs the token and the provider needs the client; wired after construction. */
-  attach(api: ApiClient) {
-    this.api = api;
-  }
-
-  getToken() {
-    return this.storage.getItem(STORAGE_KEY);
-  }
+  constructor(private readonly api: ApiClient) {}
 
   async signIn(email: string, password: string) {
     try {
-      const { token, user } = await this.client().signIn(email, password);
-      this.storage.setItem(STORAGE_KEY, token);
-      return user;
+      return (await this.api.signIn(email, password)).user;
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) {
         throw new Error('Email or password is incorrect.', { cause: e });
@@ -48,21 +34,18 @@ export class HttpAuthProvider implements AuthProvider {
   }
 
   async signOut() {
-    this.storage.removeItem(STORAGE_KEY);
-  }
-
-  async getCurrentUser() {
-    if (!this.getToken()) return null;
     try {
-      return (await this.client().me()).user;
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 401) this.storage.removeItem(STORAGE_KEY);
-      return null;
+      await this.api.signOut();
+    } catch {
+      // Signed out locally either way; the server session expires on its own.
     }
   }
 
-  private client() {
-    if (!this.api) throw new Error('HttpAuthProvider.attach() was not called');
-    return this.api;
+  async getCurrentUser() {
+    try {
+      return (await this.api.me()).user;
+    } catch {
+      return null;
+    }
   }
 }

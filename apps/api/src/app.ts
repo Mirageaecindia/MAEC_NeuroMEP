@@ -9,14 +9,21 @@ import {
 } from '@neuromep/shared';
 import express, { type Express, type Request, type Response } from 'express';
 import { z } from 'zod';
-import { currentUser, requireUser } from './auth/middleware.js';
+import { LoginLimiter } from './auth/attempts.js';
+import { currentUser, requireUser, sessionCookie, sessionToken } from './auth/middleware.js';
 import type { AuthProvider } from './auth/provider.js';
+import type { SessionStore } from './auth/sessions.js';
 import type { PlanStorage } from './plans/storage.js';
 import { sendError } from './errors.js';
 import type { ProjectRepository } from './projects/repository.js';
 
 export interface AppDeps {
   auth: AuthProvider;
+  sessions: SessionStore;
+  /** Secure flag on the session cookie (HTTPS); off in development. */
+  secureCookies?: boolean;
+  /** Login attempt limits; default 5 failures per email and 20 per address in 15 minutes. */
+  limits?: { byEmail: LoginLimiter; byAddress: LoginLimiter };
   projects: ProjectRepository;
   plans: PlanStorage;
   now?: () => string;
@@ -36,20 +43,42 @@ export function createApp(deps?: AppDeps): Express {
   });
 
   if (!deps) return app;
-  const { auth, projects, plans } = deps;
+  const { auth, sessions, projects, plans } = deps;
   const now = deps.now ?? (() => new Date().toISOString());
   const newId = deps.newId ?? randomUUID;
-  const signedIn = requireUser(auth);
+  const signedIn = requireUser(auth, sessions);
+  const secure = deps.secureCookies ?? false;
+  const limits = deps.limits ?? {
+    byEmail: new LoginLimiter(5, 15 * 60_000),
+    byAddress: new LoginLimiter(20, 15 * 60_000),
+  };
 
-  // ----- authentication (OI-28: provider behind an interface) -----
+  // ----- authentication (WBS 1.2.2; OI-28: provider behind an interface) -----
   app.post('/api/auth/sign-in', async (req, res) => {
     const body = SignInBody.safeParse(req.body);
-    const result = body.success ? await auth.signIn(body.data.email, body.data.password) : null;
-    if (!result) {
+    const emailKey = body.success ? body.data.email.trim().toLowerCase() : '';
+    const addressKey = req.ip ?? 'unknown';
+    if (limits.byEmail.isLocked(emailKey) || limits.byAddress.isLocked(addressKey)) {
+      sendError(res, 429, 'E0103');
+      return;
+    }
+    const user = body.success ? await auth.authenticate(body.data.email, body.data.password) : null;
+    if (!user) {
+      limits.byEmail.fail(emailKey);
+      limits.byAddress.fail(addressKey);
       sendError(res, 401, 'E0101');
       return;
     }
-    res.json(result);
+    limits.byEmail.clear(emailKey);
+    const { token, expiresAt } = await sessions.create(user.id);
+    res.setHeader('set-cookie', sessionCookie(token, expiresAt, secure));
+    res.json({ user });
+  });
+  app.post('/api/auth/sign-out', async (req, res) => {
+    const token = sessionToken(req);
+    if (token) await sessions.delete(token);
+    res.setHeader('set-cookie', sessionCookie('', null, secure));
+    res.status(204).end();
   });
   app.get('/api/auth/me', signedIn, (req, res) => {
     res.json({ user: currentUser(req) });

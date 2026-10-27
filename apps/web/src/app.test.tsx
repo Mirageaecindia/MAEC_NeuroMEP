@@ -5,7 +5,7 @@ import {
   type UserSummary,
 } from '@neuromep/shared';
 import { completeProject, FIXED_NOW } from '@neuromep/shared/testing';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -40,9 +40,6 @@ class FakeAuth implements AuthProvider {
   async getCurrentUser() {
     return this.user;
   }
-  getToken() {
-    return this.user ? 'token' : null;
-  }
 }
 
 const SUMMARY: ProjectSummary = {
@@ -54,6 +51,9 @@ const SUMMARY: ProjectSummary = {
   updatedAt: FIXED_NOW,
   lastPage: 'modelling',
 };
+
+/** Ends the session from the server side, as an expired cookie would (set by fakeApi). */
+let endSession: () => void = () => undefined;
 
 function fakeApi(project?: Project, projects: ProjectSummary[] = []): ApiClient {
   let current = project;
@@ -70,6 +70,10 @@ function fakeApi(project?: Project, projects: ProjectSummary[] = []): ApiClient 
     })),
     downloadPlan: async () => {
       throw new ApiError(404, 'Plan file not found.');
+    },
+    setUnauthorizedHandler: (handler: () => void) => {
+      endSession = handler;
+      return () => undefined;
     },
   } as unknown as ApiClient;
 }
@@ -116,6 +120,13 @@ describe('#TASK-01 login (Figma screen 0)', () => {
     await userEvent.type(screen.getByLabelText('Password'), 'right{Enter}');
     expect(await screen.findByText('Project Name : AMR - EW09')).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/projects');
+  });
+
+  it('returns to Login when the session ends while working (WBS 1.2.2)', async () => {
+    const router = renderAt('/projects', new FakeAuth(LEAD), fakeApi(undefined, [SUMMARY]));
+    await screen.findByText('Project Name : AMR - EW09');
+    act(() => endSession());
+    await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
   });
 
   it('shows a plain error for wrong credentials and validates the email first', async () => {
