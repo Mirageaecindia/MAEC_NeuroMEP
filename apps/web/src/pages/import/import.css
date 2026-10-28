@@ -7,7 +7,8 @@
 }
 .import-form {
   display: grid;
-  grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
+  /* The right column keeps the Figma proportions (1440 px screen) on wider screens. */
+  grid-template-columns: minmax(0, 440px) minmax(0, 860px);
   gap: 0;
 }
 .import-left {

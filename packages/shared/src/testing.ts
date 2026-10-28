@@ -1,3 +1,4 @@
+import { ElementSchema, type Element } from './model/elements.js';
 import { createEmptyProject } from './project/factory.js';
 import { generateRegistry } from './project/floors.js';
 import type { Project } from './project/schema.js';
@@ -57,5 +58,40 @@ export function completeProject(): Project {
   };
   p.disciplines.electrical = ['u-elec'];
   p.meta.reachedPage = 'modelling'; // Page 1 complete: Floor Setup is open (A-12)
+  return p;
+}
+
+/** A valid distribution board placed on `floorId`. */
+export function sampleDb(floorId: string, id = 'db-1'): Element {
+  return ElementSchema.parse({
+    id,
+    version: 0,
+    tag: `DB-${id}`,
+    description: 'Small power',
+    floorId,
+    position: { x: 12.5, y: 4 },
+    location: 'Electrical room',
+    discipline: 'electrical',
+    ipRating: 'IP42',
+    fireRated: false,
+    kind: 'db',
+    poles: 'TPN',
+    loadCategory: 'normal',
+    incomerDevice: 'MCCB',
+    earthLeakage: 'ELCB 30 mA',
+    mounting: 'recessed',
+    standbyKw: null,
+    demandCategory: 'office',
+    powerFactor: 0.85,
+    thirdHarmonicPct: null,
+    loads: [],
+  });
+}
+
+/** completeProject() after modelling has started: past Import File, one DB on the Ground Floor. */
+export function modelledProject(): Project {
+  const p = completeProject();
+  const gf = p.building.floors.find((f) => f.code === 'GF')!;
+  p.model.elements = [sampleDb(gf.id)];
   return p;
 }

@@ -1,4 +1,11 @@
-import { LOAD_TYPE_LABELS, PAGE1_LIMITS, type LoadTypeCode } from '@neuromep/shared';
+import {
+  describeImpact,
+  hasModel,
+  LOAD_TYPE_LABELS,
+  modelImpact,
+  PAGE1_LIMITS,
+  type LoadTypeCode,
+} from '@neuromep/shared';
 import { useState } from 'react';
 import { useUser } from '../../auth/AuthContext';
 import { Modal, NumberInput } from '../../components/fields';
@@ -26,6 +33,7 @@ export function DemandFactorsDialog(props: { onClose: () => void; onChanged: () 
   );
   const invalid = LOAD_TYPE_GRID.some((c) => outOfRange(draft[c]));
   const changed = LOAD_TYPE_GRID.filter((c) => draft[c] !== current[c].value);
+  const impact = modelImpact(project);
 
   function save() {
     for (const code of changed) {
@@ -61,6 +69,7 @@ export function DemandFactorsDialog(props: { onClose: () => void; onChanged: () 
         result stays Provisional, E1901). Changing a factor marks the cable sizes out of date: run
         the Cable Size Calculator again.
       </p>
+      {hasModel(impact) && <p>A change affects {describeImpact(impact)}.</p>}
       <div className="df-dialog-grid">
         {LOAD_TYPE_GRID.map((code) => (
           <label key={code} className="df-dialog-row">

@@ -4,7 +4,7 @@ import {
   type ProjectSummary,
   type UserSummary,
 } from '@neuromep/shared';
-import { completeProject, FIXED_NOW } from '@neuromep/shared/testing';
+import { completeProject, FIXED_NOW, modelledProject } from '@neuromep/shared/testing';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
@@ -280,6 +280,39 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
         .getAllByRole('option')
         .map((o) => o.textContent),
     ).toEqual(['Second Floor (no plan)', 'First Floor (no plan)', 'Ground Floor (no plan)']);
+  });
+
+  it('asks before changing a calculation input once modelling has started (Section 9)', async () => {
+    const api = fakeApi(modelledProject());
+    const save = vi.spyOn(api, 'saveProject');
+    renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
+    const air = await screen.findByLabelText(/Ambient Air/);
+    await userEvent.clear(air);
+    await userEvent.type(air, '48');
+    await userEvent.tab();
+    let dialog = screen.getByRole('dialog', { name: 'Change an earlier page?' });
+    expect(dialog).toHaveTextContent('from 50 to 48');
+    expect(dialog).toHaveTextContent('This affects 1 floor (Ground Floor), 1 panel and 0 cables');
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByLabelText(/Ambient Air/)).toHaveValue('50');
+
+    await userEvent.clear(screen.getByLabelText(/Ambient Air/));
+    await userEvent.type(screen.getByLabelText(/Ambient Air/), '48');
+    await userEvent.tab();
+    dialog = screen.getByRole('dialog', { name: 'Change an earlier page?' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Confirm' }));
+    expect(screen.getByLabelText(/Ambient Air/)).toHaveValue('48');
+    await userEvent.click(tool('Save'));
+    await waitFor(() => expect(save).toHaveBeenCalled());
+    const saved = save.mock.calls.at(-1)![0];
+    expect(saved.site.ambientAirC.value).toBe(48);
+    expect(saved.auditLog.at(-1)).toMatchObject({
+      area: 'earlierPageChange',
+      key: 'site.ambientAirC',
+      from: 50,
+      to: 48,
+    });
   });
 
   it('Save on an incomplete new project shows every missing field and creates nothing', async () => {

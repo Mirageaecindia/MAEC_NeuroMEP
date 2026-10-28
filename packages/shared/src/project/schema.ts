@@ -124,7 +124,8 @@ export const AuditEntrySchema = z.object({
   id: Id,
   at: IsoDate,
   userId: Id,
-  area: z.enum(['demandFactor', 'calculationDefault']),
+  /** earlierPageChange: a confirmed change to a Page 1 calculation input (Section 9). */
+  area: z.enum(['demandFactor', 'calculationDefault', 'earlierPageChange']),
   key: z.string(),
   from: z.union([z.number(), z.string(), z.null()]),
   to: z.union([z.number(), z.string(), z.null()]),

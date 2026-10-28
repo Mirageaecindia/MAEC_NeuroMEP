@@ -2,6 +2,7 @@ import {
   applyRegistryChange,
   canCreateProject,
   createEmptyProject,
+  describeImpact,
   page1Issues,
   parseProjectFile,
   serializeProject,
@@ -11,9 +12,11 @@ import { ACTIVE_REGIONS } from '@neuromep/rulepacks';
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useApi, useUser } from '../../auth/AuthContext';
+import { Modal } from '../../components/fields';
 import { Shell, useNotice } from '../../layout/Shell';
 import { Toolbar, type OpenMenuItem } from '../../layout/Toolbar';
-import type { CardProps } from '../../workspace/formProps';
+import { confirmationFor } from '../../workspace/earlierPageChange';
+import { newAudit, type CardProps } from '../../workspace/formProps';
 import { projectReducer, type ProjectAction } from '../../workspace/projectReducer';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { ImportFileForm } from './ImportFileForm';
@@ -107,9 +110,20 @@ export function ImportFilePage() {
       onSelect: () => download(exportFileName(project), serializeProject(project)),
     },
   ];
+  // Section 9: changing a calculation input after modelling has started asks first.
+  const [pending, setPending] = useState<{
+    action: ProjectAction;
+    confirm: NonNullable<ReturnType<typeof confirmationFor>>;
+  } | null>(null);
+  const [formKey, setFormKey] = useState(0);
+  const dispatch = (action: ProjectAction) => {
+    const confirm = confirmationFor(project, action);
+    if (confirm) setPending({ action, confirm });
+    else editor.dispatch(action);
+  };
   const props: CardProps = {
     project,
-    dispatch: editor.dispatch,
+    dispatch,
     readOnly: editor.readOnly,
     user,
     errorFor: v.errorFor,
@@ -143,12 +157,67 @@ export function ImportFilePage() {
         </p>
       )}
       <div className="panel import-panel">
-        <ImportFileForm {...props} />
+        {/* A new key after Cancel puts typed-in values back to the stored ones. */}
+        <ImportFileForm key={formKey} {...props} />
       </div>
       {importer.element}
+      {pending && (
+        <Modal
+          title="Change an earlier page?"
+          onClose={() => {
+            setPending(null);
+            setFormKey((k) => k + 1);
+          }}
+          actions={
+            <>
+              <button
+                className="btn"
+                onClick={() => {
+                  setPending(null);
+                  setFormKey((k) => k + 1);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  const { action, confirm } = pending;
+                  editor.dispatch(action);
+                  // Demand-factor changes are already written to the audit log by the reducer.
+                  if (action.type !== 'demandFactor') {
+                    editor.dispatch({
+                      type: 'earlierPageChange',
+                      key: confirm.change.key,
+                      from: confirm.change.from,
+                      to: confirm.change.to,
+                      audit: newAudit(user),
+                    });
+                  }
+                  setPending(null);
+                }}
+              >
+                Confirm
+              </button>
+            </>
+          }
+        >
+          <p>
+            You are changing {pending.confirm.change.label} from{' '}
+            <strong>{show(pending.confirm.change.from)}</strong> to{' '}
+            <strong>{show(pending.confirm.change.to)}</strong>.
+          </p>
+          <p>
+            This affects {describeImpact(pending.confirm.impact)}. Their cable sizes will be marked
+            Out of date until Cable Size is pressed again.
+          </p>
+        </Modal>
+      )}
     </Shell>
   );
 }
+
+const show = (v: number | string | null) => (v === null || v === '' ? 'TBC / empty' : String(v));
 
 /** Import File with no project open: a new project draft, created on Save (Technical Lead, A-01). */
 export function NewProjectPage() {

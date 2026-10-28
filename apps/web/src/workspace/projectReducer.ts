@@ -69,7 +69,15 @@ export type ProjectAction =
   | { type: 'calibration'; floorId: string; calibration: Calibration | null }
   | { type: 'replaceContent'; source: Project }
   | { type: 'saved'; version: number; updatedAt: string }
-  | { type: 'lastPage'; page: PageKey };
+  | { type: 'lastPage'; page: PageKey }
+  | {
+      /** A confirmed change to a Page 1 calculation input (Section 9). */
+      type: 'earlierPageChange';
+      key: string;
+      from: number | string | null;
+      to: number | string | null;
+      audit: AuditMeta;
+    };
 
 const mapFloors = (
   p: Project,
@@ -146,6 +154,14 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
         ],
       };
     }
+    case 'earlierPageChange':
+      return {
+        ...p,
+        auditLog: [
+          ...p.auditLog,
+          { ...a.audit, area: 'earlierPageChange', key: a.key, from: a.from, to: a.to },
+        ],
+      };
     case 'defaultOverride': {
       const overrides = { ...p.calculation.defaultOverrides };
       const from = overrides[a.key] ?? a.ruleValue;

@@ -107,6 +107,7 @@ export function ImportFileForm(props: CardProps) {
         className="pill-input"
         value={project.site[key].value}
         disabled={readOnly}
+        commit="blur"
         onBlur={() => touch(`site.${key}`)}
         onChange={(value) => dispatch({ type: 'site', key, value })}
       />
@@ -209,6 +210,7 @@ export function ImportFileForm(props: CardProps) {
               className="pill-input"
               value={d.plotLoad.value}
               disabled={readOnly}
+              commit="blur"
               onBlur={() => touch('details.plotLoad')}
               onChange={(v) =>
                 dispatch({ type: 'details', patch: { plotLoad: { ...d.plotLoad, value: v } } })
@@ -240,6 +242,7 @@ export function ImportFileForm(props: CardProps) {
             className="pill-input"
             value={project.site.altitudeM}
             disabled={readOnly}
+            commit="blur"
             onBlur={() => touch('site.altitudeM')}
             onChange={(value) => dispatch({ type: 'altitude', value })}
           />
@@ -324,6 +327,7 @@ export function ImportFileForm(props: CardProps) {
             value={c.upstreamFaultMva}
             placeholder="e.g. 350"
             disabled={readOnly}
+            commit="blur"
             onBlur={() => touch('calculation.upstreamFaultMva')}
             onChange={(value) => dispatch({ type: 'upstreamMva', value })}
           />
