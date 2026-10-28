@@ -275,6 +275,24 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     expect(screen.queryByRole('img', { name: /^Cable / })).not.toBeInTheDocument();
   });
 
+  it('refuses a connection that breaks the supply order (E1401)', async () => {
+    open(LEAD);
+    await planReady();
+    await placeAt('Transformer', 300, 300);
+    await placeAt('DB', 600, 300);
+    await userEvent.click(chip('Cable'));
+    await chooseConstruction();
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 300 });
+    expect(
+      await screen.findByText(
+        'Tx_GF_1 cannot feed DB-GF-01: follow source > MDB > SMDB / MCC > DB. (E1401)',
+        { selector: '.notice' },
+      ),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: /^Cable / })).not.toBeInTheDocument();
+  });
+
   it('deletes a selected cable with the Delete key, keeping both components', async () => {
     open(LEAD);
     await planReady();

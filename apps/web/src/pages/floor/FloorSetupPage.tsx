@@ -8,6 +8,7 @@ import {
   itemOfElement,
   orthogonal,
   portsOf,
+  topologyCheck,
   type CableConstruction,
   type ModelPoint,
   LIBRARY_ITEMS,
@@ -131,6 +132,9 @@ export function FloorSetupPage() {
       ? connectionProblem({ element: source, port: 'out' }, { element: target, port })
       : `${target.tag} has no incoming port.`;
     if (problem || !port) return notice(problem ?? '');
+    // Section 3 topology (#TASK-14): refused with E1401, or drawn with a warning.
+    const topology = topologyCheck(project.model, source, target, port);
+    if (!topology.ok) return notice(`${topology.message} (${topology.code})`);
     const cable = drawCable({
       id: crypto.randomUUID(),
       cables: project.model.cables,
@@ -141,6 +145,7 @@ export function FloorSetupPage() {
       construction,
     });
     editor.dispatch({ type: 'addCable', cable });
+    if (topology.warning) notice(topology.warning);
     setDraft(null);
     setArmed(null);
     setSelectedId(cable.id);
