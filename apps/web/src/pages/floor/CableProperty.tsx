@@ -67,6 +67,7 @@ export function CableProperty(props: {
         <dd>
           {c.cores} {c.conductor}/{c.insulation}/{c.armour}/{c.sheath}, {c.voltageGrade}, method{' '}
           {c.method}
+          {installation(c) && <span className="muted">{installation(c)}</span>}
           {props.editable && (
             <button className="btn-link" onClick={props.onEditConstruction}>
               Change
@@ -98,4 +99,16 @@ export function CableProperty(props: {
       )}
     </section>
   );
+}
+
+/** Installation details that were entered (12.3); TBC ones are left out. */
+function installation(c: Cable['construction']): string {
+  return [
+    c.trays !== null && `${c.trays} tray${c.trays === 1 ? '' : 's'}`,
+    c.groupedCircuits !== null && `${c.groupedCircuits} grouped circuits`,
+    c.separation !== null && `separation ${c.separation}`,
+    c.depthM !== null && `${c.depthM} m deep`,
+  ]
+    .filter(Boolean)
+    .join(', ');
 }

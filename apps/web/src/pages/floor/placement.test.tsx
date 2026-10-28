@@ -275,6 +275,46 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     expect(screen.queryByRole('img', { name: /^Cable / })).not.toBeInTheDocument();
   });
 
+  it('takes the optional installation details; depth only for buried cables (12.3)', async () => {
+    open(LEAD);
+    await planReady();
+    await userEvent.click(chip('Cable'));
+    const dialog = await screen.findByRole('dialog', { name: 'Cable construction' });
+    expect(within(dialog).queryByLabelText('Depth of laying (m)')).not.toBeInTheDocument();
+    for (const [label, value] of [
+      ['Cores', '4C'],
+      ['Conductor', 'Cu'],
+      ['Insulation', 'XLPE'],
+      ['Armour', 'SWA'],
+      ['Sheath', 'PVC'],
+      ['Voltage grade', '600/1000 V'],
+      ['Installation method', 'D-direct'],
+    ]) {
+      await userEvent.selectOptions(within(dialog).getByLabelText(label!), value!);
+    }
+    const use = within(dialog).getByRole('button', { name: 'Use this construction' });
+    expect(use).toBeEnabled(); // installation details may stay TBC
+    await userEvent.type(within(dialog).getByLabelText('Trays'), '0');
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(
+      'Trays: must be a whole number of at least 1.',
+    );
+    expect(use).toBeDisabled();
+    await userEvent.clear(within(dialog).getByLabelText('Trays'));
+    await userEvent.type(within(dialog).getByLabelText('Trays'), '2');
+    await userEvent.type(within(dialog).getByLabelText('Depth of laying (m)'), '0.8');
+    await userEvent.selectOptions(within(dialog).getByLabelText('Separation'), '2D');
+    await userEvent.click(use);
+    expect(chip('Cable')).toHaveAttribute('aria-pressed', 'true');
+    const remembered = JSON.parse(localStorage.getItem('neuromep.construction.p-1')!);
+    expect(remembered).toMatchObject({
+      method: 'D-direct',
+      trays: 2,
+      depthM: 0.8,
+      separation: '2D',
+      groupedCircuits: null,
+    });
+  });
+
   it('refuses a connection that breaks the supply order (E1401)', async () => {
     open(LEAD);
     await planReady();

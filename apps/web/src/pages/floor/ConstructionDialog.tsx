@@ -1,6 +1,6 @@
 import { CableConstructionSchema, type CableConstruction } from '@neuromep/shared';
 import { useState } from 'react';
-import { Modal } from '../../components/fields';
+import { Modal, NumberInput } from '../../components/fields';
 
 type Field = 'cores' | 'conductor' | 'insulation' | 'armour' | 'sheath' | 'voltageGrade' | 'method';
 
@@ -14,12 +14,22 @@ const FIELDS: [Field, string][] = [
   ['method', 'Installation method'],
 ];
 const OPTIONS = CableConstructionSchema.shape;
+/** Spacing between grouped cables as named in V-31 (D = one cable diameter). */
+const SEPARATIONS = ['D', '2D'];
+
+interface Installation {
+  trays: number | null;
+  depthM: number | null;
+  separation: string | null;
+  groupedCircuits: number | null;
+}
 
 /**
  * Cable construction, chosen while drawing (D-05). The project default is TBC in the rule pack
  * (12.2), so nothing is pre-selected the first time; the choice is then remembered for the
- * project. Grouping, trays and depth are added with WBS 1.3.3. Size, runs and the earth conductor
- * are never chosen here: Cable Size calculates them (D-04).
+ * project. Trays, depth of laying, separation and grouping (12.3) are optional: empty = TBC for
+ * the engine. Size, runs and the earth conductor are never chosen here: Cable Size calculates
+ * them (D-04).
  */
 export function ConstructionDialog(props: {
   initial: CableConstruction | null;
@@ -28,16 +38,23 @@ export function ConstructionDialog(props: {
   onConfirm: (c: CableConstruction) => void;
 }) {
   const [draft, setDraft] = useState<Partial<Record<Field, string>>>(() => ({ ...props.initial }));
-  const parsed = CableConstructionSchema.safeParse({
-    ...props.initial,
+  const [install, setInstall] = useState<Installation>(() => ({
     trays: props.initial?.trays ?? null,
     depthM: props.initial?.depthM ?? null,
     separation: props.initial?.separation ?? null,
     groupedCircuits: props.initial?.groupedCircuits ?? null,
+  }));
+  const buried = draft.method === 'D-direct' || draft.method === 'D-duct';
+  const parsed = CableConstructionSchema.safeParse({
+    ...props.initial,
     ...draft,
+    ...install,
+    // Depth of laying applies to buried cables only.
+    depthM: buried ? install.depthM : null,
   });
   const complete = FIELDS.every(([f]) => draft[f]);
-  const problem = complete && !parsed.success ? parsed.error.issues[0]?.message : null;
+  const issue = !parsed.success ? parsed.error.issues[0] : undefined;
+  const problem = complete && issue ? describeIssue(issue) : null;
 
   return (
     <Modal
@@ -81,6 +98,48 @@ export function ConstructionDialog(props: {
           </label>
         ))}
       </div>
+      <h3 className="construction-subhead">Installation (optional - empty = TBC)</h3>
+      <div className="construction-grid">
+        <label className="construction-row">
+          <span>Trays</span>
+          <NumberInput
+            value={install.trays}
+            onChange={(trays) => setInstall((i) => ({ ...i, trays }))}
+            placeholder="TBC"
+          />
+        </label>
+        <label className="construction-row">
+          <span>Grouped circuits</span>
+          <NumberInput
+            value={install.groupedCircuits}
+            onChange={(groupedCircuits) => setInstall((i) => ({ ...i, groupedCircuits }))}
+            placeholder="TBC"
+          />
+        </label>
+        <label className="construction-row">
+          <span>Separation</span>
+          <select
+            className="select"
+            value={install.separation ?? ''}
+            onChange={(e) => setInstall((i) => ({ ...i, separation: e.target.value || null }))}
+          >
+            <option value="">TBC</option>
+            {SEPARATIONS.map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        </label>
+        {buried && (
+          <label className="construction-row">
+            <span>Depth of laying (m)</span>
+            <NumberInput
+              value={install.depthM}
+              onChange={(depthM) => setInstall((i) => ({ ...i, depthM }))}
+              placeholder="TBC"
+            />
+          </label>
+        )}
+      </div>
       {problem && (
         <p className="field-error" role="alert">
           {problem}
@@ -88,4 +147,19 @@ export function ConstructionDialog(props: {
       )}
     </Modal>
   );
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  trays: 'Trays',
+  groupedCircuits: 'Grouped circuits',
+  depthM: 'Depth of laying',
+};
+
+/** A schema problem in plain words: "Trays: must be a whole number of at least 1". */
+function describeIssue(issue: { path: PropertyKey[]; message: string; code: string }): string {
+  const field = FIELD_LABELS[String(issue.path[0])];
+  if (!field) return issue.message;
+  return issue.code === 'invalid_type'
+    ? `${field}: enter a whole number.`
+    : `${field}: must be ${field === 'Depth of laying' ? 'greater than 0 m' : 'a whole number of at least 1'}.`;
 }
