@@ -7,10 +7,12 @@ import { projectReducer, type ProjectAction } from './projectReducer';
 
 export type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
 
-const AUTOSAVE_DELAY_MS = 1200;
+/** WBS 1.2.5: unsaved changes are saved at most 10 s after the first of them. */
+export const AUTOSAVE_INTERVAL_MS = 10_000;
 
 /**
- * Loads a project and keeps it saved: debounced autosave on change, save on leaving the page,
+ * Loads a project and keeps it saved: autosave every 10 s while there are unsaved changes, save
+ * on leaving the page,
  * optimistic-lock conflicts reported, and a warning before leaving with unsaved changes.
  * Users who may not edit Project Set-up get a read-only editor (dispatch does nothing).
  */
@@ -110,12 +112,15 @@ export function useProjectEditor(projectId: string) {
     return ok;
   }, [api, readOnly]);
 
-  // Debounced autosave on change.
+  // Autosave every 10 s (WBS 1.2.5): the timer starts with the first unsaved change and is not
+  // pushed back by later ones, so at most 10 s of work is ever unsaved. After a save (or a
+  // failed one, which is retried) the next change or the remaining changes start it again.
+  const unsaved = changeCount !== savedCount;
   useEffect(() => {
-    if (readOnly || changeCount === 0 || !isDirty() || saveState === 'conflict') return;
-    const t = setTimeout(() => void save(), AUTOSAVE_DELAY_MS);
+    if (readOnly || !unsaved || saveState === 'conflict' || saveState === 'saving') return;
+    const t = setTimeout(() => void save(), AUTOSAVE_INTERVAL_MS);
     return () => clearTimeout(t);
-  }, [changeCount, readOnly, save, saveState]);
+  }, [unsaved, savedCount, readOnly, save, saveState]);
 
   // Browser close / reload with unsaved changes.
   useEffect(() => {

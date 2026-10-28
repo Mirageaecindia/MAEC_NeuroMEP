@@ -166,6 +166,54 @@ describe('WBS 1.2.1 shell (A-03)', () => {
   });
 });
 
+describe('#TASK-08 persistence (WBS 1.2.5)', () => {
+  it('autosaves 10 s after the first change; further typing does not push it back', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      const api = fakeApi(completeProject());
+      const save = vi.spyOn(api, 'saveProject');
+      renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
+      const name = await screen.findByLabelText(/Project Name/);
+      await user.type(name, 'X');
+      await act(() => vi.advanceTimersByTimeAsync(6000));
+      await user.type(name, 'Y');
+      await act(() => vi.advanceTimersByTimeAsync(3000));
+      expect(save).not.toHaveBeenCalled();
+      await act(() => vi.advanceTimersByTimeAsync(1500));
+      expect(save).toHaveBeenCalledTimes(1);
+      expect(save.mock.calls[0]![0].details.name).toBe('NeoTowerXY');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe('#TASK-08 version conflicts (WBS 1.2.5)', () => {
+  it('reports a conflict and reloads the newer version on request (E0802)', async () => {
+    const api = fakeApi(completeProject());
+    const newer = { ...completeProject(), version: 5 };
+    newer.details = { ...newer.details, name: 'Saved by someone else' };
+    api.saveProject = async () => {
+      throw new ApiError(
+        409,
+        'Someone else saved this project after you opened it (E0802)',
+        {},
+        'E0802',
+      );
+    };
+    renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
+    const name = await screen.findByLabelText(/Project Name/);
+    await userEvent.type(name, 'X');
+    await userEvent.click(tool('Save'));
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('E0802');
+    api.getProject = async () => ({ project: newer });
+    await userEvent.click(within(alert).getByRole('button', { name: /Reload/ }));
+    expect(await screen.findByDisplayValue('Saved by someone else')).toBeInTheDocument();
+  });
+});
+
 describe('#TASK-02 All Projects (WBS 1.2.3)', () => {
   it('shows stage, revision and last modified on hover (FR-02)', async () => {
     renderAt('/projects', new FakeAuth(LEAD), fakeApi(undefined, [SUMMARY]));
