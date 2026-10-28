@@ -67,6 +67,7 @@ function fakeApi(project?: Project, projects: ProjectSummary[] = []): ApiClient 
     },
     createProject: vi.fn(async (p?: Project) => ({
       project: { ...(p ?? current!), id: 'p-new', version: 1 },
+      plansToUpload: p ? p.building.floors.filter((f) => f.plan).length : 0,
     })),
     downloadPlan: async () => {
       throw new ApiError(404, 'Plan file not found.');
@@ -162,6 +163,47 @@ describe('WBS 1.2.1 shell (A-03)', () => {
     const router = renderAt('/projects', new FakeAuth(LEAD), fakeApi(completeProject(), [SUMMARY]));
     await userEvent.click(await screen.findByRole('button', { name: /AMR - EW09/ }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/projects/p-1/floor'));
+  });
+});
+
+describe('#TASK-02 All Projects (WBS 1.2.3)', () => {
+  it('shows stage, revision and last modified on hover (FR-02)', async () => {
+    renderAt('/projects', new FakeAuth(LEAD), fakeApi(undefined, [SUMMARY]));
+    const card = await screen.findByRole('button', { name: /AMR - EW09/ });
+    expect(card.title).toMatch(/^Stage: .+ · Revision: A · Last modified: /);
+  });
+
+  it('tells an engineer with no projects how they get one', async () => {
+    renderAt('/projects', new FakeAuth(ELEC), fakeApi(undefined, []));
+    expect(await screen.findByText(/No projects are assigned to you yet/)).toBeInTheDocument();
+  });
+
+  it('offers to try again when the list cannot be loaded', async () => {
+    const api = fakeApi(undefined, [SUMMARY]);
+    const ok = api.listProjects.bind(api);
+    let calls = 0;
+    api.listProjects = async () => {
+      calls += 1;
+      if (calls === 1) throw new ApiError(0, 'Cannot reach the NeuroMEP server.');
+      return ok();
+    };
+    renderAt('/projects', new FakeAuth(LEAD), api);
+    await userEvent.click(await screen.findByRole('button', { name: 'Try again' }));
+    expect(await screen.findByText('Project Name : AMR - EW09')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('imports a project file as a new project and asks for its floor plans again', async () => {
+    const api = fakeApi(completeProject());
+    const router = renderAt('/projects/new', new FakeAuth(LEAD), api);
+    const file = new File([JSON.stringify(completeProject())], 'NeoTower.json', {
+      type: 'application/json',
+    });
+    await userEvent.upload(await screen.findByLabelText('Project file'), file);
+    await waitFor(() => expect(router.state.location.pathname).toBe('/projects/p-new/import'));
+    expect(
+      await screen.findByText(/1 floor plan is not inside a project file: upload it again/),
+    ).toBeInTheDocument();
   });
 });
 

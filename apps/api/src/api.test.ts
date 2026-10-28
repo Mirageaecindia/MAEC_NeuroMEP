@@ -18,6 +18,7 @@ let replSet: MongoMemoryReplSet;
 let database: Database;
 let app: ReturnType<typeof createApp>;
 let clock: number;
+let clockIso: string;
 
 beforeAll(async () => {
   replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
@@ -32,6 +33,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await database.db.dropDatabase();
   clock = Date.parse('2026-10-22T10:00:00.000Z');
+  clockIso = '2026-10-22T10:00:00.000Z';
   const projects = new ProjectRepository(database.client, database.db);
   await projects.init();
   const sessions = new MongoSessionStore(database.db, () => clock);
@@ -45,7 +47,7 @@ beforeEach(async () => {
     },
     projects,
     plans: new GridFsPlanStorage(database.db),
-    now: () => '2026-10-22T10:00:00.000Z',
+    now: () => clockIso,
     newId: sequentialIds('proj'),
   });
 });
@@ -229,18 +231,58 @@ describe('projects', () => {
     ).toEqual([]);
   });
 
-  it('imports a project file as a new project', async () => {
+  it('#TASK-02 imports a project file as a new project; floor plans must be uploaded again', async () => {
+    const source = completeProject(); // its Ground Floor has a plan
     const res = await request(app)
       .post('/api/projects')
       .set('cookie', await tokenFor(LEAD))
-      .send({ project: completeProject() });
+      .send({ project: source });
     expect(res.status).toBe(201);
     expect(res.body.project).toMatchObject({
       id: 'proj-1',
       version: 1,
       details: { name: 'NeoTower' },
+      meta: { createdBy: 'u-lead', lastPage: 'setup' },
     });
     expect(res.body.project.building.floors).toHaveLength(5);
+    expect(res.body.plansToUpload).toBe(1);
+    expect(res.body.project.building.floors.every((f: { plan: unknown }) => f.plan === null)).toBe(
+      true,
+    );
+  });
+
+  it('#TASK-02 upgrades an older project file on import and refuses a damaged one (E0203)', async () => {
+    const lead = await tokenFor(LEAD);
+    const v2 = completeProject();
+    const { workingDirectory: _w, model: _m, ...rest } = v2;
+    const v1 = { ...rest, schemaVersion: 1, meta: { ...v2.meta, lastPage: 'building-modelling' } };
+    const upgraded = await request(app)
+      .post('/api/projects')
+      .set('cookie', lead)
+      .send({ project: v1 });
+    expect(upgraded.status).toBe(201);
+    expect(upgraded.body.project.schemaVersion).toBe(2);
+    const damaged = await request(app)
+      .post('/api/projects')
+      .set('cookie', lead)
+      .send({ project: { schemaVersion: 2, details: 'x' } });
+    expect(damaged.status).toBe(400);
+    expect(damaged.body.code).toBe('E0203');
+  });
+
+  it('#TASK-02 lists the most recently modified project first', async () => {
+    const lead = await tokenFor(LEAD);
+    const first = (await request(app).post('/api/projects').set('cookie', lead).send({})).body
+      .project;
+    await request(app).post('/api/projects').set('cookie', lead).send({});
+    // Saving the first project makes it the most recent.
+    clockIso = '2026-10-22T11:00:00.000Z';
+    await request(app)
+      .put(`/api/projects/${first.id}`)
+      .set('cookie', lead)
+      .send({ project: { ...first, details: { ...first.details, name: 'Changed' } } });
+    const list = (await request(app).get('/api/projects').set('cookie', lead)).body.projects;
+    expect(list.map((p: { name: string }) => p.name)).toEqual(['Changed', '']);
   });
 });
 

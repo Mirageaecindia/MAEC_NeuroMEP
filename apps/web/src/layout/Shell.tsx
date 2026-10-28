@@ -1,6 +1,6 @@
 import { canCreateProject, initials, ROLE_LABELS } from '@neuromep/shared';
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { NavLink, useNavigate } from 'react-router';
+import { NavLink, useLocation, useNavigate } from 'react-router';
 import { useAuth, useUser } from '../auth/AuthContext';
 import { Icons } from './icons';
 import './shell.css';
@@ -72,13 +72,22 @@ export function Shell(props: {
     (props.projectId
       ? tabIndex(t) <= tabIndex(reached ?? 'import')
       : t === 'import' && canCreateProject(user));
-  const [notice, setNotice] = useState<string | null>(null);
-  const showNotice = useCallback((text: string) => setNotice(text), []);
+  const location = useLocation();
+  // A page may hand a notice to the next one through the navigation state (e.g. after an
+  // import); it shows once per navigation, whether or not this frame was replaced.
+  const handed = (location.state as { notice?: string } | null)?.notice ?? null;
+  const [own, setOwn] = useState<string | null>(null);
+  const [seenKey, setSeenKey] = useState<string | null>(null);
+  const notice = own ?? (handed && seenKey !== location.key ? handed : null);
+  const showNotice = useCallback((text: string) => setOwn(text), []);
   useEffect(() => {
     if (!notice) return;
-    const t = setTimeout(() => setNotice(null), 4000);
+    const t = setTimeout(() => {
+      setOwn(null);
+      setSeenKey(location.key);
+    }, 4000);
     return () => clearTimeout(t);
-  }, [notice]);
+  }, [notice, location.key]);
 
   return (
     <NoticeContext.Provider value={showNotice}>

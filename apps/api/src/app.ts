@@ -4,6 +4,7 @@ import {
   canEditProjectSetup,
   canViewProject,
   createEmptyProject,
+  migrateProjectData,
   ProjectSchema,
   type Project,
 } from '@neuromep/shared';
@@ -112,15 +113,27 @@ export function createApp(deps?: AppDeps): Express {
     const stamp = now();
     const base = createEmptyProject({ id: newId(), userId: user.id, now: stamp });
     let project = base;
+    let plansToUpload = 0;
     if (req.body?.project !== undefined) {
-      const imported = ProjectSchema.safeParse(req.body.project);
+      // Older project files are upgraded first, as on the Import File page.
+      const imported = ProjectSchema.safeParse(migrateProjectData(req.body.project));
       if (!imported.success) {
         sendError(res, 400, 'E0203');
         return;
       }
-      project = { ...imported.data, id: base.id, version: 0, meta: base.meta };
+      // Plan PDFs are not inside a project file and stored plans belong to the source project:
+      // the import keeps every floor but asks for its plan again (#TASK-02, A-02).
+      const floors = imported.data.building.floors;
+      plansToUpload = floors.filter((f) => f.plan).length;
+      project = {
+        ...imported.data,
+        id: base.id,
+        version: 0,
+        meta: base.meta,
+        building: { ...imported.data.building, floors: floors.map((f) => ({ ...f, plan: null })) },
+      };
     }
-    res.status(201).json({ project: await projects.create(project) });
+    res.status(201).json({ project: await projects.create(project), plansToUpload });
   });
 
   app.get('/api/projects/:id', signedIn, async (req, res) => {

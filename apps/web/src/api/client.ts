@@ -82,8 +82,9 @@ export class ApiClient {
   listProjects() {
     return this.request<{ projects: ProjectSummary[] }>('/api/projects');
   }
+  /** New project, or an import when a project is passed; `plansToUpload` = plans the file could not carry. */
   createProject(project?: Project) {
-    return this.request<{ project: Project }>('/api/projects', {
+    return this.request<{ project: Project; plansToUpload: number }>('/api/projects', {
       method: 'POST',
       body: JSON.stringify(project ? { project } : {}),
     });

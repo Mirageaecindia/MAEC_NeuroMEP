@@ -72,8 +72,13 @@ function useImportProject() {
         const parsed = parseProjectFile(await file.text());
         if (!parsed.ok) return notice(`${parsed.error} (E0203)`);
         try {
-          const created = (await api.createProject(parsed.project)).project;
-          navigate(`/projects/${created.id}/import`);
+          const { project: created, plansToUpload } = await api.createProject(parsed.project);
+          const message =
+            plansToUpload > 0
+              ? `Imported as a new project. ${plansToUpload} floor plan${plansToUpload === 1 ? ' is' : 's are'} not inside a project file: upload ${plansToUpload === 1 ? 'it' : 'them'} again on Floor Setup.`
+              : 'Imported as a new project.';
+          // The notice travels with the navigation: this page's frame is replaced by the new project's.
+          navigate(`/projects/${created.id}/import`, { state: { notice: message } });
         } catch (err) {
           notice((err as Error).message);
         }
