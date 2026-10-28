@@ -41,8 +41,14 @@
   background: #eef1f5;
   user-select: none;
 }
+.viewer-canvas {
+  cursor: grab;
+}
 .viewer-canvas.picking {
   cursor: crosshair;
+}
+.viewer-canvas.panning {
+  cursor: grabbing;
 }
 .viewer-page {
   position: absolute;

@@ -45,7 +45,8 @@ const MAX_CANVAS_PIXELS = 16_000_000;
 
 /**
  * Floor-plan viewer (FR-07) with two-point and drawing-scale calibration (FR-08).
- * Renders page 1 with pdf.js; wheel zooms, Shift + right-drag pans. Picked points are converted
+ * Renders page 1 with pdf.js; wheel zooms; dragging pans (left button outside calibration, middle
+ * button or Shift + right button always). Picked points are converted
  * to PDF page units, so zoom and pan never change a calibration. Clicks snap to the nearest
  * vector line endpoint within 10 screen pixels (can be turned off).
  */
@@ -79,6 +80,7 @@ export function PlanViewer(props: {
   const [scaleDen, setScaleDen] = useState<number | null>(100);
   const [sheet, setSheet] = useState<SheetSize>('A1');
   const pan = useRef<{ x: number; y: number; view: ViewState } | null>(null);
+  const [panning, setPanning] = useState(false);
   const [snapIndex, setSnapIndex] = useState<SnapIndex | null>(null);
   const [snapOn, setSnapOn] = useState(true);
   /** Snap target under the cursor while picking points. */
@@ -205,8 +207,13 @@ export function PlanViewer(props: {
   };
 
   function onMouseDown(e: ReactMouseEvent) {
-    if (e.button === 2 && e.shiftKey) {
+    // Left button picks points while calibrating and pans otherwise; middle or Shift + right pan.
+    const panStart =
+      e.button === 1 || (e.button === 2 && e.shiftKey) || (e.button === 0 && !picking);
+    if (panStart) {
+      e.preventDefault();
       pan.current = { ...local(e), view };
+      setPanning(true);
       return;
     }
     if (e.button !== 0 || !page || !picking) return;
@@ -228,6 +235,11 @@ export function PlanViewer(props: {
       panX: start.view.panX + p.x - start.x,
       panY: start.view.panY + p.y - start.y,
     });
+  }
+
+  function endPan() {
+    pan.current = null;
+    setPanning(false);
   }
 
   function startMode(m: Mode) {
@@ -411,11 +423,11 @@ export function PlanViewer(props: {
 
       <div
         ref={container}
-        className={`viewer-canvas${mode === 'calibrate' || mode === 'verify' ? ' picking' : ''}`}
+        className={`viewer-canvas${picking ? ' picking' : ''}${panning ? ' panning' : ''}`}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
-        onMouseUp={() => (pan.current = null)}
-        onMouseLeave={() => (pan.current = null)}
+        onMouseUp={endPan}
+        onMouseLeave={endPan}
         onContextMenu={(e) => e.preventDefault()}
       >
         {error && <div className="banner banner-error viewer-error">{error}</div>}
@@ -462,7 +474,8 @@ export function PlanViewer(props: {
           </svg>
         )}
         <span className="viewer-hint">
-          Zoom: {Math.round(view.zoom * 100)}% · Wheel to zoom · Shift + Right-Click to pan
+          Zoom: {Math.round(view.zoom * 100)}% · Wheel to zoom ·{' '}
+          {picking ? 'Middle button or Shift + right-drag to pan' : 'Drag to pan'}
         </span>
       </div>
       <div className="viewer-status">
