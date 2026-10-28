@@ -1,5 +1,5 @@
-import { createEmptyProject, generateRegistry } from '@neuromep/shared';
-import { completeProject, FIXED_NOW, sequentialIds } from '@neuromep/shared/testing';
+import { createEmptyProject } from '@neuromep/shared';
+import { completeProject, FIXED_NOW } from '@neuromep/shared/testing';
 import { describe, expect, it } from 'vitest';
 import { projectReducer, withUploadedPlan, type AuditMeta } from './projectReducer';
 
@@ -61,18 +61,6 @@ describe('Page 1 project reducer', () => {
       ['targetPowerFactor', 0.92, 0.95],
       ['targetPowerFactor', 0.95, 0.92],
     ]);
-  });
-
-  it('fills all floor heights', () => {
-    const counts = { basements: 1, podiums: 0, typicals: 2 };
-    let p = projectReducer(empty(), {
-      type: 'applyRegistry',
-      counts,
-      change: generateRegistry(counts, [], sequentialIds()),
-    });
-    p = projectReducer(p, { type: 'fillHeights', value: 3.6 });
-    expect(p.building.floors.map((f) => f.heightM)).toEqual([3.6, 3.6, 3.6, 3.6]);
-    expect(p.building.counts).toEqual(counts);
   });
 
   it('replacing a calibrated plan resets it to Uncalibrated and keeps the old plan for alignment', () => {

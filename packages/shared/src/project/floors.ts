@@ -96,36 +96,6 @@ export function generateRegistry(
   return { floors, removed, removedWithPlans: removed.filter((f) => f.plan !== null) };
 }
 
-/**
- * Finished floor levels (m) from the GF datum and the floor-to-floor heights. A floor's height is
- * the distance up to the next floor, so levels above GF add the heights of the floors below them
- * and basement levels subtract their own heights. Returns null where a needed height is missing.
- */
-export function computeLevels(
-  floors: readonly Floor[],
-  gfLevelM: number,
-): Map<string, number | null> {
-  const levels = new Map<string, number | null>();
-  const g = floors.findIndex((f) => f.type === 'ground');
-  if (g < 0) {
-    for (const f of floors) levels.set(f.id, null);
-    return levels;
-  }
-  const round = (x: number) => Math.round(x * 1000) / 1000;
-  levels.set(floors[g]!.id, round(gfLevelM));
-  for (let i = g + 1; i < floors.length; i++) {
-    const below = levels.get(floors[i - 1]!.id) ?? null;
-    const h = floors[i - 1]!.heightM;
-    levels.set(floors[i]!.id, below === null || h === null ? null : round(below + h));
-  }
-  for (let i = g - 1; i >= 0; i--) {
-    const above = levels.get(floors[i + 1]!.id) ?? null;
-    const h = floors[i]!.heightM;
-    levels.set(floors[i]!.id, above === null || h === null ? null : round(above - h));
-  }
-  return levels;
-}
-
 /** Applies a registry change: new floor list, and mechanical-floor references to removed floors cleared. */
 export function applyRegistryChange(
   building: Project['building'],

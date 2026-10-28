@@ -112,7 +112,7 @@ export const FloorSchema = z.object({
   code: z.string().min(1),
   name: z.string(),
   type: FloorTypeSchema,
-  /** Floor-to-floor height from this floor's level to the floor above (m). */
+  /** Not used since A-05 (no floor heights; riser lengths are typed). Kept so stored projects load. */
   heightM: z.number().nullable(),
   plan: PlanSourceSchema.nullable(),
 });
@@ -196,9 +196,9 @@ export const ProjectSchema = z.object({
       podiums: z.number().int().nullable(),
       typicals: z.number().int().nullable(),
     }),
-    /** Finished floor level of GF (m) - the datum for all other levels. */
+    /** Not used since A-05 (no GF datum). Kept so stored projects load. */
     gfLevelM: z.number(),
-    /** Mechanical floor 1-3: ids of registry floors, or null. */
+    /** Mechanical floor 1-3: ids of registry floors, or null. Not on the Figma screens. */
     mechanicalFloorIds: z.tuple([Id.nullable(), Id.nullable(), Id.nullable()]),
     /** Ordered bottom (lowest basement) to top. Empty until the registry is generated. */
     floors: z.array(FloorSchema),

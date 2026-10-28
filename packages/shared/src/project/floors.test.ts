@@ -3,7 +3,6 @@ import { FIXED_NOW, sequentialIds } from '../testing.js';
 import { createEmptyProject } from './factory.js';
 import {
   applyRegistryChange,
-  computeLevels,
   floorSlots,
   floorTags,
   generateRegistry,
@@ -123,47 +122,6 @@ describe('mechanical floor tagging', () => {
     building = applyRegistryChange(building, smaller, change);
     expect(building.mechanicalFloorIds).toEqual([null, null, gf.id]);
     expect(building.counts).toEqual(smaller);
-  });
-});
-
-describe('cumulative floor levels', () => {
-  const registry = (heights: Record<string, number | null>) =>
-    generateRegistry({ basements: 2, podiums: 1, typicals: 2 }, [], sequentialIds()).floors.map(
-      (f) => ({ ...f, heightM: heights[f.code] ?? null }),
-    );
-  const byCode = (floors: Floor[], levels: Map<string, number | null>) =>
-    Object.fromEntries(floors.map((f) => [f.code, levels.get(f.id)]));
-
-  it('adds heights upwards from GF and subtracts basement heights downwards', () => {
-    const floors = registry({ B2: 3.5, B1: 4, GF: 5, P1: 4.5, '1': 3.2, '2': 3.2 });
-    expect(byCode(floors, computeLevels(floors, 0))).toEqual({
-      B2: -7.5,
-      B1: -4,
-      GF: 0,
-      P1: 5,
-      '1': 9.5,
-      '2': 12.7,
-    });
-  });
-
-  it('uses the GF level as the datum', () => {
-    const floors = registry({ B2: 3, B1: 3, GF: 4, P1: 4, '1': 3, '2': 3 });
-    const levels = byCode(floors, computeLevels(floors, 1.25));
-    expect(levels.GF).toBe(1.25);
-    expect(levels.B1).toBe(-1.75);
-    expect(levels['1']).toBe(9.25);
-  });
-
-  it('leaves levels empty beyond a missing height', () => {
-    const floors = registry({ B2: 3, B1: null, GF: 4, P1: null, '1': 3, '2': 3 });
-    expect(byCode(floors, computeLevels(floors, 0))).toEqual({
-      B2: null,
-      B1: null,
-      GF: 0,
-      P1: 4,
-      '1': null,
-      '2': null,
-    });
   });
 });
 

@@ -55,10 +55,6 @@ export type ProjectAction =
     }
   | { type: 'counts'; counts: Partial<Project['building']['counts']> }
   | { type: 'applyRegistry'; counts: FloorCounts; change: RegistryChange }
-  | { type: 'gfLevel'; value: number }
-  | { type: 'floor'; floorId: string; patch: { name?: string; heightM?: number | null } }
-  | { type: 'fillHeights'; value: number }
-  | { type: 'mechanicalFloor'; index: 0 | 1 | 2; floorId: string | null }
   | { type: 'disciplines'; discipline: Discipline; userIds: string[] }
   | {
       type: 'planUploaded';
@@ -180,23 +176,6 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
       return { ...p, building: { ...p.building, counts: { ...p.building.counts, ...a.counts } } };
     case 'applyRegistry':
       return { ...p, building: applyRegistryChange(p.building, a.counts, a.change) };
-    case 'gfLevel':
-      return { ...p, building: { ...p.building, gfLevelM: a.value } };
-    case 'floor':
-      return mapFloors(p, a.floorId, (f) => ({ ...f, ...a.patch }));
-    case 'fillHeights':
-      return {
-        ...p,
-        building: {
-          ...p.building,
-          floors: p.building.floors.map((f) => ({ ...f, heightM: a.value })),
-        },
-      };
-    case 'mechanicalFloor': {
-      const ids = [...p.building.mechanicalFloorIds] as Project['building']['mechanicalFloorIds'];
-      ids[a.index] = a.floorId;
-      return { ...p, building: { ...p.building, mechanicalFloorIds: ids } };
-    }
     case 'disciplines':
       return { ...p, disciplines: { ...p.disciplines, [a.discipline]: a.userIds } };
     case 'planUploaded':
