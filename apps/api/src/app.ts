@@ -1,10 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import {
   canCreateProject,
+  canEditFloorPlans,
   canEditProjectSetup,
   canViewProject,
   createEmptyProject,
   migrateProjectData,
+  outsideEditRights,
   ProjectSchema,
   type Project,
 } from '@neuromep/shared';
@@ -145,15 +147,24 @@ export function createApp(deps?: AppDeps): Express {
 
   app.put('/api/projects/:id', signedIn, async (req, res) => {
     const user = currentUser(req);
-    if (!(await loadVisible(req, res))) return;
-    if (!canEditProjectSetup(user)) {
-      sendError(res, 403, 'E0301');
-      return;
-    }
+    const stored = await loadVisible(req, res);
+    if (!stored) return;
     const parsed = ProjectSchema.safeParse(req.body?.project);
     if (!parsed.success || parsed.data.id !== req.params.id) {
       sendError(res, 400, 'E0803');
       return;
+    }
+    // Section 2: the Technical Lead changes everything; engineers only their discipline layer.
+    if (!canEditProjectSetup(user)) {
+      const outside = outsideEditRights(user, stored, parsed.data);
+      if (outside === 'Project Set-up' || outside === 'this project') {
+        sendError(res, 403, 'E0301');
+        return;
+      }
+      if (outside) {
+        sendError(res, 403, 'E1002', { element: outside });
+        return;
+      }
     }
     const result = await projects.save(parsed.data, now());
     if (result.ok) res.json({ project: result.project });
@@ -171,8 +182,8 @@ export function createApp(deps?: AppDeps): Express {
       const user = currentUser(req);
       const project = await loadVisible(req, res);
       if (!project) return;
-      if (!canEditProjectSetup(user)) {
-        sendError(res, 403, 'E0301');
+      if (!canEditFloorPlans(user, project)) {
+        sendError(res, 403, 'E1002');
         return;
       }
       const data = req.body as unknown;

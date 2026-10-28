@@ -2,7 +2,12 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
-import { completeProject, sequentialIds } from '@neuromep/shared/testing';
+import {
+  completeProject,
+  modelledProject,
+  sampleDb,
+  sequentialIds,
+} from '@neuromep/shared/testing';
 import { GridFSBucket } from 'mongodb';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import request from 'supertest';
@@ -236,6 +241,54 @@ describe('projects', () => {
           .set('cookie', await tokenFor(MECH))
       ).body.projects,
     ).toEqual([]);
+  });
+
+  it('#TASK-10 an assigned electrical engineer edits the electrical layer and plans only (Section 2)', async () => {
+    const lead = await tokenFor(LEAD);
+    const elec = await tokenFor(ELEC); // assigned in the fixture
+    const p = (
+      await request(app)
+        .post('/api/projects')
+        .set('cookie', lead)
+        .send({ project: modelledProject() })
+    ).body.project;
+    const gf = p.building.floors.find((f: { code: string }) => f.code === 'GF');
+    const save = (project: unknown) =>
+      request(app).put(`/api/projects/${p.id}`).set('cookie', elec).send({ project });
+
+    const withDb = {
+      ...p,
+      model: { ...p.model, elements: [...p.model.elements, sampleDb(gf.id, 'db-2')] },
+    };
+    const ok = await save(withDb);
+    expect(ok.status).toBe(200);
+    expect(ok.body.project.model.elements).toHaveLength(2);
+
+    const current = ok.body.project;
+    const mech = { ...sampleDb(gf.id, 'ahu-1'), discipline: 'mechanical' };
+    const refused = await save({
+      ...current,
+      model: { ...current.model, elements: [...current.model.elements, mech] },
+    });
+    expect(refused.status).toBe(403);
+    expect(refused.body).toMatchObject({ code: 'E1002', element: 'DB-ahu-1 (mechanical)' });
+
+    const setup = await save({ ...current, details: { ...current.details, name: 'Renamed' } });
+    expect(setup.status).toBe(403);
+    expect(setup.body.code).toBe('E0301');
+
+    const plan = await request(app)
+      .post(`/api/projects/${p.id}/plans`)
+      .set('cookie', elec)
+      .set('content-type', 'application/pdf')
+      .send(pdfWithPages(1));
+    expect(plan.status).toBe(201);
+    const checker = await request(app)
+      .post(`/api/projects/${p.id}/plans`)
+      .set('cookie', await tokenFor('checker@neuromep.dev'))
+      .set('content-type', 'application/pdf')
+      .send(pdfWithPages(1));
+    expect(checker.status).toBe(403);
   });
 
   it('#TASK-02 imports a project file as a new project; floor plans must be uploaded again', async () => {

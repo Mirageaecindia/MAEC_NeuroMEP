@@ -1,4 +1,10 @@
-import { canEditProjectSetup, type Project } from '@neuromep/shared';
+import {
+  canEditFloorPlans,
+  canEditProjectSetup,
+  editableDisciplines,
+  type Project,
+  type UserSummary,
+} from '@neuromep/shared';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useBlocker } from 'react-router';
 import { ApiError } from '../api/client';
@@ -10,11 +16,28 @@ export type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
 /** WBS 1.2.5: unsaved changes are saved at most 10 s after the first of them. */
 export const AUTOSAVE_INTERVAL_MS = 10_000;
 
+/** Actions that change the floor plans and their calibration (any engineer of the project). */
+const PLAN_ACTIONS = new Set<ProjectAction['type']>(['planUploaded', 'calibration']);
+/** Bookkeeping every editor may record. */
+const ALWAYS = new Set<ProjectAction['type']>(['saved', 'lastPage']);
+
+/**
+ * May this user apply this action (Section 2)? Project Set-up: the Technical Lead; plans: the
+ * engineers of the project; anything else: the Technical Lead. The API checks the same on save.
+ */
+export function mayApply(user: UserSummary, project: Project, action: ProjectAction): boolean {
+  if (canEditProjectSetup(user)) return true;
+  if (!canEditFloorPlans(user, project)) return false;
+  if (ALWAYS.has(action.type) || PLAN_ACTIONS.has(action.type)) return true;
+  return false;
+}
+
 /**
  * Loads a project and keeps it saved: autosave every 10 s while there are unsaved changes, save
  * on leaving the page,
  * optimistic-lock conflicts reported, and a warning before leaving with unsaved changes.
- * Users who may not edit Project Set-up get a read-only editor (dispatch does nothing).
+ * Each action is checked against the user's rights (mayApply); `readOnly` = Project Set-up is
+ * read-only for this user, `canEdit` = they may change anything at all in this project.
  */
 export function useProjectEditor(projectId: string) {
   const api = useApi();
@@ -64,21 +87,29 @@ export function useProjectEditor(projectId: string) {
     [api, projectId, applyLoaded],
   );
 
+  const canEdit = project ? canEditFloorPlans(user, project) : false;
+  const layers = project ? editableDisciplines(user, project) : [];
+  /** The same right, for callbacks: read from the latest project. */
+  const mayEdit = useCallback(
+    () => projectRef.current !== null && canEditFloorPlans(user, projectRef.current),
+    [user],
+  );
+
   const dispatch = useCallback(
     (action: ProjectAction) => {
-      if (readOnly || !projectRef.current) return;
+      if (!projectRef.current || !mayApply(user, projectRef.current, action)) return;
       projectRef.current = projectReducer(projectRef.current, action);
       setProject(projectRef.current);
       changeSeq.current += 1;
       setChangeCount(changeSeq.current);
     },
-    [readOnly],
+    [user],
   );
 
   const isDirty = () => changeSeq.current !== savedSeq.current;
 
   const save = useCallback(async (): Promise<boolean> => {
-    if (readOnly || !projectRef.current) return true;
+    if (!mayEdit() || !projectRef.current) return true;
     if (inFlight.current) await inFlight.current;
     if (!isDirty()) return true;
     const seq = changeSeq.current;
@@ -110,17 +141,17 @@ export function useProjectEditor(projectId: string) {
     const ok = await run;
     inFlight.current = null;
     return ok;
-  }, [api, readOnly]);
+  }, [api, mayEdit]);
 
   // Autosave every 10 s (WBS 1.2.5): the timer starts with the first unsaved change and is not
   // pushed back by later ones, so at most 10 s of work is ever unsaved. After a save (or a
   // failed one, which is retried) the next change or the remaining changes start it again.
   const unsaved = changeCount !== savedCount;
   useEffect(() => {
-    if (readOnly || !unsaved || saveState === 'conflict' || saveState === 'saving') return;
+    if (!canEdit || !unsaved || saveState === 'conflict' || saveState === 'saving') return;
     const t = setTimeout(() => void save(), AUTOSAVE_INTERVAL_MS);
     return () => clearTimeout(t);
-  }, [unsaved, savedCount, readOnly, save, saveState]);
+  }, [unsaved, savedCount, canEdit, save, saveState]);
 
   // Browser close / reload with unsaved changes.
   useEffect(() => {
@@ -134,7 +165,7 @@ export function useProjectEditor(projectId: string) {
   // Leaving the page inside the app: save first; if that fails, the page asks the user.
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
-      !readOnly && isDirty() && currentLocation.pathname !== nextLocation.pathname,
+      mayEdit() && isDirty() && currentLocation.pathname !== nextLocation.pathname,
   );
   const [leaveFailed, setLeaveFailed] = useState(false);
   useEffect(() => {
@@ -149,6 +180,8 @@ export function useProjectEditor(projectId: string) {
     project,
     loadError,
     readOnly,
+    canEdit,
+    layers,
     dispatch,
     save,
     reload: load,

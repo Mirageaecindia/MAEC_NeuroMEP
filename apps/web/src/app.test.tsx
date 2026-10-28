@@ -5,7 +5,7 @@ import {
   type UserSummary,
 } from '@neuromep/shared';
 import { completeProject, FIXED_NOW, modelledProject } from '@neuromep/shared/testing';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -382,6 +382,17 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
 });
 
 describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1 - 3.8)', () => {
+  it('#TASK-10 lets the assigned electrical engineer upload plans; a checker only views', async () => {
+    renderAt('/projects/p-1/floor', new FakeAuth(ELEC), fakeApi(completeProject()));
+    await screen.findByText('TRANSFORMER CAPACITY & CONNECTED LOAD SCHEDULE');
+    expect(tool('Open')).toBeEnabled();
+    cleanup();
+    const checker: UserSummary = { ...ELEC, id: 'u-check', role: 'CHECKER' };
+    renderAt('/projects/p-1/floor', new FakeAuth(checker), fakeApi(completeProject()));
+    await screen.findByText('TRANSFORMER CAPACITY & CONNECTED LOAD SCHEDULE');
+    expect(tool('Open')).toBeDisabled();
+  });
+
   it('shows the component library, the capacity panel and a Cable Size button disabled until the source is connected (A-07)', async () => {
     renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(completeProject()));
     expect(

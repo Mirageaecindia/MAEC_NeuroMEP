@@ -124,7 +124,8 @@ export function FloorSetupPage() {
   ];
   const enabled = all.filter(
     (k) =>
-      !(editor.readOnly && (k === 'open' || k === 'save' || k === 'clear')) &&
+      // Plans and the model: the Technical Lead and the engineers of the project (Section 2).
+      !(!editor.canEdit && (k === 'open' || k === 'save' || k === 'clear')) &&
       !(k === 'open' && uploading),
   );
 
@@ -168,7 +169,11 @@ export function FloorSetupPage() {
     >
       <SaveBanner />
       {building ? (
-        <BuildingTab floors={project.building.floors} zoom={zoom} readOnly={editor.readOnly} />
+        <BuildingTab
+          floors={project.building.floors}
+          zoom={zoom}
+          readOnly={!editor.layers.includes('electrical')}
+        />
       ) : (
         <div className="floor-layout">
           <section className="panel floor-canvas" aria-label="Floor view">
@@ -183,7 +188,7 @@ export function FloorSetupPage() {
                 projectId={project.id}
                 plan={floor.plan}
                 floorLabel={floor.name}
-                readOnly={editor.readOnly}
+                readOnly={!editor.canEdit}
                 userId={user.id}
                 onCalibration={(calibration) =>
                   editor.dispatch({ type: 'calibration', floorId: floor.id, calibration })

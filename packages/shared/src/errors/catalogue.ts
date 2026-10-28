@@ -170,6 +170,13 @@ export const ERROR_CATALOGUE = [
     'Wait for release (60 s idle) or ask that user.',
     true,
   ),
+  e(
+    'E1002',
+    'You can change only your own discipline layer.',
+    'error',
+    'The change touches components of another discipline, or Project Set-up (Section 2).',
+    'Ask the engineer of that discipline or the Technical Lead.',
+  ),
   // #TASK-13 / #TASK-14 Cables and topology
   e(
     'E1301',

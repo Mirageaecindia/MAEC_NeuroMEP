@@ -144,7 +144,7 @@ export function useProjectToolbar(
       void navigate(tabPath(TAB_OF_PAGE[reachedPage(project.meta)], project.id)!, {
         replace: true,
       });
-    } else if (page && !editor.readOnly && project.meta.lastPage !== page) {
+    } else if (page && editor.canEdit && project.meta.lastPage !== page) {
       editor.dispatch({ type: 'lastPage', page });
     }
   }, [allowed, page, editor, project.meta, project.id, navigate]);
@@ -156,7 +156,7 @@ export function useProjectToolbar(
     const nextPage = PAGE_OF_TAB[next];
     // Next opens the following tab (A-12); a read-only user can only follow the editors.
     if (step > 0 && nextPage && !canOpenPage(project.meta, nextPage)) {
-      if (editor.readOnly) return notice('The Technical Lead has not opened the next page yet.');
+      if (!editor.canEdit) return notice('The Technical Lead has not opened the next page yet.');
       editor.dispatch({ type: 'lastPage', page: nextPage });
     }
     void navigate(to);
