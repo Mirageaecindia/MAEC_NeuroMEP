@@ -15,6 +15,9 @@ export class ApiError extends Error {
 /** Typed calls to apps/api. The session cookie (httpOnly) goes with every same-origin request. */
 export class ApiClient {
   private onUnauthorized: (() => void) | null = null;
+  /** A-02: PDFs of the open floor and the previous one, most recently used last. */
+  private readonly planFiles = new Map<string, ArrayBuffer>();
+  static readonly PLAN_CACHE_SIZE = 2;
 
   constructor(private readonly baseUrl = '') {}
 
@@ -71,6 +74,7 @@ export class ApiClient {
     });
   }
   signOut() {
+    this.planFiles.clear(); // the next user of this browser must not see these plans
     return this.request<void>('/api/auth/sign-out', { method: 'POST' });
   }
   me() {
@@ -111,9 +115,24 @@ export class ApiClient {
       },
     );
   }
-  downloadPlan(projectId: string, fileId: string) {
-    return this.request<ArrayBuffer>(
-      `/api/projects/${encodeURIComponent(projectId)}/plans/${encodeURIComponent(fileId)}`,
-    );
+  /**
+   * A floor's plan PDF. The open floor and the previous one stay in memory (A-02), so switching
+   * between two floors does not download again. Each call returns its own copy, because pdf.js
+   * takes ownership of the bytes it reads.
+   */
+  async downloadPlan(projectId: string, fileId: string): Promise<ArrayBuffer> {
+    const key = `${projectId}/${fileId}`;
+    let data = this.planFiles.get(key);
+    if (data) this.planFiles.delete(key);
+    else {
+      data = await this.request<ArrayBuffer>(
+        `/api/projects/${encodeURIComponent(projectId)}/plans/${encodeURIComponent(fileId)}`,
+      );
+    }
+    this.planFiles.set(key, data);
+    while (this.planFiles.size > ApiClient.PLAN_CACHE_SIZE) {
+      this.planFiles.delete(this.planFiles.keys().next().value!);
+    }
+    return data.slice(0);
   }
 }

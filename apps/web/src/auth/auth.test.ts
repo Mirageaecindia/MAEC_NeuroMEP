@@ -52,3 +52,29 @@ describe('#TASK-01 cookie session in the browser (WBS 1.2.2)', () => {
     );
   });
 });
+
+describe('#TASK-06 plan cache in the browser (A-02)', () => {
+  it('keeps the open and the previous floor, and forgets everything on Sign Out', async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(new Uint8Array([37, 80, 68, 70]), {
+          status: 200,
+          headers: { 'content-type': 'application/pdf' },
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+    const api = new ApiClient();
+    const a1 = await api.downloadPlan('p', 'gf');
+    await api.downloadPlan('p', 'f1');
+    const a2 = await api.downloadPlan('p', 'gf'); // back to the previous floor: from memory
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(a2).not.toBe(a1); // a fresh copy each time (pdf.js takes ownership)
+    expect(new Uint8Array(a2)).toEqual(new Uint8Array([37, 80, 68, 70]));
+    await api.downloadPlan('p', 'f2'); // a third floor pushes out the least recent (f1)
+    await api.downloadPlan('p', 'f1');
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    await api.signOut();
+    await api.downloadPlan('p', 'f1');
+    expect(fetchMock).toHaveBeenCalledTimes(6); // sign-out call + download again
+  });
+});

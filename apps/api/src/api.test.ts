@@ -1,4 +1,9 @@
+import { mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { Readable } from 'node:stream';
 import { completeProject, sequentialIds } from '@neuromep/shared/testing';
+import { GridFSBucket } from 'mongodb';
 import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -8,7 +13,7 @@ import { ConfigAuthProvider, loadUsersFile } from './auth/config-provider.js';
 import { MongoSessionStore } from './auth/sessions.js';
 import { DEV_USERS_FILE } from './config.js';
 import { connectMongo, type Database } from './db/mongo.js';
-import { GridFsPlanStorage } from './plans/storage.js';
+import { DiskPlanStorage, movePlansFromGridFs } from './plans/storage.js';
 import { ProjectRepository } from './projects/repository.js';
 
 const DEV_USERS = loadUsersFile(DEV_USERS_FILE);
@@ -19,6 +24,7 @@ let database: Database;
 let app: ReturnType<typeof createApp>;
 let clock: number;
 let clockIso: string;
+let plansDir: string;
 
 beforeAll(async () => {
   replSet = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
@@ -34,6 +40,7 @@ beforeEach(async () => {
   await database.db.dropDatabase();
   clock = Date.parse('2026-10-22T10:00:00.000Z');
   clockIso = '2026-10-22T10:00:00.000Z';
+  plansDir = mkdtempSync(join(tmpdir(), 'neuromep-plans-'));
   const projects = new ProjectRepository(database.client, database.db);
   await projects.init();
   const sessions = new MongoSessionStore(database.db, () => clock);
@@ -46,7 +53,7 @@ beforeEach(async () => {
       byAddress: new LoginLimiter(20, 15 * 60_000, () => clock),
     },
     projects,
-    plans: new GridFsPlanStorage(database.db),
+    plans: new DiskPlanStorage(plansDir),
     now: () => clockIso,
     newId: sequentialIds('proj'),
   });
@@ -286,23 +293,56 @@ describe('projects', () => {
   });
 });
 
-describe('floor-plan PDFs', () => {
-  const pdf = Buffer.from('%PDF-1.7\n%test plan\n');
+/** A minimal valid PDF with `n` A3-landscape pages (pdf.js reads it like a real plan). */
+function pdfWithPages(n: number): Buffer {
+  const kids = Array.from({ length: n }, (_, i) => `${3 + i} 0 R`).join(' ');
+  const pages = Array.from(
+    { length: n },
+    (_, i) => `${3 + i} 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 1191 842] >>
+endobj
+`,
+  ).join('');
+  return Buffer.from(
+    `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [${kids}] /Count ${n} >>
+endobj
+${pages}trailer
+<< /Root 1 0 R >>
+%%EOF
+`,
+  );
+}
 
-  it('stores a PDF and returns it unchanged; refuses other files', async () => {
+describe('#TASK-06 floor-plan PDFs (WBS 1.2.7, A-02)', () => {
+  const pdf = pdfWithPages(1);
+  const upload = (projectId: string, cookie: string, body: Buffer, name = 'Ground Floor.pdf') =>
+    request(app)
+      .post(`/api/projects/${projectId}/plans`)
+      .set('cookie', cookie)
+      .set('content-type', 'application/pdf')
+      .set('x-file-name', encodeURIComponent(name))
+      .send(body);
+
+  it('stores a one-page PDF on disk and returns it unchanged, cacheable, only in its project', async () => {
     const auth = await tokenFor(LEAD);
     const project = (await request(app).post('/api/projects').set('cookie', auth).send({})).body
       .project;
-    const up = await request(app)
-      .post(`/api/projects/${project.id}/plans`)
-      .set('cookie', auth)
-      .set('content-type', 'application/pdf')
-      .set('x-file-name', encodeURIComponent('Ground Floor.pdf'))
-      .send(pdf);
+    const up = await upload(project.id, auth, pdf);
     expect(up.status).toBe(201);
     expect(up.body).toMatchObject({
       fileName: 'Ground Floor.pdf',
       uploadedAt: '2026-10-22T10:00:00.000Z',
+    });
+    const disk = new DiskPlanStorage(plansDir);
+    expect(await disk.has(project.id, up.body.fileId)).toBe(true);
+    expect(await disk.meta(project.id, up.body.fileId)).toMatchObject({
+      fileName: 'Ground Floor.pdf',
+      uploadedBy: 'u-lead',
     });
 
     const down = await request(app)
@@ -315,24 +355,55 @@ describe('floor-plan PDFs', () => {
         res.on('end', () => cb(null, Buffer.concat(chunks)));
       });
     expect(down.status).toBe(200);
+    expect(down.headers['cache-control']).toBe('private, max-age=31536000, immutable');
     expect(Buffer.compare(down.body as Buffer, pdf)).toBe(0);
 
     const other = (await request(app).post('/api/projects').set('cookie', auth).send({})).body
       .project;
-    expect(
-      (
-        await request(app)
-          .get(`/api/projects/${other.id}/plans/${up.body.fileId}`)
-          .set('cookie', auth)
-      ).status,
-    ).toBe(404);
+    const elsewhere = await request(app)
+      .get(`/api/projects/${other.id}/plans/${up.body.fileId}`)
+      .set('cookie', auth);
+    expect(elsewhere.status).toBe(404);
+    expect(elsewhere.body.code).toBe('E0605');
+  });
 
-    const notPdf = await request(app)
-      .post(`/api/projects/${project.id}/plans`)
-      .set('cookie', auth)
-      .set('content-type', 'application/pdf')
-      .send(Buffer.from('hello'));
-    expect(notPdf.status).toBe(400);
+  it('refuses a non-PDF (E0602), a damaged PDF (E0601), several pages (E0604) and over 20 MB (E0603)', async () => {
+    const auth = await tokenFor(LEAD);
+    const project = (await request(app).post('/api/projects').set('cookie', auth).send({})).body
+      .project;
+    const codeOf = async (body: Buffer) => {
+      const r = await upload(project.id, auth, body);
+      return [r.status, r.body.code];
+    };
+    expect(await codeOf(Buffer.from('hello'))).toEqual([400, 'E0602']);
+    expect(await codeOf(Buffer.from('%PDF-1.7 not really a pdf'))).toEqual([400, 'E0601']);
+    expect(await codeOf(pdfWithPages(2))).toEqual([400, 'E0604']);
+    const big = Buffer.concat([pdf, Buffer.alloc(20 * 1024 * 1024)]);
+    expect(await codeOf(big)).toEqual([413, 'E0603']);
+  });
+
+  it('moves plans stored in MongoDB before A-02 to the disk under the same id', async () => {
+    const bucket = new GridFSBucket(database.db, { bucketName: 'plans' });
+    const stream = bucket.openUploadStream('Old plan.pdf', {
+      metadata: {
+        projectId: 'p-old',
+        uploadedBy: 'u-lead',
+        uploadedAt: '2026-10-20T08:00:00.000Z',
+      },
+    });
+    await new Promise((resolve, reject) =>
+      Readable.from(pdf).pipe(stream).on('finish', resolve).on('error', reject),
+    );
+    const disk = new DiskPlanStorage(plansDir);
+    expect(await movePlansFromGridFs(database.db, disk)).toBe(1);
+    expect(await disk.has('p-old', stream.id.toString())).toBe(true);
+    expect(await movePlansFromGridFs(database.db, disk)).toBe(0); // already moved
+  });
+
+  it('never builds a path from an unsafe id', async () => {
+    const disk = new DiskPlanStorage(plansDir);
+    expect(await disk.open('..', 'x')).toBeNull();
+    expect(await disk.open('p-1', '../../secret')).toBeNull();
   });
 });
 

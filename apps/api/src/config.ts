@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 
@@ -14,15 +15,26 @@ const EnvSchema = z.object({
   /** User file with password hashes (`npm run hash-password -w @neuromep/api`). Required in production. */
   USERS_FILE: z.string().optional(),
   DATA_DIR: z.string().default('.data'),
+  /** Floor-plan PDFs (A-02). Default: <DATA_DIR>/plans. */
+  PLANS_DIR: z.string().optional(),
   NODE_ENV: z.string().default('development'),
 });
 
-export type Config = z.infer<typeof EnvSchema> & { usersFile: string; production: boolean };
+export type Config = z.infer<typeof EnvSchema> & {
+  usersFile: string;
+  plansDir: string;
+  production: boolean;
+};
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const parsed = EnvSchema.parse(env);
   const production = parsed.NODE_ENV === 'production';
   if (!parsed.USERS_FILE && production) throw new Error('USERS_FILE must be set in production.');
   if (!parsed.MONGODB_URI && production) throw new Error('MONGODB_URI must be set in production.');
-  return { ...parsed, usersFile: parsed.USERS_FILE ?? DEV_USERS_FILE, production };
+  return {
+    ...parsed,
+    usersFile: parsed.USERS_FILE ?? DEV_USERS_FILE,
+    plansDir: parsed.PLANS_DIR ?? join(parsed.DATA_DIR, 'plans'),
+    production,
+  };
 }

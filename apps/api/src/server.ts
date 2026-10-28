@@ -3,7 +3,7 @@ import { ConfigAuthProvider, loadUsersFile } from './auth/config-provider.js';
 import { MongoSessionStore } from './auth/sessions.js';
 import { loadConfig } from './config.js';
 import { connectMongo, startDevMongo } from './db/mongo.js';
-import { GridFsPlanStorage } from './plans/storage.js';
+import { DiskPlanStorage, movePlansFromGridFs } from './plans/storage.js';
 import { ProjectRepository } from './projects/repository.js';
 
 const config = loadConfig();
@@ -17,6 +17,9 @@ if (!config.MONGODB_URI) console.log(`Development MongoDB (data in ${config.DATA
 
 const projects = new ProjectRepository(database.client, database.db);
 await projects.init();
+const plans = new DiskPlanStorage(config.plansDir);
+const moved = await movePlansFromGridFs(database.db, plans);
+if (moved) console.log(`Moved ${moved} floor plan(s) from MongoDB to ${config.plansDir} (A-02)`);
 const sessions = new MongoSessionStore(database.db);
 await sessions.init();
 
@@ -25,7 +28,7 @@ const app = createApp({
   sessions,
   secureCookies: config.production,
   projects,
-  plans: new GridFsPlanStorage(database.db),
+  plans,
 });
 
 // Behind Nginx on the same VPS: take the client address from X-Forwarded-For (login limits).

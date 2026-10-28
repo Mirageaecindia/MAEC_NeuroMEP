@@ -8,12 +8,13 @@ import {
   ProjectSchema,
   type Project,
 } from '@neuromep/shared';
-import express, { type Express, type Request, type Response } from 'express';
+import express, { type Express, type NextFunction, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { LoginLimiter } from './auth/attempts.js';
 import { currentUser, requireUser, sessionCookie, sessionToken } from './auth/middleware.js';
 import type { AuthProvider } from './auth/provider.js';
 import type { SessionStore } from './auth/sessions.js';
+import { checkPlanPdf } from './plans/pdf-check.js';
 import type { PlanStorage } from './plans/storage.js';
 import { sendError } from './errors.js';
 import type { ProjectRepository } from './projects/repository.js';
@@ -32,7 +33,8 @@ export interface AppDeps {
 }
 
 const SignInBody = z.object({ email: z.string(), password: z.string() });
-const MAX_PLAN_BYTES = 200 * 1024 * 1024; // A0 vector plans can be large
+/** One single-page PDF per floor, at most 20 MB (FR-07, A-02). */
+export const MAX_PLAN_BYTES = 20 * 1024 * 1024;
 
 /** Builds the Express app without listening, so tests can drive it directly. */
 export function createApp(deps?: AppDeps): Express {
@@ -178,6 +180,11 @@ export function createApp(deps?: AppDeps): Express {
         sendError(res, 400, 'E0602');
         return;
       }
+      const check = await checkPlanPdf(data);
+      if (!check.ok) {
+        sendError(res, 400, check.code, check.pages ? { pages: check.pages } : {});
+        return;
+      }
       const fileName = decodeURIComponent(req.get('x-file-name') ?? 'plan.pdf');
       res
         .status(201)
@@ -196,7 +203,18 @@ export function createApp(deps?: AppDeps): Express {
       return;
     }
     res.type('application/pdf');
+    // A file id is never reused for other content, so the browser may keep the file (A-02 cache).
+    res.set('cache-control', 'private, max-age=31536000, immutable');
     stream.pipe(res);
+  });
+
+  // A plan upload over the size limit is refused by express.raw before the route runs.
+  app.use((err: { type?: string }, req: Request, res: Response, next: NextFunction) => {
+    if (err?.type === 'entity.too.large' && req.path.endsWith('/plans')) {
+      sendError(res, 413, 'E0603');
+      return;
+    }
+    next(err);
   });
 
   return app;
