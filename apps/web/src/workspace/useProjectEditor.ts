@@ -23,13 +23,29 @@ const ALWAYS = new Set<ProjectAction['type']>(['saved', 'lastPage']);
 
 /**
  * May this user apply this action (Section 2)? Project Set-up: the Technical Lead; plans: the
- * engineers of the project; anything else: the Technical Lead. The API checks the same on save.
+ * engineers of the project; components: their own discipline layer. The API checks the same.
  */
 export function mayApply(user: UserSummary, project: Project, action: ProjectAction): boolean {
   if (canEditProjectSetup(user)) return true;
   if (!canEditFloorPlans(user, project)) return false;
   if (ALWAYS.has(action.type) || PLAN_ACTIONS.has(action.type)) return true;
-  return false;
+  // Components: only those of the user's own discipline layers (old and new version).
+  const layers = editableDisciplines(user, project);
+  const own = (id: string) => {
+    const e = project.model.elements.find((x) => x.id === id);
+    return !e || layers.includes(e.discipline);
+  };
+  switch (action.type) {
+    case 'placeElement':
+      return layers.includes(action.element.discipline);
+    case 'moveElement':
+    case 'updateElement':
+      return own(action.id);
+    case 'removeElements':
+      return action.ids.every(own);
+    default:
+      return false;
+  }
 }
 
 /**

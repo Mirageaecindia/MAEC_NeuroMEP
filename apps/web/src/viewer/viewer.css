@@ -136,3 +136,24 @@
   display: inline-flex;
   gap: 10px;
 }
+
+/* Placed components (#TASK-12) */
+.marker-tag {
+  font-size: 10px;
+  font-weight: 700;
+  fill: #1d4ed8;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 3px;
+}
+.marker-selection {
+  fill: rgba(37, 99, 235, 0.08);
+  stroke: var(--primary);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.marker-fallback {
+  fill: #fff;
+  stroke: #1d4ed8;
+  stroke-width: 2;
+}

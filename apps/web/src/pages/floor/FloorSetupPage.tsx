@@ -1,41 +1,32 @@
-import { planStatus, type Floor } from '@neuromep/shared';
+import {
+  isPlaceable,
+  itemOfElement,
+  LIBRARY_ITEMS,
+  libraryItem,
+  placeElement,
+  planStatus,
+  type Floor,
+  type PdfPoint,
+} from '@neuromep/shared';
 import { getRulePack } from '@neuromep/rulepacks';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { useApi, useUser } from '../../auth/AuthContext';
 import { Modal } from '../../components/fields';
 import { DisciplineTabs, Shell, useNotice } from '../../layout/Shell';
 import { Toolbar, type ToolKey } from '../../layout/Toolbar';
 import { readFirstPageSize } from '../../viewer/pdf';
-import { PlanViewer, type ViewerControls } from '../../viewer/PlanViewer';
+import {
+  LIBRARY_DRAG_TYPE,
+  PlanViewer,
+  type PlanMarker,
+  type ViewerControls,
+} from '../../viewer/PlanViewer';
+import { EngineeringProperty } from './EngineeringProperty';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { BuildingTab } from './BuildingTab';
 import './floor.css';
 
-/**
- * Component library: the Figma items (A-11). Legend symbols and drag-and-drop placement arrive with
- * WBS 1.3.1; Cable is the cable-drawing tool.
- */
-const LIBRARY: Record<'Electrical' | 'Mechanical' | 'PHE', string[]> = {
-  Electrical: [
-    'ATS',
-    'Generator',
-    'EB Utility',
-    'Transformer',
-    'RMU',
-    'LV Panel',
-    'ACB',
-    'MDB',
-    'SMDB',
-    'MCC',
-    'DB',
-    'Busbar',
-    'Cable',
-    'Lighting',
-  ],
-  Mechanical: [],
-  PHE: [],
-};
 const MAX_PLAN_BYTES = 20 * 1024 * 1024; // A-02
 
 /** Floor Setup (Figma 3.1 - 3.8): floor plan canvas, and the Building tab via the toolbar. */
@@ -53,6 +44,82 @@ export function FloorSetupPage() {
   const viewer = useRef<ViewerControls>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const floor = project.building.floors.find((f) => f.id === floorId) ?? null;
+
+  // ----- components (#TASK-11 / #TASK-12) -----
+  const [symbols, setSymbols] = useState<Map<string, string>>(new Map());
+  const [armed, setArmed] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [clearing, setClearing] = useState(false);
+  const canPlace = editor.layers.includes('electrical');
+  const calibration = floor?.plan?.calibration ?? null;
+  const onFloor = floor ? project.model.elements.filter((e) => e.floorId === floor.id) : [];
+  const selected = onFloor.find((e) => e.id === selectedId) ?? null;
+
+  useEffect(() => {
+    api.symbols().then(
+      (r) =>
+        setSymbols(
+          new Map(
+            r.symbols.map((s) => [
+              s.key,
+              `data:image/svg+xml;charset=utf-8,${encodeURIComponent(s.svg)}`,
+            ]),
+          ),
+        ),
+      () => undefined, // components then show as plain boxes
+    );
+  }, [api]);
+
+  // Delete removes the selected component; Escape drops the armed item and the selection.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const typing = (e.target as HTMLElement | null)?.closest?.('input, textarea, select');
+      if (e.key === 'Escape') {
+        setArmed(null);
+        setSelectedId(null);
+      } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId && !typing) {
+        e.preventDefault();
+        editor.dispatch({ type: 'removeElements', ids: [selectedId] });
+        setSelectedId(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [editor, selectedId]);
+
+  function place(at: PdfPoint, key: string | null) {
+    if (!key || !floor) return;
+    if (!calibration) {
+      notice('Calibrate the plan before placing components (E0701).');
+      return;
+    }
+    const item = libraryItem(key);
+    if (!item || !isPlaceable(item)) return;
+    const element = placeElement(item, {
+      id: crypto.randomUUID(),
+      floorId: floor.id,
+      floorCode: floor.code,
+      position: { x: at.x * calibration.metresPerUnit, y: at.y * calibration.metresPerUnit },
+      taken: project.model.elements.map((e) => e.tag),
+    });
+    editor.dispatch({ type: 'placeElement', element });
+    setSelectedId(element.id);
+    setArmed(null);
+  }
+
+  // Positions are stored in metres; the plan shows them through its calibration.
+  const markers: PlanMarker[] = calibration
+    ? onFloor.map((e) => ({
+        id: e.id,
+        tag: e.tag,
+        image: symbols.get(itemOfElement(e)?.key ?? '') ?? null,
+        at: {
+          x: e.position.x / calibration.metresPerUnit,
+          y: e.position.y / calibration.metresPerUnit,
+        },
+      }))
+    : [];
+  const mine = onFloor.filter((e) => editor.layers.includes(e.discipline));
 
   async function upload(target: Floor, file: File) {
     setUploading(true);
@@ -103,7 +170,10 @@ export function FloorSetupPage() {
     reset: () => (building ? setZoom(1) : viewer.current?.fit()),
     building: () => setParams(building ? {} : { tab: 'building' }),
     status: () => notice('Flagging a floor as done (A-08) is added with WBS 1.3.'),
-    clear: () => notice('Clear removes your drawing on this floor - added with WBS 1.3.'),
+    clear: () =>
+      mine.length > 0
+        ? setClearing(true)
+        : notice('There is nothing of yours to clear on this floor.'),
   });
 
   const all: ToolKey[] = [
@@ -138,20 +208,33 @@ export function FloorSetupPage() {
           <p className="sidebar-title">Component Library</p>
           <DisciplineTabs value={tab} onChange={setTab} disabled={building} />
           <div className="library-chips">
-            {(tab === 'All'
-              ? [...LIBRARY.Electrical, ...LIBRARY.Mechanical, ...LIBRARY.PHE]
-              : LIBRARY[tab]
-            ).map((item) => (
-              <button
-                key={item}
-                className="lib-chip"
-                disabled={building}
-                title="Drag-and-drop placement comes with WBS 1.3.1"
-                onClick={() => notice('Drag-and-drop placement comes with WBS 1.3.1.')}
-              >
-                {item}
-              </button>
-            ))}
+            {LIBRARY_ITEMS.filter((i) => tab === 'All' || i.discipline === tab.toLowerCase()).map(
+              (item) => (
+                <button
+                  key={item.key}
+                  className={`lib-chip${armed === item.key ? ' armed' : ''}`}
+                  disabled={building || !canPlace}
+                  aria-pressed={armed === item.key}
+                  draggable={!building && canPlace && isPlaceable(item)}
+                  title={
+                    isPlaceable(item)
+                      ? `${item.label} (${item.cmpCode}, draft symbol): drag onto the plan, or click it and then click the plan`
+                      : 'Draw a cable between two components'
+                  }
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData(LIBRARY_DRAG_TYPE, item.key);
+                    e.dataTransfer.effectAllowed = 'copy';
+                  }}
+                  onClick={() =>
+                    isPlaceable(item)
+                      ? setArmed((k) => (k === item.key ? null : item.key))
+                      : notice('Drawing cables comes with WBS 1.3.2.')
+                  }
+                >
+                  {item.label}
+                </button>
+              ),
+            )}
             {tab !== 'All' && tab !== 'Electrical' && (
               <p className="muted">No {tab.toLowerCase()} components yet.</p>
             )}
@@ -193,6 +276,20 @@ export function FloorSetupPage() {
                 onCalibration={(calibration) =>
                   editor.dispatch({ type: 'calibration', floorId: floor.id, calibration })
                 }
+                markers={markers}
+                selectedId={selectedId}
+                placing={armed !== null}
+                onPlace={(at, key) => (canPlace ? place(at, key ?? armed) : undefined)}
+                onSelect={setSelectedId}
+                onMove={(id, at) => {
+                  if (!calibration) return;
+                  const m = calibration.metresPerUnit;
+                  editor.dispatch({
+                    type: 'moveElement',
+                    id,
+                    position: { x: at.x * m, y: at.y * m },
+                  });
+                }}
               />
             ) : (
               <p className="canvas-empty muted">
@@ -201,7 +298,28 @@ export function FloorSetupPage() {
               </p>
             )}
           </section>
-          <RightPanel floor={floor} />
+          <RightPanel
+            floor={floor}
+            property={
+              selected && (
+                <EngineeringProperty
+                  key={`${selected.id}:${selected.version}`}
+                  element={selected}
+                  editable={editor.layers.includes(selected.discipline)}
+                  takenTags={project.model.elements
+                    .filter((e) => e.id !== selected.id)
+                    .map((e) => e.tag)}
+                  onChange={(patch) =>
+                    editor.dispatch({ type: 'updateElement', id: selected.id, patch })
+                  }
+                  onDelete={() => {
+                    editor.dispatch({ type: 'removeElements', ids: [selected.id] });
+                    setSelectedId(null);
+                  }}
+                />
+              )
+            }
+          />
         </div>
       )}
       <input
@@ -215,6 +333,34 @@ export function FloorSetupPage() {
           e.target.value = '';
         }}
       />
+      {clearing && floor && (
+        <Modal
+          title={`Clear ${floor.name}?`}
+          onClose={() => setClearing(false)}
+          actions={
+            <>
+              <button className="btn" onClick={() => setClearing(false)}>
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger-outline"
+                onClick={() => {
+                  editor.dispatch({ type: 'removeElements', ids: mine.map((e) => e.id) });
+                  setSelectedId(null);
+                  setClearing(false);
+                }}
+              >
+                Clear {mine.length} component{mine.length === 1 ? '' : 's'}
+              </button>
+            </>
+          }
+        >
+          <p>
+            This removes the {mine.length} component{mine.length === 1 ? '' : 's'} of your
+            discipline on {floor.name}, with their cables. The plan and its calibration stay.
+          </p>
+        </Modal>
+      )}
       {replace && (
         <Modal
           title={`Replace the plan of ${replace.floor.name}?`}
@@ -247,7 +393,7 @@ export function FloorSetupPage() {
 }
 
 /** Right panel (Figma 3.1 - 3.3): transformer capacity and connected load; Cable Size (A-07). */
-function RightPanel(props: { floor: Floor | null }) {
+function RightPanel(props: { floor: Floor | null; property: ReactNode }) {
   const { project } = useWorkspace();
   const pf = (() => {
     if (!project.rulePackId || !project.rulePackVersion) return null;
@@ -295,6 +441,7 @@ function RightPanel(props: { floor: Floor | null }) {
         {props.floor && props.floor.plan && planStatus(props.floor) !== 'Calibrated' && (
           <p className="field-hint">Calibrate the plan before placing components (E0701).</p>
         )}
+        {props.property}
       </div>
       <button
         className="btn btn-primary cable-size"

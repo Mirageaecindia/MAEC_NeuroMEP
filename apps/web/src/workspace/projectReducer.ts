@@ -1,5 +1,7 @@
 import {
   applyRegistryChange,
+  type Element,
+  type ModelPoint,
   laterPage,
   reachedPage,
   type Calibration,
@@ -66,6 +68,11 @@ export type ProjectAction =
   | { type: 'replaceContent'; source: Project }
   | { type: 'saved'; version: number; updatedAt: string }
   | { type: 'lastPage'; page: PageKey }
+  /** Floor Setup components (#TASK-12); positions in metres. */
+  | { type: 'placeElement'; element: Element }
+  | { type: 'moveElement'; id: string; position: ModelPoint }
+  | { type: 'updateElement'; id: string; patch: { tag?: string; description?: string } }
+  | { type: 'removeElements'; ids: string[] }
   | {
       /** A confirmed change to a Page 1 calculation input (Section 9). */
       type: 'earlierPageChange';
@@ -148,6 +155,34 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
           ...p.auditLog,
           { ...a.audit, area: 'demandFactor', key: `${a.table}.${a.key}`, from, to: a.value },
         ],
+      };
+    }
+    case 'placeElement':
+      return { ...p, model: { ...p.model, elements: [...p.model.elements, a.element] } };
+    case 'moveElement':
+    case 'updateElement': {
+      const change = a.type === 'moveElement' ? { position: a.position } : a.patch;
+      return {
+        ...p,
+        model: {
+          ...p.model,
+          elements: p.model.elements.map((e) =>
+            e.id === a.id ? { ...e, ...change, version: e.version + 1 } : e,
+          ),
+        },
+      };
+    }
+    case 'removeElements': {
+      // A removed component takes the cables connected to it along (they would have no end).
+      const gone = new Set(a.ids);
+      return {
+        ...p,
+        model: {
+          elements: p.model.elements.filter((e) => !gone.has(e.id)),
+          cables: p.model.cables.filter(
+            (c) => !gone.has(c.from.elementId) && !gone.has(c.to.elementId),
+          ),
+        },
       };
     }
     case 'earlierPageChange':

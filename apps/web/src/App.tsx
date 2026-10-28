@@ -1,5 +1,6 @@
 import { Navigate, RouterProvider, type RouteObject } from 'react-router';
 import type { ApiClient } from './api/client';
+import { NoticeProvider } from './layout/Shell';
 import { AuthProviderBoundary } from './auth/AuthContext';
 import type { AuthProvider } from './auth/AuthProvider';
 import { ProtectedRoute } from './auth/ProtectedRoute';
@@ -42,7 +43,9 @@ export function App(props: {
 }) {
   return (
     <AuthProviderBoundary auth={props.auth} api={props.api}>
-      <RouterProvider router={props.router} />
+      <NoticeProvider>
+        <RouterProvider router={props.router} />
+      </NoticeProvider>
     </AuthProviderBoundary>
   );
 }

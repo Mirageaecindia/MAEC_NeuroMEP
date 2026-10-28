@@ -1,6 +1,14 @@
 import type { Project, ProjectSummary, UserSummary } from '@neuromep/shared';
 
 /** An API error with a plain-language message for the user. */
+/** A legend symbol as served by GET /api/symbols. */
+export interface LegendSymbol {
+  key: string;
+  cmpCode: string;
+  status: 'draft' | 'approved';
+  svg: string;
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -18,6 +26,7 @@ export class ApiClient {
   /** A-02: PDFs of the open floor and the previous one, most recently used last. */
   private readonly planFiles = new Map<string, ArrayBuffer>();
   static readonly PLAN_CACHE_SIZE = 2;
+  private symbolList: Promise<{ symbols: LegendSymbol[] }> | null = null;
 
   constructor(private readonly baseUrl = '') {}
 
@@ -79,6 +88,14 @@ export class ApiClient {
   }
   me() {
     return this.request<{ user: UserSummary }>('/api/auth/me');
+  }
+  /** Legend symbols of the component library (A-11), fetched once. */
+  symbols() {
+    this.symbolList ??= this.request<{ symbols: LegendSymbol[] }>('/api/symbols').catch((e) => {
+      this.symbolList = null; // try again next time
+      throw e;
+    });
+    return this.symbolList;
   }
   users() {
     return this.request<{ users: UserSummary[] }>('/api/users');

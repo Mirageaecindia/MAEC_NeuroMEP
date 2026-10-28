@@ -237,6 +237,7 @@ export function placeElement(
 ): Element {
   return ElementSchema.parse({
     ...item.create(),
+    libraryKey: item.key,
     id: args.id,
     tag: nextTag(item.tag, args.floorCode, args.taken),
     floorId: args.floorId,
@@ -245,3 +246,12 @@ export function placeElement(
 }
 
 export const isPlaceable = (item: LibraryItem): item is PlaceableItem => !item.tool;
+
+/** The library item an element was placed from (by its libraryKey, or by its kind for older data). */
+export function itemOfElement(e: Element): PlaceableItem | undefined {
+  const placeable = LIBRARY_ITEMS.filter(isPlaceable);
+  return (
+    placeable.find((i) => i.key === e.libraryKey) ??
+    placeable.find((i) => i.create().kind === e.kind)
+  );
+}

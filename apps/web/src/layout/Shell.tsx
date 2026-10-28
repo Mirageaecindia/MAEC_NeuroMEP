@@ -1,5 +1,13 @@
 import { canCreateProject, initials, ROLE_LABELS } from '@neuromep/shared';
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router';
 import { useAuth, useUser } from '../auth/AuthContext';
 import { Icons } from './icons';
@@ -26,8 +34,30 @@ export const ReachedTabContext = createContext<TabKey | null>(null);
 const tabIndex = (t: TabKey) => TABS.findIndex((x) => x.key === t);
 
 // ----- small notices (e.g. "Bot comes in a later release") -----
-const NoticeContext = createContext<(text: string) => void>(() => undefined);
-export const useNotice = () => useContext(NoticeContext);
+interface Notices {
+  text: string | null;
+  show: (text: string) => void;
+  clear: () => void;
+}
+const NoticeContext = createContext<Notices>({
+  text: null,
+  show: () => undefined,
+  clear: () => undefined,
+});
+/** Shows a short notice in the page frame. Works anywhere below NoticeProvider (App root). */
+export const useNotice = () => useContext(NoticeContext).show;
+
+/**
+ * Holds the current notice above the router, so a page can raise one from its own code (the page
+ * renders its Shell, so a provider inside Shell would not reach it) and it survives a navigation.
+ */
+export function NoticeProvider(props: { children: ReactNode }) {
+  const [text, setText] = useState<string | null>(null);
+  const show = useCallback((t: string) => setText(t), []);
+  const clear = useCallback(() => setText(null), []);
+  const value = useMemo(() => ({ text, show, clear }), [text, show, clear]);
+  return <NoticeContext.Provider value={value}>{props.children}</NoticeContext.Provider>;
+}
 
 function useTheme() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -76,21 +106,20 @@ export function Shell(props: {
   // A page may hand a notice to the next one through the navigation state (e.g. after an
   // import); it shows once per navigation, whether or not this frame was replaced.
   const handed = (location.state as { notice?: string } | null)?.notice ?? null;
-  const [own, setOwn] = useState<string | null>(null);
+  const { text: own, clear } = useContext(NoticeContext);
   const [seenKey, setSeenKey] = useState<string | null>(null);
   const notice = own ?? (handed && seenKey !== location.key ? handed : null);
-  const showNotice = useCallback((text: string) => setOwn(text), []);
   useEffect(() => {
     if (!notice) return;
     const t = setTimeout(() => {
-      setOwn(null);
+      clear();
       setSeenKey(location.key);
     }, 4000);
     return () => clearTimeout(t);
-  }, [notice, location.key]);
+  }, [notice, location.key, clear]);
 
   return (
-    <NoticeContext.Provider value={showNotice}>
+    <>
       <div className="shell">
         <aside className="sidebar">
           <NavLink to="/projects" className="brand" title="All projects">
@@ -173,7 +202,7 @@ export function Shell(props: {
           </div>
         )}
       </div>
-    </NoticeContext.Provider>
+    </>
   );
 }
 

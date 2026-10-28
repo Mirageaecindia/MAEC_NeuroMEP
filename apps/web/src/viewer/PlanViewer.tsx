@@ -35,6 +35,21 @@ import './viewer.css';
 
 type Mode = 'view' | 'calibrate' | 'verify' | 'scale';
 
+/** A placed component drawn on the plan (#TASK-12): its symbol and tag at a PDF point. */
+export interface PlanMarker {
+  id: string;
+  tag: string;
+  /** Symbol image (data URL); a plain box when missing. */
+  image: string | null;
+  at: PdfPoint;
+}
+
+/** Data type of a library item dragged onto the plan. */
+export const LIBRARY_DRAG_TYPE = 'application/x-neuromep-item';
+/** Symbol size on screen (px), and how close a click must be to hit one. */
+const MARKER_PX = 32;
+const HIT_PX = 20;
+
 /** Driven from the shared toolbar (Zoom In / Zoom Out / Reset). */
 export interface ViewerControls {
   zoomIn(): void;
@@ -58,6 +73,15 @@ export function PlanViewer(props: {
   userId: string;
   onCalibration: (c: Calibration) => void;
   controls?: Ref<ViewerControls>;
+  /** Components on this floor (#TASK-12). */
+  markers?: PlanMarker[];
+  selectedId?: string | null;
+  /** A library item is armed: the next click on the plan places it. */
+  placing?: boolean;
+  /** A click while placing, or a library item dropped (itemKey). */
+  onPlace?: (at: PdfPoint, itemKey?: string) => void;
+  onSelect?: (id: string | null) => void;
+  onMove?: (id: string, at: PdfPoint) => void;
 }) {
   const { plan } = props;
   const api = useApi();
@@ -81,6 +105,9 @@ export function PlanViewer(props: {
   const [sheet, setSheet] = useState<SheetSize>('A1');
   const pan = useRef<{ x: number; y: number; view: ViewState } | null>(null);
   const [panning, setPanning] = useState(false);
+  /** A component being dragged: where it is now (PDF point), until the mouse is released. */
+  const drag = useRef<{ id: string; moved: boolean } | null>(null);
+  const [dragAt, setDragAt] = useState<{ id: string; at: PdfPoint } | null>(null);
   const [snapIndex, setSnapIndex] = useState<SnapIndex | null>(null);
   const [snapOn, setSnapOn] = useState(true);
   /** Snap target under the cursor while picking points. */
@@ -206,8 +233,33 @@ export function PlanViewer(props: {
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
 
+  const markers = props.markers ?? [];
+  /** The component under a screen point, if any. */
+  const hit = (s: { x: number; y: number }) =>
+    page
+      ? markers.find((m) => {
+          const p = pdfToScreen(m.at, view, page.transform);
+          return Math.hypot(p.x - s.x, p.y - s.y) <= HIT_PX;
+        })
+      : undefined;
+
   function onMouseDown(e: ReactMouseEvent) {
-    // Left button picks points while calibrating and pans otherwise; middle or Shift + right pan.
+    // Outside calibration the left button places (armed item), selects / moves a component, or
+    // pans the empty plan. Middle or Shift + right button always pan.
+    if (e.button === 0 && !picking && page) {
+      const s = local(e);
+      if (props.placing) {
+        props.onPlace?.(screenToPdf(s, view, page.transform));
+        return;
+      }
+      const m = hit(s);
+      props.onSelect?.(m ? m.id : null);
+      if (m && props.onMove) {
+        e.preventDefault();
+        drag.current = { id: m.id, moved: false };
+        return;
+      }
+    }
     const panStart =
       e.button === 1 || (e.button === 2 && e.shiftKey) || (e.button === 0 && !picking);
     if (panStart) {
@@ -222,6 +274,11 @@ export function PlanViewer(props: {
     setPoints((p) => [...p, snapTarget(free) ?? free]);
   }
   function onMouseMove(e: ReactMouseEvent) {
+    if (drag.current && page) {
+      drag.current.moved = true;
+      setDragAt({ id: drag.current.id, at: screenToPdf(local(e), view, page.transform) });
+      return;
+    }
     if (!pan.current) {
       if (picking && page && points.length < 2) {
         setHover(snapTarget(screenToPdf(local(e), view, page.transform)));
@@ -238,8 +295,22 @@ export function PlanViewer(props: {
   }
 
   function endPan() {
+    if (drag.current?.moved && dragAt) props.onMove?.(dragAt.id, dragAt.at);
+    drag.current = null;
+    setDragAt(null);
     pan.current = null;
     setPanning(false);
+  }
+
+  function onDrop(e: React.DragEvent) {
+    const key = e.dataTransfer.getData(LIBRARY_DRAG_TYPE);
+    if (!key || !page || !Number.isFinite(e.clientX) || !Number.isFinite(e.clientY)) return;
+    e.preventDefault();
+    const r = container.current!.getBoundingClientRect();
+    props.onPlace?.(
+      screenToPdf({ x: e.clientX - r.left, y: e.clientY - r.top }, view, page.transform),
+      key,
+    );
   }
 
   function startMode(m: Mode) {
@@ -423,11 +494,15 @@ export function PlanViewer(props: {
 
       <div
         ref={container}
-        className={`viewer-canvas${picking ? ' picking' : ''}${panning ? ' panning' : ''}`}
+        className={`viewer-canvas${picking || props.placing ? ' picking' : ''}${panning ? ' panning' : ''}`}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={endPan}
         onMouseLeave={endPan}
+        onDragOver={(e) => {
+          if (e.dataTransfer.types.includes(LIBRARY_DRAG_TYPE)) e.preventDefault();
+        }}
+        onDrop={onDrop}
         onContextMenu={(e) => e.preventDefault()}
       >
         {error && <div className="banner banner-error viewer-error">{error}</div>}
@@ -447,7 +522,55 @@ export function PlanViewer(props: {
           }
         />
         {page && (
-          <svg className="viewer-overlay" width={size.width} height={size.height} aria-hidden>
+          <svg className="viewer-overlay" width={size.width} height={size.height}>
+            {markers.map((m) => {
+              const s = toScreen(dragAt?.id === m.id ? dragAt.at : m.at);
+              const selected = m.id === props.selectedId;
+              return (
+                <g
+                  key={m.id}
+                  className={`plan-marker${selected ? ' selected' : ''}`}
+                  role="img"
+                  aria-label={`${m.tag}${selected ? ' (selected)' : ''}`}
+                >
+                  {selected && (
+                    <rect
+                      x={s.x - MARKER_PX / 2 - 4}
+                      y={s.y - MARKER_PX / 2 - 4}
+                      width={MARKER_PX + 8}
+                      height={MARKER_PX + 8}
+                      rx={4}
+                      className="marker-selection"
+                    />
+                  )}
+                  {m.image ? (
+                    <image
+                      href={m.image}
+                      x={s.x - MARKER_PX / 2}
+                      y={s.y - MARKER_PX / 2}
+                      width={MARKER_PX}
+                      height={MARKER_PX}
+                    />
+                  ) : (
+                    <rect
+                      x={s.x - MARKER_PX / 2}
+                      y={s.y - MARKER_PX / 4}
+                      width={MARKER_PX}
+                      height={MARKER_PX / 2}
+                      className="marker-fallback"
+                    />
+                  )}
+                  <text
+                    x={s.x}
+                    y={s.y + MARKER_PX / 2 + 11}
+                    textAnchor="middle"
+                    className="marker-tag"
+                  >
+                    {m.tag}
+                  </text>
+                </g>
+              );
+            })}
             {shownLine.length === 2 && (
               <line
                 x1={toScreen(shownLine[0]!).x}

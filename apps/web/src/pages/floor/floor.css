@@ -245,3 +245,43 @@
   gap: 8px;
   font-size: 12px;
 }
+
+/* Component library: an armed item places on the next click (#TASK-12). */
+.lib-chip.armed {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.lib-chip[draggable='true'] {
+  cursor: grab;
+}
+
+/* Engineering Property card (Figma 3.3) */
+.property-card {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: var(--surface-muted);
+  font-size: 11px;
+}
+.property-card h3 {
+  font-size: 11px;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+.property-card dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px 6px;
+  align-items: center;
+  margin: 0 0 10px;
+}
+.property-card dt {
+  font-weight: 700;
+}
+.property-card dd {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}

@@ -72,6 +72,7 @@ function fakeApi(project?: Project, projects: ProjectSummary[] = []): ApiClient 
     downloadPlan: async () => {
       throw new ApiError(404, 'Plan file not found.');
     },
+    symbols: async () => ({ symbols: [] }),
     setUnauthorizedHandler: (handler: () => void) => {
       endSession = handler;
       return () => undefined;

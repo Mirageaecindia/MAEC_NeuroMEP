@@ -67,6 +67,8 @@ const base = {
   discipline: DisciplineSchema,
   ipRating: IpRatingSchema.nullable(),
   fireRated: z.boolean(),
+  /** Library item it was placed from (its legend symbol and name, A-11); absent for older data. */
+  libraryKey: z.string().optional(),
 };
 
 /** Fields shared by boards (LV panel / MDB / EMDB / SMDB / ESMDB / MCC / EMCC / DB). */
