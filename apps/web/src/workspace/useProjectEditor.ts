@@ -43,6 +43,10 @@ export function mayApply(user: UserSummary, project: Project, action: ProjectAct
       return own(action.id);
     case 'removeElements':
       return action.ids.every(own);
+    case 'addCable':
+    case 'updateCable':
+    case 'removeCables':
+      return layers.includes('electrical');
     default:
       return false;
   }

@@ -1,6 +1,15 @@
 import {
+  closeRoute,
+  connectionProblem,
+  drawCable,
+  fedFrom,
+  isOutput,
   isPlaceable,
   itemOfElement,
+  orthogonal,
+  portsOf,
+  type CableConstruction,
+  type ModelPoint,
   LIBRARY_ITEMS,
   libraryItem,
   placeElement,
@@ -19,15 +28,36 @@ import { readFirstPageSize } from '../../viewer/pdf';
 import {
   LIBRARY_DRAG_TYPE,
   PlanViewer,
+  type PlanCable,
   type PlanMarker,
   type ViewerControls,
 } from '../../viewer/PlanViewer';
+import { CableProperty } from './CableProperty';
+import { ConstructionDialog } from './ConstructionDialog';
 import { EngineeringProperty } from './EngineeringProperty';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { BuildingTab } from './BuildingTab';
 import './floor.css';
 
 const MAX_PLAN_BYTES = 20 * 1024 * 1024; // A-02
+
+/** The last cable construction used in a project, kept in this browser (D-05). */
+const constructionKey = (projectId: string) => `neuromep.construction.${projectId}`;
+function loadConstruction(projectId: string): CableConstruction | null {
+  try {
+    const raw = localStorage.getItem(constructionKey(projectId));
+    return raw ? (JSON.parse(raw) as CableConstruction) : null;
+  } catch {
+    return null;
+  }
+}
+function saveConstruction(projectId: string, c: CableConstruction) {
+  try {
+    localStorage.setItem(constructionKey(projectId), JSON.stringify(c));
+  } catch {
+    /* a convenience only */
+  }
+}
 
 /** Floor Setup (Figma 3.1 - 3.8): floor plan canvas, and the Building tab via the toolbar. */
 export function FloorSetupPage() {
@@ -54,6 +84,67 @@ export function FloorSetupPage() {
   const calibration = floor?.plan?.calibration ?? null;
   const onFloor = floor ? project.model.elements.filter((e) => e.floorId === floor.id) : [];
   const selected = onFloor.find((e) => e.id === selectedId) ?? null;
+  const floorCables = floor ? project.model.cables.filter((c) => c.floorId === floor.id) : [];
+  const selectedCable = floorCables.find((c) => c.id === selectedId) ?? null;
+
+  // ----- cables (#TASK-13) -----
+  const [construction, setConstruction] = useState<CableConstruction | null>(() =>
+    loadConstruction(project.id),
+  );
+  /** Construction dialog: before the cable tool, or to change a selected cable. */
+  const [constructionFor, setConstructionFor] = useState<'tool' | string | null>(null);
+  /** The cable being drawn: its source port and route so far (metres). */
+  const [draft, setDraft] = useState<{
+    from: { elementId: string; port: 'out' };
+    points: ModelPoint[];
+  } | null>(null);
+  const allowance = lengthAllowance(project);
+
+  function cableClick(at: PdfPoint, componentId: string | null) {
+    if (!floor || !calibration || !construction) {
+      notice('Calibrate the plan before drawing cables (E0701).');
+      return;
+    }
+    const m = calibration.metresPerUnit;
+    const point = { x: at.x * m, y: at.y * m };
+    const target = componentId ? onFloor.find((e) => e.id === componentId) : undefined;
+    if (!draft) {
+      if (!target) return notice('Click the component the cable starts from.');
+      if (!portsOf(target).some(isOutput)) {
+        return notice(`${target.tag} has no outgoing way: start from the board that feeds.`);
+      }
+      setDraft({ from: { elementId: target.id, port: 'out' }, points: [target.position] });
+      return;
+    }
+    if (!target) {
+      setDraft({ ...draft, points: [...draft.points, orthogonal(draft.points.at(-1)!, point)] });
+      return;
+    }
+    const source = onFloor.find((e) => e.id === draft.from.elementId)!;
+    // An ATS takes its normal input first, then standby.
+    const inputs = portsOf(target).filter((p) => !isOutput(p));
+    const fed = new Set(
+      project.model.cables.filter((c) => c.to.elementId === target.id).map((c) => c.to.port),
+    );
+    const port = inputs.find((p) => !fed.has(p)) ?? inputs[0];
+    const problem = port
+      ? connectionProblem({ element: source, port: 'out' }, { element: target, port })
+      : `${target.tag} has no incoming port.`;
+    if (problem || !port) return notice(problem ?? '');
+    const cable = drawCable({
+      id: crypto.randomUUID(),
+      cables: project.model.cables,
+      from: { element: source, port: 'out' },
+      to: { element: target, port },
+      route: closeRoute(draft.points, target.position),
+      floorCode: floor.code,
+      construction,
+    });
+    editor.dispatch({ type: 'addCable', cable });
+    setDraft(null);
+    setArmed(null);
+    setSelectedId(cable.id);
+  }
 
   useEffect(() => {
     api.symbols().then(
@@ -77,15 +168,25 @@ export function FloorSetupPage() {
       if (e.key === 'Escape') {
         setArmed(null);
         setSelectedId(null);
+        setDraft(null);
+      } else if (e.key === 'Backspace' && draft && !typing) {
+        // While drawing, Backspace takes back the last bend.
+        e.preventDefault();
+        setDraft(draft.points.length > 1 ? { ...draft, points: draft.points.slice(0, -1) } : null);
       } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId && !typing) {
         e.preventDefault();
-        editor.dispatch({ type: 'removeElements', ids: [selectedId] });
+        const isCable = project.model.cables.some((c) => c.id === selectedId);
+        editor.dispatch(
+          isCable
+            ? { type: 'removeCables', ids: [selectedId] }
+            : { type: 'removeElements', ids: [selectedId] },
+        );
         setSelectedId(null);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [editor, selectedId]);
+  }, [editor, selectedId, draft, project.model.cables]);
 
   function place(at: PdfPoint, key: string | null) {
     if (!key || !floor) return;
@@ -120,6 +221,11 @@ export function FloorSetupPage() {
       }))
     : [];
   const mine = onFloor.filter((e) => editor.layers.includes(e.discipline));
+  const toPdf = (p: ModelPoint) =>
+    calibration ? { x: p.x / calibration.metresPerUnit, y: p.y / calibration.metresPerUnit } : p;
+  const planCables: PlanCable[] = calibration
+    ? floorCables.map((c) => ({ id: c.id, tag: c.tag, points: c.route.map(toPdf) }))
+    : [];
 
   async function upload(target: Floor, file: File) {
     setUploading(true);
@@ -225,11 +331,13 @@ export function FloorSetupPage() {
                     e.dataTransfer.setData(LIBRARY_DRAG_TYPE, item.key);
                     e.dataTransfer.effectAllowed = 'copy';
                   }}
-                  onClick={() =>
-                    isPlaceable(item)
-                      ? setArmed((k) => (k === item.key ? null : item.key))
-                      : notice('Drawing cables comes with WBS 1.3.2.')
-                  }
+                  onClick={() => {
+                    setDraft(null);
+                    if (isPlaceable(item)) setArmed((k) => (k === item.key ? null : item.key));
+                    else if (armed === 'cable') setArmed(null);
+                    else if (construction) setArmed('cable');
+                    else setConstructionFor('tool');
+                  }}
                 >
                   {item.label}
                 </button>
@@ -278,7 +386,11 @@ export function FloorSetupPage() {
                 }
                 markers={markers}
                 selectedId={selectedId}
-                placing={armed !== null}
+                placing={armed !== null && armed !== 'cable'}
+                cables={planCables}
+                cableMode={armed === 'cable'}
+                drawingPoints={draft ? draft.points.map(toPdf) : null}
+                onCableClick={cableClick}
                 onPlace={(at, key) => (canPlace ? place(at, key ?? armed) : undefined)}
                 onSelect={setSelectedId}
                 onMove={(id, at) => {
@@ -301,22 +413,44 @@ export function FloorSetupPage() {
           <RightPanel
             floor={floor}
             property={
-              selected && (
-                <EngineeringProperty
-                  key={`${selected.id}:${selected.version}`}
-                  element={selected}
-                  editable={editor.layers.includes(selected.discipline)}
-                  takenTags={project.model.elements
-                    .filter((e) => e.id !== selected.id)
-                    .map((e) => e.tag)}
+              selectedCable ? (
+                <CableProperty
+                  key={`${selectedCable.id}:${selectedCable.version}`}
+                  cable={selectedCable}
+                  elements={project.model.elements}
+                  allowance={allowance}
+                  editable={editor.layers.includes('electrical')}
+                  takenTags={project.model.cables
+                    .filter((c) => c.id !== selectedCable.id)
+                    .map((c) => c.tag)}
                   onChange={(patch) =>
-                    editor.dispatch({ type: 'updateElement', id: selected.id, patch })
+                    editor.dispatch({ type: 'updateCable', id: selectedCable.id, patch })
                   }
+                  onEditConstruction={() => setConstructionFor(selectedCable.id)}
                   onDelete={() => {
-                    editor.dispatch({ type: 'removeElements', ids: [selected.id] });
+                    editor.dispatch({ type: 'removeCables', ids: [selectedCable.id] });
                     setSelectedId(null);
                   }}
                 />
+              ) : (
+                selected && (
+                  <EngineeringProperty
+                    key={`${selected.id}:${selected.version}`}
+                    element={selected}
+                    editable={editor.layers.includes(selected.discipline)}
+                    takenTags={project.model.elements
+                      .filter((e) => e.id !== selected.id)
+                      .map((e) => e.tag)}
+                    onChange={(patch) =>
+                      editor.dispatch({ type: 'updateElement', id: selected.id, patch })
+                    }
+                    fedFrom={fedFrom(selected, project.model)}
+                    onDelete={() => {
+                      editor.dispatch({ type: 'removeElements', ids: [selected.id] });
+                      setSelectedId(null);
+                    }}
+                  />
+                )
               )
             }
           />
@@ -333,6 +467,32 @@ export function FloorSetupPage() {
           e.target.value = '';
         }}
       />
+      {constructionFor && (
+        <ConstructionDialog
+          title={constructionFor === 'tool' ? 'Cable construction' : 'Change cable construction'}
+          initial={
+            constructionFor === 'tool'
+              ? construction
+              : (project.model.cables.find((c) => c.id === constructionFor)?.construction ??
+                construction)
+          }
+          onCancel={() => setConstructionFor(null)}
+          onConfirm={(c) => {
+            if (constructionFor === 'tool') {
+              setConstruction(c);
+              saveConstruction(project.id, c);
+              setArmed('cable');
+            } else {
+              editor.dispatch({
+                type: 'updateCable',
+                id: constructionFor,
+                patch: { construction: c },
+              });
+            }
+            setConstructionFor(null);
+          }}
+        />
+      )}
       {clearing && floor && (
         <Modal
           title={`Clear ${floor.name}?`}
@@ -456,4 +616,24 @@ function RightPanel(props: { floor: Floor | null; property: ReactNode }) {
       </button>
     </aside>
   );
+}
+
+/**
+ * Cable length allowance (12.2): the Technical Lead's override, else the rule-pack value, else its
+ * interim default (OI-17: 10 %), labelled interim. Null without a rule pack.
+ */
+function lengthAllowance(project: {
+  rulePackId: string | null;
+  rulePackVersion: string | null;
+  calculation: { defaultOverrides: Record<string, number | string> };
+}): { pct: number; interim: boolean } | null {
+  const override = project.calculation.defaultOverrides.cableLengthAllowancePct;
+  if (typeof override === 'number') return { pct: override, interim: false };
+  if (!project.rulePackId || !project.rulePackVersion) return null;
+  const d = getRulePack(project.rulePackId, project.rulePackVersion).calculationDefaults.find(
+    (x) => x.key === 'cableLengthAllowancePct',
+  );
+  if (typeof d?.value === 'number') return { pct: d.value, interim: false };
+  if (typeof d?.interimDefault === 'number') return { pct: d.interimDefault, interim: true };
+  return null;
 }

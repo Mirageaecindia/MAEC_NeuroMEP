@@ -8,6 +8,7 @@ import {
   type PdfPlan,
   type PdfPoint,
   type SheetSize,
+  orthogonal,
 } from '@neuromep/shared';
 import type { PDFDocumentProxy, PDFPageProxy, RenderTask } from 'pdfjs-dist';
 import {
@@ -42,6 +43,13 @@ export interface PlanMarker {
   /** Symbol image (data URL); a plain box when missing. */
   image: string | null;
   at: PdfPoint;
+}
+
+/** A cable drawn on the plan (#TASK-13): its tag and route in PDF points. */
+export interface PlanCable {
+  id: string;
+  tag: string;
+  points: PdfPoint[];
 }
 
 /** Data type of a library item dragged onto the plan. */
@@ -82,6 +90,13 @@ export function PlanViewer(props: {
   onPlace?: (at: PdfPoint, itemKey?: string) => void;
   onSelect?: (id: string | null) => void;
   onMove?: (id: string, at: PdfPoint) => void;
+  /** Cables on this floor (#TASK-13); selectable like components. */
+  cables?: PlanCable[];
+  /** Cable tool armed: clicks go to onCableClick instead of selecting or panning. */
+  cableMode?: boolean;
+  /** Route of the cable being drawn so far; a preview leg follows the pointer. */
+  drawingPoints?: PdfPoint[] | null;
+  onCableClick?: (at: PdfPoint, componentId: string | null) => void;
 }) {
   const { plan } = props;
   const api = useApi();
@@ -234,6 +249,20 @@ export function PlanViewer(props: {
   };
 
   const markers = props.markers ?? [];
+  const cables = props.cables ?? [];
+  /** Pointer position while drawing a cable (preview leg). */
+  const [pointer, setPointer] = useState<PdfPoint | null>(null);
+  /** The cable under a screen point (within 6 px of a leg), if any. */
+  const hitCable = (s: { x: number; y: number }) =>
+    page
+      ? cables.find((c) =>
+          c.points.slice(1).some((b, i) => {
+            const a = pdfToScreen(c.points[i]!, view, page.transform);
+            const q = pdfToScreen(b, view, page.transform);
+            return distanceToSegment(s, a, q) <= 6;
+          }),
+        )
+      : undefined;
   /** The component under a screen point, if any. */
   const hit = (s: { x: number; y: number }) =>
     page
@@ -248,12 +277,18 @@ export function PlanViewer(props: {
     // pans the empty plan. Middle or Shift + right button always pan.
     if (e.button === 0 && !picking && page) {
       const s = local(e);
+      if (props.cableMode) {
+        props.onCableClick?.(screenToPdf(s, view, page.transform), hit(s)?.id ?? null);
+        return;
+      }
       if (props.placing) {
         props.onPlace?.(screenToPdf(s, view, page.transform));
         return;
       }
       const m = hit(s);
-      props.onSelect?.(m ? m.id : null);
+      const c = m ? undefined : hitCable(s);
+      props.onSelect?.(m?.id ?? c?.id ?? null);
+      if (c) return;
       if (m && props.onMove) {
         e.preventDefault();
         drag.current = { id: m.id, moved: false };
@@ -274,6 +309,7 @@ export function PlanViewer(props: {
     setPoints((p) => [...p, snapTarget(free) ?? free]);
   }
   function onMouseMove(e: ReactMouseEvent) {
+    if (props.drawingPoints && page) setPointer(screenToPdf(local(e), view, page.transform));
     if (drag.current && page) {
       drag.current.moved = true;
       setDragAt({ id: drag.current.id, at: screenToPdf(local(e), view, page.transform) });
@@ -494,7 +530,7 @@ export function PlanViewer(props: {
 
       <div
         ref={container}
-        className={`viewer-canvas${picking || props.placing ? ' picking' : ''}${panning ? ' panning' : ''}`}
+        className={`viewer-canvas${picking || props.placing || props.cableMode ? ' picking' : ''}${panning ? ' panning' : ''}`}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={endPan}
@@ -523,6 +559,36 @@ export function PlanViewer(props: {
         />
         {page && (
           <svg className="viewer-overlay" width={size.width} height={size.height}>
+            {cables.map((c) => {
+              const pts = c.points.map(toScreen);
+              const selected = c.id === props.selectedId;
+              const label = longestLegMiddle(pts);
+              return (
+                <g
+                  key={c.id}
+                  className={`plan-cable${selected ? ' selected' : ''}`}
+                  role="img"
+                  aria-label={`Cable ${c.tag}${selected ? ' (selected)' : ''}`}
+                >
+                  <polyline points={pts.map((p) => `${p.x},${p.y}`).join(' ')} />
+                  <text x={label.x} y={label.y - 5} textAnchor="middle" className="cable-tag">
+                    {c.tag}
+                  </text>
+                </g>
+              );
+            })}
+            {props.drawingPoints && props.drawingPoints.length > 0 && (
+              <polyline
+                className="cable-preview"
+                points={[
+                  ...props.drawingPoints,
+                  ...(pointer ? [orthogonal(props.drawingPoints.at(-1)!, pointer)] : []),
+                ]
+                  .map(toScreen)
+                  .map((p) => `${p.x},${p.y}`)
+                  .join(' ')}
+              />
+            )}
             {markers.map((m) => {
               const s = toScreen(dragAt?.id === m.id ? dragAt.at : m.at);
               const selected = m.id === props.selectedId;
@@ -640,4 +706,26 @@ export function PlanViewer(props: {
       </div>
     </div>
   );
+}
+
+type ScreenPoint = { x: number; y: number };
+
+/** Distance from a point to a line segment (screen px), for selecting cables. */
+function distanceToSegment(p: ScreenPoint, a: ScreenPoint, b: ScreenPoint): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len2 = dx * dx + dy * dy;
+  const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2));
+  return Math.hypot(p.x - (a.x + t * dx), p.y - (a.y + t * dy));
+}
+
+/** Middle of the longest leg of a polyline: where the cable tag is written. */
+function longestLegMiddle(pts: ScreenPoint[]): ScreenPoint {
+  let best = { len: -1, mid: pts[0] ?? { x: 0, y: 0 } };
+  pts.slice(1).forEach((b, i) => {
+    const a = pts[i]!;
+    const len = Math.hypot(b.x - a.x, b.y - a.y);
+    if (len > best.len) best = { len, mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
+  });
+  return best.mid;
 }

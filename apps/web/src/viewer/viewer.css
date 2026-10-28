@@ -157,3 +157,28 @@
   stroke: #1d4ed8;
   stroke-width: 2;
 }
+
+/* Cables (#TASK-13) */
+.plan-cable polyline {
+  fill: none;
+  stroke: #dc2626;
+  stroke-width: 2;
+}
+.plan-cable.selected polyline {
+  stroke-width: 4;
+  stroke-dasharray: 8 4;
+}
+.cable-tag {
+  font-size: 10px;
+  font-weight: 700;
+  fill: #dc2626;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 3px;
+}
+.cable-preview {
+  fill: none;
+  stroke: #dc2626;
+  stroke-width: 2;
+  stroke-dasharray: 5 4;
+}

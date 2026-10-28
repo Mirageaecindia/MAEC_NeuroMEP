@@ -8,6 +8,7 @@ import {
   connectionProblem,
   drawCable,
   fedFrom,
+  moveCableEnd,
   nextWay,
   orthogonal,
   portsOf,
@@ -70,6 +71,29 @@ describe('#TASK-13 routes and length (FR-15, A-05)', () => {
       { x: 0, y: 0 },
       { x: 6, y: 0 },
       { x: 6, y: 4 },
+    ]);
+  });
+
+  it('keeps the route right-angled when a connected component moves', () => {
+    const cable = {
+      route: [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 5 },
+      ],
+    };
+    expect(moveCableEnd(cable, 'to', { x: 12, y: 5 }).route).toEqual([
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 12, y: 0 },
+      { x: 12, y: 5 },
+    ]);
+    // The old start becomes the elbow, so the rest of the route stays as drawn.
+    expect(moveCableEnd(cable, 'from', { x: 0, y: 2 }).route).toEqual([
+      { x: 0, y: 2 },
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 5 },
     ]);
   });
 

@@ -3,13 +3,15 @@ import { useState } from 'react';
 
 /**
  * "Engineering Property" card of the selected component (Figma 3.3): name, tag, description and
- * fed-from. Equipment values (kVA, poles, loads …) are entered here with WBS 1.3.4; fed-from
- * follows from the cables (WBS 1.3.2). Text is saved when the field is left.
+ * fed-from (from the cables). Equipment values (kVA, poles, loads …) are entered here with WBS
+ * 1.3.4. Text is saved when the field is left.
  */
 export function EngineeringProperty(props: {
   element: Element;
   editable: boolean;
   takenTags: string[];
+  /** Tag(s) of the component feeding it, from the cables; null when nothing feeds it yet. */
+  fedFrom: string | null;
   onChange: (patch: { tag?: string; description?: string }) => void;
   onDelete: () => void;
 }) {
@@ -64,7 +66,7 @@ export function EngineeringProperty(props: {
           />
         </dd>
         <dt>Fed From :</dt>
-        <dd title="Follows from the cables (WBS 1.3.2)">-</dd>
+        <dd>{props.fedFrom ?? '-'}</dd>
         <dt>Symbol :</dt>
         <dd>{item ? `${item.cmpCode} (draft)` : '-'}</dd>
       </dl>

@@ -60,6 +60,17 @@ export function closeRoute(points: ModelPoint[], end: ModelPoint): ModelPoint[] 
   return [...points, { x: end.x, y: last.y }, end];
 }
 
+/** A cable whose component moved: the end follows, with an elbow if a leg would turn diagonal. */
+export function moveCableEnd<T extends Pick<Cable, 'route'>>(
+  cable: T,
+  end: 'from' | 'to',
+  p: ModelPoint,
+): T {
+  if (end === 'to') return { ...cable, route: closeRoute(cable.route.slice(0, -1), p) };
+  const reversed = closeRoute([...cable.route].reverse().slice(0, -1), p);
+  return { ...cable, route: reversed.reverse() };
+}
+
 const segmentsLength = (route: ModelPoint[]) =>
   route.slice(1).reduce((sum, p, i) => sum + Math.hypot(p.x - route[i]!.x, p.y - route[i]!.y), 0);
 

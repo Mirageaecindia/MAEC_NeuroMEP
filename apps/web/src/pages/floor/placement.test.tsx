@@ -3,7 +3,7 @@ import { completeProject } from '@neuromep/shared/testing';
 import { createEvent, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ApiClient } from '../../api/client';
 import { App, routes } from '../../App';
 import type { AuthProvider } from '../../auth/AuthProvider';
@@ -108,6 +108,8 @@ beforeAll(() => {
     },
   );
 });
+// The last cable construction is remembered in the browser: each test starts without it.
+beforeEach(() => localStorage.clear());
 afterAll(() => {
   delete (HTMLElement.prototype as unknown as Record<string, unknown>).clientWidth;
   delete (HTMLElement.prototype as unknown as Record<string, unknown>).clientHeight;
@@ -200,5 +202,92 @@ describe('#TASK-12 placing components on Floor Setup (WBS 1.3.1)', () => {
     open(CHECKER);
     await planReady();
     expect(chip('DB')).toBeDisabled();
+  });
+});
+
+describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
+  async function placeAt(name: string, x: number, y: number) {
+    await userEvent.click(chip(name));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: x, clientY: y });
+  }
+  async function chooseConstruction() {
+    const dialog = await screen.findByRole('dialog', { name: 'Cable construction' });
+    const pick: [string, string][] = [
+      ['Cores', '4C'],
+      ['Conductor', 'Cu'],
+      ['Insulation', 'XLPE'],
+      ['Armour', 'SWA'],
+      ['Sheath', 'PVC'],
+      ['Voltage grade', '600/1000 V'],
+      ['Installation method', 'B'],
+    ];
+    for (const [label, value] of pick) {
+      await userEvent.selectOptions(within(dialog).getByLabelText(label), value);
+    }
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Use this construction' }));
+  }
+
+  it('draws a right-angled cable from a board to a DB with its way, tag and length', async () => {
+    open(LEAD);
+    await planReady();
+    await placeAt('SMDB', 300, 300);
+    await placeAt('DB', 600, 450);
+    await userEvent.click(chip('Cable'));
+    await chooseConstruction();
+    expect(chip('Cable')).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 }); // SMDB
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 310 }); // bend
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 450 }); // DB
+    expect(await screen.findByRole('img', { name: 'Cable FGF-1 (selected)' })).toBeInTheDocument();
+    const card = screen.getByRole('region', { name: 'Engineering Property' });
+    expect(card).toHaveTextContent('From :SMDB-GF-01');
+    expect(card).toHaveTextContent('To :DB-GF-01');
+    expect(card).toHaveTextContent('Circuit :1RYB');
+    expect(card).toHaveTextContent('4C Cu/XLPE/SWA/PVC, 600/1000 V, method B');
+    expect(card).toHaveTextContent('vertical 1.00 m + 10 % (interim, OI-17)');
+    expect(card).toHaveTextContent('Calculated by Cable Size');
+
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 450 }); // select the DB
+    expect(screen.getByRole('region', { name: 'Engineering Property' })).toHaveTextContent(
+      'Fed From :SMDB-GF-01',
+    );
+
+    // The construction is remembered: the next cable starts without asking again (D-05).
+    await userEvent.click(chip('Cable'));
+    expect(screen.queryByRole('dialog', { name: 'Cable construction' })).not.toBeInTheDocument();
+    expect(chip('Cable')).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('refuses to start on a DB, which has no outgoing way, and Escape cancels a cable', async () => {
+    open(LEAD);
+    await planReady();
+    await placeAt('DB', 600, 450);
+    await userEvent.click(chip('Cable'));
+    await chooseConstruction();
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 450 });
+    expect(
+      await screen.findByText('DB-GF-01 has no outgoing way: start from the board that feeds.', {
+        selector: '.notice',
+      }),
+    ).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(chip('Cable')).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByRole('img', { name: /^Cable / })).not.toBeInTheDocument();
+  });
+
+  it('deletes a selected cable with the Delete key, keeping both components', async () => {
+    open(LEAD);
+    await planReady();
+    await placeAt('SMDB', 300, 300);
+    await placeAt('DB', 300, 500);
+    await userEvent.click(chip('Cable'));
+    await chooseConstruction();
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 500 });
+    expect(await screen.findByRole('img', { name: 'Cable FGF-1 (selected)' })).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'Delete' });
+    expect(screen.queryByRole('img', { name: /^Cable / })).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'SMDB-GF-01' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'DB-GF-01' })).toBeInTheDocument();
   });
 });

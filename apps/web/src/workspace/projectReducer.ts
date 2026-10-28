@@ -1,5 +1,8 @@
 import {
   applyRegistryChange,
+  moveCableEnd,
+  type Cable,
+  type CableConstruction,
   type Element,
   type ModelPoint,
   laterPage,
@@ -73,6 +76,10 @@ export type ProjectAction =
   | { type: 'moveElement'; id: string; position: ModelPoint }
   | { type: 'updateElement'; id: string; patch: { tag?: string; description?: string } }
   | { type: 'removeElements'; ids: string[] }
+  /** Cables (#TASK-13); always the electrical layer. */
+  | { type: 'addCable'; cable: Cable }
+  | { type: 'updateCable'; id: string; patch: { tag?: string; construction?: CableConstruction } }
+  | { type: 'removeCables'; ids: string[] }
   | {
       /** A confirmed change to a Page 1 calculation input (Section 9). */
       type: 'earlierPageChange';
@@ -160,8 +167,23 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
     case 'placeElement':
       return { ...p, model: { ...p.model, elements: [...p.model.elements, a.element] } };
     case 'moveElement':
+      // Cables attached to the component follow it (#TASK-13).
+      return {
+        ...p,
+        model: {
+          elements: p.model.elements.map((e) =>
+            e.id === a.id ? { ...e, position: a.position, version: e.version + 1 } : e,
+          ),
+          cables: p.model.cables.map((c) => {
+            let next = c;
+            if (c.from.elementId === a.id) next = moveCableEnd(next, 'from', a.position);
+            if (c.to.elementId === a.id) next = moveCableEnd(next, 'to', a.position);
+            return next === c ? c : { ...next, version: c.version + 1 };
+          }),
+        },
+      };
     case 'updateElement': {
-      const change = a.type === 'moveElement' ? { position: a.position } : a.patch;
+      const change = a.patch;
       return {
         ...p,
         model: {
@@ -184,6 +206,22 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
           ),
         },
       };
+    }
+    case 'addCable':
+      return { ...p, model: { ...p.model, cables: [...p.model.cables, a.cable] } };
+    case 'updateCable':
+      return {
+        ...p,
+        model: {
+          ...p.model,
+          cables: p.model.cables.map((c) =>
+            c.id === a.id ? { ...c, ...a.patch, version: c.version + 1 } : c,
+          ),
+        },
+      };
+    case 'removeCables': {
+      const gone = new Set(a.ids);
+      return { ...p, model: { ...p.model, cables: p.model.cables.filter((c) => !gone.has(c.id)) } };
     }
     case 'earlierPageChange':
       return {
