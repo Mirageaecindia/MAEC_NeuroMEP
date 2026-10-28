@@ -18,6 +18,7 @@ import type { AuthProvider } from './auth/provider.js';
 import type { SessionStore } from './auth/sessions.js';
 import { checkPlanPdf } from './plans/pdf-check.js';
 import type { PlanStorage } from './plans/storage.js';
+import type { LegendSymbol } from './symbols/catalogue.js';
 import { sendError } from './errors.js';
 import type { ProjectRepository } from './projects/repository.js';
 
@@ -30,6 +31,8 @@ export interface AppDeps {
   limits?: { byEmail: LoginLimiter; byAddress: LoginLimiter };
   projects: ProjectRepository;
   plans: PlanStorage;
+  /** Legend symbols of the component library (A-11); none when not given. */
+  symbols?: LegendSymbol[];
   now?: () => string;
   newId?: () => string;
 }
@@ -88,6 +91,12 @@ export function createApp(deps?: AppDeps): Express {
   app.get('/api/auth/me', signedIn, (req, res) => {
     res.json({ user: currentUser(req) });
   });
+  // ----- component library symbols (A-11, #TASK-11) -----
+  app.get('/api/symbols', signedIn, (_req, res) => {
+    res.set('cache-control', 'private, max-age=3600');
+    res.json({ symbols: deps.symbols ?? [] });
+  });
+
   app.get('/api/users', signedIn, async (_req, res) => {
     res.json({ users: await auth.listUsers() });
   });

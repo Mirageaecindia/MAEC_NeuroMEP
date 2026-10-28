@@ -1,0 +1,83 @@
+{
+  "note": "Draft symbols for Technical Lead approval (A-11, OI-34). Replace a file with the symbol traced from the company CAD block and set its status to \"approved\".",
+  "symbols": [
+    {
+      "key": "ats",
+      "cmpCode": "CMP-010",
+      "file": "ats.svg",
+      "status": "draft"
+    },
+    {
+      "key": "generator",
+      "cmpCode": "CMP-009",
+      "file": "generator.svg",
+      "status": "draft"
+    },
+    {
+      "key": "eb-utility",
+      "cmpCode": "CMP-007",
+      "file": "eb-utility.svg",
+      "status": "draft"
+    },
+    {
+      "key": "transformer",
+      "cmpCode": "CMP-008",
+      "file": "transformer.svg",
+      "status": "draft"
+    },
+    {
+      "key": "rmu",
+      "cmpCode": "CMP-007",
+      "file": "rmu.svg",
+      "status": "draft"
+    },
+    {
+      "key": "lv-panel",
+      "cmpCode": "CMP-011",
+      "file": "lv-panel.svg",
+      "status": "draft"
+    },
+    {
+      "key": "acb",
+      "cmpCode": "CMP-012",
+      "file": "acb.svg",
+      "status": "draft"
+    },
+    {
+      "key": "mdb",
+      "cmpCode": "CMP-011",
+      "file": "mdb.svg",
+      "status": "draft"
+    },
+    {
+      "key": "smdb",
+      "cmpCode": "CMP-002",
+      "file": "smdb.svg",
+      "status": "draft"
+    },
+    {
+      "key": "mcc",
+      "cmpCode": "CMP-003",
+      "file": "mcc.svg",
+      "status": "draft"
+    },
+    {
+      "key": "db",
+      "cmpCode": "CMP-001",
+      "file": "db.svg",
+      "status": "draft"
+    },
+    {
+      "key": "busbar",
+      "cmpCode": "CMP-013",
+      "file": "busbar.svg",
+      "status": "draft"
+    },
+    {
+      "key": "lighting",
+      "cmpCode": "CMP-001",
+      "file": "lighting.svg",
+      "status": "draft"
+    }
+  ]
+}

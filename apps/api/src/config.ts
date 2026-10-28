@@ -17,6 +17,8 @@ const EnvSchema = z.object({
   DATA_DIR: z.string().default('.data'),
   /** Floor-plan PDFs (A-02). Default: <DATA_DIR>/plans. */
   PLANS_DIR: z.string().optional(),
+  /** Legend symbols of the component library (A-11). Default: the draft set in apps/api/symbols. */
+  SYMBOLS_DIR: z.string().optional(),
   NODE_ENV: z.string().default('development'),
 });
 

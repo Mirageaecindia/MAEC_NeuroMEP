@@ -1,4 +1,5 @@
-import { mkdtempSync } from 'node:fs';
+import { isPlaceable, LIBRARY_ITEMS } from '@neuromep/shared';
+import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Readable } from 'node:stream';
@@ -19,6 +20,7 @@ import { MongoSessionStore } from './auth/sessions.js';
 import { DEV_USERS_FILE } from './config.js';
 import { connectMongo, type Database } from './db/mongo.js';
 import { DiskPlanStorage, movePlansFromGridFs } from './plans/storage.js';
+import { loadSymbols } from './symbols/catalogue.js';
 import { ProjectRepository } from './projects/repository.js';
 
 const DEV_USERS = loadUsersFile(DEV_USERS_FILE);
@@ -59,6 +61,7 @@ beforeEach(async () => {
     },
     projects,
     plans: new DiskPlanStorage(plansDir),
+    symbols: loadSymbols(),
     now: () => clockIso,
     newId: sequentialIds('proj'),
   });
@@ -506,5 +509,32 @@ describe('#TASK-08 network model persistence', () => {
     const loaded = (await request(app).get(`/api/projects/${created.id}`).set('cookie', auth)).body
       .project;
     expect(loaded.model.elements.map((e: { tag: string }) => e.tag)).toEqual(['Tx_GF_1', 'ATS-1']);
+  });
+});
+
+describe('#TASK-11 legend symbols (A-11)', () => {
+  it('serves a draft symbol with its CMP code for every placeable library item', async () => {
+    expect((await request(app).get('/api/symbols')).status).toBe(401);
+    const res = await request(app)
+      .get('/api/symbols')
+      .set('cookie', await tokenFor(ELEC));
+    expect(res.status).toBe(200);
+    const byKey = new Map(res.body.symbols.map((s: { key: string }) => [s.key, s]));
+    for (const item of LIBRARY_ITEMS.filter(isPlaceable)) {
+      expect(byKey.get(item.key)).toMatchObject({ cmpCode: item.cmpCode, status: 'draft' });
+    }
+    expect(res.body.symbols[0].svg).toMatch(/^<svg /);
+  });
+
+  it('refuses a symbol file that could run code', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'neuromep-symbols-'));
+    writeFileSync(
+      join(dir, 'catalogue.json'),
+      JSON.stringify({
+        symbols: [{ key: 'db', cmpCode: 'CMP-001', file: 'db.svg', status: 'draft' }],
+      }),
+    );
+    writeFileSync(join(dir, 'db.svg'), '<svg onload="alert(1)"></svg>');
+    expect(() => loadSymbols(dir)).toThrow(/not a plain SVG/);
   });
 });
