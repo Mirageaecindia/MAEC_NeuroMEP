@@ -24,10 +24,23 @@ export async function startDevMongo(dataDir: string, dbName: string): Promise<Da
   // Development only: dbPath comes from the DATA_DIR setting, not from a request.
   // eslint-disable-next-line security/detect-non-literal-fs-filename
   mkdirSync(dbPath, { recursive: true });
-  const replSet = await MongoMemoryReplSet.create({
-    replSet: { count: 1, storageEngine: 'wiredTiger' },
-    instanceOpts: [{ dbPath, port: 27027 }],
-  });
+  let replSet: InstanceType<typeof MongoMemoryReplSet>;
+  try {
+    replSet = await MongoMemoryReplSet.create({
+      replSet: { count: 1, storageEngine: 'wiredTiger' },
+      instanceOpts: [{ dbPath, port: 27027 }],
+    });
+  } catch (e) {
+    // The usual cause: `npm run dev` is already running in another terminal.
+    if (/DBPathInUse|EADDRINUSE|address already in use/i.test(String(e))) {
+      throw new Error(
+        `The development database in ${dbPath} is already in use - NeuroMEP is probably running ` +
+          'in another terminal. Stop it there (Ctrl + C), then run npm run dev again.',
+        { cause: e },
+      );
+    }
+    throw e;
+  }
   const database = await connectMongo(replSet.getUri(), dbName);
   return {
     ...database,
