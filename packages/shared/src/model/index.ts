@@ -2,6 +2,7 @@ export * from './cable.js';
 export * from './elements.js';
 export * from './impact.js';
 export * from './library.js';
+export * from './loadImport.js';
 export * from './loads.js';
 export * from './topology.js';
 export * from './wiring.js';

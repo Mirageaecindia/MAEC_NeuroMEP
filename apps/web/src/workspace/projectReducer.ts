@@ -1,5 +1,6 @@
 import {
   applyRegistryChange,
+  type LoadLine,
   ElementSchema,
   moveCableEnd,
   type Cable,
@@ -82,6 +83,12 @@ export type ProjectAction =
   | { type: 'addCable'; cable: Cable }
   | { type: 'updateCable'; id: string; patch: { tag?: string; construction?: CableConstruction } }
   | { type: 'removeCables'; ids: string[] }
+  /** DB loads replaced from an Excel sheet (FR-35); one audit entry per DB (total kW). */
+  | {
+      type: 'loadImport';
+      changes: { id: string; tag: string; loads: LoadLine[]; beforeKw: number; afterKw: number }[];
+      audit: AuditMeta;
+    }
   | {
       /** A confirmed change to a Page 1 calculation input (Section 9). */
       type: 'earlierPageChange';
@@ -227,6 +234,30 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
     case 'removeCables': {
       const gone = new Set(a.ids);
       return { ...p, model: { ...p.model, cables: p.model.cables.filter((c) => !gone.has(c.id)) } };
+    }
+    case 'loadImport': {
+      const byId = new Map(a.changes.map((c) => [c.id, c]));
+      return {
+        ...p,
+        model: {
+          ...p.model,
+          elements: p.model.elements.map((e) => {
+            const c = byId.get(e.id);
+            return c && e.kind === 'db' ? { ...e, loads: c.loads, version: e.version + 1 } : e;
+          }),
+        },
+        auditLog: [
+          ...p.auditLog,
+          ...a.changes.map((c, i) => ({
+            ...a.audit,
+            id: `${a.audit.id}-${i}`,
+            area: 'loadImport' as const,
+            key: c.tag,
+            from: Math.round(c.beforeKw * 1000) / 1000,
+            to: Math.round(c.afterKw * 1000) / 1000,
+          })),
+        ],
+      };
     }
     case 'earlierPageChange':
       return {

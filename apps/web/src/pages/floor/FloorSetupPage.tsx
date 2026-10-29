@@ -1,5 +1,8 @@
 import {
   categoryFactorsPending,
+  parseLoadSheet,
+  planLoadImport,
+  type LoadImportPlan,
   closeRoute,
   loadSummaries,
   connectionProblem,
@@ -26,7 +29,10 @@ import { useSearchParams } from 'react-router';
 import { useApi, useUser } from '../../auth/AuthContext';
 import { Modal } from '../../components/fields';
 import { DisciplineTabs, Shell, useNotice } from '../../layout/Shell';
-import { Toolbar, type ToolKey } from '../../layout/Toolbar';
+import { Toolbar, type OpenMenuItem, type ToolKey } from '../../layout/Toolbar';
+import { newAudit } from '../../workspace/formProps';
+import { LoadImportDialog } from './LoadImportDialog';
+import { loadTemplate, readSheetRows } from './loadSheet';
 import { readFirstPageSize } from '../../viewer/pdf';
 import {
   LIBRARY_DRAG_TYPE,
@@ -77,6 +83,52 @@ export function FloorSetupPage() {
   const [uploading, setUploading] = useState(false);
   const viewer = useRef<ViewerControls>(null);
   const fileInput = useRef<HTMLInputElement>(null);
+  const sheetInput = useRef<HTMLInputElement>(null);
+  /** DB load upload being previewed (FR-35). */
+  const [loadImport, setLoadImport] = useState<{
+    fileName: string;
+    plan: LoadImportPlan;
+    problems: { row: number; message: string }[];
+  } | null>(null);
+
+  async function readLoadSheet(file: File) {
+    try {
+      const { rows, problems } = parseLoadSheet(await readSheetRows(file));
+      setLoadImport({
+        fileName: file.name,
+        plan: planLoadImport(project.model.elements, rows),
+        problems,
+      });
+    } catch {
+      notice('This file could not be read as an Excel workbook (.xlsx).');
+    }
+  }
+
+  async function downloadTemplate() {
+    const dbs = project.model.elements.filter((e) => e.kind === 'db');
+    const url = URL.createObjectURL(await loadTemplate(dbs));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'NeuroMEP_DB_loads.xlsx';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const openMenu: OpenMenuItem[] = [
+    {
+      label: 'Floor plan (PDF)…',
+      onSelect: () =>
+        floor
+          ? fileInput.current?.click()
+          : notice('Set the number of floors on Import File first.'),
+    },
+    {
+      label: 'DB loads from Excel…',
+      onSelect: () => sheetInput.current?.click(),
+      disabled: !editor.layers.includes('electrical'),
+    },
+    { label: 'Download the DB load template', onSelect: () => void downloadTemplate() },
+  ];
   const floor = project.building.floors.find((f) => f.id === floorId) ?? null;
 
   // ----- components (#TASK-11 / #TASK-12) -----
@@ -361,6 +413,7 @@ export function FloorSetupPage() {
         <Toolbar
           {...toolbar}
           enabled={enabled}
+          openMenu={openMenu}
           pressed={building ? ['building'] : []}
           hidden={building ? ['status'] : []}
         />
@@ -499,6 +552,40 @@ export function FloorSetupPage() {
               });
             }
             setConstructionFor(null);
+          }}
+        />
+      )}
+      <input
+        ref={sheetInput}
+        type="file"
+        accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        hidden
+        aria-label="DB load sheet"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = '';
+          if (file) void readLoadSheet(file);
+        }}
+      />
+      {loadImport && (
+        <LoadImportDialog
+          fileName={loadImport.fileName}
+          plan={loadImport.plan}
+          problems={loadImport.problems}
+          onCancel={() => setLoadImport(null)}
+          onImport={() => {
+            const changes = loadImport.plan.matched
+              .filter((m) => m.changed)
+              .map((m) => ({
+                id: m.element.id,
+                tag: m.element.tag,
+                loads: m.lines,
+                beforeKw: m.beforeKw,
+                afterKw: m.afterKw,
+              }));
+            editor.dispatch({ type: 'loadImport', changes, audit: newAudit(user) });
+            notice(`Loads of ${changes.length} DB${changes.length === 1 ? '' : 's'} imported.`);
+            setLoadImport(null);
           }}
         />
       )}

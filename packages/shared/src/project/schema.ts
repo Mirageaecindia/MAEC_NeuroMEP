@@ -125,7 +125,8 @@ export const AuditEntrySchema = z.object({
   at: IsoDate,
   userId: Id,
   /** earlierPageChange: a confirmed change to a Page 1 calculation input (Section 9). */
-  area: z.enum(['demandFactor', 'calculationDefault', 'earlierPageChange']),
+  /** loadImport: DB loads replaced from an Excel sheet (FR-35); from / to = total kW. */
+  area: z.enum(['demandFactor', 'calculationDefault', 'earlierPageChange', 'loadImport']),
   key: z.string(),
   from: z.union([z.number(), z.string(), z.null()]),
   to: z.union([z.number(), z.string(), z.null()]),

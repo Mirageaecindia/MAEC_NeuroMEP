@@ -1,4 +1,4 @@
-import type { Project, UserSummary } from '@neuromep/shared';
+import { loadTemplateHeader, type Project, type UserSummary } from '@neuromep/shared';
 import { completeProject } from '@neuromep/shared/testing';
 import { createEvent, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -443,5 +443,46 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     await userEvent.type(kva, '1500');
     await userEvent.tab();
     expect(screen.getByText('1500 kVA')).toBeInTheDocument();
+  });
+});
+
+describe('#TASK-15 DB loads from Excel (FR-35)', () => {
+  it('previews matched and unmatched rows (E1503), imports and writes the audit log', async () => {
+    const api = open(LEAD);
+    await planReady();
+    await userEvent.click(chip('DB'));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
+
+    const ExcelJS = (await import('exceljs')).default;
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('DB loads');
+    const header = loadTemplateHeader();
+    ws.addRow(header);
+    const row = (tag: string, kw: number) =>
+      header.map((h, i) => (i === 0 ? tag : h.startsWith('Lighting L') ? kw : null));
+    ws.addRow(row('db-gf-01', 3));
+    ws.addRow(row('DB-NOT-HERE', 1));
+    const file = new File([await wb.xlsx.writeBuffer()], 'loads.xlsx');
+    await userEvent.upload(screen.getByLabelText('DB load sheet'), file);
+
+    const dialog = await screen.findByRole('dialog', { name: 'Import DB loads' });
+    expect(
+      within(dialog).getByRole('row', { name: 'DB-GF-01 0.00 kW 9.00 kW' }),
+    ).toBeInTheDocument();
+    expect(dialog).toHaveTextContent('Not matched (E1503): row 3 "DB-NOT-HERE"');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Import 1 DB' }));
+    expect(screen.getByRole('region', { name: 'Engineering Property' })).toHaveTextContent(
+      'Loads :1 line, 9.00 kW',
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.saveProject).toHaveBeenCalled());
+    const saved = api.saveProject.mock.calls.at(-1)![0];
+    expect(saved.auditLog.at(-1)).toMatchObject({
+      area: 'loadImport',
+      key: 'DB-GF-01',
+      from: 0,
+      to: 9,
+    });
   });
 });

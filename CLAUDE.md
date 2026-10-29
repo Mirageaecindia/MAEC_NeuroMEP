@@ -66,7 +66,7 @@ Login → five top tabs: **All Projects** (project cards with status) → **Impo
 
 ## Stack (D-14, Section 7)
 - npm workspaces: `apps/web` (React + Vite), `apps/api` (Node + Express), `packages/engine` (pure TS; web worker + api), `packages/shared` (Zod schemas, types, Page 1 rules, error catalogue), `packages/rulepacks` (Dubai pack, CableSizer tables), `revit-addin/` (future).
-- Section 7 also names Zustand, Konva, three.js, Socket.IO, ExcelJS — add each with the WBS item that needs it.
+- Section 7 also names Zustand, Konva, three.js, Socket.IO, ExcelJS — add each with the WBS item that needs it. ExcelJS added in WBS 1.3.4 (web, loaded on demand; `uuid` pinned to 11.1.1 by an override, GHSA-w5hq-g745-h8pq). Placement uses an SVG overlay, not Konva (decision 28 Oct).
 - MongoDB replica set, official driver; collections `projects`, `floors`, `elements`, `rulepacks`, `auditLog`, `exports`, `sessions`. Plan files on disk (A-02). Optimistic locking via `version`.
 - Hosting: Netcup VPS (Nginx + TLS, PM2, MongoDB, nightly backup); staging demo on 10 Nov (WBS 1.8.3).
 - Tooling: Node 24 LTS; ESLint (+ security rules) + Prettier; Vitest, mongodb-memory-server, Playwright (WBS 1.5.2); CI on every push with tests, code analysis and dependency audit (WBS 1.1.3).
