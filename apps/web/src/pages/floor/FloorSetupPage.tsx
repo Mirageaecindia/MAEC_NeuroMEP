@@ -14,6 +14,7 @@ import {
   orthogonal,
   portsOf,
   topologyCheck,
+  sourceConnected,
   type CableConstruction,
   type ModelPoint,
   LIBRARY_ITEMS,
@@ -423,10 +424,11 @@ export function FloorSetupPage() {
       {building ? (
         <BuildingTab
           floors={project.building.floors}
-          risers={project.model.risers}
+          model={project.model}
           zoom={zoom}
           readOnly={!editor.layers.includes('electrical')}
-          onRiser={(id, patch) => editor.dispatch({ type: 'riser', id, patch })}
+          onRisers={(risers) => editor.dispatch({ type: 'risers', risers })}
+          onSave={() => void editor.save()}
         />
       ) : (
         <div className="floor-layout">
@@ -729,7 +731,7 @@ function RightPanel(props: {
         .filter((r) => r.summary.connectedKw > 0)
     : [];
   const tops = scope ? scope.tops.map((e) => summaries.get(e.id)!) : [];
-  const sourceConnected = false; // set by the Building tab once the transformer feeds the risers (WBS 1.4)
+  const fedFromSource = sourceConnected(project.model);
   return (
     <aside className="panel right-panel" aria-label="Right panel">
       <div className="capacity">
@@ -768,9 +770,9 @@ function RightPanel(props: {
       </div>
       <button
         className="btn btn-primary cable-size"
-        disabled={!sourceConnected}
+        disabled={!fedFromSource}
         title={
-          sourceConnected
+          fedFromSource
             ? undefined
             : 'Connect the transformer to the risers in the Building tab first (A-07)'
         }

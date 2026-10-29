@@ -18,7 +18,7 @@ import {
   type PdfPlan,
   type Project,
   type Region,
-  riserRows,
+  withoutElements,
   type Riser,
   type RegistryChange,
 } from '@neuromep/shared';
@@ -85,8 +85,8 @@ export type ProjectAction =
   | { type: 'addCable'; cable: Cable }
   | { type: 'updateCable'; id: string; patch: { tag?: string; construction?: CableConstruction } }
   | { type: 'removeCables'; ids: string[] }
-  /** Building tab Riser Design (FR-20, A-05): length / width of one riser row. */
-  | { type: 'riser'; id: string; patch: Partial<Pick<Riser, 'lengthM' | 'widthM'>> }
+  /** Building tab risers (FR-20): Riser Design and connections, edited with the shared helpers. */
+  | { type: 'risers'; risers: Riser[] }
   /** DB loads replaced from an Excel sheet (FR-35); one audit entry per DB (total kW). */
   | {
       type: 'loadImport';
@@ -217,8 +217,8 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
       return {
         ...p,
         model: {
-          ...p.model,
           elements: p.model.elements.filter((e) => !gone.has(e.id)),
+          risers: withoutElements(p.model.risers, gone),
           cables: p.model.cables.filter(
             (c) => !gone.has(c.from.elementId) && !gone.has(c.to.elementId),
           ),
@@ -241,12 +241,8 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
       const gone = new Set(a.ids);
       return { ...p, model: { ...p.model, cables: p.model.cables.filter((c) => !gone.has(c.id)) } };
     }
-    case 'riser': {
-      const risers = riserRows(p.model.risers).map((x) =>
-        x.id === a.id ? { ...x, ...a.patch } : x,
-      );
-      return { ...p, model: { ...p.model, risers } };
-    }
+    case 'risers':
+      return { ...p, model: { ...p.model, risers: a.risers } };
     case 'loadImport': {
       const byId = new Map(a.changes.map((c) => [c.id, c]));
       return {

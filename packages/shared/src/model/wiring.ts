@@ -1,5 +1,6 @@
 import { CableSchema, type Cable, type CableConstruction } from './cable.js';
 import type { Element, ModelPoint } from './elements.js';
+import type { Riser } from './riser.js';
 
 /**
  * Cable drawing rules (FR-15, #TASK-13): ports, orthogonal routes, length, outgoing ways and
@@ -164,8 +165,10 @@ export function drawCable(args: {
 /** The tag of the component feeding an element (Engineering Property "Fed From"), or null. */
 export function fedFrom(
   element: Pick<Element, 'id'>,
-  model: { elements: readonly Element[]; cables: readonly Cable[] },
+  model: { elements: readonly Element[]; cables: readonly Cable[]; risers?: readonly Riser[] },
 ): string | null {
+  const riser = model.risers?.findIndex((r) => r.feeds.includes(element.id)) ?? -1;
+  if (riser >= 0) return `Riser ${riser + 1}`;
   const incoming = model.cables.filter((c) => c.to.elementId === element.id);
   if (incoming.length === 0) return null;
   return incoming

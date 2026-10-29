@@ -1,5 +1,9 @@
 import {
   createEmptyProject,
+  isPlaceable,
+  libraryItem,
+  placeElement,
+  setRiser,
   type Project,
   type ProjectSummary,
   type UserSummary,
@@ -403,16 +407,27 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(screen.getByRole('button', { name: 'Cable Size' })).toBeDisabled();
   });
 
-  it('Building tab: Cable Size Calculator is enabled only when every floor is connected; then Save', async () => {
-    renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(completeProject()));
+  it('#TASK-18 a riser fed from the transformer feeds the floor boards; then Cable Size (A-07)', async () => {
+    const api = fakeApi(buildingProject());
+    renderAt('/projects/p-1/floor', new FakeAuth(LEAD), api);
     await userEvent.click(await screenTool('Building'));
     const summary = screen.getByRole('complementary', { name: 'Building Summary' });
     const calc = within(summary).getByRole('button', { name: 'Cable Size Calculator' });
     expect(calc).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
+    expect(await screen.findByText('Enter a riser length in Riser Design first.')).toBeVisible();
     await userEvent.type(within(summary).getByLabelText('Riser 1 length'), '26');
-    for (const board of screen.getAllByRole('button', { name: / board$/ }))
-      await userEvent.click(board);
+    await userEvent.click(screen.getByRole('button', { name: 'Riser 1' }));
+    expect(await screen.findByText('Riser 1 is fed from TX-1.')).toBeVisible();
     expect(calc).toBeEnabled();
+    await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
+    await userEvent.click(tool('Save'));
+    await waitFor(async () =>
+      expect((await api.getProject('p-1')).project.model.risers[0]).toMatchObject({
+        fedFromId: 'tx',
+        feeds: ['db-1'],
+      }),
+    );
     expect(within(summary).getByRole('button', { name: 'Save' })).toBeDisabled();
     await userEvent.click(calc);
     expect(within(summary).getByRole('button', { name: 'Save' })).toBeEnabled();
@@ -453,11 +468,10 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
   });
 
   it('Demand Factors reopens the 12 load-type factors; a change needs a new Cable Size run (A-14)', async () => {
-    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(completeProject()));
+    const project = buildingProject();
+    project.model.risers = setRiser([], 'riser-1', { lengthM: 26, fedFromId: 'tx' });
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(project));
     const summary = await screen.findByRole('complementary', { name: 'Building Summary' });
-    await userEvent.type(within(summary).getByLabelText('Riser 1 length'), '26');
-    for (const board of screen.getAllByRole('button', { name: / board$/ }))
-      await userEvent.click(board);
     await userEvent.click(within(summary).getByRole('button', { name: 'Cable Size Calculator' }));
     await userEvent.click(within(summary).getByRole('button', { name: 'Demand Factors' }));
     const dialog = screen.getByRole('dialog', { name: 'Demand Factors' });
@@ -488,6 +502,23 @@ describe('#TASK-30 / #TASK-31 Schematic and Output (Figma 4, 5)', () => {
     expect(screen.getByRole('table', { name: /Schedule SMDB/ })).toBeInTheDocument();
   });
 });
+
+/** modelledProject() with a transformer on the Ground Floor (Building tab). */
+function buildingProject(): Project {
+  const p = modelledProject();
+  const gf = p.building.floors.find((f) => f.code === 'GF')!;
+  const item = libraryItem('transformer');
+  if (!item || !isPlaceable(item)) throw new Error('transformer');
+  const tx = placeElement(item, {
+    id: 'tx',
+    floorId: gf.id,
+    floorCode: 'GF',
+    position: { x: 2, y: 2 },
+    taken: [],
+  });
+  p.model.elements.push({ ...tx, tag: 'TX-1' });
+  return p;
+}
 
 async function screenTool(name: string) {
   await screen.findByRole('toolbar', { name: 'Tools' });

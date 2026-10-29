@@ -1,5 +1,6 @@
 import type { Cable } from './cable.js';
 import type { Element, ElementKind } from './elements.js';
+import type { Riser } from './riser.js';
 import type { Port } from './wiring.js';
 
 /**
@@ -33,6 +34,10 @@ const ALLOWED_UPSTREAM: Partial<Record<ElementKind, ElementKind[]>> = {
   ups: [...MAIN],
   'pfc-bank': [...MAIN],
 };
+/** May an element of kind `from` feed one of kind `to` (Section 3)? */
+export const mayFeed = (from: ElementKind, to: ElementKind) =>
+  (ALLOWED_UPSTREAM[to] ?? []).includes(from);
+
 const ATS_INPUT: Record<'normal' | 'standby', ElementKind[]> = {
   normal: ['transformer', ...MAIN],
   standby: ['generator', 'ups'],
@@ -48,7 +53,7 @@ export type TopologyCheck =
 const refuse = (message: string): TopologyCheck => ({ ok: false, code: 'E1401', message });
 
 /** Every component upstream of an element (following the cables against their direction). */
-function upstreamOf(id: string, cables: readonly Cable[]): Set<string> {
+export function upstreamOf(id: string, cables: readonly Cable[]): Set<string> {
   const seen = new Set<string>();
   const queue = [id];
   while (queue.length) {
@@ -65,7 +70,7 @@ function upstreamOf(id: string, cables: readonly Cable[]): Set<string> {
 
 /** Checks a new cable from `from` to `to` (port `toPort`) against the model (Section 3). */
 export function topologyCheck(
-  model: { cables: readonly Cable[] },
+  model: { cables: readonly Cable[]; risers?: readonly Riser[] },
   from: Element,
   to: Element,
   toPort: Port,
@@ -77,7 +82,7 @@ export function topologyCheck(
     if (!ATS_INPUT[toPort].includes(from.kind)) {
       return refuse(`The ${toPort} input of ${to.tag} cannot be fed from ${from.tag}.`);
     }
-  } else if (!(ALLOWED_UPSTREAM[to.kind] ?? []).includes(from.kind)) {
+  } else if (!mayFeed(from.kind, to.kind)) {
     return refuse(`${from.tag} cannot feed ${to.tag}: follow source > MDB > SMDB / MCC > DB.`);
   }
   if (from.kind === 'busbar') {
@@ -91,6 +96,9 @@ export function topologyCheck(
   }
 
   // One supply per component; up to two incomers on an LV panel / MDB; one per ATS input.
+  if (model.risers?.some((r) => r.feeds.includes(to.id))) {
+    return refuse(`${to.tag} is already fed from a riser (Building tab).`);
+  }
   const incoming = cables.filter((c) => c.to.elementId === to.id);
   if (to.kind === 'ats') {
     if (incoming.some((c) => c.to.port === toPort)) {

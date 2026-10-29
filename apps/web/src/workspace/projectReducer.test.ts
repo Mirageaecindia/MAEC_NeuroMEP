@@ -1,5 +1,5 @@
-import { createEmptyProject } from '@neuromep/shared';
-import { completeProject, FIXED_NOW } from '@neuromep/shared/testing';
+import { createEmptyProject, setBoardRiser } from '@neuromep/shared';
+import { completeProject, FIXED_NOW, modelledProject } from '@neuromep/shared/testing';
 import { describe, expect, it } from 'vitest';
 import { projectReducer, withUploadedPlan, type AuditMeta } from './projectReducer';
 
@@ -115,11 +115,12 @@ describe('Page 1 project reducer', () => {
   });
 });
 
-describe('#TASK-17 Riser Design', () => {
-  it('stores the typed length and width of a riser row', () => {
-    let p = projectReducer(empty(), { type: 'riser', id: 'riser-2', patch: { lengthM: 15 } });
-    p = projectReducer(p, { type: 'riser', id: 'riser-2', patch: { widthM: 0.2 } });
-    expect(p.model.risers[1]).toEqual({ id: 'riser-2', lengthM: 15, widthM: 0.2 });
-    expect(p.model.risers[0]).toEqual({ id: 'riser-1', lengthM: null, widthM: null });
+describe('#TASK-17 / #TASK-18 risers', () => {
+  it('a removed board leaves the riser that fed it', () => {
+    let p = modelledProject();
+    p = projectReducer(p, { type: 'risers', risers: setBoardRiser([], 'db-1', 'riser-1') });
+    expect(p.model.risers[0]!.feeds).toEqual(['db-1']);
+    p = projectReducer(p, { type: 'removeElements', ids: ['db-1'] });
+    expect(p.model.risers[0]!.feeds).toEqual([]);
   });
 });

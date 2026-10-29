@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { canEditFloorPlans, editableDisciplines, outsideEditRights } from './access.js';
+import { setRiser } from './model/riser.js';
 import { modelledProject, sampleDb } from './testing.js';
 import type { UserSummary } from './users.js';
 
@@ -46,7 +47,7 @@ describe('#TASK-10 discipline layers (Section 2)', () => {
   it('#TASK-17 keeps the Riser Design in the electrical layer', () => {
     const before = modelledProject();
     const riser = structuredClone(before);
-    riser.model.risers = [{ id: 'riser-1', lengthM: 26, widthM: 0.4 }];
+    riser.model.risers = setRiser([], 'riser-1', { lengthM: 26, widthM: 0.4 });
     expect(outsideEditRights(ELEC, before, riser)).toBeNull();
     // A mechanical engineer assigned to the project may not change them.
     before.disciplines.mechanical = [MECH.id];

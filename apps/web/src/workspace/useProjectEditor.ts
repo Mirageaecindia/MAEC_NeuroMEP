@@ -47,7 +47,7 @@ export function mayApply(user: UserSummary, project: Project, action: ProjectAct
     case 'updateCable':
     case 'removeCables':
     case 'loadImport':
-    case 'riser':
+    case 'risers':
       return layers.includes('electrical');
     default:
       return false;

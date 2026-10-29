@@ -1,4 +1,16 @@
-import { riserRows, type Floor, type Riser } from '@neuromep/shared';
+import {
+  riserBoards,
+  riserOf,
+  riserRows,
+  riserSources,
+  setBoardRiser,
+  setRiser,
+  sourceConnected,
+  type Cable,
+  type Element,
+  type Floor,
+  type Riser,
+} from '@neuromep/shared';
 import { useMemo, useState } from 'react';
 import { NumberInput } from '../../components/fields';
 import { StatusMark, type StatusIcon } from '../../layout/icons';
@@ -9,91 +21,146 @@ const ROW = 70;
 const TOP = 40;
 const RISER_X = [330, 352, 374];
 const BOARD_X = 760;
+const BOARD_GAP = 56;
+
+/** The next item after `current` in `list`, then none, then the first again (click to cycle). */
+function cycle<T>(list: readonly T[], current: T | null): T | null {
+  const i = current === null ? -1 : list.indexOf(current);
+  return i + 1 < list.length ? list[i + 1]! : null;
+}
 
 /**
- * Building tab (Figma 3.5 - 3.8): floors stacked with the risers, transformer feeding the risers,
- * floor boards connected to risers; Building Summary with floor status, Riser Design, Cable Size
- * Calculator, Save / Cancel. The Riser Design is stored in the project (WBS 1.4.1); floor
- * connections are kept on this page until WBS 1.4.2 and the engine runs from WBS 1.7.
+ * Building tab (Figma 3.5 - 3.8, FR-19 / FR-20): floors stacked top-down (A-13) with the risers on
+ * the left. Click a riser to choose what feeds it (transformer or LV panel / MDB), click a floor
+ * board to choose the riser feeding it; both are stored in the project. Building Summary with
+ * floor status, Riser Design, Cable Size Calculator (enabled once a riser leads back to a
+ * transformer, A-07), Save / Cancel. The engine runs from WBS 1.7.
  */
 export function BuildingTab(props: {
   floors: Floor[];
-  risers: Riser[];
+  model: { elements: Element[]; cables: Cable[]; risers: Riser[] };
   zoom: number;
   readOnly: boolean;
-  onRiser: (id: string, patch: Partial<Pick<Riser, 'lengthM' | 'widthM'>>) => void;
+  onRisers: (risers: Riser[]) => void;
+  onSave: () => void;
 }) {
   const notice = useNotice();
-  const risers = riserRows(props.risers);
-  /** floorId -> riser index. */
-  const [links, setLinks] = useState<Record<string, number>>({});
+  const { model } = props;
+  const risers = riserRows(model.risers);
+  /** Risers as they were when the tab opened (Cancel). */
+  const [opened] = useState(model.risers);
   const [sized, setSized] = useState(false);
   const [dfOpen, setDfOpen] = useState(false);
+  const change = (next: Riser[]) => {
+    props.onRisers(next);
+    setSized(false);
+  };
 
   // Top floor first, then Ground, basements at the bottom - as in the building section (A-13).
   const rows = useMemo(() => [...props.floors].reverse(), [props.floors]);
-  const bottomY = TOP + (rows.length - 1) * ROW + 40;
-  const maxLen = Math.max(0, ...risers.map((r) => r.lengthM ?? 0));
-  const riserTop = (r: Riser) =>
-    r.lengthM && maxLen ? bottomY - ((bottomY - TOP + 20) * r.lengthM) / maxLen : bottomY;
-  const hasRisers = maxLen > 0;
-  const allLinked = hasRisers && rows.length > 0 && rows.every((f) => links[f.id] !== undefined);
   const floorY = (i: number) => TOP + i * ROW + 40;
+  const bottomY = floorY(rows.length - 1);
+  const boards = rows.map((f) => riserBoards(model, f.id));
+  const width = BOARD_X + Math.max(1, ...boards.map((b) => b.length)) * BOARD_GAP + 20;
+  const maxLen = Math.max(0, ...risers.map((r) => r.lengthM ?? 0));
+  const tag = (id: string | null) => model.elements.find((e) => e.id === id)?.tag ?? null;
 
-  function connect(floor: Floor, i: number) {
+  /** Up to the highest floor it feeds; a riser without tap-offs in proportion to its length. */
+  function riserTop(r: Riser) {
+    const fed = rows.flatMap((_, i) => (boards[i]!.some((b) => r.feeds.includes(b.id)) ? [i] : []));
+    if (fed.length > 0) return floorY(Math.min(...fed)) - 34;
+    return r.lengthM && maxLen ? bottomY - ((bottomY - TOP + 20) * r.lengthM) / maxLen : bottomY;
+  }
+
+  function chooseSource(r: Riser, n: number) {
     if (props.readOnly) return;
-    const y = floorY(i);
-    const reaching = risers
-      .map((r, idx) => ({ r, idx }))
-      .filter(({ r }) => r.lengthM && riserTop(r) <= y - 20);
-    if (reaching.length === 0) {
-      notice(`No riser reaches ${floor.name} - increase a riser length.`);
+    const sources = riserSources(model).map((e) => e.id);
+    if (sources.length === 0) {
+      notice('Place a transformer or an LV panel / MDB in Floor Setup to feed the risers.');
       return;
     }
-    const current = links[floor.id];
-    const pos = reaching.findIndex((x) => x.idx === current);
-    const next = reaching[(pos + 1) % reaching.length]!.idx;
-    setLinks((l) => ({ ...l, [floor.id]: next }));
-    setSized(false);
+    const next = cycle(sources, r.fedFromId);
+    change(setRiser(model.risers, r.id, { fedFromId: next }));
+    notice(next ? `Riser ${n} is fed from ${tag(next)}.` : `Riser ${n} is not fed.`);
+  }
+
+  function chooseRiser(board: Element) {
+    if (props.readOnly) return;
+    const usable = risers.filter((r) => r.lengthM).map((r) => r.id);
+    if (usable.length === 0) {
+      notice('Enter a riser length in Riser Design first.');
+      return;
+    }
+    change(
+      setBoardRiser(model.risers, board.id, cycle(usable, riserOf(risers, board.id)?.id ?? null)),
+    );
   }
 
   const status = (f: Floor, discipline: 'elec' | 'mech' | 'phe'): StatusIcon =>
     discipline === 'elec' && f.plan ? 'pill' : 'cross';
+  const connected = sourceConnected({ ...model, risers });
+  const fedRisers = risers.flatMap((r, i) => (r.lengthM && r.fedFromId ? [i] : []));
+  const sourceTags = [...new Set(fedRisers.map((i) => tag(risers[i]!.fedFromId)))].join(', ');
 
   return (
     <div className="building-tab">
       <div className="building-canvas" aria-label="Building view">
         <svg
-          width={(BOARD_X + 60) * props.zoom}
+          width={width * props.zoom}
           height={(bottomY + 40) * props.zoom}
-          viewBox={`0 0 ${BOARD_X + 60} ${bottomY + 40}`}
+          viewBox={`0 0 ${width} ${bottomY + 40}`}
           role="img"
           aria-label="Riser diagram"
         >
           {rows.map((f, i) => {
             const y = floorY(i);
-            const riser = links[f.id];
+            const onFloor = boards[i]!;
             return (
               <g key={f.id}>
                 <line x1={RISER_X[2]! + 24} y1={y} x2={BOARD_X} y2={y} className="floor-line" />
                 <text x={(RISER_X[2]! + BOARD_X) / 2} y={y - 5} className="floor-label">
                   {f.name}
                 </text>
-                {riser !== undefined && (
-                  <path
-                    className="riser-link"
-                    d={`M ${RISER_X[riser]! + 6} ${y - 28} H ${BOARD_X + 16} V ${y - 8}`}
-                  />
+                {onFloor.length === 0 ? (
+                  <g
+                    className="floor-board empty"
+                    role="button"
+                    aria-label={`${f.name} board`}
+                    onClick={() =>
+                      notice(`Place an SMDB, MCC or DB on ${f.name} in Floor Setup to connect it.`)
+                    }
+                  >
+                    <rect x={BOARD_X} y={y - 9} width="32" height="16" />
+                    <line x1={BOARD_X} y1={y + 7} x2={BOARD_X + 32} y2={y - 9} />
+                  </g>
+                ) : (
+                  onFloor.map((b, k) => {
+                    const x = BOARD_X + k * BOARD_GAP;
+                    const riser = risers.findIndex((r) => r.feeds.includes(b.id));
+                    return (
+                      <g key={b.id}>
+                        {riser >= 0 && (
+                          <path
+                            className="riser-link"
+                            d={`M ${RISER_X[riser]! + 6} ${y - 28} H ${x + 16} V ${y - 8}`}
+                          />
+                        )}
+                        <g
+                          className="floor-board"
+                          role="button"
+                          aria-label={`${b.tag} board`}
+                          onClick={() => chooseRiser(b)}
+                        >
+                          <rect x={x} y={y - 9} width="32" height="16" />
+                          <line x1={x} y1={y + 7} x2={x + 32} y2={y - 9} />
+                          <text x={x + 16} y={y + 20} className="floor-label">
+                            {b.tag}
+                          </text>
+                        </g>
+                      </g>
+                    );
+                  })
                 )}
-                <g
-                  className="floor-board"
-                  role="button"
-                  aria-label={`${f.name} board`}
-                  onClick={() => connect(f, i)}
-                >
-                  <rect x={BOARD_X} y={y - 9} width="32" height="16" />
-                  <line x1={BOARD_X} y1={y + 7} x2={BOARD_X + 32} y2={y - 9} />
-                </g>
               </g>
             );
           })}
@@ -102,27 +169,40 @@ export function BuildingTab(props: {
               <rect
                 key={r.id}
                 className="riser"
+                role="button"
                 x={RISER_X[idx]}
                 y={riserTop(r)}
                 width="9"
                 height={bottomY - riserTop(r)}
                 aria-label={`Riser ${idx + 1}`}
-              />
+                onClick={() => chooseSource(r, idx + 1)}
+              >
+                <title>
+                  {r.fedFromId ? `Fed from ${tag(r.fedFromId)}` : 'Click to choose what feeds it'}
+                </title>
+              </rect>
             ) : null,
           )}
-          {hasRisers && (
-            <g aria-label="Transformer">
-              <line
-                x1="60"
-                y1={bottomY}
-                x2={RISER_X[2]! + 9}
-                y2={bottomY}
-                className="source-link"
-              />
+          {maxLen > 0 && (
+            <g aria-label="Source">
+              {fedRisers.length > 0 && (
+                <line
+                  x1="60"
+                  y1={bottomY}
+                  x2={RISER_X[Math.max(...fedRisers)]! + 9}
+                  y2={bottomY}
+                  className="source-link"
+                />
+              )}
               <rect x="20" y={bottomY - 18} width="36" height="36" rx="6" className="tx-box" />
               <text x="38" y={bottomY + 5} className="tx-text">
                 Tx
               </text>
+              {sourceTags && (
+                <text x="38" y={bottomY + 32} className="floor-label">
+                  {sourceTags}
+                </text>
+              )}
             </g>
           )}
         </svg>
@@ -187,8 +267,7 @@ export function BuildingTab(props: {
                           notice('Riser length and width are more than 0 m.');
                           return;
                         }
-                        props.onRiser(r.id, { [k]: v });
-                        setSized(false);
+                        change(setRiser(model.risers, r.id, { [k]: v }));
                       }}
                     />
                   </td>
@@ -198,13 +277,9 @@ export function BuildingTab(props: {
           </tbody>
         </table>
         <button
-          className={`summary-btn${allLinked ? ' ready' : ''}`}
-          disabled={!allLinked || props.readOnly}
-          title={
-            allLinked
-              ? undefined
-              : 'Connect the transformer and every floor to a riser first (A-07)'
-          }
+          className={`summary-btn${connected ? ' ready' : ''}`}
+          disabled={!connected || props.readOnly}
+          title={connected ? undefined : 'Connect the transformer to the risers first (A-07)'}
           onClick={() => setSized(true)}
         >
           Cable Size Calculator
@@ -218,17 +293,11 @@ export function BuildingTab(props: {
           <button
             className={`summary-btn${sized ? ' ready' : ''}`}
             disabled={!sized}
-            onClick={() => notice('Riser design is stored in the project with WBS 1.4.')}
+            onClick={props.onSave}
           >
             Save
           </button>
-          <button
-            className="summary-btn"
-            onClick={() => {
-              setLinks({});
-              setSized(false);
-            }}
-          >
+          <button className="summary-btn" disabled={props.readOnly} onClick={() => change(opened)}>
             Cancel
           </button>
         </div>
