@@ -16,7 +16,7 @@ It replaces manual drawing plus the CableSizer v1.1 Excel workbook.
   - Section 10: calculation specification (verified); Section 11: verification log (V-nn); [ENG] = awaits Senior Electrical Engineer.
   - Section 12: data dictionary (12.1 Page 1, 12.2 rule-pack defaults, 12.3 equipment fields, 12.5 tooltips). Section 18: open items and decisions. Appendix D: errors engineers meet.
   - **Never invent a value for an open item.** Use the stated interim default or a clearly labelled placeholder.
-- **UI design (Figma, received 27 Oct 2026):** `NeuroMEP UI/*.png` — 14 screens: Login, then 5 pages as top tabs (All Projects, Import File, Floor Setup with Building tab, Schematic, Output). **Follow these screens strictly.** They replace all earlier UI screenshots and the WBS 1.2.1 layout previews. Conflicts with the design document are resolved by amendments A-03 to A-14 (design doc Section 0): Figma wins for frontend features; the calculations of Section 10 never change. Ask the user about anything new.
+- **UI design (Figma, received 27 Oct 2026):** `NeuroMEP UI/*.png` — 14 screens: Login, then 5 pages as top tabs (All Projects, Import File, Floor Setup with Building tab, Schematic, Output). **Follow these screens strictly.** They replace all earlier UI screenshots and the WBS 1.2.1 layout previews. Conflicts with the design document are resolved by amendments A-03 to A-15 (design doc Section 0): Figma wins for frontend features; the calculations of Section 10 never change. Ask the user about anything new.
 - **Project schedule (WBS):** `docs/Design doc and WBS/NeuroMEP_Project_Gantt_Schedule (1).xlsx` — 26 Oct to 10 Nov 2026. **Develop in WBS order** (1.1 → 1.8); each commit names its WBS item and #TASK code.
 - **Reference data:**
   - `docs/reference/cablesizer_lookup_rules.json` — source record of the CableSizer lookup tables. Never edit it.
@@ -62,6 +62,7 @@ Login → five top tabs: **All Projects** (project cards with status) → **Impo
 - Project access (26 Oct, unchanged): Technical Lead, Checker and System Administrator see all projects; engineers see projects they created or are assigned to.
 - Editing (Section 2, built in WBS 1.3.1): the Technical Lead edits everything; an engineer assigned to the project edits the components of their own discipline layer (cables = electrical) and may upload / calibrate floor plans; Import File stays Technical Lead only. The API checks every save (`outsideEditRights`: E0301 for Project Set-up, E1002 for another layer).
 - TBC demand factors: E1901 "Demand factor not confirmed" (Warning) — 1.0 is used and the result is Provisional. Load-type labels as Appendix B.
+- **A-15** (29 Oct, interim until OI-02): load table applies load-type factors only, once per board; category factors shown, not applied; MD labelled "Provisional - OI-02 open" (`packages/shared/src/model/loads.ts`).
 
 ## Stack (D-14, Section 7)
 - npm workspaces: `apps/web` (React + Vite), `apps/api` (Node + Express), `packages/engine` (pure TS; web worker + api), `packages/shared` (Zod schemas, types, Page 1 rules, error catalogue), `packages/rulepacks` (Dubai pack, CableSizer tables), `revit-addin/` (future).
