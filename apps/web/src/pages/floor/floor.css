@@ -302,3 +302,29 @@
   font-weight: 700;
   margin: 14px 0 0;
 }
+.prop-row {
+  display: contents;
+}
+.prop-number {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.prop-multi {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+}
+.loads-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.loads-table th {
+  text-align: left;
+  font-weight: 700;
+  padding: 4px;
+}
+.loads-table td {
+  padding: 3px 4px;
+}

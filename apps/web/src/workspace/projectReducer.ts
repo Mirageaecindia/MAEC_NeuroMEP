@@ -1,5 +1,6 @@
 import {
   applyRegistryChange,
+  ElementSchema,
   moveCableEnd,
   type Cable,
   type CableConstruction,
@@ -74,7 +75,8 @@ export type ProjectAction =
   /** Floor Setup components (#TASK-12); positions in metres. */
   | { type: 'placeElement'; element: Element }
   | { type: 'moveElement'; id: string; position: ModelPoint }
-  | { type: 'updateElement'; id: string; patch: { tag?: string; description?: string } }
+  /** Properties of a component (12.3); refused unless the result is a valid element. */
+  | { type: 'updateElement'; id: string; patch: Record<string, unknown> }
   | { type: 'removeElements'; ids: string[] }
   /** Cables (#TASK-13); always the electrical layer. */
   | { type: 'addCable'; cable: Cable }
@@ -183,14 +185,17 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
         },
       };
     case 'updateElement': {
-      const change = a.patch;
+      // Identity, kind, floor and discipline layer never change through a property edit.
+      const { id: _id, kind: _k, floorId: _f, discipline: _d, ...change } = a.patch;
       return {
         ...p,
         model: {
           ...p.model,
-          elements: p.model.elements.map((e) =>
-            e.id === a.id ? { ...e, ...change, version: e.version + 1 } : e,
-          ),
+          elements: p.model.elements.map((e) => {
+            if (e.id !== a.id) return e;
+            const next = ElementSchema.safeParse({ ...e, ...change, version: e.version + 1 });
+            return next.success ? next.data : e;
+          }),
         },
       };
     }

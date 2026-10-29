@@ -349,3 +349,54 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     expect(screen.getByRole('img', { name: 'DB-GF-01' })).toBeInTheDocument();
   });
 });
+
+describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
+  async function placeAt(name: string, x: number, y: number) {
+    await userEvent.click(chip(name));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: x, clientY: y });
+  }
+  const card = () => screen.getByRole('region', { name: 'Engineering Property' });
+
+  it('enters a DB power factor (refusing one out of range) and its loads', async () => {
+    const api = open(LEAD);
+    await planReady();
+    await placeAt('DB', 300, 300);
+    expect(card()).toHaveTextContent('Loads :None entered (E1501)');
+
+    const pf = within(card()).getByLabelText('Power factor :');
+    await userEvent.type(pf, '0.4');
+    await userEvent.tab();
+    expect(within(card()).getByText(/\(E1502\)/)).toBeInTheDocument();
+    await userEvent.clear(pf);
+    await userEvent.type(pf, '0.9');
+    await userEvent.tab();
+
+    await userEvent.click(within(card()).getByRole('button', { name: 'Edit loads' }));
+    const dialog = screen.getByRole('dialog', { name: /^Loads - DB-GF-01/ });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add load line' }));
+    await userEvent.type(within(dialog).getByLabelText('L1 kW 1'), '2');
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('Line 1: enter every value');
+    await userEvent.type(within(dialog).getByLabelText('L2 kW 1'), '2');
+    await userEvent.type(within(dialog).getByLabelText('L3 kW 1'), '2');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save loads' }));
+    expect(card()).toHaveTextContent('Loads :1 line, 6.00 kW');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.saveProject).toHaveBeenCalled());
+    const db = api.saveProject.mock.calls.at(-1)![0].model.elements[0]!;
+    expect(db).toMatchObject({
+      powerFactor: 0.9,
+      loads: [{ method: 'kw', loadType: '1', kwL1: 2, kwL2: 2, kwL3: 2 }],
+    });
+  });
+
+  it("uses a transformer's kVA as the allowable load of the capacity panel", async () => {
+    open(LEAD);
+    await planReady();
+    await placeAt('Transformer', 300, 300);
+    const kva = within(card()).getByLabelText('Capacity :');
+    await userEvent.type(kva, '1500');
+    await userEvent.tab();
+    expect(screen.getByText('1500 kVA')).toBeInTheDocument();
+  });
+});
