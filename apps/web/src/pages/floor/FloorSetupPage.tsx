@@ -1,5 +1,7 @@
 import {
+  categoryFactorsPending,
   closeRoute,
+  loadSummaries,
   connectionProblem,
   drawCable,
   fedFrom,
@@ -36,6 +38,7 @@ import {
 import { CableProperty } from './CableProperty';
 import { ConstructionDialog } from './ConstructionDialog';
 import { EngineeringProperty } from './EngineeringProperty';
+import { LoadTable } from './LoadTable';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { BuildingTab } from './BuildingTab';
 import './floor.css';
@@ -417,6 +420,7 @@ export function FloorSetupPage() {
           </section>
           <RightPanel
             floor={floor}
+            selectedId={selectedId}
             property={
               selectedCable ? (
                 <CableProperty
@@ -558,7 +562,11 @@ export function FloorSetupPage() {
 }
 
 /** Right panel (Figma 3.1 - 3.3): transformer capacity and connected load; Cable Size (A-07). */
-function RightPanel(props: { floor: Floor | null; property: ReactNode }) {
+function RightPanel(props: {
+  floor: Floor | null;
+  selectedId: string | null;
+  property: ReactNode;
+}) {
   const { project } = useWorkspace();
   const pf = (() => {
     if (!project.rulePackId || !project.rulePackVersion) return null;
@@ -581,8 +589,57 @@ function RightPanel(props: { floor: Floor | null; property: ReactNode }) {
           : pf
             ? plot.value / pf
             : null;
-  const connected = 0; // load aggregation arrives with components (WBS 1.3.4)
+  // Live loads (FR-18, 10.2 step 2 only; demand factors per A-15).
+  const summaries = loadSummaries(project, pf);
+  const fed = new Set(project.model.cables.map((c) => c.to.elementId));
+  const roots = project.model.elements.filter((e) => !fed.has(e.id));
+  // Connected kVA of the whole project: the top-level components, connected kW / pf.
+  const connected = Math.round(
+    roots.reduce((sum, e) => {
+      const s = summaries.get(e.id);
+      return s && s.pf ? sum + s.connectedKw / s.pf : sum;
+    }, 0),
+  );
   const loaded = allowable ? Math.round((connected / allowable) * 100) : 0;
+
+  // The table: below the selected board, else the components of this floor.
+  const selected = project.model.elements.find((e) => e.id === props.selectedId);
+  const below = (id: string): string[] =>
+    project.model.cables
+      .filter((c) => c.from.elementId === id)
+      .flatMap((c) => [c.to.elementId, ...below(c.to.elementId)]);
+  const scope =
+    selected &&
+    summaries.get(selected.id)!.connectedKw > 0 &&
+    project.model.cables.some((c) => c.from.elementId === selected.id)
+      ? {
+          title: `LOAD TABLE - below ${selected.tag}`,
+          ids: new Set([selected.id, ...below(selected.id)]),
+          tops: [selected],
+        }
+      : props.floor
+        ? (() => {
+            const onFloor = project.model.elements.filter((e) => e.floorId === props.floor!.id);
+            const ids = new Set(onFloor.map((e) => e.id));
+            const fedOnFloor = new Set(
+              project.model.cables
+                .filter((c) => ids.has(c.from.elementId))
+                .map((c) => c.to.elementId),
+            );
+            return {
+              title: `LOAD TABLE - ${props.floor!.name}`,
+              ids,
+              tops: onFloor.filter((e) => !fedOnFloor.has(e.id)),
+            };
+          })()
+        : null;
+  const rows = scope
+    ? project.model.elements
+        .filter((e) => scope.ids.has(e.id))
+        .map((element) => ({ element, summary: summaries.get(element.id)! }))
+        .filter((r) => r.summary.connectedKw > 0)
+    : [];
+  const tops = scope ? scope.tops.map((e) => summaries.get(e.id)!) : [];
   const sourceConnected = false; // set by the Building tab once the transformer feeds the risers (WBS 1.4)
   return (
     <aside className="panel right-panel" aria-label="Right panel">
@@ -607,6 +664,18 @@ function RightPanel(props: { floor: Floor | null; property: ReactNode }) {
           <p className="field-hint">Calibrate the plan before placing components (E0701).</p>
         )}
         {props.property}
+        {scope && (
+          <LoadTable
+            title={scope.title}
+            rows={rows}
+            total={{
+              connectedKw: tops.reduce((s, x) => s + x.connectedKw, 0),
+              maxDemandKw: tops.reduce((s, x) => s + x.maxDemandKw, 0),
+            }}
+            tbcFactors={rows.some((r) => r.summary.tbcFactors.length > 0)}
+            categoriesPending={categoryFactorsPending(project)}
+          />
+        )}
       </div>
       <button
         className="btn btn-primary cable-size"

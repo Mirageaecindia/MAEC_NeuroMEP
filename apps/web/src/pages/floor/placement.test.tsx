@@ -390,6 +390,51 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     });
   });
 
+  it('updates the live load table and connected kVA as loads are entered (FR-18)', async () => {
+    open(LEAD);
+    await planReady();
+    await placeAt('SMDB', 300, 300);
+    await placeAt('DB', 300, 500);
+    await userEvent.click(within(card()).getByRole('button', { name: 'Edit loads' }));
+    const dialog = screen.getByRole('dialog', { name: /^Loads - DB-GF-01/ });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add load line' }));
+    for (const n of [1, 2, 3])
+      await userEvent.type(within(dialog).getByLabelText(`L${n} kW 1`), '2');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save loads' }));
+
+    const table = screen.getByRole('region', { name: 'Load table' });
+    expect(table).toHaveTextContent('LOAD TABLE - Ground Floor');
+    expect(
+      within(table).getByRole('row', { name: /DB-GF-01 2\.0 2\.0 2\.0 0\.85/ }),
+    ).toBeInTheDocument();
+    expect(table).toHaveTextContent('Connected 6.0 kW · Max demand 6.0 kW');
+    expect(table).toHaveTextContent('demand factors TBC, 1.0 used (E1901)');
+    // Not fed yet: the DB is itself a top-level component, 6 kW / 0.85 = 7 kVA.
+    expect(screen.getByText('7 kVA')).toBeInTheDocument();
+
+    await userEvent.click(chip('Cable'));
+    const c = await screen.findByRole('dialog', { name: 'Cable construction' });
+    for (const [label, value] of [
+      ['Cores', '4C'],
+      ['Conductor', 'Cu'],
+      ['Insulation', 'XLPE'],
+      ['Armour', 'SWA'],
+      ['Sheath', 'PVC'],
+      ['Voltage grade', '600/1000 V'],
+      ['Installation method', 'B'],
+    ]) {
+      await userEvent.selectOptions(within(c).getByLabelText(label!), value!);
+    }
+    await userEvent.click(within(c).getByRole('button', { name: 'Use this construction' }));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 500 });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 }); // select the SMDB
+    const below = screen.getByRole('region', { name: 'Load table' });
+    expect(below).toHaveTextContent('LOAD TABLE - below SMDB-GF-01');
+    expect(below).toHaveTextContent('Connected 6.0 kW · Max demand 6.0 kW');
+    expect(screen.getByText('7 kVA')).toBeInTheDocument();
+  });
+
   it("uses a transformer's kVA as the allowable load of the capacity panel", async () => {
     open(LEAD);
     await planReady();

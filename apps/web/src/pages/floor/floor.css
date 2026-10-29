@@ -328,3 +328,35 @@
 .loads-table td {
   padding: 3px 4px;
 }
+
+/* Live load table (FR-18) */
+.load-table {
+  margin-top: 12px;
+  font-size: 10px;
+}
+.load-table h3 {
+  font-size: 10px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+.load-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.load-table th,
+.load-table td {
+  padding: 2px 3px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+}
+.load-table th:first-child,
+.load-table td:first-child {
+  text-align: left;
+  max-width: 70px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.load-totals {
+  margin: 6px 0 2px;
+}
