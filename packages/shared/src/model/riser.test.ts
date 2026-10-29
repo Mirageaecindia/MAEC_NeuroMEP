@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { createEmptyProject } from '../project/factory.js';
 import { ProjectSchema } from '../project/schema.js';
-import { FIXED_NOW } from '../testing.js';
-import type { Cable, CableConstruction } from './cable.js';
+import { FIXED_NOW, testCable, testElement } from '../testing.js';
 import type { Element } from './elements.js';
-import { isPlaceable, libraryItem, placeElement } from './library.js';
 import {
   riserBoards,
   riserOf,
@@ -16,47 +14,10 @@ import {
   withoutElements,
 } from './riser.js';
 import { topologyCheck } from './topology.js';
-import { drawCable, fedFrom } from './wiring.js';
+import { fedFrom } from './wiring.js';
 
-const construction: CableConstruction = {
-  cores: '4C',
-  conductor: 'Cu',
-  insulation: 'XLPE',
-  armour: 'SWA',
-  sheath: 'PVC',
-  voltageGrade: '600/1000 V',
-  method: 'B',
-  trays: null,
-  depthM: null,
-  separation: null,
-  groupedCircuits: null,
-};
-
-function el(key: string, id: string, floorId = 'gf'): Element {
-  const item = libraryItem(key)!;
-  if (!isPlaceable(item)) throw new Error(key);
-  const e = placeElement(item, {
-    id,
-    floorId,
-    floorCode: 'GF',
-    position: { x: 0, y: 0 },
-    taken: [],
-  });
-  return { ...e, tag: id };
-}
-const cable = (from: Element, to: Element): Cable =>
-  drawCable({
-    id: `c-${to.id}`,
-    cables: [],
-    from: { element: from, port: 'out' },
-    to: { element: to, port: 'in' },
-    route: [
-      { x: 0, y: 0 },
-      { x: 1, y: 0 },
-    ],
-    floorCode: 'GF',
-    construction,
-  });
+const el = testElement;
+const cable = (from: Element, to: Element) => testCable(from, to);
 
 const tx = el('transformer', 'TX');
 const mdb = el('mdb', 'MDB');

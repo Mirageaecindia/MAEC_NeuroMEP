@@ -1,5 +1,8 @@
 import {
+  completenessIssues,
   riserBoards,
+  scenarioSupply,
+  type Scenario,
   riserOf,
   riserRows,
   riserSources,
@@ -51,6 +54,7 @@ export function BuildingTab(props: {
   const [opened] = useState(model.risers);
   const [sized, setSized] = useState(false);
   const [dfOpen, setDfOpen] = useState(false);
+  const [scenario, setScenario] = useState<Scenario>('normal');
   const change = (next: Riser[]) => {
     props.onRisers(next);
     setSized(false);
@@ -105,6 +109,12 @@ export function BuildingTab(props: {
   return (
     <div className="building-tab">
       <div className="building-canvas" aria-label="Building view">
+        <NetworkCheck
+          model={{ ...model, risers }}
+          floors={props.floors}
+          scenario={scenario}
+          onScenario={setScenario}
+        />
         <svg
           width={width * props.zoom}
           height={(bottomY + 40) * props.zoom}
@@ -311,5 +321,57 @@ export function BuildingTab(props: {
         )}
       </aside>
     </div>
+  );
+}
+
+/**
+ * Network check above the riser diagram (FR-20, WBS 1.4.3): the scenario switch and, for normal
+ * supply, the completeness warnings (E1801 / E1802); for standby, what the generator supplies.
+ */
+function NetworkCheck(props: {
+  model: Parameters<typeof completenessIssues>[0];
+  floors: Floor[];
+  scenario: Scenario;
+  onScenario: (s: Scenario) => void;
+}) {
+  const issues = completenessIssues(props.model, props.floors);
+  const standby = scenarioSupply(props.model, 'standby');
+  return (
+    <section className="network-check" aria-label="Network check">
+      <div className="scenario-switch" role="radiogroup" aria-label="Scenario">
+        {(['normal', 'standby'] as const).map((s) => (
+          <button
+            key={s}
+            role="radio"
+            aria-checked={props.scenario === s}
+            className={props.scenario === s ? 'on' : ''}
+            onClick={() => props.onScenario(s)}
+          >
+            {s === 'normal' ? 'Normal' : 'Standby'}
+          </button>
+        ))}
+      </div>
+      {props.scenario === 'normal' ? (
+        issues.length === 0 ? (
+          <p className="muted">Every component has a path to a source.</p>
+        ) : (
+          <ul className="network-issues" aria-label="Network warnings">
+            {issues.map((i) => (
+              <li key={`${i.code}-${i.elementId ?? i.floorId}`}>
+                <strong>{i.code}</strong> {i.message}
+              </li>
+            ))}
+          </ul>
+        )
+      ) : (
+        <p className="muted">
+          On generator supply: {standby.supplied.length} of{' '}
+          {standby.supplied.length + standby.notSupplied.length} components
+          {standby.notSupplied.length > 0 &&
+            ` - not on standby: ${standby.notSupplied.map((e) => e.tag).join(', ')}`}
+          . Which loads must be on standby is open (OI-11).
+        </p>
+      )}
+    </section>
   );
 }

@@ -1,4 +1,7 @@
+import type { Cable, CableConstruction } from './model/cable.js';
 import { ElementSchema, type Element } from './model/elements.js';
+import { isPlaceable, libraryItem, placeElement } from './model/library.js';
+import { drawCable, type Port } from './model/wiring.js';
 import { createEmptyProject } from './project/factory.js';
 import { generateRegistry } from './project/floors.js';
 import type { Project } from './project/schema.js';
@@ -94,4 +97,48 @@ export function modelledProject(): Project {
   const gf = p.building.floors.find((f) => f.code === 'GF')!;
   p.model.elements = [sampleDb(gf.id)];
   return p;
+}
+
+export const TEST_CONSTRUCTION: CableConstruction = {
+  cores: '4C',
+  conductor: 'Cu',
+  insulation: 'XLPE',
+  armour: 'SWA',
+  sheath: 'PVC',
+  voltageGrade: '600/1000 V',
+  method: 'B',
+  trays: null,
+  depthM: null,
+  separation: null,
+  groupedCircuits: null,
+};
+
+/** A library component (e.g. 'transformer', 'mdb', 'db') with `id` as its tag. */
+export function testElement(key: string, id: string, floorId = 'gf'): Element {
+  const item = libraryItem(key);
+  if (!item || !isPlaceable(item)) throw new Error(`Not a placeable library item: ${key}`);
+  const e = placeElement(item, {
+    id,
+    floorId,
+    floorCode: 'GF',
+    position: { x: 0, y: 0 },
+    taken: [],
+  });
+  return { ...e, tag: id };
+}
+
+/** A cable from `from` to `to` (port `toPort`, e.g. an ATS input). */
+export function testCable(from: Element, to: Element, toPort: Port = 'in'): Cable {
+  return drawCable({
+    id: `c-${from.id}-${to.id}`,
+    cables: [],
+    from: { element: from, port: 'out' },
+    to: { element: to, port: toPort },
+    route: [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+    ],
+    floorCode: 'GF',
+    construction: TEST_CONSTRUCTION,
+  });
 }

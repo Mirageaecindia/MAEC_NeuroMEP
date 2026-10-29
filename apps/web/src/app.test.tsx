@@ -467,6 +467,22 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(names.at(-1)).toMatch(/^Basement/);
   });
 
+  it('#TASK-18 network check: warnings until the DB reaches the transformer; standby view', async () => {
+    const project = buildingProject();
+    project.model.risers = setRiser([], 'riser-1', { lengthM: 26, fedFromId: 'tx' });
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(project));
+    const check = await screen.findByRole('region', { name: 'Network check' });
+    const warnings = within(check).getByRole('list', { name: 'Network warnings' });
+    expect(warnings).toHaveTextContent(
+      'E1802 Ground Floor has boards but no tap-off from a riser.',
+    );
+    expect(warnings).toHaveTextContent('E1801 DB-db-1 has no path to a transformer or generator.');
+    await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
+    expect(within(check).getByText('Every component has a path to a source.')).toBeVisible();
+    await userEvent.click(within(check).getByRole('radio', { name: 'Standby' }));
+    expect(within(check).getByText(/On generator supply: 0 of 1 components/)).toBeVisible();
+  });
+
   it('Demand Factors reopens the 12 load-type factors; a change needs a new Cable Size run (A-14)', async () => {
     const project = buildingProject();
     project.model.risers = setRiser([], 'riser-1', { lengthM: 26, fedFromId: 'tx' });

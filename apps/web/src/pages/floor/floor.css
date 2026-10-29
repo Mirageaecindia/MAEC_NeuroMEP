@@ -108,6 +108,41 @@
   overflow: auto;
   padding: 10px;
 }
+.network-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+.network-check p {
+  margin: 4px 0;
+}
+.scenario-switch {
+  display: inline-flex;
+  flex: none;
+  border: 1px solid #9ca3af;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.scenario-switch button {
+  border: 0;
+  padding: 4px 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 12px;
+}
+.scenario-switch button.on {
+  background: #374151;
+  color: #fff;
+}
+.network-issues {
+  margin: 0;
+  padding-left: 16px;
+  max-height: 72px;
+  overflow: auto;
+  color: #92400e;
+}
 .floor-line {
   stroke: #9ca3af;
   stroke-width: 1;

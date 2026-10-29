@@ -484,5 +484,5 @@ describe('#TASK-15 DB loads from Excel (FR-35)', () => {
       from: 0,
       to: 9,
     });
-  });
+  }, 40_000); // ExcelJS reads and writes a workbook: slow when the whole suite runs in parallel
 });
