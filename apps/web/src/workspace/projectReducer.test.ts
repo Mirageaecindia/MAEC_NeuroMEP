@@ -114,3 +114,12 @@ describe('Page 1 project reducer', () => {
     expect(next.meta).toEqual(current.meta);
   });
 });
+
+describe('#TASK-17 Riser Design', () => {
+  it('stores the typed length and width of a riser row', () => {
+    let p = projectReducer(empty(), { type: 'riser', id: 'riser-2', patch: { lengthM: 15 } });
+    p = projectReducer(p, { type: 'riser', id: 'riser-2', patch: { widthM: 0.2 } });
+    expect(p.model.risers[1]).toEqual({ id: 'riser-2', lengthM: 15, widthM: 0.2 });
+    expect(p.model.risers[0]).toEqual({ id: 'riser-1', lengthM: null, widthM: null });
+  });
+});

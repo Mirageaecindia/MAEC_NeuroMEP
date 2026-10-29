@@ -43,6 +43,17 @@ describe('#TASK-10 discipline layers (Section 2)', () => {
     expect(outsideEditRights(ELEC, before, moved)).toMatch(/\(mechanical\)$/);
   });
 
+  it('#TASK-17 keeps the Riser Design in the electrical layer', () => {
+    const before = modelledProject();
+    const riser = structuredClone(before);
+    riser.model.risers = [{ id: 'riser-1', lengthM: 26, widthM: 0.4 }];
+    expect(outsideEditRights(ELEC, before, riser)).toBeNull();
+    // A mechanical engineer assigned to the project may not change them.
+    before.disciplines.mechanical = [MECH.id];
+    riser.disciplines.mechanical = [MECH.id];
+    expect(outsideEditRights(MECH, before, riser)).toBe('risers (electrical)');
+  });
+
   it('refuses any change to Project Set-up, whatever the key order', () => {
     const before = modelledProject();
     const renamed = structuredClone(before);

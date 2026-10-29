@@ -56,7 +56,7 @@ export function createEmptyProject(args: { id: string; userId: string; now: stri
     },
     workingDirectory: '',
     disciplines: { electrical: [], mechanical: [], phe: [] },
-    model: { elements: [], cables: [] },
+    model: { elements: [], cables: [], risers: [] },
     auditLog: [],
     meta: { createdAt: args.now, createdBy: args.userId, updatedAt: args.now, lastPage: 'setup' },
   };

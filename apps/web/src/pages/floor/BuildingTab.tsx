@@ -1,14 +1,9 @@
-import type { Floor } from '@neuromep/shared';
+import { riserRows, type Floor, type Riser } from '@neuromep/shared';
 import { useMemo, useState } from 'react';
 import { NumberInput } from '../../components/fields';
 import { StatusMark, type StatusIcon } from '../../layout/icons';
 import { useNotice } from '../../layout/Shell';
 import { DemandFactorsDialog } from './DemandFactorsDialog';
-
-interface Riser {
-  lengthM: number | null;
-  widthM: number | null;
-}
 
 const ROW = 70;
 const TOP = 40;
@@ -18,16 +13,18 @@ const BOARD_X = 760;
 /**
  * Building tab (Figma 3.5 - 3.8): floors stacked with the risers, transformer feeding the risers,
  * floor boards connected to risers; Building Summary with floor status, Riser Design, Cable Size
- * Calculator, Save / Cancel. WBS 1.2.1 layout: riser design and connections are kept on this
- * page only; storing them and running the engine follow in WBS 1.4 and 1.7.
+ * Calculator, Save / Cancel. The Riser Design is stored in the project (WBS 1.4.1); floor
+ * connections are kept on this page until WBS 1.4.2 and the engine runs from WBS 1.7.
  */
-export function BuildingTab(props: { floors: Floor[]; zoom: number; readOnly: boolean }) {
+export function BuildingTab(props: {
+  floors: Floor[];
+  risers: Riser[];
+  zoom: number;
+  readOnly: boolean;
+  onRiser: (id: string, patch: Partial<Pick<Riser, 'lengthM' | 'widthM'>>) => void;
+}) {
   const notice = useNotice();
-  const [risers, setRisers] = useState<Riser[]>([
-    { lengthM: null, widthM: null },
-    { lengthM: null, widthM: null },
-    { lengthM: null, widthM: null },
-  ]);
+  const risers = riserRows(props.risers);
   /** floorId -> riser index. */
   const [links, setLinks] = useState<Record<string, number>>({});
   const [sized, setSized] = useState(false);
@@ -103,7 +100,7 @@ export function BuildingTab(props: { floors: Floor[]; zoom: number; readOnly: bo
           {risers.map((r, idx) =>
             r.lengthM ? (
               <rect
-                key={idx}
+                key={r.id}
                 className="riser"
                 x={RISER_X[idx]}
                 y={riserTop(r)}
@@ -176,7 +173,7 @@ export function BuildingTab(props: { floors: Floor[]; zoom: number; readOnly: bo
           </thead>
           <tbody>
             {risers.map((r, i) => (
-              <tr key={i}>
+              <tr key={r.id}>
                 <th scope="row">Riser {i + 1}</th>
                 {(['lengthM', 'widthM'] as const).map((k) => (
                   <td key={k}>
@@ -186,7 +183,11 @@ export function BuildingTab(props: { floors: Floor[]; zoom: number; readOnly: bo
                       value={r[k]}
                       disabled={props.readOnly}
                       onChange={(v) => {
-                        setRisers((rs) => rs.map((x, j) => (j === i ? { ...x, [k]: v } : x)));
+                        if (v !== null && v <= 0) {
+                          notice('Riser length and width are more than 0 m.');
+                          return;
+                        }
+                        props.onRiser(r.id, { [k]: v });
                         setSized(false);
                       }}
                     />

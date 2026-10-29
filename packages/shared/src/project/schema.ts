@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { CableSchema } from '../model/cable.js';
 import { ElementSchema } from '../model/elements.js';
+import { RiserSchema } from '../model/riser.js';
 import {
   DemandCategorySchema,
   DesignStageSchema,
@@ -216,6 +217,8 @@ export const ProjectSchema = z.object({
   model: z.object({
     elements: z.array(ElementSchema),
     cables: z.array(CableSchema),
+    /** Building tab Riser Design (FR-20, A-05); empty in projects stored before WBS 1.4.1. */
+    risers: z.array(RiserSchema).default([]),
   }),
 
   auditLog: z.array(AuditEntrySchema),

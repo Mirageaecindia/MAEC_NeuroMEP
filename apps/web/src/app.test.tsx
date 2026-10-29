@@ -419,6 +419,27 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(within(summary).getByRole('button', { name: 'Demand Factors' })).toBeInTheDocument();
   });
 
+  it('#TASK-17 keeps the Riser Design in the project and refuses a length of 0', async () => {
+    const api = fakeApi(completeProject());
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), api);
+    let summary = await screen.findByRole('complementary', { name: 'Building Summary' });
+    await userEvent.type(within(summary).getByLabelText('Riser 2 length'), '15');
+    await userEvent.type(within(summary).getByLabelText('Riser 2 width'), '0');
+    expect(await screen.findByText('Riser length and width are more than 0 m.')).toBeVisible();
+    expect(screen.getByRole('img', { name: 'Riser diagram' })).toContainElement(
+      screen.getByLabelText('Riser 2'),
+    );
+    await userEvent.click(tool('Save'));
+    await waitFor(async () =>
+      expect((await api.getProject('p-1')).project.model.risers[1]?.lengthM).toBe(15),
+    );
+    cleanup();
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), api);
+    summary = await screen.findByRole('complementary', { name: 'Building Summary' });
+    expect(within(summary).getByLabelText('Riser 2 length')).toHaveValue('15');
+    expect(within(summary).getByLabelText('Riser 2 width')).toHaveValue('');
+  });
+
   it('Building Summary lists the floors top-down with basements at the bottom (A-13)', async () => {
     renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(completeProject()));
     const summary = await screen.findByRole('complementary', { name: 'Building Summary' });

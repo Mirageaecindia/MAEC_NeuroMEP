@@ -97,7 +97,7 @@ function setupPart(p: Project) {
 /**
  * Checks a save by someone who is not the Technical Lead (Section 2): Project Set-up must be
  * unchanged, and every added, changed or removed component must be in one of their layers
- * (cables belong to the electrical layer). Returns what was out of bounds, or null.
+ * (cables and risers belong to the electrical layer). Returns what was out of bounds, or null.
  */
 export function outsideEditRights(
   user: UserSummary,
@@ -122,6 +122,9 @@ export function outsideEditRights(
   }
   if (!layers.has('electrical') && changed(before.model.cables, after.model.cables).length > 0) {
     return 'cables (electrical)';
+  }
+  if (!layers.has('electrical') && changed(before.model.risers, after.model.risers).length > 0) {
+    return 'risers (electrical)';
   }
   return null;
 }

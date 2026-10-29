@@ -423,8 +423,10 @@ export function FloorSetupPage() {
       {building ? (
         <BuildingTab
           floors={project.building.floors}
+          risers={project.model.risers}
           zoom={zoom}
           readOnly={!editor.layers.includes('electrical')}
+          onRiser={(id, patch) => editor.dispatch({ type: 'riser', id, patch })}
         />
       ) : (
         <div className="floor-layout">
