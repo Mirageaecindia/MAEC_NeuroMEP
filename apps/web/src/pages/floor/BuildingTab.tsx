@@ -9,16 +9,19 @@ import {
   setBoardRiser,
   setRiser,
   sourceConnected,
-  type Cable,
+  floorStatus,
   type Element,
+  type Project,
   type Floor,
   type Riser,
+  type Discipline,
 } from '@neuromep/shared';
 import { useMemo, useState } from 'react';
 import { NumberInput } from '../../components/fields';
-import { StatusMark, type StatusIcon } from '../../layout/icons';
+import { StatusMark } from '../../layout/icons';
 import { useNotice } from '../../layout/Shell';
 import { DemandFactorsDialog } from './DemandFactorsDialog';
+import { STATUS_ICON } from './FloorStatusDialog';
 
 const ROW = 70;
 const TOP = 40;
@@ -41,7 +44,7 @@ function cycle<T>(list: readonly T[], current: T | null): T | null {
  */
 export function BuildingTab(props: {
   floors: Floor[];
-  model: { elements: Element[]; cables: Cable[]; risers: Riser[] };
+  model: Project['model'];
   zoom: number;
   readOnly: boolean;
   onRisers: (risers: Riser[]) => void;
@@ -100,8 +103,7 @@ export function BuildingTab(props: {
     );
   }
 
-  const status = (f: Floor, discipline: 'elec' | 'mech' | 'phe'): StatusIcon =>
-    discipline === 'elec' && f.plan ? 'pill' : 'cross';
+  const status = (f: Floor, d: Discipline) => STATUS_ICON[floorStatus(model, f.id, d)];
   const connected = sourceConnected({ ...model, risers });
   const fedRisers = risers.flatMap((r, i) => (r.lengthM && r.fedFromId ? [i] : []));
   const sourceTags = [...new Set(fedRisers.map((i) => tag(risers[i]!.fedFromId)))].join(', ');
@@ -239,10 +241,10 @@ export function BuildingTab(props: {
               <tr key={f.id}>
                 <th scope="row">{f.name} :</th>
                 <td>
-                  <StatusMark status={status(f, 'elec')} size={16} />
+                  <StatusMark status={status(f, 'electrical')} size={16} />
                 </td>
                 <td>
-                  <StatusMark status={status(f, 'mech')} size={16} />
+                  <StatusMark status={status(f, 'mechanical')} size={16} />
                 </td>
                 <td>
                   <StatusMark status={status(f, 'phe')} size={16} />

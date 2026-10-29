@@ -1,4 +1,5 @@
-import type { Discipline } from './model/elements.js';
+import { DisciplineSchema, type Discipline } from './model/elements.js';
+import { isFlagged, type FloorFlag } from './model/floorFlags.js';
 import type { Project } from './project/schema.js';
 import type { Role } from './roles.js';
 import type { UserSummary } from './users.js';
@@ -85,6 +86,15 @@ function stable(value: unknown): string {
   );
 }
 
+/** Ids of the items added, changed or removed between two lists. */
+function changed<T extends { id: string }>(a: readonly T[], b: readonly T[]): string[] {
+  const old = new Map(a.map((x) => [x.id, stable(x)]));
+  const now = new Map(b.map((x) => [x.id, stable(x)]));
+  return [...new Set([...old.keys(), ...now.keys()])].filter((id) => old.get(id) !== now.get(id));
+}
+
+const flagKey = (f: FloorFlag) => `${f.floorId}:${f.discipline}`;
+
 /** Everything that only the Technical Lead may change: the project without model, plans and meta. */
 function setupPart(p: Project) {
   const { model: _m, meta: _meta, version: _v, auditLog: _a, building, ...rest } = p;
@@ -107,11 +117,6 @@ export function outsideEditRights(
   const layers = new Set<Discipline>(editableDisciplines(user, before));
   if (layers.size === 0) return 'this project';
   if (stable(setupPart(before)) !== stable(setupPart(after))) return 'Project Set-up';
-  const changed = <T extends { id: string }>(a: T[], b: T[]) => {
-    const old = new Map(a.map((x) => [x.id, stable(x)]));
-    const now = new Map(b.map((x) => [x.id, stable(x)]));
-    return [...new Set([...old.keys(), ...now.keys()])].filter((id) => old.get(id) !== now.get(id));
-  };
   const oldById = new Map(before.model.elements.map((e) => [e.id, e]));
   const newById = new Map(after.model.elements.map((e) => [e.id, e]));
   for (const id of changed(before.model.elements, after.model.elements)) {
@@ -125,6 +130,59 @@ export function outsideEditRights(
   }
   if (!layers.has('electrical') && changed(before.model.risers, after.model.risers).length > 0) {
     return 'risers (electrical)';
+  }
+  // Floor flags (A-08): engineers flag their own layer; only the Technical Lead reopens.
+  const oldFlags = new Set(before.model.floorFlags.map(flagKey));
+  const newFlags = new Set(after.model.floorFlags.map(flagKey));
+  if ([...oldFlags].some((k) => !newFlags.has(k))) return 'floor flags (only the Lead reopens)';
+  const added = after.model.floorFlags.find((f) => !oldFlags.has(flagKey(f)));
+  if (added && !layers.has(added.discipline)) return `floor flag (${added.discipline})`;
+  return null;
+}
+
+/**
+ * A change to a floor flagged done (A-08, E1003), for every user including the Technical Lead:
+ * the floor stays locked until it is reopened (flagged before and after the save). Components
+ * and cables of the flagged discipline and the floor plan are locked. Returns what changed.
+ */
+export function lockedChange(before: Project, after: Project): string | null {
+  const locked = (floorId: string, d: Discipline) =>
+    isFlagged(before.model.floorFlags, floorId, d) && isFlagged(after.model.floorFlags, floorId, d);
+  const name = (floorId: string) =>
+    after.building.floors.find((f) => f.id === floorId)?.name ?? floorId;
+  const items = <T extends { id: string; floorId: string }>(
+    a: readonly T[],
+    b: readonly T[],
+    discipline: (x: T) => Discipline,
+    label: (x: T) => string,
+  ) => {
+    const old = new Map(a.map((x) => [x.id, x]));
+    const now = new Map(b.map((x) => [x.id, x]));
+    for (const id of changed(a, b)) {
+      for (const x of [old.get(id), now.get(id)]) {
+        if (x && locked(x.floorId, discipline(x))) return `${label(x)} (${name(x.floorId)})`;
+      }
+    }
+    return null;
+  };
+  const element = items(
+    before.model.elements,
+    after.model.elements,
+    (e) => e.discipline,
+    (e) => e.tag,
+  );
+  if (element) return element;
+  const cable = items(
+    before.model.cables,
+    after.model.cables,
+    () => 'electrical',
+    (c) => c.tag,
+  );
+  if (cable) return cable;
+  for (const f of after.building.floors) {
+    const old = before.building.floors.find((x) => x.id === f.id);
+    const anyFlag = DisciplineSchema.options.some((d) => locked(f.id, d));
+    if (old && anyFlag && stable(old.plan) !== stable(f.plan)) return `${f.name} plan`;
   }
   return null;
 }

@@ -294,6 +294,49 @@ describe('projects', () => {
     expect(checker.status).toBe(403);
   });
 
+  it('#TASK-10 a floor flagged done is locked for everyone until the Lead reopens it (A-08, E1003)', async () => {
+    const lead = await tokenFor(LEAD);
+    const elec = await tokenFor(ELEC);
+    const p = (
+      await request(app)
+        .post('/api/projects')
+        .set('cookie', lead)
+        .send({ project: modelledProject() })
+    ).body.project;
+    const gf = p.building.floors.find((f: { code: string }) => f.code === 'GF').id;
+    const save = async (cookie: string, project: unknown) =>
+      request(app).put(`/api/projects/${p.id}`).set('cookie', cookie).send({ project });
+    const flag = {
+      floorId: gf,
+      discipline: 'electrical',
+      by: 'u-elec',
+      at: '2026-10-30T08:00:00Z',
+    };
+
+    const risers = [{ id: 'riser-1', lengthM: 26, widthM: 0.4, fedFromId: null, feeds: ['db-1'] }];
+    const flagged = await save(elec, { ...p, model: { ...p.model, risers, floorFlags: [flag] } });
+    expect(flagged.status).toBe(200);
+    // Risers and flags are stored with the project (read back from MongoDB).
+    const stored = await request(app).get(`/api/projects/${p.id}`).set('cookie', lead);
+    expect(stored.body.project.model).toMatchObject({ risers, floorFlags: [flag] });
+    const current = flagged.body.project;
+    const editDb = (project: typeof p) => ({
+      ...project,
+      model: {
+        ...project.model,
+        elements: [{ ...project.model.elements[0], description: 'Changed' }],
+      },
+    });
+    const refused = await save(lead, editDb(current));
+    expect(refused.status).toBe(403);
+    expect(refused.body).toMatchObject({ code: 'E1003', element: 'DB-db-1 (Ground Floor)' });
+    const reopen = { ...current, model: { ...current.model, floorFlags: [] } };
+    expect((await save(elec, reopen)).body.code).toBe('E1002');
+    const reopened = await save(lead, reopen);
+    expect(reopened.status).toBe(200);
+    expect((await save(lead, editDb(reopened.body.project))).status).toBe(200);
+  });
+
   it('#TASK-02 imports a project file as a new project; floor plans must be uploaded again', async () => {
     const source = completeProject(); // its Ground Floor has a plan
     const res = await request(app)

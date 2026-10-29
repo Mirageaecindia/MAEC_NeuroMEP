@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { CableSchema } from '../model/cable.js';
 import { ElementSchema } from '../model/elements.js';
+import { FloorFlagSchema } from '../model/floorFlags.js';
 import { RiserSchema } from '../model/riser.js';
 import {
   DemandCategorySchema,
@@ -219,6 +220,8 @@ export const ProjectSchema = z.object({
     cables: z.array(CableSchema),
     /** Building tab Riser Design (FR-20, A-05); empty in projects stored before WBS 1.4.1. */
     risers: z.array(RiserSchema).default([]),
+    /** Floors flagged done per discipline, locked until the Lead reopens them (A-08). */
+    floorFlags: z.array(FloorFlagSchema).default([]),
   }),
 
   auditLog: z.array(AuditEntrySchema),

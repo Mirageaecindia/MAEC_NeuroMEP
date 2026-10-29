@@ -42,7 +42,7 @@ describe('project file (.json)', () => {
       source: 'rulepack',
     });
     expect(result.project.workingDirectory).toBe('');
-    expect(result.project.model).toEqual({ elements: [], cables: [], risers: [] });
+    expect(result.project.model).toEqual({ elements: [], cables: [], risers: [], floorFlags: [] });
     expect(result.project.meta.lastPage).toBe('modelling');
   });
 

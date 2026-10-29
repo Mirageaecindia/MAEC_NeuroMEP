@@ -7,6 +7,7 @@ import {
   createEmptyProject,
   migrateProjectData,
   outsideEditRights,
+  lockedChange,
   ProjectSchema,
   type Project,
 } from '@neuromep/shared';
@@ -174,6 +175,12 @@ export function createApp(deps?: AppDeps): Express {
         sendError(res, 403, 'E1002', { element: outside });
         return;
       }
+    }
+    // A-08: a floor flagged done stays locked for everyone until the Lead reopens it.
+    const locked = lockedChange(stored, parsed.data);
+    if (locked) {
+      sendError(res, 403, 'E1003', { element: locked });
+      return;
     }
     const result = await projects.save(parsed.data, now());
     if (result.ok) res.json({ project: result.project });

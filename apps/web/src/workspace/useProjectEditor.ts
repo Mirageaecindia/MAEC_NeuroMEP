@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useBlocker } from 'react-router';
 import { ApiError } from '../api/client';
 import { useApi, useUser } from '../auth/AuthContext';
+import { touchesLockedFloor } from './floorLock';
 import { projectReducer, type ProjectAction } from './projectReducer';
 
 export type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
@@ -23,9 +24,11 @@ const ALWAYS = new Set<ProjectAction['type']>(['saved', 'lastPage']);
 
 /**
  * May this user apply this action (Section 2)? Project Set-up: the Technical Lead; plans: the
- * engineers of the project; components: their own discipline layer. The API checks the same.
+ * engineers of the project; components: their own discipline layer; a floor flagged done is
+ * locked for everyone (A-08). The API checks the same.
  */
 export function mayApply(user: UserSummary, project: Project, action: ProjectAction): boolean {
+  if (touchesLockedFloor(project, action)) return false;
   if (canEditProjectSetup(user)) return true;
   if (!canEditFloorPlans(user, project)) return false;
   if (ALWAYS.has(action.type) || PLAN_ACTIONS.has(action.type)) return true;
@@ -49,6 +52,9 @@ export function mayApply(user: UserSummary, project: Project, action: ProjectAct
     case 'loadImport':
     case 'risers':
       return layers.includes('electrical');
+    case 'floorFlag':
+      // Engineers flag their own layer; only the Technical Lead reopens (A-08).
+      return action.flag !== null && layers.includes(action.discipline);
     default:
       return false;
   }

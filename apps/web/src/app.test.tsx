@@ -483,6 +483,43 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(within(check).getByText(/On generator supply: 0 of 1 components/)).toBeVisible();
   });
 
+  it('#TASK-10 an engineer flags a connected floor done; it locks until the Lead reopens it (A-08)', async () => {
+    const project = buildingProject();
+    project.model.risers = setRiser([], 'riser-1', { lengthM: 26, fedFromId: 'tx' });
+    const api = fakeApi(project);
+    renderAt('/projects/p-1/floor', new FakeAuth(ELEC), api);
+    await userEvent.click(await screenTool('Status'));
+    let dialog = screen.getByRole('dialog', { name: 'Ground Floor status' });
+    const flag = within(dialog).getByRole('button', { name: 'Flag Electrical done' });
+    expect(flag).toBeDisabled(); // DB-db-1 has no source yet (E1801)
+    expect(dialog).toHaveTextContent('DB-db-1 has no path to a transformer or generator. (E1801)');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+
+    await userEvent.click(tool('Building'));
+    await userEvent.click(await screen.findByRole('button', { name: 'DB-db-1 board' }));
+    await userEvent.click(tool('Building'));
+    await userEvent.click(await screenTool('Status'));
+    dialog = screen.getByRole('dialog', { name: 'Ground Floor status' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Flag Electrical done' }));
+    await waitFor(async () =>
+      expect((await api.getProject('p-1')).project.model.floorFlags).toMatchObject([
+        { discipline: 'electrical', by: ELEC.id },
+      ]),
+    );
+    expect(within(dialog).queryByRole('button', { name: /Reopen/ })).not.toBeInTheDocument();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
+    expect(screen.getByText(/flagged done for electrical and locked \(E1003\)/)).toBeVisible();
+
+    cleanup();
+    renderAt('/projects/p-1/floor', new FakeAuth(LEAD), api);
+    await userEvent.click(await screenTool('Status'));
+    dialog = screen.getByRole('dialog', { name: 'Ground Floor status' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Reopen Electrical' }));
+    expect(
+      within(dialog).getByRole('button', { name: 'Flag Electrical done' }),
+    ).toBeInTheDocument();
+  });
+
   it('Demand Factors reopens the 12 load-type factors; a change needs a new Cable Size run (A-14)', async () => {
     const project = buildingProject();
     project.model.risers = setRiser([], 'riser-1', { lengthM: 26, fedFromId: 'tx' });

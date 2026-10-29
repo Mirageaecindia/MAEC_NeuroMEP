@@ -177,6 +177,13 @@ export const ERROR_CATALOGUE = [
     'The change touches components of another discipline, or Project Set-up (Section 2).',
     'Ask the engineer of that discipline or the Technical Lead.',
   ),
+  e(
+    'E1003',
+    'Floor flagged done and locked',
+    'blocks',
+    'The floor was flagged done for this discipline (A-08): it is saved and locked.',
+    'Ask the Technical Lead to reopen the floor.',
+  ),
   // #TASK-13 / #TASK-14 Cables and topology
   e(
     'E1301',

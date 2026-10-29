@@ -19,6 +19,7 @@ import {
   type Project,
   type Region,
   withoutElements,
+  setFloorFlag,
   type Riser,
   type RegistryChange,
 } from '@neuromep/shared';
@@ -87,6 +88,13 @@ export type ProjectAction =
   | { type: 'removeCables'; ids: string[] }
   /** Building tab risers (FR-20): Riser Design and connections, edited with the shared helpers. */
   | { type: 'risers'; risers: Riser[] }
+  /** Floor flagged done for a discipline (A-08), or reopened (`flag` null, the Lead only). */
+  | {
+      type: 'floorFlag';
+      floorId: string;
+      discipline: Discipline;
+      flag: { by: string; at: string } | null;
+    }
   /** DB loads replaced from an Excel sheet (FR-35); one audit entry per DB (total kW). */
   | {
       type: 'loadImport';
@@ -217,6 +225,7 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
       return {
         ...p,
         model: {
+          ...p.model,
           elements: p.model.elements.filter((e) => !gone.has(e.id)),
           risers: withoutElements(p.model.risers, gone),
           cables: p.model.cables.filter(
@@ -243,6 +252,10 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
     }
     case 'risers':
       return { ...p, model: { ...p.model, risers: a.risers } };
+    case 'floorFlag': {
+      const floorFlags = setFloorFlag(p.model.floorFlags, a.floorId, a.discipline, a.flag);
+      return { ...p, model: { ...p.model, floorFlags } };
+    }
     case 'loadImport': {
       const byId = new Map(a.changes.map((c) => [c.id, c]));
       return {

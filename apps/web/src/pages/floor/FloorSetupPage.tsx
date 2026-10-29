@@ -15,6 +15,8 @@ import {
   portsOf,
   topologyCheck,
   sourceConnected,
+  isFlagged,
+  floorStatus,
   type CableConstruction,
   type ModelPoint,
   LIBRARY_ITEMS,
@@ -48,6 +50,7 @@ import { EngineeringProperty } from './EngineeringProperty';
 import { LoadTable } from './LoadTable';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { BuildingTab } from './BuildingTab';
+import { FloorStatusDialog, STATUS_ICON } from './FloorStatusDialog';
 import './floor.css';
 
 const MAX_PLAN_BYTES = 20 * 1024 * 1024; // A-02
@@ -137,7 +140,13 @@ export function FloorSetupPage() {
   const [armed, setArmed] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
-  const canPlace = editor.layers.includes('electrical');
+  const [statusOpen, setStatusOpen] = useState(false);
+  // A-08: a layer flagged done on this floor is locked until the Lead reopens it.
+  const lockedLayers = floor
+    ? editor.layers.filter((d) => isFlagged(project.model.floorFlags, floor.id, d))
+    : [];
+  const canPlace = editor.layers.includes('electrical') && !lockedLayers.includes('electrical');
+  const statusLayer = editor.layers[0] ?? 'electrical';
   const calibration = floor?.plan?.calibration ?? null;
   const onFloor = floor ? project.model.elements.filter((e) => e.floorId === floor.id) : [];
   const selected = onFloor.find((e) => e.id === selectedId) ?? null;
@@ -336,7 +345,8 @@ export function FloorSetupPage() {
     zoomOut: () => (building ? zoomBy(1 / 1.25) : viewer.current?.zoomOut()),
     reset: () => (building ? setZoom(1) : viewer.current?.fit()),
     building: () => setParams(building ? {} : { tab: 'building' }),
-    status: () => notice('Flagging a floor as done (A-08) is added with WBS 1.3.'),
+    status: () =>
+      floor ? setStatusOpen(true) : notice('Set the number of floors on Import File first.'),
     clear: () =>
       mine.length > 0
         ? setClearing(true)
@@ -417,10 +427,19 @@ export function FloorSetupPage() {
           openMenu={openMenu}
           pressed={building ? ['building'] : []}
           hidden={building ? ['status'] : []}
+          statusIcon={
+            floor ? STATUS_ICON[floorStatus(project.model, floor.id, statusLayer)] : undefined
+          }
         />
       }
     >
       <SaveBanner />
+      {!building && floor && lockedLayers.length > 0 && (
+        <div className="banner banner-info" role="status">
+          {floor.name} is flagged done for {lockedLayers.join(', ')} and locked (E1003). Only the
+          Technical Lead can reopen it.
+        </div>
+      )}
       {building ? (
         <BuildingTab
           floors={project.building.floors}
@@ -444,7 +463,7 @@ export function FloorSetupPage() {
                 projectId={project.id}
                 plan={floor.plan}
                 floorLabel={floor.name}
-                readOnly={!editor.canEdit}
+                readOnly={!editor.canEdit || lockedLayers.includes('electrical')}
                 userId={user.id}
                 onCalibration={(calibration) =>
                   editor.dispatch({ type: 'calibration', floorId: floor.id, calibration })
@@ -591,6 +610,25 @@ export function FloorSetupPage() {
             notice(`Loads of ${changes.length} DB${changes.length === 1 ? '' : 's'} imported.`);
             setLoadImport(null);
           }}
+        />
+      )}
+      {statusOpen && floor && (
+        <FloorStatusDialog
+          floor={floor}
+          project={project}
+          layers={editor.layers}
+          isLead={user.role === 'TECHNICAL_LEAD'}
+          onFlag={(discipline) => {
+            const flag = { by: user.id, at: new Date().toISOString() };
+            editor.dispatch({ type: 'floorFlag', floorId: floor.id, discipline, flag });
+            void editor.save(); // flagged = saved and locked (A-08)
+            notice(`${floor.name} flagged done for ${discipline}.`);
+          }}
+          onReopen={(discipline) => {
+            editor.dispatch({ type: 'floorFlag', floorId: floor.id, discipline, flag: null });
+            notice(`${floor.name} reopened for ${discipline}.`);
+          }}
+          onClose={() => setStatusOpen(false)}
         />
       )}
       {clearing && floor && (

@@ -11,10 +11,14 @@ import {
 } from '@neuromep/shared';
 import type { ClientSession, Collection, Db, MongoClient } from 'mongodb';
 
-/** `projects` collection: the project without floors and network model (stored separately). */
+/**
+ * `projects` collection: the project without floors, elements and cables (stored separately).
+ * The short model lists (risers, floor flags) stay in the project document.
+ */
 type ProjectDoc = Omit<Project, 'id' | 'building' | 'model'> & {
   _id: string;
   building: Omit<Project['building'], 'floors'> & { floorIds: string[] };
+  model?: Omit<Project['model'], 'elements' | 'cables'>;
 };
 type FloorDoc = Floor & { _id: string; projectId: string };
 /** `elements` collection: network elements and cables of a project, in model order. */
@@ -179,9 +183,15 @@ export class ProjectRepository {
   }
 
   private toDoc(p: Project): ProjectDoc {
-    const { id, building, model: _model, ...rest } = p;
+    const { id, building, model, ...rest } = p;
     const { floors, ...b } = building;
-    return { ...rest, _id: id, building: { ...b, floorIds: floors.map((f) => f.id) } };
+    const { elements: _e, cables: _c, ...lists } = model;
+    return {
+      ...rest,
+      _id: id,
+      building: { ...b, floorIds: floors.map((f) => f.id) },
+      model: lists,
+    };
   }
 
   private async assemble(doc: ProjectDoc): Promise<Project> {
@@ -190,7 +200,7 @@ export class ProjectRepository {
       this.elements.find({ projectId: doc._id }).sort({ order: 1 }).toArray(),
     ]);
     const byId = new Map(floorDocs.map(({ _id: _key, projectId: _p, ...f }) => [f.id, f as Floor]));
-    const { _id, building, ...rest } = doc;
+    const { _id, building, model, ...rest } = doc;
     const { floorIds, ...b } = building;
     // Stored documents from older schema versions are upgraded on read.
     return ProjectSchema.parse(
@@ -199,6 +209,7 @@ export class ProjectRepository {
         id: _id,
         building: { ...b, floors: floorIds.map((id) => byId.get(id)).filter(Boolean) },
         model: {
+          ...model, // absent in projects stored before WBS 1.4.1: the schema defaults apply
           elements: elementDocs.filter((d) => d.docType === 'element').map((d) => d.data),
           cables: elementDocs.filter((d) => d.docType === 'cable').map((d) => d.data),
         },
