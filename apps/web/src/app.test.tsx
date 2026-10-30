@@ -455,6 +455,28 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(within(summary).getByLabelText('Riser 2 width')).toHaveValue('');
   });
 
+  it('Undo and Redo step back and forward through the latest changes', async () => {
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(completeProject()));
+    const summary = await screen.findByRole('complementary', { name: 'Building Summary' });
+    expect(tool('Undo')).toBeDisabled();
+    await userEvent.type(within(summary).getByLabelText('Riser 2 length'), '7');
+    await userEvent.click(tool('Undo'));
+    expect(within(summary).getByLabelText('Riser 2 length')).toHaveValue('');
+    expect(tool('Undo')).toBeDisabled();
+    await userEvent.click(tool('Redo'));
+    expect(within(summary).getByLabelText('Riser 2 length')).toHaveValue('7');
+    expect(tool('Redo')).toBeDisabled();
+  });
+
+  it('underlines only the active tab; the guide button reads Help', async () => {
+    renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(completeProject()));
+    const tabs = await screen.findByRole('navigation', { name: 'Pages' });
+    await screen.findByText('TRANSFORMER CAPACITY & CONNECTED LOAD SCHEDULE');
+    const active = [...tabs.querySelectorAll('.tab.active')].map((t) => t.textContent);
+    expect(active).toEqual(['Floor Setup']);
+    expect(tool('Help')).toBeInTheDocument();
+  });
+
   it('Building Summary lists the floors top-down with basements at the bottom (A-13)', async () => {
     renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(completeProject()));
     const summary = await screen.findByRole('complementary', { name: 'Building Summary' });

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Icons, type StatusIcon } from './icons';
 
-/** The 15 toolbar buttons of the Figma design, in order (A-03). */
+/** The toolbar buttons of the Figma design, in order (A-03), plus Undo / Redo. */
 export type ToolKey =
   | 'open'
   | 'save'
   | 'clear'
+  | 'undo'
+  | 'redo'
   | 'zoomIn'
   | 'zoomOut'
   | 'reset'
@@ -22,6 +24,8 @@ const LABELS: Record<ToolKey, string> = {
   open: 'Open',
   save: 'Save',
   clear: 'Clear',
+  undo: 'Undo',
+  redo: 'Redo',
   zoomIn: 'Zoom In',
   zoomOut: 'Zoom Out',
   reset: 'Reset',
@@ -32,7 +36,7 @@ const LABELS: Record<ToolKey, string> = {
   status: 'Status',
   back: 'Back',
   next: 'Next',
-  guide: 'User Guide',
+  guide: 'Help',
 };
 
 export interface OpenMenuItem {
@@ -168,6 +172,8 @@ export function Toolbar(props: ToolbarProps) {
           </div>
         </div>
         {tool('clear', Icons.clear())}
+        {tool('undo', Icons.undo())}
+        {tool('redo', Icons.redo())}
       </div>
       <div className="tool-group">
         {tool('zoomIn', Icons.zoomIn())}

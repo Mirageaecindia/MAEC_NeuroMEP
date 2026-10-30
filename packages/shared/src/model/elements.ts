@@ -62,6 +62,8 @@ const base = {
   description: z.string(),
   floorId: Id,
   position: ModelPointSchema,
+  /** Size of the symbol on the plan, 1 = standard (drawing only, never used in calculations). */
+  symbolScale: z.number().min(0.5).max(4).optional(),
   /** Location / room; may be suggested from the nearest PDF text label. */
   location: z.string(),
   discipline: DisciplineSchema,

@@ -121,6 +121,16 @@ export const Icons = {
       <path d="M7 7l10 10M17 7L7 17" stroke={BLUE} strokeWidth="2.4" strokeLinecap="round" />,
       size,
     ),
+  undo: () =>
+    svg([
+      <path key="a" d="M9 5L4 10l5 5" fill="none" stroke={BLUE} strokeWidth="2.6" />,
+      <path key="b" d="M4 10h10a6 6 0 0 1 0 12h-3" fill="none" stroke={BLUE} strokeWidth="2.6" />,
+    ]),
+  redo: () =>
+    svg([
+      <path key="a" d="M15 5l5 5-5 5" fill="none" stroke={BLUE} strokeWidth="2.6" />,
+      <path key="b" d="M20 10H10a6 6 0 0 0 0 12h3" fill="none" stroke={BLUE} strokeWidth="2.6" />,
+    ]),
   back: () =>
     svg(
       <path d="M15 3L6 12l9 9" fill="none" stroke={BLUE} strokeWidth="4" strokeLinejoin="round" />,

@@ -192,7 +192,9 @@
   padding-right: 2px;
 }
 .tool {
-  width: 50px;
+  min-width: 50px;
+  padding: 0 5px;
+  white-space: nowrap;
   height: 46px;
   border: none;
   border-radius: 8px;

@@ -19,6 +19,8 @@ export const AUTOSAVE_INTERVAL_MS = 10_000;
 
 /** Actions that change the floor plans and their calibration (any engineer of the project). */
 const PLAN_ACTIONS = new Set<ProjectAction['type']>(['planUploaded', 'calibration']);
+/** Undo keeps the last 50 changes. */
+const HISTORY_LIMIT = 50;
 /** Bookkeeping every editor may record. */
 const ALWAYS = new Set<ProjectAction['type']>(['saved', 'lastPage']);
 
@@ -60,6 +62,16 @@ export function mayApply(user: UserSummary, project: Project, action: ProjectAct
   }
 }
 
+/** A state from the history, with the bookkeeping (version, save time, pages) of `now`. */
+function restore(snapshot: Project, now: Project): Project {
+  const { updatedAt, lastPage, reachedPage } = now.meta;
+  return {
+    ...snapshot,
+    version: now.version,
+    meta: { ...snapshot.meta, updatedAt, lastPage, reachedPage },
+  };
+}
+
 /**
  * Loads a project and keeps it saved: autosave every 10 s while there are unsaved changes, save
  * on leaving the page,
@@ -83,9 +95,18 @@ export function useProjectEditor(projectId: string) {
   const changeSeq = useRef(0);
   const savedSeq = useRef(0);
   const inFlight = useRef<Promise<boolean> | null>(null);
+  /** Undo / Redo: earlier and undone project states of this session. */
+  const past = useRef<Project[]>([]);
+  const future = useRef<Project[]>([]);
+  const [historyLength, setHistoryLength] = useState({ past: 0, future: 0 });
+  const syncHistory = () =>
+    setHistoryLength({ past: past.current.length, future: future.current.length });
 
   const applyLoaded = useCallback((p: Project) => {
     projectRef.current = p;
+    past.current = [];
+    future.current = [];
+    setHistoryLength({ past: 0, future: 0 });
     changeSeq.current = savedSeq.current = 0;
     setLoadError(null);
     setProject(p);
@@ -123,16 +144,43 @@ export function useProjectEditor(projectId: string) {
     [user],
   );
 
+  const commit = (next: Project) => {
+    projectRef.current = next;
+    setProject(next);
+    changeSeq.current += 1;
+    setChangeCount(changeSeq.current);
+  };
+
   const dispatch = useCallback(
     (action: ProjectAction) => {
-      if (!projectRef.current || !mayApply(user, projectRef.current, action)) return;
-      projectRef.current = projectReducer(projectRef.current, action);
-      setProject(projectRef.current);
-      changeSeq.current += 1;
-      setChangeCount(changeSeq.current);
+      const before = projectRef.current;
+      if (!before || !mayApply(user, before, action)) return;
+      if (action.type === 'floorFlag') {
+        // A flag locks the floor: changes before it are not undone past it (A-08).
+        past.current = [];
+        future.current = [];
+      } else if (!ALWAYS.has(action.type)) {
+        past.current = [...past.current, before].slice(-HISTORY_LIMIT);
+        future.current = [];
+      }
+      syncHistory();
+      commit(projectReducer(before, action));
     },
     [user],
   );
+
+  /** Undo / Redo the latest change of this session; saved like any other change. */
+  const step = useCallback((from: typeof past, to: typeof past) => {
+    const now = projectRef.current;
+    const snapshot = from.current.at(-1);
+    if (!now || !snapshot) return;
+    from.current = from.current.slice(0, -1);
+    to.current = [...to.current, now];
+    syncHistory();
+    commit(restore(snapshot, now));
+  }, []);
+  const undo = useCallback(() => step(past, future), [step]);
+  const redo = useCallback(() => step(future, past), [step]);
 
   const isDirty = () => changeSeq.current !== savedSeq.current;
 
@@ -211,6 +259,10 @@ export function useProjectEditor(projectId: string) {
     canEdit,
     layers,
     dispatch,
+    undo,
+    redo,
+    canUndo: historyLength.past > 0,
+    canRedo: historyLength.future > 0,
     save,
     reload: load,
     saveState,

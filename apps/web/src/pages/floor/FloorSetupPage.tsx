@@ -284,6 +284,7 @@ export function FloorSetupPage() {
         id: e.id,
         tag: e.tag,
         image: symbols.get(itemOfElement(e)?.key ?? '') ?? null,
+        scale: e.symbolScale,
         at: {
           x: e.position.x / calibration.metresPerUnit,
           y: e.position.y / calibration.metresPerUnit,
@@ -357,6 +358,8 @@ export function FloorSetupPage() {
     'open',
     'save',
     'clear',
+    'undo',
+    'redo',
     'zoomIn',
     'zoomOut',
     'reset',
@@ -373,7 +376,9 @@ export function FloorSetupPage() {
     (k) =>
       // Plans and the model: the Technical Lead and the engineers of the project (Section 2).
       !(!editor.canEdit && (k === 'open' || k === 'save' || k === 'clear')) &&
-      !(k === 'open' && uploading),
+      !(k === 'open' && uploading) &&
+      !(k === 'undo' && !editor.canUndo) &&
+      !(k === 'redo' && !editor.canRedo),
   );
 
   return (
@@ -410,7 +415,16 @@ export function FloorSetupPage() {
                     else setConstructionFor('tool');
                   }}
                 >
-                  {item.label}
+                  <span className="lib-icon" aria-hidden>
+                    {symbols.get(item.key) ? (
+                      <img src={symbols.get(item.key)} alt="" draggable={false} />
+                    ) : item.key === 'cable' ? (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M3 18h7V6h11" fill="none" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                    ) : null}
+                  </span>
+                  <span className="lib-label">{item.label}</span>
                 </button>
               ),
             )}
@@ -477,6 +491,9 @@ export function FloorSetupPage() {
                 onCableClick={cableClick}
                 onPlace={(at, key) => (canPlace ? place(at, key ?? armed) : undefined)}
                 onSelect={setSelectedId}
+                onResize={(id, symbolScale) =>
+                  editor.dispatch({ type: 'updateElement', id, patch: { symbolScale } })
+                }
                 onMove={(id, at) => {
                   if (!calibration) return;
                   const m = calibration.metresPerUnit;

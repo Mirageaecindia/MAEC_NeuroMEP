@@ -65,16 +65,18 @@
   stroke-width: 2;
   stroke-dasharray: 6 4;
 }
-.cal-line.saved {
-  stroke: var(--success);
+.cal-length {
+  font-weight: 700;
+  font-size: 12px;
+  fill: var(--primary);
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 3;
 }
 .cal-point circle {
   fill: var(--primary);
   stroke: #fff;
   stroke-width: 2;
-}
-.cal-point.saved circle {
-  fill: var(--success);
 }
 .cal-point text {
   font-weight: 800;
@@ -181,4 +183,13 @@
   stroke: #dc2626;
   stroke-width: 2;
   stroke-dasharray: 5 4;
+}
+
+.marker-handle {
+  fill: #fff;
+  stroke: var(--primary);
+  stroke-width: 1.5;
+}
+.viewer-canvas.resizing {
+  cursor: nwse-resize;
 }

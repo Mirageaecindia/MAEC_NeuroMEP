@@ -125,7 +125,7 @@ const ORDER: TabKey[] = ['projects', 'import', 'floor', 'schematic', 'output'];
 
 /**
  * Toolbar wiring shared by the project tabs: floor picker, Back / Next between tabs, Save, Sync,
- * User Guide and the inactive Bot / Smart-AI buttons (A-09). Pages add their own actions.
+ * Help and the inactive Bot / Smart-AI buttons (A-09). Pages add their own actions.
  */
 export function useProjectToolbar(
   tab: TabKey,
@@ -192,6 +192,10 @@ export function useProjectToolbar(
               editor.reload().then(() => notice('Project synchronised with the server.')),
             );
           return;
+        case 'undo':
+          return editor.undo();
+        case 'redo':
+          return editor.redo();
         case 'back':
           return go(-1);
         case 'next':

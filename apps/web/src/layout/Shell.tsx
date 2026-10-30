@@ -157,7 +157,7 @@ export function Shell(props: {
                   <NavLink
                     key={t.key}
                     to={to}
-                    className={`tab${active ? ' active' : ''}`}
+                    className={() => `tab${active ? ' active' : ''}`}
                     aria-current={active ? 'page' : undefined}
                   >
                     {t.label}
