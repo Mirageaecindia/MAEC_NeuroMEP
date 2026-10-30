@@ -140,3 +140,18 @@
   gap: 8px;
   max-width: 420px;
 }
+
+.floor-plans {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.plan-match th {
+  text-align: left;
+  padding: 4px 12px 4px 0;
+  font-weight: 600;
+}
+.plan-match td {
+  padding: 4px 0;
+}

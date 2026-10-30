@@ -36,7 +36,7 @@ import { Toolbar, type OpenMenuItem, type ToolKey } from '../../layout/Toolbar';
 import { newAudit } from '../../workspace/formProps';
 import { LoadImportDialog } from './LoadImportDialog';
 import { loadTemplate, readSheetRows } from './loadSheet';
-import { readFirstPageSize } from '../../viewer/pdf';
+import { isPdf, uploadPlanFile } from '../../workspace/planUpload';
 import {
   LIBRARY_DRAG_TYPE,
   PlanViewer,
@@ -52,8 +52,6 @@ import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/Pro
 import { BuildingTab } from './BuildingTab';
 import { FloorStatusDialog, STATUS_ICON } from './FloorStatusDialog';
 import './floor.css';
-
-const MAX_PLAN_BYTES = 20 * 1024 * 1024; // A-02
 
 /** The last cable construction used in a project, kept in this browser (D-05). */
 const constructionKey = (projectId: string) => `neuromep.construction.${projectId}`;
@@ -301,24 +299,10 @@ export function FloorSetupPage() {
   async function upload(target: Floor, file: File) {
     setUploading(true);
     try {
-      if (file.size > MAX_PLAN_BYTES) throw new Error('The plan is larger than 20 MB (E0603).');
-      let info;
-      try {
-        info = await readFirstPageSize(file);
-      } catch {
-        throw new Error('Floor plan could not be opened (E0601).');
-      }
-      if (info.pages !== 1) throw new Error('The plan has more than one page (E0604).');
-      const stored = await api.uploadPlan(project.id, file);
       editor.dispatch({
         type: 'planUploaded',
         floorId: target.id,
-        plan: {
-          kind: 'pdf',
-          ...stored,
-          uploadedBy: user.id,
-          page: { widthPt: info.widthPt, heightPt: info.heightPt },
-        },
+        plan: await uploadPlanFile(api, project.id, file, user.id),
         now: new Date().toISOString(),
       });
     } catch (e) {
@@ -330,7 +314,7 @@ export function FloorSetupPage() {
 
   function chosen(file: File | undefined) {
     if (!file || !floor) return;
-    if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+    if (!isPdf(file)) {
       notice('Only PDF files can be uploaded (E0602).');
       return;
     }

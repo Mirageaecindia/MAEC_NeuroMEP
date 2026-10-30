@@ -319,6 +319,24 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/projects/p-1/floor'));
   });
 
+  it('Floor Plans below Plot Ref matches chosen PDFs to floors from the lowest up', async () => {
+    const project = completeProject();
+    renderAt('/projects/p-1/import', new FakeAuth(LEAD), fakeApi(project));
+    const pdf = (name: string) => new File(['%PDF'], name, { type: 'application/pdf' });
+    await userEvent.upload(await screen.findByLabelText('Floor plan files'), [
+      pdf('first.pdf'),
+      pdf('second.pdf'),
+    ]);
+    const dialog = await screen.findByRole('dialog', { name: 'Match floor plans to floors' });
+    const [lowest, next, third] = project.building.floors;
+    const picked = (f: typeof lowest) =>
+      (within(dialog).getByLabelText(`Plan for ${f!.name}`) as HTMLSelectElement).selectedOptions[0]
+        ?.textContent;
+    expect(picked(lowest)).toBe('first.pdf');
+    expect(picked(next)).toBe('second.pdf');
+    if (third) expect(picked(third)).toMatch(/No plan|Keep current plan/);
+  });
+
   it('No of Floors builds the floor list Ground + First ... (A-05)', async () => {
     const empty = {
       ...createEmptyProject({ id: 'p-2', userId: 'u-lead', now: FIXED_NOW }),

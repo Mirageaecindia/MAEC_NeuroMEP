@@ -19,6 +19,7 @@ import { confirmationFor } from '../../workspace/earlierPageChange';
 import { newAudit, type CardProps } from '../../workspace/formProps';
 import { projectReducer, type ProjectAction } from '../../workspace/projectReducer';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
+import { FloorPlansUpload } from './FloorPlansUpload';
 import { ImportFileForm } from './ImportFileForm';
 
 /** File name from the project name and design stage (Section 14; revision is not on the Figma form, A-10). */
@@ -158,7 +159,7 @@ export function ImportFilePage() {
       )}
       <div className="panel import-panel">
         {/* A new key after Cancel puts typed-in values back to the stored ones. */}
-        <ImportFileForm key={formKey} {...props} />
+        <ImportFileForm key={formKey} {...props} plans={<FloorPlansUpload />} />
       </div>
       {importer.element}
       {pending && (

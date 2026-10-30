@@ -70,7 +70,7 @@ function Row(props: {
 }
 
 /** Import File form (Figma screen 2): project data, calculation set-up, discipline assignment. */
-export function ImportFileForm(props: CardProps) {
+export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
   const { project, dispatch, readOnly, errorFor, touch, user } = props;
   const d = project.details;
   const c = project.calculation;
@@ -169,6 +169,16 @@ export function ImportFileForm(props: CardProps) {
         </Row>
         {text('clientName', 'Client Name')}
         {text('plotRef', 'Plot Ref')}
+        {props.plans ?? (
+          <div className="form-row">
+            <span className="form-label">Floor Plans</span>
+            <div className="form-control">
+              <span className="field-hint">
+                Save the project first, then upload its floor plans.
+              </span>
+            </div>
+          </div>
+        )}
         <Row
           label="Project Category"
           required
