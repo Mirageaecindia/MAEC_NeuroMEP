@@ -18,6 +18,35 @@ export const CalculationDefaultSchema = z.strictObject({
 });
 export type CalculationDefault = z.infer<typeof CalculationDefaultSchema>;
 
+/** Device data (Appendix B, 10.5): generic breakers until the catalogue arrives (OI-03). */
+export const DevicesSchema = z.strictObject({
+  note: z.string(),
+  breakerRatingsA: z.array(z.number().positive()),
+  cableSizesMm2: z.array(z.number().positive()),
+  trayWidthsMm: z.array(z.number().positive()),
+  dewaMinimumCable: z.strictObject({
+    note: z.string(),
+    rows: z.array(
+      z.strictObject({
+        breakerA: z.number().positive(),
+        sizeMm2: z.number().positive(),
+        runs: z.number().int().positive(),
+      }),
+    ),
+  }),
+  breakerTypes: z.array(
+    z.strictObject({
+      type: z.enum(['MCB', 'MCCB', 'ACB']),
+      maxRatingA: z.number().positive(),
+      faultRatingsKa: z.array(z.number().positive()),
+      interim: z.boolean(),
+      note: z.string(),
+    }),
+  ),
+});
+export type Devices = z.infer<typeof DevicesSchema>;
+export type BreakerType = Devices['breakerTypes'][number]['type'];
+
 export const RulePackSchema = z.strictObject({
   id: z.string().min(1),
   version: z.string().regex(/^\d+\.\d+\.\d+$/),
@@ -35,5 +64,6 @@ export const RulePackSchema = z.strictObject({
     byCategory: z.record(DemandCategorySchema, NullableFactor),
   }),
   calculationDefaults: z.array(CalculationDefaultSchema),
+  devices: DevicesSchema,
 });
 export type RulePack = z.infer<typeof RulePackSchema>;

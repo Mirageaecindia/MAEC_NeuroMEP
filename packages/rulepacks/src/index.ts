@@ -2,3 +2,4 @@
 export * from './apply.js';
 export * from './registry.js';
 export * from './schema.js';
+export * from './devices.js';
