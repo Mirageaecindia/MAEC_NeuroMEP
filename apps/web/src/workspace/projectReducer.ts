@@ -4,7 +4,9 @@ import {
   ElementSchema,
   moveCableEnd,
   type Cable,
+  type BusbarSpec,
   type CableConstruction,
+  type FeederType,
   type Element,
   type ModelPoint,
   laterPage,
@@ -84,7 +86,16 @@ export type ProjectAction =
   | { type: 'removeElements'; ids: string[] }
   /** Cables (#TASK-13); always the electrical layer. */
   | { type: 'addCable'; cable: Cable }
-  | { type: 'updateCable'; id: string; patch: { tag?: string; construction?: CableConstruction } }
+  | {
+      type: 'updateCable';
+      id: string;
+      patch: {
+        tag?: string;
+        construction?: CableConstruction;
+        feederType?: FeederType;
+        busbar?: BusbarSpec;
+      };
+    }
   | { type: 'removeCables'; ids: string[] }
   /** Building tab risers (FR-20): Riser Design and connections, edited with the shared helpers. */
   | { type: 'risers'; risers: Riser[] }

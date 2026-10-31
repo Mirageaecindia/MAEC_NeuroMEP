@@ -232,9 +232,9 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     await planReady();
     await placeAt('SMDB', 300, 300);
     await placeAt('DB', 600, 450);
-    await userEvent.click(chip('Cable'));
+    await userEvent.click(chip('Feeder'));
     await chooseConstruction();
-    expect(chip('Cable')).toHaveAttribute('aria-pressed', 'true');
+    expect(chip('Feeder')).toHaveAttribute('aria-pressed', 'true');
     fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 }); // SMDB
     fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 310 }); // bend
     fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 450 }); // DB
@@ -253,16 +253,16 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     );
 
     // The construction is remembered: the next cable starts without asking again (D-05).
-    await userEvent.click(chip('Cable'));
+    await userEvent.click(chip('Feeder'));
     expect(screen.queryByRole('dialog', { name: 'Cable construction' })).not.toBeInTheDocument();
-    expect(chip('Cable')).toHaveAttribute('aria-pressed', 'true');
+    expect(chip('Feeder')).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('refuses to start on a DB, which has no outgoing way, and Escape cancels a cable', async () => {
     open(LEAD);
     await planReady();
     await placeAt('DB', 600, 450);
-    await userEvent.click(chip('Cable'));
+    await userEvent.click(chip('Feeder'));
     await chooseConstruction();
     fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 450 });
     expect(
@@ -271,14 +271,14 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
       }),
     ).toBeInTheDocument();
     fireEvent.keyDown(window, { key: 'Escape' });
-    expect(chip('Cable')).toHaveAttribute('aria-pressed', 'false');
+    expect(chip('Feeder')).toHaveAttribute('aria-pressed', 'false');
     expect(screen.queryByRole('img', { name: /^Cable / })).not.toBeInTheDocument();
   });
 
   it('takes the optional installation details; depth only for buried cables (12.3)', async () => {
     open(LEAD);
     await planReady();
-    await userEvent.click(chip('Cable'));
+    await userEvent.click(chip('Feeder'));
     const dialog = await screen.findByRole('dialog', { name: 'Cable construction' });
     expect(within(dialog).queryByLabelText('Depth of laying (m)')).not.toBeInTheDocument();
     for (const [label, value] of [
@@ -304,7 +304,7 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     await userEvent.type(within(dialog).getByLabelText('Depth of laying (m)'), '0.8');
     await userEvent.selectOptions(within(dialog).getByLabelText('Separation'), '2D');
     await userEvent.click(use);
-    expect(chip('Cable')).toHaveAttribute('aria-pressed', 'true');
+    expect(chip('Feeder')).toHaveAttribute('aria-pressed', 'true');
     const remembered = JSON.parse(localStorage.getItem('neuromep.construction.p-1')!);
     expect(remembered).toMatchObject({
       method: 'D-direct',
@@ -320,7 +320,7 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     await planReady();
     await placeAt('Transformer', 300, 300);
     await placeAt('DB', 600, 300);
-    await userEvent.click(chip('Cable'));
+    await userEvent.click(chip('Feeder'));
     await chooseConstruction();
     fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
     fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 300 });
@@ -338,7 +338,7 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     await planReady();
     await placeAt('SMDB', 300, 300);
     await placeAt('DB', 300, 500);
-    await userEvent.click(chip('Cable'));
+    await userEvent.click(chip('Feeder'));
     await chooseConstruction();
     fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
     fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 500 });
@@ -412,7 +412,7 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     // Not fed yet: the DB is itself a top-level component, 6 kW / 0.85 = 7 kVA.
     expect(screen.getByText('7 kVA')).toBeInTheDocument();
 
-    await userEvent.click(chip('Cable'));
+    await userEvent.click(chip('Feeder'));
     const c = await screen.findByRole('dialog', { name: 'Cable construction' });
     for (const [label, value] of [
       ['Cores', '4C'],

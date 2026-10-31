@@ -85,15 +85,6 @@ export function topologyCheck(
   } else if (!mayFeed(from.kind, to.kind)) {
     return refuse(`${from.tag} cannot feed ${to.tag}: follow source > MDB > SMDB / MCC > DB.`);
   }
-  if (from.kind === 'busbar') {
-    const tapOff = from.busbarType === 'tap-off';
-    if (tapOff && to.kind !== 'tap-off-box') {
-      return refuse(`${from.tag} is a tap-off busbar: it feeds tap-off boxes only.`);
-    }
-    if (!tapOff && cables.some((c) => c.from.elementId === from.id)) {
-      return refuse(`${from.tag} is a feeder busbar: it feeds one panel only.`);
-    }
-  }
 
   // One supply per component; up to two incomers on an LV panel / MDB; one per ATS input.
   if (model.risers?.some((r) => r.feeds.includes(to.id))) {
@@ -126,4 +117,13 @@ export function topologyCheck(
     }
   }
   return { ok: true };
+}
+
+/**
+ * May this feeder be a busbar (decision 1 Nov 2026)? A busbar feeder starts at a transformer or a
+ * main panel (Section 3: they may feed a busbar). Returns the reason when not.
+ */
+export function busbarFeederIssue(from: Element | undefined): string | null {
+  if (!from || mayFeed(from.kind, 'busbar')) return null;
+  return `A busbar feeder starts at a transformer or a main panel (LV Panel / MDB), not ${from.tag}.`;
 }

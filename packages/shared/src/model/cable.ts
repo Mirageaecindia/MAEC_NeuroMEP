@@ -1,8 +1,9 @@
 import { z } from 'zod';
-import { ModelPointSchema } from './elements.js';
+import { IpRatingSchema, ModelPointSchema } from './elements.js';
 
 /**
- * Cable = network edge (FR-15, 12.3 "Cable"). Construction is chosen while drawing (D-05);
+ * Feeder = network edge: a cable, or a point-to-point (feeder-type) busbar (decision 1 Nov 2026).
+ * Tap-off busbars are the risers of the Building tab. Cable = network edge (FR-15, 12.3 "Cable"). Construction is chosen while drawing (D-05);
  * size, runs and ECC are calculated by Cable Size unless locked (D-04).
  */
 
@@ -42,6 +43,22 @@ export const CableLocksSchema = z.object({
   eccMm2: z.number().positive().nullable(),
 });
 
+/** Feeder drawn on the plan: cable (default) or busbar. */
+export const FeederTypeSchema = z.enum(['cable', 'busbar']);
+export type FeederType = z.infer<typeof FeederTypeSchema>;
+
+/**
+ * Busbar feeder fields entered by the engineer (12.3, TPN+E, 600/1000 V). Rating, length and
+ * fault duty are calculated; R, X and Icw come from the manufacturer datasheet (OI-13).
+ */
+export const BusbarSpecSchema = z.object({
+  conductor: z.enum(['Cu', 'Al']),
+  ipRating: IpRatingSchema.nullable(),
+  fireRated: z.boolean(),
+});
+export type BusbarSpec = z.infer<typeof BusbarSpecSchema>;
+export const DEFAULT_BUSBAR: BusbarSpec = { conductor: 'Cu', ipRating: null, fireRated: false };
+
 export const CableSchema = z.object({
   id: Id,
   version: z.number().int().nonnegative(),
@@ -56,6 +73,10 @@ export const CableSchema = z.object({
   route: z.array(ModelPointSchema).min(2),
   /** Vertical runs added to the routed length (m). */
   verticalM: z.number().nonnegative(),
+  feederType: FeederTypeSchema.default('cable'),
+  /** Kept while the feeder is a cable, so switching back and forth loses nothing. */
+  busbar: BusbarSpecSchema.optional(),
+  /** Cable construction (also kept while the feeder is a busbar). */
   construction: CableConstructionSchema,
   locks: CableLocksSchema,
 });

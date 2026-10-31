@@ -183,21 +183,8 @@ export const LIBRARY_ITEMS: readonly LibraryItem[] = [
     tag: proposal('DB'),
     create: db(''),
   },
-  {
-    key: 'busbar',
-    label: 'Busbar',
-    discipline: 'electrical',
-    cmpCode: 'CMP-013',
-    tag: proposal('BB'),
-    create: () => ({
-      ...common,
-      kind: 'busbar',
-      busbarType: 'feeder',
-      conductor: 'Cu',
-      servedFloorIds: [],
-    }),
-  },
-  { key: 'cable', label: 'Cable', discipline: 'electrical', tool: true },
+  // Feeder: drawn like a cable; cable or busbar chosen in the Engineering Property (1 Nov 2026).
+  { key: 'cable', label: 'Feeder', discipline: 'electrical', tool: true },
   {
     // Lighting is a lighting distribution board in Phase 1 (decision 28 Oct 2026, A-11).
     key: 'lighting',

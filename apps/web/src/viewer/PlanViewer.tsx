@@ -52,6 +52,8 @@ export interface PlanCable {
   id: string;
   tag: string;
   points: PdfPoint[];
+  /** A busbar feeder, drawn thicker than a cable. */
+  busbar?: boolean;
 }
 
 /** Data type of a library item dragged onto the plan. */
@@ -623,7 +625,7 @@ export function PlanViewer(props: {
               return (
                 <g
                   key={c.id}
-                  className={`plan-cable${selected ? ' selected' : ''}`}
+                  className={`plan-cable${c.busbar ? ' busbar' : ''}${selected ? ' selected' : ''}`}
                   role="img"
                   aria-label={`Cable ${c.tag}${selected ? ' (selected)' : ''}`}
                 >

@@ -100,18 +100,6 @@ describe('#TASK-14 topology rules on connect (Section 3, E1401)', () => {
     });
   });
 
-  it('feeds tap-off boxes only from a tap-off busbar, one panel from a feeder busbar', () => {
-    const feeder = el('busbar', 'bb');
-    const tapOff = { ...el('busbar', 'bb2'), busbarType: 'tap-off' } as Element;
-    expect(check([], tapOff, smdb)).toMatchObject({
-      message: 'BB-GF-01 is a tap-off busbar: it feeds tap-off boxes only.',
-    });
-    const used = link([], feeder, smdb);
-    expect(check(used, feeder, el('smdb', 's2'))).toMatchObject({
-      message: 'BB-GF-01 is a feeder busbar: it feeds one panel only.',
-    });
-  });
-
   it('warns above 18 ways and refuses the 26th', () => {
     let cables: Cable[] = [];
     for (let i = 0; i < 18; i++) cables = link(cables, smdb, el('db', `d${i}`));

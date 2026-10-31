@@ -27,8 +27,7 @@ describe('#TASK-11 component library (A-11, Section 13)', () => {
       'SMDB',
       'MCC',
       'DB',
-      'Busbar',
-      'Cable',
+      'Feeder',
       'Lighting',
     ]);
     expect(LIBRARY_ITEMS.filter((i) => !isPlaceable(i)).map((i) => i.key)).toEqual(['cable']);

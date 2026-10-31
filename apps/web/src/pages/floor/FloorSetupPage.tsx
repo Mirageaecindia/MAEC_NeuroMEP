@@ -293,7 +293,12 @@ export function FloorSetupPage() {
   const toPdf = (p: ModelPoint) =>
     calibration ? { x: p.x / calibration.metresPerUnit, y: p.y / calibration.metresPerUnit } : p;
   const planCables: PlanCable[] = calibration
-    ? floorCables.map((c) => ({ id: c.id, tag: c.tag, points: c.route.map(toPdf) }))
+    ? floorCables.map((c) => ({
+        id: c.id,
+        tag: c.tag,
+        points: c.route.map(toPdf),
+        busbar: c.feederType === 'busbar',
+      }))
     : [];
 
   async function upload(target: Floor, file: File) {
@@ -385,7 +390,7 @@ export function FloorSetupPage() {
                   title={
                     isPlaceable(item)
                       ? `${item.label} (${item.cmpCode}, draft symbol): drag onto the plan, or click it and then click the plan`
-                      : 'Draw a cable between two components'
+                      : 'Draw a feeder (cable or busbar) between two components'
                   }
                   onDragStart={(e) => {
                     e.dataTransfer.setData(LIBRARY_DRAG_TYPE, item.key);

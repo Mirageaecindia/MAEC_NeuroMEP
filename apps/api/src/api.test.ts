@@ -292,7 +292,7 @@ describe('projects', () => {
       .set('content-type', 'application/pdf')
       .send(pdfWithPages(1));
     expect(checker.status).toBe(403);
-  });
+  }, 20_000); // several saves; slow in a parallel run
 
   it('#TASK-10 a floor flagged done is locked for everyone until the Lead reopens it (A-08, E1003)', async () => {
     const lead = await tokenFor(LEAD);

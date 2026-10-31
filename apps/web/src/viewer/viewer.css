@@ -193,3 +193,8 @@
 .viewer-canvas.resizing {
   cursor: nwse-resize;
 }
+
+.plan-cable.busbar polyline {
+  stroke-width: 6;
+  stroke-linecap: square;
+}

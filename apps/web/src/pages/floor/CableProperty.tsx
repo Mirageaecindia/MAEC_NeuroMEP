@@ -1,11 +1,21 @@
-import { cableLength, type Cable, type Element } from '@neuromep/shared';
+import {
+  busbarFeederIssue,
+  cableLength,
+  DEFAULT_BUSBAR,
+  IpRatingSchema,
+  type BusbarSpec,
+  type Cable,
+  type Element,
+  type FeederType,
+} from '@neuromep/shared';
 import { useState } from 'react';
 
 const m = (v: number) => `${v.toFixed(2)} m`;
 
 /**
- * Engineering Property of a selected cable (FR-15): tag, ends, circuit reference, construction
- * and the length the engine will use - routed + 1 m vertical (A-05) + the 12.2 allowance.
+ * Engineering Property of a selected feeder (FR-15): Cable or Busbar (decision 1 Nov 2026), tag,
+ * ends, circuit reference, cable construction or busbar fields (12.3), and the length the engine
+ * will use - routed + 1 m vertical (A-05) + the 12.2 allowance.
  */
 export function CableProperty(props: {
   cable: Cable;
@@ -14,7 +24,7 @@ export function CableProperty(props: {
   allowance: { pct: number; interim: boolean } | null;
   editable: boolean;
   takenTags: string[];
-  onChange: (patch: { tag: string }) => void;
+  onChange: (patch: { tag?: string; feederType?: FeederType; busbar?: BusbarSpec }) => void;
   onEditConstruction: () => void;
   onDelete: () => void;
 }) {
@@ -32,13 +42,39 @@ export function CableProperty(props: {
   };
   const length = cableLength(cable, props.allowance?.pct ?? 0);
   const c = cable.construction;
+  const from = props.elements.find((x) => x.id === cable.from.elementId);
+  const busbarIssue = busbarFeederIssue(from);
+  const isBusbar = cable.feederType === 'busbar';
+  const bb = cable.busbar ?? DEFAULT_BUSBAR;
+  const setBusbar = (patch: Partial<BusbarSpec>) => props.onChange({ busbar: { ...bb, ...patch } });
 
   return (
     <section className="property-card" aria-label="Engineering Property">
       <h3>Engineering Property</h3>
       <dl>
         <dt>Name :</dt>
-        <dd>Cable</dd>
+        <dd>Feeder</dd>
+        <dt>
+          <label htmlFor="feeder-type">Type :</label>
+        </dt>
+        <dd>
+          <select
+            id="feeder-type"
+            className="pill-input"
+            value={cable.feederType}
+            disabled={!props.editable}
+            onChange={(e) => {
+              const feederType = e.target.value as FeederType;
+              props.onChange(feederType === 'busbar' ? { feederType, busbar: bb } : { feederType });
+            }}
+          >
+            <option value="cable">Cable</option>
+            <option value="busbar" disabled={busbarIssue !== null}>
+              Busbar
+            </option>
+          </select>
+          {busbarIssue && !isBusbar && <span className="muted">{busbarIssue}</span>}
+        </dd>
         <dt>
           <label htmlFor="cable-tag">Tag :</label>
         </dt>
@@ -63,17 +99,76 @@ export function CableProperty(props: {
         <dd>{end(cable.to.elementId, cable.to.port)}</dd>
         <dt>Circuit :</dt>
         <dd>{cable.circuitRef}</dd>
-        <dt>Construction :</dt>
-        <dd>
-          {c.cores} {c.conductor}/{c.insulation}/{c.armour}/{c.sheath}, {c.voltageGrade}, method{' '}
-          {c.method}
-          {installation(c) && <span className="muted">{installation(c)}</span>}
-          {props.editable && (
-            <button className="btn-link" onClick={props.onEditConstruction}>
-              Change
-            </button>
-          )}
-        </dd>
+        {isBusbar ? (
+          <>
+            <dt>Busbar :</dt>
+            <dd>Feeder type, TPN+E, 600/1000 V</dd>
+            <dt>
+              <label htmlFor="busbar-conductor">Conductor :</label>
+            </dt>
+            <dd>
+              <select
+                id="busbar-conductor"
+                className="pill-input"
+                value={bb.conductor}
+                disabled={!props.editable}
+                onChange={(e) =>
+                  setBusbar({ conductor: e.target.value as BusbarSpec['conductor'] })
+                }
+              >
+                <option value="Cu">Cu</option>
+                <option value="Al">Al</option>
+              </select>
+            </dd>
+            <dt>
+              <label htmlFor="busbar-ip">IP :</label>
+            </dt>
+            <dd>
+              <select
+                id="busbar-ip"
+                className="pill-input"
+                value={bb.ipRating ?? ''}
+                disabled={!props.editable}
+                onChange={(e) =>
+                  setBusbar({
+                    ipRating: e.target.value ? (e.target.value as BusbarSpec['ipRating']) : null,
+                  })
+                }
+              >
+                <option value="">Select</option>
+                {IpRatingSchema.options.map((ip) => (
+                  <option key={ip}>{ip}</option>
+                ))}
+              </select>
+            </dd>
+            <dt>
+              <label htmlFor="busbar-fire">Fire rated :</label>
+            </dt>
+            <dd>
+              <input
+                id="busbar-fire"
+                type="checkbox"
+                checked={bb.fireRated}
+                disabled={!props.editable}
+                onChange={(e) => setBusbar({ fireRated: e.target.checked })}
+              />
+            </dd>
+          </>
+        ) : (
+          <>
+            <dt>Construction :</dt>
+            <dd>
+              {c.cores} {c.conductor}/{c.insulation}/{c.armour}/{c.sheath}, {c.voltageGrade}, method{' '}
+              {c.method}
+              {installation(c) && <span className="muted">{installation(c)}</span>}
+              {props.editable && (
+                <button className="btn-link" onClick={props.onEditConstruction}>
+                  Change
+                </button>
+              )}
+            </dd>
+          </>
+        )}
         <dt>Length :</dt>
         <dd>
           <span>
@@ -89,12 +184,25 @@ export function CableProperty(props: {
               ` + ${props.allowance.pct} %${props.allowance.interim ? ' (interim, OI-17)' : ''} ${m(length.allowanceM)}`}
           </span>
         </dd>
-        <dt>Size :</dt>
-        <dd className="muted">Calculated by Cable Size</dd>
+        {isBusbar ? (
+          <>
+            <dt>Rating :</dt>
+            <dd className="muted">Calculated by Cable Size</dd>
+            <dt>Fault duty :</dt>
+            <dd className="muted">Calculated by Cable Size</dd>
+            <dt>R / X / Icw :</dt>
+            <dd className="muted">Datasheet required (OI-13)</dd>
+          </>
+        ) : (
+          <>
+            <dt>Size :</dt>
+            <dd className="muted">Calculated by Cable Size</dd>
+          </>
+        )}
       </dl>
       {props.editable && (
         <button className="btn btn-sm btn-danger-outline" onClick={props.onDelete}>
-          Delete cable
+          Delete feeder
         </button>
       )}
     </section>
