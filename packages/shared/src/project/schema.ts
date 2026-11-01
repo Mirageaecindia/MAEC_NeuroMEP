@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { CableSchema } from '../model/cable.js';
 import { ElementSchema } from '../model/elements.js';
+import { StoredResultSchema } from '../model/sizing.js';
 import { FloorFlagSchema } from '../model/floorFlags.js';
 import { RiserSchema } from '../model/riser.js';
 import {
@@ -222,6 +223,8 @@ export const ProjectSchema = z.object({
     risers: z.array(RiserSchema).default([]),
     /** Floors flagged done per discipline, locked until the Lead reopens them (A-08). */
     floorFlags: z.array(FloorFlagSchema).default([]),
+    /** Last Cable Size result per component and feeder (FR-18, FR-21). */
+    results: z.array(StoredResultSchema).default([]),
   }),
 
   auditLog: z.array(AuditEntrySchema),

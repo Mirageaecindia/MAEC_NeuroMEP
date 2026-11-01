@@ -7,6 +7,7 @@ import {
   type BusbarSpec,
   type CableConstruction,
   type FeederType,
+  type StoredResult,
   type Element,
   type ModelPoint,
   laterPage,
@@ -99,6 +100,8 @@ export type ProjectAction =
   | { type: 'removeCables'; ids: string[] }
   /** Building tab risers (FR-20): Riser Design and connections, edited with the shared helpers. */
   | { type: 'risers'; risers: Riser[] }
+  /** Results of a Cable Size run (FR-21), merged by the caller (`mockRun` until WBS 1.7.1). */
+  | { type: 'cableSize'; results: StoredResult[] }
   /** Floor flagged done for a discipline (A-08), or reopened (`flag` null, the Lead only). */
   | {
       type: 'floorFlag';
@@ -263,6 +266,8 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
     }
     case 'risers':
       return { ...p, model: { ...p.model, risers: a.risers } };
+    case 'cableSize':
+      return { ...p, model: { ...p.model, results: a.results } };
     case 'floorFlag': {
       const floorFlags = setFloorFlag(p.model.floorFlags, a.floorId, a.discipline, a.flag);
       return { ...p, model: { ...p.model, floorFlags } };

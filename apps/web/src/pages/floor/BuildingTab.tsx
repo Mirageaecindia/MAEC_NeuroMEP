@@ -49,6 +49,8 @@ export function BuildingTab(props: {
   readOnly: boolean;
   onRisers: (risers: Riser[]) => void;
   onSave: () => void;
+  /** Cable Size Calculator: Cable Size for the whole project (FR-21, A-07). */
+  onCableSize: () => void;
 }) {
   const notice = useNotice();
   const { model } = props;
@@ -292,7 +294,10 @@ export function BuildingTab(props: {
           className={`summary-btn${connected ? ' ready' : ''}`}
           disabled={!connected || props.readOnly}
           title={connected ? undefined : 'Connect the transformer to the risers first (A-07)'}
-          onClick={() => setSized(true)}
+          onClick={() => {
+            props.onCableSize();
+            setSized(true);
+          }}
         >
           Cable Size Calculator
         </button>

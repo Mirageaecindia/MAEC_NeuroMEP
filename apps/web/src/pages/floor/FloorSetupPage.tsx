@@ -1,4 +1,7 @@
 import {
+  mockRun,
+  type Project,
+  type SizingScope,
   categoryFactorsPending,
   parseLoadSheet,
   planLoadImport,
@@ -45,6 +48,8 @@ import {
   type ViewerControls,
 } from '../../viewer/PlanViewer';
 import { CableProperty } from './CableProperty';
+import { SizingResult } from './SizingResult';
+import { tooltipLines } from './tooltip';
 import { ConstructionDialog } from './ConstructionDialog';
 import { EngineeringProperty } from './EngineeringProperty';
 import { LoadTable } from './LoadTable';
@@ -451,6 +456,16 @@ export function FloorSetupPage() {
           readOnly={!editor.layers.includes('electrical')}
           onRisers={(risers) => editor.dispatch({ type: 'risers', risers })}
           onSave={() => void editor.save()}
+          onCableSize={() =>
+            editor.dispatch({
+              type: 'cableSize',
+              results: mockRun(
+                project,
+                { kind: 'project' },
+                { runId: crypto.randomUUID(), at: new Date().toISOString() },
+              ),
+            })
+          }
         />
       ) : (
         <div className="floor-layout">
@@ -480,6 +495,14 @@ export function FloorSetupPage() {
                 onCableClick={cableClick}
                 onPlace={(at, key) => (canPlace ? place(at, key ?? armed) : undefined)}
                 onSelect={setSelectedId}
+                tooltip={(id) =>
+                  tooltipLines(
+                    project,
+                    loadSummaries(project, defaultPf(project)),
+                    allowance?.pct ?? 0,
+                    id,
+                  )
+                }
                 onResize={(id, symbolScale) =>
                   editor.dispatch({ type: 'updateElement', id, patch: { symbolScale } })
                 }
@@ -702,14 +725,9 @@ function RightPanel(props: {
   selectedId: string | null;
   property: ReactNode;
 }) {
-  const { project } = useWorkspace();
-  const pf = (() => {
-    if (!project.rulePackId || !project.rulePackVersion) return null;
-    const v = getRulePack(project.rulePackId, project.rulePackVersion).calculationDefaults.find(
-      (d) => d.key === 'defaultLoadPowerFactor',
-    )?.value;
-    return typeof v === 'number' ? v : null;
-  })();
+  const { project, editor } = useWorkspace();
+  const notice = useNotice();
+  const pf = defaultPf(project);
   const transformers = project.model.elements.filter((e) => e.kind === 'transformer');
   const txKva = transformers.reduce((s, t) => s + (t.kind === 'transformer' ? (t.kva ?? 0) : 0), 0);
   const plot = project.details.plotLoad;
@@ -776,6 +794,16 @@ function RightPanel(props: {
     : [];
   const tops = scope ? scope.tops.map((e) => summaries.get(e.id)!) : [];
   const fedFromSource = sourceConnected(project.model);
+  // Cable Size scope (FR-21, decision 1 Nov 2026): the selected component or feeder, else the floor.
+  const selectedItem =
+    selected ?? project.model.cables.find((c) => c.id === props.selectedId) ?? null;
+  const sizingScope: SizingScope | null = selectedItem
+    ? { kind: 'element', id: selectedItem.id }
+    : props.floor
+      ? { kind: 'floor', floorId: props.floor.id }
+      : null;
+  const scopeName = selectedItem?.tag ?? props.floor?.name;
+  const canSize = fedFromSource && sizingScope !== null && editor.layers.includes('electrical');
   return (
     <aside className="panel right-panel" aria-label="Right panel">
       <div className="capacity">
@@ -799,6 +827,7 @@ function RightPanel(props: {
           <p className="field-hint">Calibrate the plan before placing components (E0701).</p>
         )}
         {props.property}
+        {selectedItem && <SizingResult project={project} id={selectedItem.id} />}
         {scope && (
           <LoadTable
             title={scope.title}
@@ -814,17 +843,37 @@ function RightPanel(props: {
       </div>
       <button
         className="btn btn-primary cable-size"
-        disabled={!fedFromSource}
+        aria-label={scopeName ? `Cable Size ${scopeName}` : 'Cable Size'}
+        disabled={!canSize}
         title={
           fedFromSource
-            ? undefined
+            ? `Size ${scopeName ?? ''}`
             : 'Connect the transformer to the risers in the Building tab first (A-07)'
         }
+        onClick={() => {
+          if (!sizingScope) return;
+          const results = mockRun(project, sizingScope, {
+            runId: crypto.randomUUID(),
+            at: new Date().toISOString(),
+          });
+          editor.dispatch({ type: 'cableSize', results });
+          notice(`Cable Size ran on ${scopeName} (mock results until WBS 1.6).`);
+        }}
       >
         Cable Size
+        {scopeName && <small className="cable-size-scope">{scopeName}</small>}
       </button>
     </aside>
   );
+}
+
+/** Default load power factor of the project's rule pack, or null without one. */
+function defaultPf(project: Project): number | null {
+  if (!project.rulePackId || !project.rulePackVersion) return null;
+  const v = getRulePack(project.rulePackId, project.rulePackVersion).calculationDefaults.find(
+    (d) => d.key === 'defaultLoadPowerFactor',
+  )?.value;
+  return typeof v === 'number' ? v : null;
 }
 
 /**

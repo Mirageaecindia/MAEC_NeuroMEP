@@ -53,6 +53,7 @@ export function mayApply(user: UserSummary, project: Project, action: ProjectAct
     case 'removeCables':
     case 'loadImport':
     case 'risers':
+    case 'cableSize':
       return layers.includes('electrical');
     case 'floorFlag':
       // Engineers flag their own layer; only the Technical Lead reopens (A-08).

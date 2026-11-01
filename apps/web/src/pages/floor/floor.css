@@ -415,3 +415,38 @@
 .load-totals {
   margin: 6px 0 2px;
 }
+
+/* Cable Size result (FR-18, FR-21): grey when Out of date. */
+.cable-size-scope {
+  display: block;
+  font-size: 9px;
+  font-weight: 400;
+  opacity: 0.85;
+}
+.result-status {
+  font-weight: 700;
+  margin: 4px 0 6px;
+}
+.result-card.out-of-date {
+  filter: grayscale(1);
+  opacity: 0.65;
+}
+.check-list {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0;
+}
+.check-list li {
+  padding: 1px 0;
+}
+.check-pass {
+  color: var(--success);
+}
+.check-fail,
+.check-blocked {
+  color: var(--danger);
+}
+.check-not-calculated,
+.check-not-required {
+  color: var(--text-muted);
+}

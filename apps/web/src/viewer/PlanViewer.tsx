@@ -99,6 +99,8 @@ export function PlanViewer(props: {
   onPlace?: (at: PdfPoint, itemKey?: string) => void;
   onSelect?: (id: string | null) => void;
   onMove?: (id: string, at: PdfPoint) => void;
+  /** Hover tooltip lines of a component or feeder (FR-36). */
+  tooltip?: (id: string) => string[] | null;
   /** A selected component resized by a corner handle. */
   onResize?: (id: string, scale: number) => void;
   /** Cables on this floor (#TASK-13); selectable like components. */
@@ -137,6 +139,8 @@ export function PlanViewer(props: {
   /** Corner resize of the selected component in progress, and its scale so far. */
   const [resizing, setResizing] = useState<{ id: string; scale: number } | null>(null);
   const [overHandle, setOverHandle] = useState(false);
+  /** Component or feeder under the pointer and where (FR-36 tooltip). */
+  const [hovered, setHovered] = useState<{ id: string; x: number; y: number } | null>(null);
   const [snapIndex, setSnapIndex] = useState<SnapIndex | null>(null);
   const [snapOn, setSnapOn] = useState(true);
   /** Snap target under the cursor while picking points. */
@@ -360,7 +364,12 @@ export function PlanViewer(props: {
       setResizing({ id: m.id, scale: Math.round(scale * 20) / 20 });
       return;
     }
-    if (!pan.current && !drag.current && page) setOverHandle(!!onHandle(local(e)));
+    if (!pan.current && !drag.current && page) {
+      const s = local(e);
+      setOverHandle(!!onHandle(s));
+      const id = picking ? undefined : (hit(s)?.id ?? hitCable(s)?.id);
+      setHovered(id ? { id, ...s } : null);
+    } else setHovered(null);
     if (drag.current && page) {
       drag.current.moved = true;
       setDragAt({ id: drag.current.id, at: screenToPdf(local(e), view, page.transform) });
@@ -593,7 +602,10 @@ export function PlanViewer(props: {
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={endPan}
-        onMouseLeave={endPan}
+        onMouseLeave={() => {
+          endPan();
+          setHovered(null);
+        }}
         onDragOver={(e) => {
           if (e.dataTransfer.types.includes(LIBRARY_DRAG_TYPE)) e.preventDefault();
         }}
@@ -739,6 +751,17 @@ export function PlanViewer(props: {
               <circle className="snap-ring" cx={toScreen(hover).x} cy={toScreen(hover).y} r={9} />
             )}
           </svg>
+        )}
+        {hovered && props.tooltip?.(hovered.id) && (
+          <div
+            className="plan-tooltip"
+            role="tooltip"
+            style={{ left: hovered.x + 14, top: hovered.y + 14 }}
+          >
+            {props.tooltip(hovered.id)!.map((line, i) => (
+              <div key={i}>{line}</div>
+            ))}
+          </div>
         )}
         <span className="viewer-hint">
           Zoom: {Math.round(view.zoom * 100)}% · Wheel to zoom ·{' '}

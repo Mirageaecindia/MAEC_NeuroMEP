@@ -422,7 +422,7 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
       await screen.findByText('TRANSFORMER CAPACITY & CONNECTED LOAD SCHEDULE'),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Transformer' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Cable Size' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^Cable Size( |$)/ })).toBeDisabled();
   });
 
   it('#TASK-18 a riser fed from the transformer feeds the floor boards; then Cable Size (A-07)', async () => {
@@ -449,6 +449,11 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(within(summary).getByRole('button', { name: 'Save' })).toBeDisabled();
     await userEvent.click(calc);
     expect(within(summary).getByRole('button', { name: 'Save' })).toBeEnabled();
+    // FR-21: the run covers the whole project and is saved with it (mock until WBS 1.7.1).
+    await userEvent.click(within(summary).getByRole('button', { name: 'Save' }));
+    await waitFor(async () =>
+      expect((await api.getProject('p-1')).project.model.results.length).toBeGreaterThan(0),
+    );
     expect(within(summary).getByRole('button', { name: 'Demand Factors' })).toBeInTheDocument();
   });
 

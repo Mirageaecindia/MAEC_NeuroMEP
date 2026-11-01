@@ -1,4 +1,5 @@
 import { DisciplineSchema, type Discipline } from './model/elements.js';
+import { stable } from './stable.js';
 import { isFlagged, type FloorFlag } from './model/floorFlags.js';
 import type { Project } from './project/schema.js';
 import type { Role } from './roles.js';
@@ -75,17 +76,6 @@ export function editableDisciplines(
 export const canEditFloorPlans = (user: UserSummary, project: Pick<Project, 'disciplines'>) =>
   editableDisciplines(user, project).length > 0;
 
-/** JSON with sorted keys, so two equal objects compare equal whatever their key order. */
-function stable(value: unknown): string {
-  return JSON.stringify(value, (_k, v: unknown) =>
-    v && typeof v === 'object' && !Array.isArray(v)
-      ? Object.fromEntries(
-          Object.entries(v as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : 1)),
-        )
-      : v,
-  );
-}
-
 /** Ids of the items added, changed or removed between two lists. */
 function changed<T extends { id: string }>(a: readonly T[], b: readonly T[]): string[] {
   const old = new Map(a.map((x) => [x.id, stable(x)]));
@@ -130,6 +120,9 @@ export function outsideEditRights(
   }
   if (!layers.has('electrical') && changed(before.model.risers, after.model.risers).length > 0) {
     return 'risers (electrical)';
+  }
+  if (!layers.has('electrical') && stable(before.model.results) !== stable(after.model.results)) {
+    return 'Cable Size results (electrical)';
   }
   // Floor flags (A-08): engineers flag their own layer; only the Technical Lead reopens.
   const oldFlags = new Set(before.model.floorFlags.map(flagKey));
