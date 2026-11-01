@@ -34,8 +34,8 @@ export default defineConfig(
     },
   },
   {
-    // Tests and the one-time CableSizer converter read trusted local files with fixed regexes.
-    files: ['**/*.test.{ts,tsx}', 'packages/rulepacks/scripts/**/*.ts'],
+    // Tests, smoke-test fixtures and the one-time CableSizer converter read trusted local files with fixed regexes.
+    files: ['**/*.test.{ts,tsx}', 'packages/rulepacks/scripts/**/*.ts', 'e2e/**/*.ts'],
     rules: {
       'security/detect-non-literal-fs-filename': 'off',
       'security/detect-non-literal-regexp': 'off',

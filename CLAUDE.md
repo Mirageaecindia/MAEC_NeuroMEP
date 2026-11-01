@@ -74,7 +74,7 @@ Login → five top tabs: **All Projects** (project cards with status) → **Impo
 - Section 7 also names Zustand, Konva, three.js, Socket.IO, ExcelJS — add each with the WBS item that needs it. ExcelJS added in WBS 1.3.4 (web, loaded on demand; `uuid` pinned to 11.1.1 by an override, GHSA-w5hq-g745-h8pq). Placement uses an SVG overlay, not Konva (decision 28 Oct).
 - MongoDB replica set, official driver; collections `projects`, `floors`, `elements`, `rulepacks`, `auditLog`, `exports`, `sessions`. Plan files on disk (A-02). Optimistic locking via `version`.
 - Hosting: Netcup VPS (Nginx + TLS, PM2, MongoDB, nightly backup); staging demo on 10 Nov (WBS 1.8.3).
-- Tooling: Node 24 LTS; ESLint (+ security rules) + Prettier; Vitest, mongodb-memory-server, Playwright (WBS 1.5.2); CI on every push with tests, code analysis and dependency audit (WBS 1.1.3).
+- Tooling: Node 24 LTS; ESLint (+ security rules) + Prettier; Vitest, mongodb-memory-server, Playwright (WBS 1.5.2); smoke tests in `e2e/` (`npm run test:e2e`) start their own API on 4100 and web on 5273 with a temporary data folder, never the dev servers; CI on every push with tests, code analysis and dependency audit (WBS 1.1.3).
 - Internal packages expose a `source` export condition (dev/tests use TS source; `build` emits `dist/`).
 - A floor's `plan` is a discriminated union (`kind: 'pdf'`; `'revit'` later, #TASK-33). Calibration stored in PDF page units; the model is stored in metres.
 - Dev: `npm run dev` starts an in-process MongoDB replica set when `MONGODB_URI` is unset. Dev users (`apps/api/config/users.dev.json`) `lead@ / electrical@ / electrical2@ / mechanical@ / phe@ / checker@ / admin@neuromep.dev`, password `neuromep-dev`.
