@@ -21,7 +21,7 @@ import { checkPlanPdf } from './plans/pdf-check.js';
 import type { PlanStorage } from './plans/storage.js';
 import type { LegendSymbol } from './symbols/catalogue.js';
 import { sendError } from './errors.js';
-import type { ProjectRepository } from './projects/repository.js';
+import { EXPORT_KINDS, type ProjectRepository } from './projects/repository.js';
 
 export interface AppDeps {
   auth: AuthProvider;
@@ -153,6 +153,24 @@ export function createApp(deps?: AppDeps): Express {
   app.get('/api/projects/:id', signedIn, async (req, res) => {
     const project = await loadVisible(req, res);
     if (project) res.json({ project });
+  });
+
+  // Export file names never repeat (_v1, _v2): the server hands out the next number.
+  app.post('/api/projects/:id/exports', signedIn, async (req, res) => {
+    const project = await loadVisible(req, res);
+    if (!project) return;
+    const kind = z.enum(EXPORT_KINDS).safeParse(req.body?.kind);
+    if (!kind.success) {
+      sendError(res, 400, 'E0803');
+      return;
+    }
+    const version = await deps.projects.nextExportVersion(
+      project.id,
+      kind.data,
+      currentUser(req).id,
+      now(),
+    );
+    res.json({ version });
   });
 
   app.put('/api/projects/:id', signedIn, async (req, res) => {

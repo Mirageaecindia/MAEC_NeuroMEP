@@ -34,6 +34,20 @@ export type SaveResult =
 
 const key = (projectId: string, id: string) => `${projectId}/${id}`;
 
+/** Exported file types; each is numbered on its own. */
+export const EXPORT_KINDS = ['sld'] as const;
+export type ExportKind = (typeof EXPORT_KINDS)[number];
+
+/** `exports` collection: the last version number of each export of a project. */
+interface ExportDoc {
+  _id: string;
+  projectId: string;
+  kind: ExportKind;
+  version: number;
+  lastBy: string;
+  lastAt: string;
+}
+
 /**
  * Projects across the `projects`, `floors`, `elements` and `auditLog` collections. Saves use
  * optimistic locking: a save names the version it started from and fails with a conflict if
@@ -44,6 +58,7 @@ export class ProjectRepository {
   private readonly floors: Collection<FloorDoc>;
   private readonly elements: Collection<ElementDoc>;
   private readonly audit: Collection<AuditDoc>;
+  private readonly exports: Collection<ExportDoc>;
 
   constructor(
     private readonly client: MongoClient,
@@ -53,6 +68,20 @@ export class ProjectRepository {
     this.floors = db.collection('floors');
     this.elements = db.collection('elements');
     this.audit = db.collection('auditLog');
+    this.exports = db.collection('exports');
+  }
+
+  /**
+   * Next version number of an export of a project (_v1, _v2 ...): export files never overwrite
+   * (Section 7). Records who exported last and when.
+   */
+  async nextExportVersion(projectId: string, kind: ExportKind, by: string, at: string) {
+    const doc = await this.exports.findOneAndUpdate(
+      { _id: `${projectId}:${kind}` },
+      { $inc: { version: 1 }, $set: { projectId, kind, lastBy: by, lastAt: at } },
+      { upsert: true, returnDocument: 'after' },
+    );
+    return doc!.version;
   }
 
   async init(): Promise<void> {

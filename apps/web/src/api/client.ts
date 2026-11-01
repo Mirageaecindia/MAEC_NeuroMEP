@@ -119,6 +119,13 @@ export class ApiClient {
       body: JSON.stringify({ project }),
     });
   }
+  /** Next version of an export (_v1, _v2 ...): export files never overwrite. */
+  nextExportVersion(projectId: string, kind: 'sld') {
+    return this.request<{ version: number }>(
+      `/api/projects/${encodeURIComponent(projectId)}/exports`,
+      { method: 'POST', body: JSON.stringify({ kind }) },
+    );
+  }
   uploadPlan(projectId: string, file: File) {
     return this.request<{ fileId: string; fileName: string; uploadedAt: string }>(
       `/api/projects/${encodeURIComponent(projectId)}/plans`,

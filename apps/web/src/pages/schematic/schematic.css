@@ -94,3 +94,47 @@
 .schedule-sheet .strong {
   font-weight: 700;
 }
+
+/* Output: schedules from the model (WBS 1.5.3) */
+.output-area {
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 12px;
+}
+.sheet-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.download-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  font-size: 11px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-muted);
+}
+.download-inputs .missing,
+.schedule-sheet .missing {
+  outline: 2px solid #f59e0b;
+  outline-offset: 1px;
+}
+.meter-input {
+  width: 32px;
+  font-size: 9px;
+  text-align: center;
+}
+.meter-type select,
+.meter-type input {
+  font-size: 9px;
+}
+.schedule-sheet .logo img {
+  max-height: 34px;
+  max-width: 120px;
+}
+.sheet-board {
+  font-size: 13px;
+}

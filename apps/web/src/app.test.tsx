@@ -588,16 +588,46 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
 });
 
 describe('#TASK-30 / #TASK-31 Schematic and Output (Figma 4, 5)', () => {
-  it('Schematic lists transformers; Output shows a preview once a schedule is ticked', async () => {
-    const project = completeProject();
+  it('#TASK-30 Schematic draws the single-line diagram of the model transformers', async () => {
+    const project = buildingProject();
     project.meta.reachedPage = 'simulation-report';
+    project.model.risers = [{ id: 'r1', lengthM: 20, widthM: 1, fedFromId: 'tx', feeds: ['db-1'] }];
     renderAt('/projects/p-1/schematic', new FakeAuth(LEAD), fakeApi(project));
-    expect(await screen.findByRole('checkbox', { name: 'All Transformer' })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('link', { name: 'Output' }));
-    const second = await screen.findByRole('checkbox', { name: 'Second Level Schedule' });
-    expect(screen.queryByRole('table', { name: /Schedule/ })).not.toBeInTheDocument();
-    await userEvent.click(second);
-    expect(screen.getByRole('table', { name: /Schedule SMDB/ })).toBeInTheDocument();
+    expect(await screen.findByRole('checkbox', { name: 'TX-1' })).toBeChecked();
+    const sld = screen.getByRole('img', { name: 'Single-line diagram from TX-1' });
+    expect(within(sld).getByText('DB-db-1')).toBeInTheDocument();
+    expect(within(sld).getByText('Riser 1 tap-off')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Download' })).toBeEnabled();
+    await userEvent.click(screen.getByRole('checkbox', { name: 'TX-1' }));
+    expect(screen.getByText('Select a transformer on the left.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Download' })).toBeDisabled();
+  });
+
+  it('#TASK-31 Output previews schedules by level and asks the sheet inputs before download', async () => {
+    const project = buildingProject();
+    project.meta.reachedPage = 'simulation-report';
+    renderAt('/projects/p-1/output', new FakeAuth(LEAD), fakeApi(project));
+    const floorLevel = await screen.findByRole('checkbox', { name: 'Floor Level Schedule' });
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Second Level Schedule' }));
+    expect(screen.getByText('No boards of the ticked levels in this project yet.')).toBeVisible();
+    await userEvent.click(floorLevel);
+    const sheet = screen.getByRole('table', { name: 'Schedule DB-db-1' });
+    expect(sheet).toHaveTextContent('INCOMER');
+    const download = screen.getByRole('button', { name: 'Download' });
+    expect(download).toBeDisabled();
+    await userEvent.selectOptions(screen.getByLabelText('DB-db-1 type of meter'), 'upto-125a-3ph');
+    await userEvent.type(screen.getByLabelText('Planned completion date'), '2027-06-30');
+    expect(download).toBeDisabled(); // the logo is still missing
+    const logo = new File(['<svg xmlns="http://www.w3.org/2000/svg"/>'], 'logo.svg', {
+      type: 'image/svg+xml',
+    });
+    await userEvent.upload(screen.getByLabelText('Logo'), logo);
+    await waitFor(() => expect(download).toBeEnabled());
+    expect(within(sheet).getByRole('img', { name: /logo/ })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Generator Load Analysis' }));
+    expect(
+      screen.getByText(/awaiting its definition by the Senior Electrical Engineer/),
+    ).toBeVisible();
   });
 });
 

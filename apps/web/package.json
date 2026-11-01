@@ -15,10 +15,12 @@
     "@neuromep/rulepacks": "0.1.0",
     "@neuromep/shared": "0.1.0",
     "exceljs": "^4.4.0",
+    "jspdf": "4.2.1",
     "pdfjs-dist": "^6.4.299",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router": "^7.18.4",
+    "svg2pdf.js": "2.8.1",
     "uuid": "^11.1.1"
   },
   "devDependencies": {

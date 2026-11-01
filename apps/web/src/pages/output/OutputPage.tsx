@@ -1,27 +1,89 @@
+import {
+  boardSchedule,
+  loadSummaries,
+  SCHEDULE_LEVELS,
+  scheduleLevelOf,
+  type ElementKind,
+  type ScheduleLevel,
+} from '@neuromep/shared';
 import { useState } from 'react';
 import { DisciplineTabs, Shell, useNotice } from '../../layout/Shell';
 import { Toolbar } from '../../layout/Toolbar';
-import { REPORTS, SAMPLE_SCHEDULE, SCHEDULE_TYPES } from '../../sample/sampleData';
+import { defaultPf, lengthAllowance } from '../../workspace/projectDefaults';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
+import { emptyMeters, missingMeters, ScheduleSheet, type BoardMeters } from './ScheduleSheet';
 import '../schematic/schematic.css';
 
-/** Output (Figma screen 5): report library, schedule preview, Download. */
+/** Report Library (Figma screen 5); levels by board hierarchy (decision 2 Nov 2026). */
+const REPORTS: { key: ScheduleLevel | 'completed' | 'generator'; label: string }[] = [
+  { key: 'completed', label: 'Completed Schedule' },
+  { key: 'first', label: 'First Level Schedule' },
+  { key: 'second', label: 'Second Level Schedule' },
+  { key: 'floor', label: 'Floor Level Schedule' },
+  { key: 'generator', label: 'Generator Load Analysis' },
+];
+type ReportKey = (typeof REPORTS)[number]['key'];
+
+/** Schedule Type narrows the ticked levels to one board type. */
+const SCHEDULE_TYPES: { label: string; kinds: readonly ElementKind[] | null }[] = [
+  { label: 'All schedules', kinds: null },
+  { label: 'DB Schedule', kinds: ['db'] },
+  { label: 'SMDB Schedule', kinds: ['smdb', 'esmdb'] },
+  { label: 'MDB Schedule', kinds: SCHEDULE_LEVELS.first },
+  { label: 'MCC Schedule', kinds: ['mcc', 'emcc'] },
+];
+
+/**
+ * Output (Figma screen 5): Report Library, schedule previews from the model, and the inputs the
+ * sheet needs before download (logo, planned completion date, kWh meters, type of meter) - asked
+ * at every download and not stored (decision 2 Nov 2026). The schedule files come in WBS 1.7.2.
+ */
 export function OutputPage() {
   const { project } = useWorkspace();
   const notice = useNotice();
   const [tab, setTab] = useState<'All' | 'Electrical' | 'Mechanical' | 'PHE'>('All');
-  const [reports, setReports] = useState<Set<string>>(new Set());
-  const [type, setType] = useState<(typeof SCHEDULE_TYPES)[number]>('DB Schedule');
+  const [reports, setReports] = useState<Set<ReportKey>>(new Set());
+  const [typeIndex, setTypeIndex] = useState(0);
+  const [logo, setLogo] = useState<string | null>(null);
+  const [completionDate, setCompletionDate] = useState('');
+  const [meters, setMeters] = useState<Record<string, BoardMeters>>({});
   const toolbar = useProjectToolbar('output', {
     status: () => notice('Floor status (A-08) is shown on Floor Setup.'),
   });
-  const toggle = (r: string) =>
+  const toggle = (r: ReportKey) =>
     setReports((s) => {
       const n = new Set(s);
       if (n.has(r)) n.delete(r);
       else n.add(r);
       return n;
     });
+
+  // Boards in building order (lowest floor first), then by tag.
+  const floorOrder = new Map(project.building.floors.map((f, i) => [f.id, i]));
+  const kinds = SCHEDULE_TYPES[typeIndex]!.kinds;
+  const boards = project.model.elements
+    .filter((e) => {
+      const level = scheduleLevelOf(e.kind);
+      if (!level || (kinds && !kinds.includes(e.kind))) return false;
+      return reports.has('completed') || reports.has(level);
+    })
+    .sort(
+      (a, b) =>
+        (floorOrder.get(a.floorId) ?? 0) - (floorOrder.get(b.floorId) ?? 0) ||
+        a.tag.localeCompare(b.tag, undefined, { numeric: true }),
+    );
+  const electrical = tab === 'All' || tab === 'Electrical';
+  const summaries = loadSummaries(project, defaultPf(project));
+  const allowance = lengthAllowance(project)?.pct ?? 0;
+  const schedules = electrical
+    ? boards.map((b) => boardSchedule(project, b.id, summaries, allowance)!)
+    : [];
+  const missing = [
+    ...(schedules.length && !logo ? ['logo'] : []),
+    ...(schedules.length && !completionDate ? ['planned completion date'] : []),
+    ...schedules.flatMap((s) => missingMeters(s, meters[s.board.id])),
+  ];
+  const canDownload = schedules.length > 0 && missing.length === 0;
 
   return (
     <Shell
@@ -33,19 +95,25 @@ export function OutputPage() {
           <DisciplineTabs value={tab} onChange={setTab} />
           <ul className="check-list">
             {REPORTS.map((r) => (
-              <li key={r}>
+              <li key={r.key}>
                 <label>
-                  {r}
-                  <input type="checkbox" checked={reports.has(r)} onChange={() => toggle(r)} />
+                  {r.label}
+                  <input
+                    type="checkbox"
+                    checked={reports.has(r.key)}
+                    onChange={() => toggle(r.key)}
+                  />
                 </label>
               </li>
             ))}
           </ul>
           <label className="schedule-type">
             Schedule Type:
-            <select value={type} onChange={(e) => setType(e.target.value as typeof type)}>
-              {SCHEDULE_TYPES.map((t) => (
-                <option key={t}>{t}</option>
+            <select value={typeIndex} onChange={(e) => setTypeIndex(Number(e.target.value))}>
+              {SCHEDULE_TYPES.map((t, i) => (
+                <option key={t.label} value={i}>
+                  {t.label}
+                </option>
               ))}
             </select>
           </label>
@@ -54,9 +122,16 @@ export function OutputPage() {
       sidebarFooter={
         <button
           className="btn btn-primary download-btn"
-          disabled={reports.size === 0}
+          disabled={!canDownload}
+          title={
+            canDownload
+              ? undefined
+              : schedules.length
+                ? `Fill in before download: ${missing.slice(0, 4).join('; ')}${missing.length > 4 ? ' …' : ''}`
+                : 'Tick a schedule in the Report Library'
+          }
           onClick={() =>
-            notice('Excel export comes with WBS 1.7.2 (files never overwritten: _v1, _v2).')
+            notice('Schedule files (Excel / PDF, _v1, _v2) are produced in WBS 1.7.2.')
           }
         >
           Download
@@ -70,113 +145,80 @@ export function OutputPage() {
       }
     >
       <SaveBanner />
-      <section className="panel drawing-area" aria-label="Report preview">
-        {reports.size > 0 && (
-          <span className="sample-note">Sample data - generated from the results in WBS 1.7</span>
+      <section className="panel drawing-area output-area" aria-label="Report preview">
+        {reports.has('generator') && (
+          <p className="banner banner-info">
+            Generator Load Analysis is awaiting its definition by the Senior Electrical Engineer
+            (which loads go on the generator, OI-11). It will be the one editable report.
+          </p>
         )}
-        {reports.size > 0 && <SchedulePreview />}
+        {!electrical && reports.size > 0 && (
+          <p className="muted">
+            Phase 1 schedules are electrical; {tab.toLowerCase()} components supply electrical data.
+          </p>
+        )}
+        {electrical && reports.size > 0 && schedules.length === 0 && !reports.has('generator') && (
+          <p className="muted">No boards of the ticked levels in this project yet.</p>
+        )}
+        {schedules.length > 0 && (
+          <>
+            <form
+              className="download-inputs"
+              aria-label="Before download"
+              onSubmit={(e) => e.preventDefault()}
+            >
+              <strong>Before download</strong>
+              <label className={logo ? undefined : 'missing'}>
+                Logo{' '}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml"
+                  aria-label="Logo"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () => setLogo(String(reader.result));
+                    reader.readAsDataURL(file);
+                  }}
+                />
+              </label>
+              <label className={completionDate ? undefined : 'missing'}>
+                Planned completion date{' '}
+                <input
+                  type="date"
+                  aria-label="Planned completion date"
+                  value={completionDate}
+                  onChange={(e) => setCompletionDate(e.target.value)}
+                />
+              </label>
+              <span className="muted" role="status">
+                {missing.length
+                  ? `${missing.length} input${missing.length === 1 ? '' : 's'} still needed (highlighted).`
+                  : 'Ready to download.'}
+              </span>
+            </form>
+            {schedules.some((s) => s.sizesPending) && (
+              <p className="sample-note">
+                Breaker, fault duty, size and ECC come from Cable Size (engine in WBS 1.6).
+              </p>
+            )}
+            <div className="sheet-stack">
+              {schedules.map((s) => (
+                <ScheduleSheet
+                  key={s.board.id}
+                  schedule={s}
+                  meters={meters[s.board.id] ?? emptyMeters()}
+                  onMeters={(m) => setMeters((all) => ({ ...all, [s.board.id]: m }))}
+                  logo={logo}
+                  completionDate={completionDate}
+                  client={project.details.clientName}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </section>
     </Shell>
-  );
-}
-
-function SchedulePreview() {
-  const s = SAMPLE_SCHEDULE;
-  const f = (n: number) => n.toFixed(2);
-  return (
-    <table className="schedule-sheet" aria-label={`Schedule ${s.board}`}>
-      <tbody>
-        <tr>
-          <td colSpan={7} className="left strong">
-            PROJECT : {s.project}
-            <br />
-            PLANNED COMPLETION DATE :
-            <br />
-            <br />
-            {s.board}
-          </td>
-          <td colSpan={7} className="strong">
-            DETAILS OF CONNECTED LOAD, MAX. DEMAND &amp; kWHR METERING
-          </td>
-          <td colSpan={4}>
-            <div className="logo">{s.client}</div>
-            LOCATION OF SMDB: {s.location}
-          </td>
-        </tr>
-        <tr className="strong">
-          <td>CIRCUIT / FEEDER</td>
-          <td>WAY NO</td>
-          <td>SP/TP</td>
-          <td>ACB/MCCB (A)</td>
-          <td>FAULT DUTY kA</td>
-          <td>NO. OF CORES</td>
-          <td>TYPE</td>
-          <td>SIZE</td>
-          <td>ECC mm²</td>
-          <td>LENGTH (m)</td>
-          <td>R-PH</td>
-          <td>Y-PH</td>
-          <td>B-PH</td>
-          <td>TCL kW</td>
-          <td>MD kW</td>
-          <td>1-PH</td>
-          <td>3-PH</td>
-          <td>REMARKS</td>
-        </tr>
-        <tr className="strong">
-          <td className="left">INCOMER</td>
-          <td>-</td>
-          <td>TP</td>
-          <td>{s.incomer.breaker}</td>
-          <td>{s.incomer.duty}</td>
-          <td>{s.incomer.cores}</td>
-          <td>{s.incomer.type}</td>
-          <td>{s.incomer.size}</td>
-          <td>{s.incomer.ecc}</td>
-          <td>{s.incomer.length}</td>
-          {s.incomer.kw.map((k, i) => (
-            <td key={i}>{f(k)}</td>
-          ))}
-          <td>{f(s.incomer.tcl)}</td>
-          <td>{f(s.incomer.md)}</td>
-          <td />
-          <td />
-          <td />
-        </tr>
-        {s.ways.map(([ref, way, size, ecc, len, kw, tcl, md]) => (
-          <tr key={way}>
-            <td className="left">{ref}</td>
-            <td>{way}</td>
-            <td>TP</td>
-            <td>40</td>
-            <td>35</td>
-            <td>T 4C</td>
-            <td>XLPE</td>
-            <td>{size}</td>
-            <td>{ecc}</td>
-            <td>{len}</td>
-            {kw.map((k, i) => (
-              <td key={i}>{f(k)}</td>
-            ))}
-            <td>{f(tcl)}</td>
-            <td>{f(md)}</td>
-            <td>1</td>
-            <td />
-            <td />
-          </tr>
-        ))}
-        <tr className="strong">
-          <td colSpan={10} className="left">
-            DEMAND FACTOR: {s.totals.demandFactor} MAX. DEMAND: {f(s.totals.md)} kW
-          </td>
-          {s.totals.kw.map((k, i) => (
-            <td key={i}>{k.toFixed(3)}</td>
-          ))}
-          <td>{f(s.totals.tcl)}</td>
-          <td>{f(s.totals.md)}</td>
-          <td colSpan={3}>TOTAL</td>
-        </tr>
-      </tbody>
-    </table>
   );
 }

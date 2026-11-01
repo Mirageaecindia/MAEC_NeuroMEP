@@ -155,6 +155,17 @@ describe('projects', () => {
     expect(elec.status).toBe(403);
   });
 
+  it('#TASK-30 numbers exports _v1, _v2 per project and kind (files never overwrite)', async () => {
+    const auth = await tokenFor(LEAD);
+    const created = (await request(app).post('/api/projects').set('cookie', auth).send({})).body
+      .project;
+    const next = (kind: string) =>
+      request(app).post(`/api/projects/${created.id}/exports`).set('cookie', auth).send({ kind });
+    expect((await next('sld')).body).toEqual({ version: 1 });
+    expect((await next('sld')).body).toEqual({ version: 2 });
+    expect((await next('anything')).status).toBe(400);
+  });
+
   it('saves with optimistic locking and round-trips floors and audit log', async () => {
     const auth = await tokenFor(LEAD);
     const created = (await request(app).post('/api/projects').set('cookie', auth).send({})).body

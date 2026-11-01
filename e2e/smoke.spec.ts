@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import { FIXTURE } from './global-setup';
 
 /**
@@ -55,10 +56,7 @@ test('#TASK-16 login, Import File, Floor Setup, Building tab and Cable Size', as
   await summary.getByLabel('Riser 1 length').fill('26');
   await page.getByRole('button', { name: 'Riser 1', exact: true }).click();
   await expect(page.getByText('Riser 1 is fed from TX-1.')).toBeVisible();
-  await page
-    .getByRole('button', { name: /board$/ })
-    .first()
-    .click();
+  await page.getByRole('button', { name: 'DB-db-1 board' }).click();
   await expect(calculator).toBeEnabled();
   await calculator.click();
   await summary.getByRole('button', { name: 'Save' }).click();
@@ -78,4 +76,19 @@ test('#TASK-16 login, Import File, Floor Setup, Building tab and Cable Size', as
   await expect(
     page.getByRole('complementary', { name: 'Building Summary' }).getByLabel('Riser 1 length'),
   ).toHaveValue('26');
+
+  // Schematic: the diagram from the model downloads as a numbered PDF (never overwritten).
+  await tool(page, 'Building').click();
+  await tool(page, 'Next').click();
+  await expect(page).toHaveURL(/\/schematic$/);
+  const sld = page.getByRole('img', { name: 'Single-line diagram from TX-1' });
+  await expect(sld.getByText('DB-db-1')).toBeVisible();
+  for (const n of [1, 2]) {
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Download' }).click();
+    const file = await download;
+    expect(file.suggestedFilename().endsWith(`_SLD_v${n}.pdf`)).toBe(true);
+    const head = (await readFile((await file.path())!)).subarray(0, 5).toString();
+    expect(head).toBe('%PDF-');
+  }
 });

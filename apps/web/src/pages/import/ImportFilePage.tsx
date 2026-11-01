@@ -21,15 +21,11 @@ import { projectReducer, type ProjectAction } from '../../workspace/projectReduc
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { FloorPlansUpload } from './FloorPlansUpload';
 import { ImportFileForm } from './ImportFileForm';
+import { safeFileName } from '../../workspace/fileNames';
 
 /** File name from the project name and design stage (Section 14; revision is not on the Figma form, A-10). */
 export function exportFileName(p: Project): string {
-  const clean = (s: string) =>
-    s
-      .trim()
-      .replace(/[^\w.-]+/g, '_')
-      .replace(/^_+|_+$/g, '');
-  const parts = [clean(p.details.name) || 'NeuroMEP_project', p.details.designStage ?? ''];
+  const parts = [safeFileName(p.details.name) || 'NeuroMEP_project', p.details.designStage ?? ''];
   return `${parts.filter(Boolean).join('_')}.json`;
 }
 
