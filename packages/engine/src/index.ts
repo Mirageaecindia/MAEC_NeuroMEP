@@ -9,3 +9,5 @@ export const ENGINE_VERSION = '0.1.0';
 export * from './design.js';
 export * from './capacity.js';
 export * from './checks.js';
+export * from './shortCircuit.js';
+export * from './duty.js';
