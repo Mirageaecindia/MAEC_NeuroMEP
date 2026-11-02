@@ -269,6 +269,13 @@ export const ERROR_CATALOGUE = [
     true,
   ),
   e(
+    'E2003',
+    'Design current cannot be calculated',
+    'blocks',
+    'Power factor, motor efficiency or capacitor rating is missing; the engine never assumes it.',
+    'Enter the missing value on the load, or wait for the confirmed default (OI-30).',
+  ),
+  e(
     'E2101',
     'Cable size outside the table',
     'blocks',

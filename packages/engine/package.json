@@ -15,5 +15,9 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@neuromep/rulepacks": "0.1.0",
+    "@neuromep/shared": "0.1.0"
   }
 }

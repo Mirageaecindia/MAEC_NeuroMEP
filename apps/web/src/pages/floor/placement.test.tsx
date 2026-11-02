@@ -465,7 +465,12 @@ describe('#TASK-15 DB loads from Excel (FR-35)', () => {
     const file = new File([await wb.xlsx.writeBuffer()], 'loads.xlsx');
     await userEvent.upload(screen.getByLabelText('DB load sheet'), file);
 
-    const dialog = await screen.findByRole('dialog', { name: 'Import DB loads' });
+    // ExcelJS reads the sheet in the page; under coverage instrumentation this takes seconds.
+    const dialog = await screen.findByRole(
+      'dialog',
+      { name: 'Import DB loads' },
+      { timeout: 20_000 },
+    );
     expect(
       within(dialog).getByRole('row', { name: 'DB-GF-01 0.00 kW 9.00 kW' }),
     ).toBeInTheDocument();

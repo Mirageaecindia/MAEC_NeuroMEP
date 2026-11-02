@@ -38,6 +38,14 @@ describe('#TASK-30 / #TASK-31 schematic tree and panel schedules (Section 14)', 
     expect(smdb.children[0]!.element.tag).toBe('DB-X');
   });
 
+  it('#TASK-19 carries the load of riser-fed boards up to the MDB and transformer', () => {
+    const p = network();
+    const s = loadSummaries(p, 0.9);
+    expect(s.get('smdb')!.connectedKw).toBe(6);
+    expect(s.get('mdb')!.connectedKw).toBe(6);
+    expect(s.get('tx')!.connectedKw).toBe(6);
+  });
+
   it('fills a schedule from the model; sizes wait for Cable Size', () => {
     const p = network();
     const s = boardSchedule(p, 'smdb', loadSummaries(p, 0.9), 0)!;

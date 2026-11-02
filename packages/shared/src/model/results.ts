@@ -57,6 +57,7 @@ export const ProvisionalReasonSchema = z.enum([
   'demand-factors-tbc',
   'unverified-ampacity-tables',
 ]);
+export type ProvisionalReason = z.infer<typeof ProvisionalReasonSchema>;
 
 export const ElementResultSchema = z.object({
   elementId: z.string().min(1),

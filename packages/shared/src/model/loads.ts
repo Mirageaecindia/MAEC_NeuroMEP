@@ -85,13 +85,16 @@ export function loadSummaries(
   project: Pick<Project, 'model' | 'calculation'>,
   defaultPf: number | null,
 ): Map<string, LoadSummary> {
-  const { elements, cables } = project.model;
+  const { elements, cables, risers } = project.model;
   const byId = new Map(elements.map((e) => [e.id, e]));
   const children = new Map<string, Element[]>();
-  for (const c of cables) {
-    const to = byId.get(c.to.elementId);
-    if (to) children.set(c.from.elementId, [...(children.get(c.from.elementId) ?? []), to]);
-  }
+  const link = (fromId: string, toId: string) => {
+    const to = byId.get(toId);
+    if (to) children.set(fromId, [...(children.get(fromId) ?? []), to]);
+  };
+  for (const c of cables) link(c.from.elementId, c.to.elementId);
+  // Boards on a riser tap-off are fed by the riser's source (FR-20).
+  for (const r of risers ?? []) if (r.fedFromId) for (const id of r.feeds) link(r.fedFromId, id);
   const factors = project.calculation.demandFactors.byLoadType;
   const out = new Map<string, LoadSummary & { q: number }>();
 
@@ -122,8 +125,14 @@ export function loadSummaries(
         demand = add(demand, scale(kw, df ?? 1));
       }
     } else {
-      // Sources, ATS, busbars and tap-off boxes carry the maximum demand of what they feed.
-      demand = sub.reduce((d, s) => add(d, s.demand), zero());
+      // Sources, ATS and load points carry the maximum demand of what they feed, plus their own
+      // entered load in full; its demand factor is applied once, at the board above (10.3).
+      demand = ownLines(e)
+        .map(lineKw)
+        .reduce(
+          add,
+          sub.reduce((d, s) => add(d, s.demand), zero()),
+        );
     }
 
     // Power factor: entered on a DB; for a sum, the equivalent pf from P and Q.
