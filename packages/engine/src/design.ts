@@ -91,7 +91,8 @@ export function designFeeders(project: Project): FeederDesign[] {
     const from = byId.get(cable.from.elementId);
     const trace: FeederDesign['trace'] = [];
     const errors: string[] = [];
-    const reasons: ProvisionalReason[] = ['unverified-ampacity-tables'];
+    // CableSizer tables are the working tables (decision 2 Nov 2026, amends V-12): not a reason.
+    const reasons: ProvisionalReason[] = [];
     if (!supplied.has(to.id)) reasons.unshift('upstream-not-connected');
     if (s.tbcFactors.length) {
       reasons.push('demand-factors-tbc');

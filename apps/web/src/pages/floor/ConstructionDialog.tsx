@@ -1,4 +1,4 @@
-import { CableConstructionSchema, type CableConstruction } from '@neuromep/shared';
+import { CableConstructionSchema, SEPARATIONS, type CableConstruction } from '@neuromep/shared';
 import { useState } from 'react';
 import { Modal, NumberInput } from '../../components/fields';
 
@@ -14,8 +14,6 @@ const FIELDS: [Field, string][] = [
   ['method', 'Installation method'],
 ];
 const OPTIONS = CableConstructionSchema.shape;
-/** Spacing between grouped cables as named in V-31 (D = one cable diameter). */
-const SEPARATIONS = ['D', '2D'];
 
 interface Installation {
   trays: number | null;
@@ -45,12 +43,15 @@ export function ConstructionDialog(props: {
     groupedCircuits: props.initial?.groupedCircuits ?? null,
   }));
   const buried = draft.method === 'D-direct' || draft.method === 'D-duct';
+  const separations = draft.method ? SEPARATIONS[draft.method as CableConstruction['method']] : [];
   const parsed = CableConstructionSchema.safeParse({
     ...props.initial,
     ...draft,
     ...install,
     // Depth of laying applies to buried cables only.
     depthM: buried ? install.depthM : null,
+    // A separation from another method does not apply.
+    separation: separations.includes(install.separation ?? '') ? install.separation : null,
   });
   const complete = FIELDS.every(([f]) => draft[f]);
   const issue = !parsed.success ? parsed.error.issues[0] : undefined;
@@ -116,19 +117,23 @@ export function ConstructionDialog(props: {
             placeholder="TBC"
           />
         </label>
-        <label className="construction-row">
-          <span>Separation</span>
-          <select
-            className="select"
-            value={install.separation ?? ''}
-            onChange={(e) => setInstall((i) => ({ ...i, separation: e.target.value || null }))}
-          >
-            <option value="">TBC</option>
-            {SEPARATIONS.map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-        </label>
+        {separations.length > 0 && (
+          <label className="construction-row">
+            <span>Separation</span>
+            <select
+              className="select"
+              value={install.separation ?? ''}
+              onChange={(e) => setInstall((i) => ({ ...i, separation: e.target.value || null }))}
+            >
+              <option value="">TBC</option>
+              {separations.map((s) => (
+                <option key={s} value={s}>
+                  {s === 'touching' ? 'Touching' : buried ? `${s} m` : s}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         {buried && (
           <label className="construction-row">
             <span>Depth of laying (m)</span>

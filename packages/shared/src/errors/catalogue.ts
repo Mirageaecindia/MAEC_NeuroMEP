@@ -292,6 +292,13 @@ export const ERROR_CATALOGUE = [
     true,
   ),
   e(
+    'E2103',
+    'Table value suspected wrong',
+    'warning',
+    'A CableSizer rating is lower than the rating of the next smaller size (known table errors, V-12).',
+    'Check the value against the Ducab catalogue; the engineer signs off OI-07.',
+  ),
+  e(
     'E2301',
     'Source data missing for fault level',
     'blocks',

@@ -55,6 +55,7 @@ export const ResultStatusSchema = z.enum([
 export const ProvisionalReasonSchema = z.enum([
   'upstream-not-connected',
   'demand-factors-tbc',
+  /** No longer produced since 2 Nov 2026 (CableSizer tables approved); kept for stored results. */
   'unverified-ampacity-tables',
 ]);
 export type ProvisionalReason = z.infer<typeof ProvisionalReasonSchema>;

@@ -19,7 +19,8 @@ const REASONS: Record<StoredResult['provisionalReasons'][number], string> = {
 export function statusText(r: StoredResult, outOfDate: boolean): string {
   if (outOfDate) return 'Out of date - press Cable Size';
   if (r.status === 'provisional') {
-    return `Provisional - ${r.provisionalReasons.map((x) => REASONS[x]).join('; ')}`;
+    const why = r.provisionalReasons.map((x) => REASONS[x]).join('; ');
+    return why ? `Provisional - ${why}` : 'Provisional';
   }
   return {
     final: 'Final',

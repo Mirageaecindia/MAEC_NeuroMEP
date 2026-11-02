@@ -94,10 +94,7 @@ function mockResult(p: Project, item: Item, supplied: Set<string>): ElementResul
   return {
     elementId: item.id,
     status: 'provisional',
-    provisionalReasons: [
-      ...(supplied.has(id) ? [] : (['upstream-not-connected'] as const)),
-      'unverified-ampacity-tables',
-    ],
+    provisionalReasons: [...(supplied.has(id) ? [] : (['upstream-not-connected'] as const))],
     errors: [],
     sizedBy: null,
     checks,

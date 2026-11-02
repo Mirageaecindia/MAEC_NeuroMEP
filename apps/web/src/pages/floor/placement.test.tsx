@@ -302,7 +302,7 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     await userEvent.clear(within(dialog).getByLabelText('Trays'));
     await userEvent.type(within(dialog).getByLabelText('Trays'), '2');
     await userEvent.type(within(dialog).getByLabelText('Depth of laying (m)'), '0.8');
-    await userEvent.selectOptions(within(dialog).getByLabelText('Separation'), '2D');
+    await userEvent.selectOptions(within(dialog).getByLabelText('Separation'), '0.30');
     await userEvent.click(use);
     expect(chip('Feeder')).toHaveAttribute('aria-pressed', 'true');
     const remembered = JSON.parse(localStorage.getItem('neuromep.construction.p-1')!);
@@ -310,7 +310,7 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
       method: 'D-direct',
       trays: 2,
       depthM: 0.8,
-      separation: '2D',
+      separation: '0.30',
       groupedCircuits: null,
     });
   });

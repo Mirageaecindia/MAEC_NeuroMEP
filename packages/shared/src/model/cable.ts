@@ -36,6 +36,17 @@ export const CableConstructionSchema = z
   });
 export type CableConstruction = z.infer<typeof CableConstructionSchema>;
 
+/**
+ * Separation between grouped cables per installation method (component sheet, 12.3; CableSizer
+ * grouping tables): D = one cable diameter, metres for buried cables. Conduit (B) has none.
+ */
+export const SEPARATIONS: Record<CableConstruction['method'], readonly string[]> = {
+  B: [],
+  J: ['touching', 'D', '2D'],
+  'D-direct': ['touching', '0.15', '0.30', '0.45', '0.60'],
+  'D-duct': ['touching', '0.45', '0.60'],
+};
+
 /** Engineer locks (D-04): a locked value is validated only, never re-sized. */
 export const CableLocksSchema = z.object({
   sizeMm2: z.number().positive().nullable(),
