@@ -11,3 +11,4 @@ export * from './capacity.js';
 export * from './checks.js';
 export * from './shortCircuit.js';
 export * from './duty.js';
+export * from './protection.js';
