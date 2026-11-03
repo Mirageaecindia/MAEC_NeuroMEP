@@ -1,5 +1,6 @@
 import { suppliedIn, type Element, type Project } from '@neuromep/shared';
 import { MAX_PASSES, sizeCables, type SizedBy } from './autosize.js';
+import { checkNetworkFeeders, type RiserCheck } from './checks.js';
 import { checkAll, type FullCheck, type ProtectionCheck } from './protection.js';
 
 /**
@@ -17,6 +18,8 @@ export interface SizedFeeder extends Omit<FullCheck, 'status'> {
 
 export interface CableSizeOutcome {
   feeders: SizedFeeder[];
+  /** Risers (Building tab) at the final sizes: busbar rating, voltage drop. */
+  risers: RiserCheck[];
   passes: number;
   converged: boolean;
 }
@@ -149,5 +152,10 @@ export function cableSize(project: Project): CableSizeOutcome {
     }
     return result;
   });
-  return { feeders, passes: run.passes, converged: run.converged };
+  return {
+    feeders,
+    risers: checkNetworkFeeders(project, run.sized).risers,
+    passes: run.passes,
+    converged: run.converged,
+  };
 }

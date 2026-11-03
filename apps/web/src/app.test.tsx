@@ -8,7 +8,7 @@ import {
   type ProjectSummary,
   type UserSummary,
 } from '@neuromep/shared';
-import { completeProject, FIXED_NOW, modelledProject } from '@neuromep/shared/testing';
+import { completeProject, FIXED_NOW, modelledProject, testCable } from '@neuromep/shared/testing';
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
@@ -447,7 +447,11 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
   });
 
   it('#TASK-18 a riser fed from the transformer feeds the floor boards; then Cable Size (A-07)', async () => {
-    const api = fakeApi(buildingProject());
+    const project = buildingProject();
+    project.calculation.busbarMaker = 'schneider';
+    const db = project.model.elements.find((e) => e.id === 'db-1')!;
+    Object.assign(db, { loads: [{ method: 'kw', loadType: '2', kwL1: 20, kwL2: 20, kwL3: 20 }] });
+    const api = fakeApi(project);
     renderAt('/projects/p-1/floor', new FakeAuth(LEAD), api);
     await userEvent.click(await screenTool('Building'));
     const summary = screen.getByRole('complementary', { name: 'Building Summary' });
@@ -469,11 +473,15 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     );
     expect(within(summary).getByRole('button', { name: 'Save' })).toBeDisabled();
     await userEvent.click(calc);
-    expect(within(summary).getByRole('button', { name: 'Save' })).toBeEnabled();
-    // FR-21: the run covers the whole project and is saved with it (mock until WBS 1.7.1).
+    await waitFor(() =>
+      expect(within(summary).getByRole('button', { name: 'Save' })).toBeEnabled(),
+    );
+    // Cost: the riser's busbar (smallest Schneider rating, 800 A) x 2.2 AED (3 Nov 2026).
+    expect(summary).toHaveTextContent('Cost : 1760 AED');
+    expect(screen.getByText('Cable Size ran on the whole project.')).toBeVisible();
     await userEvent.click(within(summary).getByRole('button', { name: 'Save' }));
     await waitFor(async () =>
-      expect((await api.getProject('p-1')).project.model.results.length).toBeGreaterThan(0),
+      expect((await api.getProject('p-1')).project.model.risers[0]?.feeds).toEqual(['db-1']),
     );
     expect(within(summary).getByRole('button', { name: 'Demand Factors' })).toBeInTheDocument();
   });
@@ -586,13 +594,38 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     ).toBeInTheDocument();
   });
 
+  it('#TASK-26 the right-panel Cable Size runs the engine and keeps real results (WBS 1.7.1)', async () => {
+    const project = buildingProject();
+    const tx = project.model.elements.find((e) => e.id === 'tx')!;
+    const db = project.model.elements.find((e) => e.id === 'db-1')!;
+    Object.assign(tx, { kva: 1000, ukPct: 6, urPct: 1 });
+    Object.assign(db, { loads: [{ method: 'kw', loadType: '2', kwL1: 20, kwL2: 20, kwL3: 20 }] });
+    const cable = testCable(tx, db);
+    project.model.cables.push(cable);
+    project.model.risers = setRiser([], 'riser-1', { lengthM: 26, fedFromId: 'tx' });
+    const api = fakeApi(project);
+    renderAt('/projects/p-1/floor', new FakeAuth(LEAD), api);
+    const button = await screen.findByRole('button', { name: /^Cable Size( |$)/ });
+    await userEvent.click(button);
+    expect(await screen.findByText(/^Cable Size ran on /)).toBeVisible();
+    await userEvent.click(tool('Save'));
+    await waitFor(async () => {
+      const saved = (await api.getProject('p-1')).project.model.results;
+      const r = saved.find((x) => x.elementId === cable.id);
+      // 60 kW balanced at pf 0.85: Ib = 101.9 A, In 125 A.
+      expect(r).toMatchObject({ engineVersion: '0.1.0', device: { ratingA: 125 } });
+      expect(r!.values.ibA).toBeCloseTo(60_000 / (Math.sqrt(3) * 400 * 0.85), 6);
+      expect(saved.find((x) => x.elementId === 'db-1')?.device?.ratingA).toBe(125);
+    });
+  });
+
   it('Demand Factors reopens the 12 load-type factors; a change needs a new Cable Size run (A-14)', async () => {
     const project = buildingProject();
     project.model.risers = setRiser([], 'riser-1', { lengthM: 26, fedFromId: 'tx' });
     renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(project));
     const summary = await screen.findByRole('complementary', { name: 'Building Summary' });
     await userEvent.click(within(summary).getByRole('button', { name: 'Cable Size Calculator' }));
-    await userEvent.click(within(summary).getByRole('button', { name: 'Demand Factors' }));
+    await userEvent.click(await within(summary).findByRole('button', { name: 'Demand Factors' }));
     const dialog = screen.getByRole('dialog', { name: 'Demand Factors' });
     expect(within(dialog).getAllByPlaceholderText('TBC')).toHaveLength(12);
     await userEvent.type(within(dialog).getByLabelText('Lighting demand factor'), '1.5');

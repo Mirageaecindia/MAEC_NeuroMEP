@@ -17,6 +17,7 @@ import {
   type Discipline,
 } from '@neuromep/shared';
 import { useMemo, useState } from 'react';
+import type { EngineReply } from '../../workspace/engineRun';
 import { NumberInput } from '../../components/fields';
 import { StatusMark } from '../../layout/icons';
 import { useNotice } from '../../layout/Shell';
@@ -40,7 +41,8 @@ function cycle<T>(list: readonly T[], current: T | null): T | null {
  * the left. Click a riser to choose what feeds it (transformer or LV panel / MDB), click a floor
  * board to choose the riser feeding it; both are stored in the project. Building Summary with
  * floor status, Riser Design, Cable Size Calculator (enabled once a riser leads back to a
- * transformer, A-07), Save / Cancel. The engine runs from WBS 1.7.
+ * transformer, A-07) with the riser Cost (busbar rating x 2.2 AED per riser, 3 Nov 2026),
+ * Save / Cancel.
  */
 export function BuildingTab(props: {
   floors: Floor[];
@@ -49,8 +51,8 @@ export function BuildingTab(props: {
   readOnly: boolean;
   onRisers: (risers: Riser[]) => void;
   onSave: () => void;
-  /** Cable Size Calculator: Cable Size for the whole project (FR-21, A-07). */
-  onCableSize: () => void;
+  /** Cable Size Calculator: Cable Size for the whole project (FR-21, A-07); null if it failed. */
+  onCableSize: () => Promise<EngineReply | null>;
 }) {
   const notice = useNotice();
   const { model } = props;
@@ -58,6 +60,8 @@ export function BuildingTab(props: {
   /** Risers as they were when the tab opened (Cancel). */
   const [opened] = useState(model.risers);
   const [sized, setSized] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [cost, setCost] = useState<Pick<EngineReply, 'risers' | 'totalAed'> | null>(null);
   const [dfOpen, setDfOpen] = useState(false);
   const [scenario, setScenario] = useState<Scenario>('normal');
   const change = (next: Riser[]) => {
@@ -292,18 +296,22 @@ export function BuildingTab(props: {
         </table>
         <button
           className={`summary-btn${connected ? ' ready' : ''}`}
-          disabled={!connected || props.readOnly}
+          disabled={!connected || props.readOnly || running}
           title={connected ? undefined : 'Connect the transformer to the risers first (A-07)'}
-          onClick={() => {
-            props.onCableSize();
+          onClick={async () => {
+            setRunning(true);
+            const reply = await props.onCableSize();
+            setRunning(false);
+            if (!reply) return;
+            setCost(reply);
             setSized(true);
           }}
         >
-          Cable Size Calculator
+          {running ? 'Sizing…' : 'Cable Size Calculator'}
         </button>
-        <p className="summary-cost">
-          <strong>Cost :</strong> {sized ? <span title="Price source to be confirmed">-</span> : ''}{' '}
-          AED
+        <p className="summary-cost" title={cost?.risers.map((r) => r.detail).join('\n')}>
+          <strong>Cost :</strong>{' '}
+          {sized && cost ? (cost.totalAed === null ? '-' : formatAed(cost.totalAed)) : ''} AED
         </p>
         <hr />
         <div className="summary-actions">
@@ -330,6 +338,9 @@ export function BuildingTab(props: {
     </div>
   );
 }
+
+const formatAed = (aed: number) =>
+  aed.toLocaleString('en-US', { maximumFractionDigits: 2, useGrouping: false });
 
 /**
  * Network check above the riser diagram (FR-20, WBS 1.4.3): the scenario switch and, for normal

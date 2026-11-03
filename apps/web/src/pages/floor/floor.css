@@ -450,3 +450,17 @@
 .check-not-required {
   color: var(--text-muted);
 }
+.check-warning {
+  color: var(--warning);
+}
+.result-trace summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.result-trace ol {
+  margin: 4px 0;
+  padding-left: 18px;
+  max-height: 220px;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}

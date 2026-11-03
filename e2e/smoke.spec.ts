@@ -59,15 +59,16 @@ test('#TASK-16 login, Import File, Floor Setup, Building tab and Cable Size', as
   await page.getByRole('button', { name: 'DB-db-1 board' }).click();
   await expect(calculator).toBeEnabled();
   await calculator.click();
+  await expect(page.getByText('Cable Size ran on the whole project.')).toBeVisible();
+  await expect(summary.getByText(/^Cost :/)).toBeVisible();
   await summary.getByRole('button', { name: 'Save' }).click();
 
   // Back on the floor, the right-panel Cable Size is enabled and runs on the floor.
   await tool(page, 'Building').click();
   await expect(cableSize).toBeEnabled();
   await cableSize.click();
-  await expect(
-    page.getByText(/Cable Size ran on .* \(mock results until WBS 1\.6\)\./),
-  ).toBeVisible();
+  // The engine runs in its Web Worker (WBS 1.7.1).
+  await expect(page.getByText(/^Cable Size ran on /)).toBeVisible();
 
   // Saved: a reload keeps the riser.
   await tool(page, 'Save').click();

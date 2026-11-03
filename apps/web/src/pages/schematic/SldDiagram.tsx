@@ -1,4 +1,4 @@
-import { resultOf, type Project, type SldNode } from '@neuromep/shared';
+import type { Project, SldNode } from '@neuromep/shared';
 import { forwardRef } from 'react';
 
 /** Layout (SVG units): a column per board with outgoing ways, a row per way. */
@@ -29,7 +29,8 @@ function columns(root: SldNode): SldNode[] {
 function wayLabel(project: Project, n: SldNode): string {
   if (!n.via) return '';
   if (n.via.kind === 'riser') return `Riser ${n.via.riser} tap-off`;
-  const r = resultOf(project, n.via.cable.id)?.result;
+  const cableId = n.via.cable.id;
+  const r = project.model.results.find((x) => x.elementId === cableId);
   const kind = n.via.cable.feederType === 'busbar' ? 'busbar' : n.via.cable.construction.cores;
   const size = r?.size ? `${r.size.runs} x ${r.size.sizeMm2} mm²` : 'size -';
   const breaker = r?.device ? `${r.device.ratingA} A ${r.device.type}` : 'breaker -';

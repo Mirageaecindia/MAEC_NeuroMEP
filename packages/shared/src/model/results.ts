@@ -77,7 +77,8 @@ export const ElementResultSchema = z.object({
       runs: z.number().int().positive(),
       cores: z.enum(['1C', '2C', '3C', '4C']),
       sizeMm2: z.number().positive(),
-      eccMm2: z.number().positive(),
+      /** Null when the earth conductor table has no entry (aluminium, missing size). */
+      eccMm2: z.number().positive().nullable(),
       lengthM: z.number().nonnegative(),
     })
     .nullable(),

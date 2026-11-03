@@ -15,3 +15,4 @@ export * from './duty.js';
 export * from './protection.js';
 export * from './autosize.js';
 export * from './cableSize.js';
+export * from './results.js';

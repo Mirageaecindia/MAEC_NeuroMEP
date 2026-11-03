@@ -12,6 +12,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@neuromep/engine": "0.1.0",
     "@neuromep/rulepacks": "0.1.0",
     "@neuromep/shared": "0.1.0",
     "exceljs": "^4.4.0",

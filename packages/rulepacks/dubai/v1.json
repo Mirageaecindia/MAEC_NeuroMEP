@@ -135,6 +135,15 @@
       "note": "100 % unless the user asks for less (manager 3 Nov 2026)"
     },
     {
+      "key": "riserCostAedPerA",
+      "group": "Cost",
+      "label": "Riser cost per ampere of busbar rating",
+      "unit": "AED/A",
+      "type": "number",
+      "value": 2.2,
+      "note": "Cost of a riser = its busbar rating (A) x 2.2 AED, one price per riser whatever its length (manager, 3 Nov 2026)"
+    },
+    {
       "key": "maxParallelRuns",
       "group": "Cables",
       "label": "Maximum parallel runs",

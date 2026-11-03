@@ -1,8 +1,6 @@
 import {
   CHECK_LABELS,
   formatVd,
-  MOCK_ENGINE,
-  MOCK_NOTE,
   resultOf,
   type CheckCode,
   type Project,
@@ -31,15 +29,25 @@ export function statusText(r: StoredResult, outOfDate: boolean): string {
   }[r.status];
 }
 
-/** Size, breaker and voltage drop as the right panel and tooltips show them. */
+const amps = (a: number | null) => (a === null ? '-' : `${a.toFixed(1)} A`);
+const ka = (k: number | null) => (k === null ? '-' : `${k.toFixed(2)} kA`);
+
+/** Size, breaker, currents, voltage drop and fault levels as the right panel and tooltips show them. */
 export function resultFigures(r: StoredResult) {
   const s = r.size;
   const d = r.device;
+  const v = r.values;
   return {
-    size: s ? `${s.runs} x ${s.cores} ${s.sizeMm2} mm² + ${s.eccMm2} mm² ECC` : '-',
-    breaker: d ? `${d.ratingA} A ${d.type} ${d.poles}` : '-',
-    vdOwn: formatVd(r.values.vdOwnPct),
-    vdTotal: formatVd(r.values.vdTotalPct),
+    size: s
+      ? `${s.runs} x ${s.cores} ${s.sizeMm2} mm²${s.eccMm2 ? ` + ${s.eccMm2} mm² ECC` : ''}`
+      : '-',
+    breaker: d
+      ? `${d.ratingA} A ${d.type} ${d.poles}${d.faultRatingKa ? ` ${d.faultRatingKa} kA` : ''}`
+      : '-',
+    currents: `${amps(v.ibA)} / ${v.inA === null ? '-' : `${v.inA} A`} / ${amps(v.izA)}`,
+    vdOwn: formatVd(v.vdOwnPct),
+    vdTotal: formatVd(v.vdTotalPct),
+    faults: `${ka(v.ikMaxKa)} max, ${ka(v.ikMinKa)} min`,
   };
 }
 
@@ -62,7 +70,6 @@ export function SizingResult(props: { project: Project; id: string }) {
       aria-label="Cable Size result"
     >
       <h3>Cable Size result</h3>
-      {r.engineVersion === MOCK_ENGINE && <p className="banner banner-info">{MOCK_NOTE}.</p>}
       <p className="result-status" role="status">
         {statusText(r, outOfDate)}
       </p>
@@ -73,10 +80,14 @@ export function SizingResult(props: { project: Project; id: string }) {
         <dd>{f.size}</dd>
         <dt>Breaker :</dt>
         <dd>{f.breaker}</dd>
+        <dt>Ib / In / Iz :</dt>
+        <dd>{f.currents}</dd>
         <dt>Vd circuit :</dt>
         <dd>{f.vdOwn}</dd>
         <dt>Vd total :</dt>
         <dd>{f.vdTotal}</dd>
+        <dt>Ik" :</dt>
+        <dd>{f.faults}</dd>
       </dl>
       <ul className="check-list" aria-label="Checks">
         {(Object.keys(r.checks) as CheckCode[]).map((c) => (
@@ -92,8 +103,21 @@ export function SizingResult(props: { project: Project; id: string }) {
           </li>
         ))}
       </ul>
+      {r.trace.length > 0 && (
+        <details className="result-trace">
+          <summary>Calculation trace</summary>
+          <ol>
+            {r.trace.map((t, i) => (
+              <li key={i}>
+                <strong>{t.step}</strong> {t.detail}
+              </li>
+            ))}
+          </ol>
+        </details>
+      )}
       <p className="muted">
-        Run {new Date(r.ranAt).toLocaleString()} · rule pack {r.rulePackVersion ?? '-'}
+        Run {new Date(r.ranAt).toLocaleString()} · engine {r.engineVersion} · rule pack{' '}
+        {r.rulePackVersion ?? '-'}
       </p>
     </section>
   );

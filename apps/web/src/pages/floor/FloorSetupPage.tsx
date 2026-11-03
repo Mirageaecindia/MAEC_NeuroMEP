@@ -1,5 +1,4 @@
 import {
-  mockRun,
   type SizingScope,
   categoryFactorsPending,
   parseLoadSheet,
@@ -35,6 +34,7 @@ import { Modal } from '../../components/fields';
 import { DisciplineTabs, Shell, useNotice } from '../../layout/Shell';
 import { Toolbar, type OpenMenuItem, type ToolKey } from '../../layout/Toolbar';
 import { newAudit } from '../../workspace/formProps';
+import { useCableSize } from '../../workspace/useCableSize';
 import { LoadImportDialog } from './LoadImportDialog';
 import { loadTemplate, readSheetRows } from './loadSheet';
 import { isPdf, uploadPlanFile } from '../../workspace/planUpload';
@@ -81,6 +81,7 @@ export function FloorSetupPage() {
   const api = useApi();
   const user = useUser();
   const notice = useNotice();
+  const cableSize = useCableSize();
   const [params, setParams] = useSearchParams();
   const building = params.get('tab') === 'building';
   const [tab, setTab] = useState<'All' | 'Electrical' | 'Mechanical' | 'PHE'>('All');
@@ -455,16 +456,7 @@ export function FloorSetupPage() {
           readOnly={!editor.layers.includes('electrical')}
           onRisers={(risers) => editor.dispatch({ type: 'risers', risers })}
           onSave={() => void editor.save()}
-          onCableSize={() =>
-            editor.dispatch({
-              type: 'cableSize',
-              results: mockRun(
-                project,
-                { kind: 'project' },
-                { runId: crypto.randomUUID(), at: new Date().toISOString() },
-              ),
-            })
-          }
+          onCableSize={() => cableSize.run({ kind: 'project' }, 'the whole project')}
         />
       ) : (
         <div className="floor-layout">
@@ -725,7 +717,7 @@ function RightPanel(props: {
   property: ReactNode;
 }) {
   const { project, editor } = useWorkspace();
-  const notice = useNotice();
+  const cableSize = useCableSize();
   const pf = defaultPf(project);
   const transformers = project.model.elements.filter((e) => e.kind === 'transformer');
   const txKva = transformers.reduce((s, t) => s + (t.kind === 'transformer' ? (t.kva ?? 0) : 0), 0);
@@ -802,7 +794,11 @@ function RightPanel(props: {
       ? { kind: 'floor', floorId: props.floor.id }
       : null;
   const scopeName = selectedItem?.tag ?? props.floor?.name;
-  const canSize = fedFromSource && sizingScope !== null && editor.layers.includes('electrical');
+  const canSize =
+    fedFromSource &&
+    sizingScope !== null &&
+    editor.layers.includes('electrical') &&
+    !cableSize.running;
   return (
     <aside className="panel right-panel" aria-label="Right panel">
       <div className="capacity">
@@ -850,16 +846,10 @@ function RightPanel(props: {
             : 'Connect the transformer to the risers in the Building tab first (A-07)'
         }
         onClick={() => {
-          if (!sizingScope) return;
-          const results = mockRun(project, sizingScope, {
-            runId: crypto.randomUUID(),
-            at: new Date().toISOString(),
-          });
-          editor.dispatch({ type: 'cableSize', results });
-          notice(`Cable Size ran on ${scopeName} (mock results until WBS 1.6).`);
+          if (sizingScope) void cableSize.run(sizingScope, scopeName ?? 'the floor');
         }}
       >
-        Cable Size
+        {cableSize.running ? 'Sizing…' : 'Cable Size'}
         {scopeName && <small className="cable-size-scope">{scopeName}</small>}
       </button>
     </aside>

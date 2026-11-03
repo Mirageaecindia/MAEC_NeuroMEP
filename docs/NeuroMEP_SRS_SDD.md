@@ -40,7 +40,7 @@ The baseline is v0.3 exactly as issued (WBS 1.1.1), with only these amendments a
 | A-14 | Building tab, 10.2 | "Demand Factors" in the Building Summary (shown after Cable Size) reopens the 12 load-type demand factors of Import File so they can be changed; a change marks the cable sizes out of date until the Cable Size Calculator runs again. The Allowable kVA in the Floor Setup capacity panel is the transformer load needed to power the building's electrical connections. |
 | A-15 | 10.3, OI-02, FR-18 | Interim until OI-02 is answered (decision 29 Oct 2026): the live load table applies the load-type demand factor once at each board to its connected load per type (10.3; TBC = 1.0, E1901; a panel override first, D-03); demand-category factors are shown but not applied, and maximum demand is labelled Provisional - OI-02 open. Sources, ATS and busbars carry the maximum demand of what they feed. |
 
-**Open UI question (27-Oct-2026):** Riser / transformer cost in AED (Building tab "Cost") - scope and price source (Technical Lead (manager)). The "Demand Factors" button is settled by A-14.
+**UI question of 27-Oct-2026, answered 3-Nov-2026 (manager):** Building tab "Cost" = for each riser, its busbar ampere rating x 2.2 AED, one price per riser whatever its length; risers only. The rate is a rule-pack value (`riserCostAedPerA`). The "Demand Factors" button is settled by A-14.
 
 **Source documents:** CableSizer v1.1 Calculation File and User Manual; Components for NeuroMEP workbook; Project Set-up - Electrical slide; POWER/LIGHT legend sheet; NeuroMEP UI screens; IEC 60909-0, BS 7671, IEC 60364-5-52, IEC 60947-2.
 
