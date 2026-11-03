@@ -128,7 +128,11 @@ describe('#TASK-26 auto-sizing (10.13)', () => {
       separation: 'touching',
     });
     b.feed('mdb', 'db', 20, { groupedCircuits: 1, separation: 'touching' });
-    b.project.calculation.defaultOverrides = { cableLengthAllowancePct: 0, maxParallelRuns: 1 };
+    b.project.calculation.defaultOverrides = {
+      cableLengthAllowancePct: 0,
+      cableLengthAdditionM: 1,
+      maxParallelRuns: 1,
+    };
     const run = sizeCables(b.project);
     expect(run.converged).toBe(true);
     const db = checkFeeders(b.project, run.sized).find((f) => f.toId === 'db')!;

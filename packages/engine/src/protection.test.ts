@@ -42,7 +42,7 @@ function network(): Project {
     earthFaultLoopImpedance: true,
   };
   p.calculation.demandFactors.byLoadType['2'] = { value: 1, source: 'user' };
-  p.calculation.defaultOverrides = { cableLengthAllowancePct: 0 };
+  p.calculation.defaultOverrides = { cableLengthAllowancePct: 0, cableLengthAdditionM: 1 };
   const f = p.building.floors[0]!.id;
   const tx = {
     ...testElement('transformer', 'tx', f),
@@ -190,11 +190,12 @@ describe('#TASK-24 / #TASK-25 protection checks C4 - C6 (10.9 - 10.11)', () => {
     expect(main.eccMm2).toBeNull();
   });
 
-  it('aluminium and fire-rated cables wait for their tables (OI-18)', () => {
+  it('fire-rated cable uses its XLPE-type data; aluminium earth-loop data is not in the tables', () => {
     const p = network();
     p.model.cables[1]!.construction = { ...TRAY, insulation: 'FR' };
-    const d = toDb(p);
-    expect(d.c4.detail).toMatch(/OI-18/);
-    expect(d.c5.detail).toMatch(/OI-18/);
+    expect(toDb(p).c4.detail).toMatch(/Phase k 143/);
+    p.model.cables[1]!.construction = { ...TRAY, conductor: 'Al' };
+    const al = toDb(p);
+    expect(al.c5.detail).toBe('Earth conductor and loop tables cover copper cables only.');
   });
 });

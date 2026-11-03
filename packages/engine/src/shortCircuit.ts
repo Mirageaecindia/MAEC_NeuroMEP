@@ -4,10 +4,14 @@ import type { Sizes } from './checks.js';
 import { tableValue } from './tables.js';
 
 /**
- * Three-phase short-circuit currents to IEC 60909 (10.8, #TASK-23): maximum Ik" (cmax, cold
- * conductors, trefoil reactance for single-core) and minimum Ik" (cmin, conductors at end-of-fault
- * temperature, flat reactance), peak current ip, at every component, for the normal (transformer)
- * and standby (generator through the ATS) supply.
+ * Three-phase short-circuit currents (10.8, #TASK-23) by the CableSizer v1.1 method (decision
+ * 3 Nov 2026): Isc = c x Vn / (sqrt3 x Zkt) with c = 1 for 230/400 V; upstream network
+ * Zup = Vn² / Sup, Xup = 0.995 Zup, Rup = 0.1 Xup; transformer Zk = uk Vn² / S, Rk = ur Vn² / S,
+ * Xk = sqrt(Zk² - Rk²) (no KT); generator Xkt = X"d Vn² / S, Rkt = 0.1 Xkt (no KG); cables
+ * Rk = rho L / (A N) (rho 18.32 Cu / 30.34 Al), Xk = 0.1 L / N below 120 mm², 0.09 L / N from
+ * 120 mm²; motors in parallel at the main LV panel (IL/IF from the rule pack). The minimum uses
+ * conductor resistance at fault temperature (x 1.6 XLPE / 1.38 PVC) and the highest generator
+ * X"d. Peak ip = kappa x sqrt2 x Ik" (10.8, V-10).
  */
 
 export type Scenario = 'normal' | 'standby';
@@ -35,32 +39,32 @@ export type FaultResult =
 
 const VN = 400;
 const SQRT3 = Math.sqrt(3);
-/** Typical cable reactance per arrangement (10.8, V-20), mOhm/m. */
-const X_MULTICORE = 0.08;
-const X_TREFOIL = 0.085;
-const X_FLAT = 0.095;
-/** Conductor temperature at the end of a fault (IEC 60949): PVC 160 deg C, XLPE / FR 250 deg C. */
-const END_OF_FAULT_C = { PVC: 160, XLPE: 250, FR: 250 } as const;
-/** IEC 60076-5 minimum uk by rating (10.8). */
-function defaultUk(kva: number): number {
-  return kva <= 630 ? 4 : kva <= 1250 ? 5 : kva <= 2500 ? 6 : 7;
-}
+/** Conductor resistivity at 20 deg C, mOhm mm²/m (CableSizer). */
+const RHO = { Cu: 18.32, Al: 30.34 } as const;
+/** Resistance at fault temperature, for minimum currents (CableSizer FactorR). */
+const HOT = { PVC: 1.38, XLPE: 1.6, FR: 1.6 } as const;
 
 const add = (a: Z, b: Z): Z => ({ r: a.r + b.r, x: a.x + b.x });
 /** Ik" in kA: V / mOhm = kA. */
 const ik = (c: number, z: Z) => (c * VN) / (SQRT3 * Math.hypot(z.r, z.x));
 const kappa = (z: Z) => 1.02 + 0.98 * Math.exp((-3 * z.r) / z.x);
 
-/** Cable impedance (mOhm) at maximum (cold) or minimum (hot) fault conditions (V-20). */
-function cableZ(cable: Cable, s: Sizes, lengthM: number, hot: boolean): Z | string {
+/** Cable impedance (mOhm), cold for maximum or at fault temperature for minimum currents. */
+function cableZ(cable: Cable, s: Sizes, lengthM: number, hot: boolean): Z {
   const c = cable.construction;
-  if (c.conductor !== 'Cu') return 'Aluminium conductor resistance is not in the tables (OI-18).';
-  const r20 = tableValue('Rs', { size: s.sizeMm2 });
-  if (!r20.found) return r20.detail;
-  const theta = END_OF_FAULT_C[c.insulation];
-  const r = r20.value * (hot ? 1 + 0.004 * (theta - 20) : 1);
-  const x = c.cores === '1C' ? (hot ? X_FLAT : X_TREFOIL) : X_MULTICORE;
-  return { r: (r * lengthM) / s.runs, x: (x * lengthM) / s.runs };
+  const r = (RHO[c.conductor] * lengthM) / (s.sizeMm2 * s.runs);
+  const x = ((s.sizeMm2 < 120 ? 0.1 : 0.09) * lengthM) / s.runs;
+  return { r: hot ? r * HOT[c.insulation] : r, x };
+}
+
+/** Parallel combination a b / (a + b) of two complex impedances (motor group with the network). */
+export function parallel(a: Z, b: Z): Z {
+  const nr = a.r * b.r - a.x * b.x;
+  const ni = a.r * b.x + a.x * b.r;
+  const dr = a.r + b.r;
+  const di = a.x + b.x;
+  const den = dr * dr + di * di;
+  return { r: (nr * dr + ni * di) / den, x: (ni * dr - nr * di) / den };
 }
 
 /**
@@ -81,30 +85,43 @@ export function faultLevels(
   const { elements, cables, risers } = project.model;
   const byId = new Map(elements.map((e) => [e.id, e]));
   const out = new Map<string, FaultResult>();
-  const hasMotors = elements.some((e) => e.kind === 'motor');
+
+  const num = (key: string) => {
+    const o = project.calculation.defaultOverrides[key];
+    if (typeof o === 'number') return o;
+    const v = pack.calculationDefaults.find((d) => d.key === key)?.value;
+    return typeof v === 'number' ? v : null;
+  };
+  const vn2 = VN * VN;
 
   // Impedances of the source in this scenario, at the LV terminals (max, min).
   const sourceZ = (e: Element): { max: Z; min: Z; notes: string[] } | FaultResult => {
     const notes: string[] = [];
-    const vn2 = VN * VN;
     if (e.kind === 'transformer') {
       const sq = project.calculation.upstreamFaultMva;
-      if (!sq)
+      if (!sq) {
         return {
           ok: false,
           code: 'E2301',
           detail: 'Enter the upstream fault level (MVA) on Page 1.',
         };
+      }
       if (!e.kva)
         return { ok: false, code: 'E2301', detail: `Enter the rating (kVA) of ${e.tag}.` };
-      // Upstream network (V-17): ZQ = cQ Vn² / S"kQ, XQ = 0.995 ZQ, RQ = 0.1 XQ.
-      const zq = (cmax * vn2) / (sq * 1000);
+      // Upstream network (CableSizer): Zup = Vn² / Sup, Xup = 0.995 Zup, Rup = 0.1 Xup.
+      const zq = vn2 / (sq * 1000);
       const q: Z = { r: 0.1 * 0.995 * zq, x: 0.995 * zq };
-      notes.push('Minimum fault uses the Page 1 upstream level: DEWA minimum not given (OI-33).');
-      // Transformer (V-18) with the correction factor KT.
-      const uk = e.ukPct ?? defaultUk(e.kva);
-      if (e.ukPct === null)
-        notes.push(`${e.tag}: uk ${uk} % (IEC 60076-5 minimum for ${e.kva} kVA).`);
+      // Transformer: uk from the manufacturer catalogue by rating and primary voltage if not entered.
+      let uk = e.ukPct;
+      if (uk === null) {
+        const kv = e.primaryV ? e.primaryV / 1000 : 11;
+        const set = pack.sourceData.transformerUkPct.find((t) => kv <= t.maxPrimaryKv);
+        const row = set?.rows.find((r) => e.kva! <= r.maxKva);
+        if (!row) return { ok: false, code: 'E2301', detail: `Enter uk (%) of ${e.tag}.` };
+        uk = row.ukPct;
+        const at = e.primaryV ? `${kv} kV` : '11 kV assumed - primary voltage not entered';
+        notes.push(`${e.tag}: uk ${uk} % (manufacturer catalogue, ${e.kva} kVA, ${at}).`);
+      }
       let ur = e.urPct;
       if (ur === null) {
         const t = tableValue('Ur', { kVA: e.kva });
@@ -115,25 +132,80 @@ export function faultLevels(
       const base = (vn2 / (e.kva * 1000)) * 1000; // Vn² / S in mOhm
       const zt = (uk / 100) * base;
       const rt = (ur / 100) * base;
-      const xt = Math.sqrt(Math.max(0, zt * zt - rt * rt));
-      const kt = (0.95 * cmax) / (1 + 0.6 * (xt / base));
-      const t: Z = { r: rt * kt, x: xt * kt };
+      const t: Z = { r: rt, x: Math.sqrt(Math.max(0, zt * zt - rt * rt)) };
       return { max: add(q, t), min: add(q, t), notes };
     }
-    // Generator (V-19): X"d with RG = 0.15 X"d and KG; the minimum comes from the sustained current.
-    if (e.kind !== 'generator' || !e.kvaOverride || !e.xdSubtransientPct) {
-      return { ok: false, code: 'E2301', detail: `Enter the rating (kVA) and X"d of ${e.tag}.` };
+    // Generator: X"d entered, else the typical range by rating - lowest for the maximum fault,
+    // highest for the minimum (decision 3 Nov 2026); Rkt = 0.1 Xkt.
+    if (e.kind !== 'generator' || !e.kvaOverride) {
+      return { ok: false, code: 'E2301', detail: `Enter the rating (kVA) of ${e.tag}.` };
     }
-    const base = (vn2 / (e.kvaOverride * 1000)) * 1000;
-    const xd = (e.xdSubtransientPct / 100) * base;
-    const kg = cmax / (1 + (e.xdSubtransientPct / 100) * 0.6); // sin phi rG = 0.6 at pf 0.8
-    const g: Z = { r: 0.15 * xd * kg, x: xd * kg };
-    let min = g;
+    const kva = e.kvaOverride;
+    const range = pack.sourceData.generatorXdPct.find((g) => kva <= g.maxKva)!;
+    const xdMax = e.xdSubtransientPct ?? range.low;
+    const xdMin = e.xdSubtransientPct ?? range.high;
+    if (e.xdSubtransientPct === null) {
+      notes.push(
+        `${e.tag}: X"d ${range.low} - ${range.high} % typical for ${kva} kVA: ${range.low} % for the maximum, ${range.high} % for the minimum fault.`,
+      );
+    }
+    const base = (vn2 / (kva * 1000)) * 1000;
+    const gen = (xd: number): Z => ({ r: 0.1 * (xd / 100) * base, x: (xd / 100) * base });
+    let min = gen(xdMin);
     if (e.sustainedScKa) {
       const zs = (cmin * VN) / (SQRT3 * e.sustainedScKa); // mOhm
-      min = { r: 0.15 * zs, x: zs };
-    } else notes.push(`${e.tag}: sustained short-circuit current not entered; minimum uses X"d.`);
-    return { max: g, min, notes };
+      min = { r: 0.1 * zs, x: zs };
+    }
+    return { max: gen(xdMax), min, notes };
+  };
+
+  // Motor group of a main LV panel (CableSizer "MDB including motor"): the motors fed from it,
+  // ZM = Vn² / (IL/IF x SrM), XM = 0.922 ZM, RM = 0.42 XM (V-21), SrM = P / (efficiency x pf).
+  const ilIf = num('motorLockedRotorRatio');
+  const pf = num('defaultLoadPowerFactor');
+  const motorGroup = (boardId: string): { z: Z | null; notes: string[] } => {
+    const below = new Set<string>();
+    const stack = [boardId];
+    while (stack.length) {
+      const cur = stack.pop()!;
+      const next = [
+        ...cables.filter((c) => c.from.elementId === cur).map((c) => c.to.elementId),
+        ...risers.filter((r) => r.fedFromId === cur).flatMap((r) => r.feeds),
+      ];
+      for (const id of next) {
+        if (!below.has(id)) {
+          below.add(id);
+          stack.push(id);
+        }
+      }
+    }
+    const motors = elements.filter((m) => m.kind === 'motor' && below.has(m.id));
+    if (!motors.length) return { z: null, notes: [] };
+    if (!ilIf || !pf) {
+      return {
+        z: null,
+        notes: ['Motor contribution not included: IL/IF or power factor missing.'],
+      };
+    }
+    let srm = 0;
+    const skipped: string[] = [];
+    for (const m of motors) {
+      if (m.kind !== 'motor') continue;
+      const kw = m.manualLoads.reduce(
+        (t, l) => t + (l.method === 'kw' ? l.kwL1 + l.kwL2 + l.kwL3 : 0),
+        0,
+      );
+      if (!m.efficiency) skipped.push(m.tag);
+      else srm += kw / (m.efficiency * pf);
+    }
+    const notes = skipped.length
+      ? [`Motor contribution without ${skipped.join(', ')} (efficiency missing).`]
+      : [];
+    if (srm <= 0) return { z: null, notes };
+    const zm = vn2 / (ilIf * srm); // mOhm, SrM in kVA
+    const xm = 0.922 * zm;
+    notes.push(`Motor contribution included: ${srm.toFixed(1)} kVA of motors, IL/IF ${ilIf}.`);
+    return { z: { r: 0.42 * xm, x: xm }, notes };
   };
 
   const visit = (e: Element, max: Z, min: Z | null, notes: string[], seen: Set<string>) => {
@@ -163,17 +235,15 @@ export function faultLevels(
         out.set(to.id, { ok: false, code: 'E2102', detail: `${cable.tag} has no size yet.` });
         continue;
       }
-      const zMax = cableZ(cable, s, len, false);
-      const zMin = cableZ(cable, s, len, true);
-      if (typeof zMax === 'string' || typeof zMin === 'string') {
-        out.set(to.id, {
-          ok: false,
-          code: 'E2102',
-          detail: String(typeof zMax === 'string' ? zMax : zMin),
-        });
-        continue;
+      let toMax = add(max, cableZ(cable, s, len, false));
+      let toNotes = notes;
+      // Motors feed a fault from the main LV panel downwards (maximum only).
+      if (scenario === 'normal' && e.kind === 'transformer') {
+        const m = motorGroup(to.id);
+        if (m.z) toMax = parallel(toMax, m.z);
+        toNotes = [...notes, ...m.notes];
       }
-      visit(to, add(max, zMax), min ? add(min, zMin) : null, notes, next);
+      visit(to, toMax, min ? add(min, cableZ(cable, s, len, true)) : null, toNotes, next);
     }
     for (const r of risers) {
       if (r.fedFromId !== e.id) continue;
@@ -201,12 +271,7 @@ export function faultLevels(
       out.set(src.id, z);
       continue;
     }
-    const notes = [...z.notes];
-    if (hasMotors)
-      notes.push(
-        'Motor contribution not included: locked-rotor ratio IL/IF not confirmed (OI-30).',
-      );
-    visit(src, z.max, z.min, notes, new Set([src.id]));
+    visit(src, z.max, z.min, [...z.notes], new Set([src.id]));
   }
   return out;
 }

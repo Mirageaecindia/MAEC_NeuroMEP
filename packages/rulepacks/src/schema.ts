@@ -47,6 +47,31 @@ export const DevicesSchema = z.strictObject({
 export type Devices = z.infer<typeof DevicesSchema>;
 export type BreakerType = Devices['breakerTypes'][number]['type'];
 
+/**
+ * Source impedance data for short circuits (manager's answers 3 Nov 2026, Q9): transformer
+ * impedance voltage by rating and primary voltage class (manufacturer catalogue), and typical
+ * generator sub-transient reactance ranges by rating.
+ */
+export const SourceDataSchema = z.strictObject({
+  transformerUkPct: z.array(
+    z.strictObject({
+      /** Primary voltage up to this value (kV) uses this row set. */
+      maxPrimaryKv: z.number().positive(),
+      rows: z.array(
+        z.strictObject({ maxKva: z.number().positive(), ukPct: z.number().positive() }),
+      ),
+    }),
+  ),
+  generatorXdPct: z.array(
+    z.strictObject({
+      maxKva: z.number().positive(),
+      low: z.number().positive(),
+      high: z.number().positive(),
+    }),
+  ),
+});
+export type SourceData = z.infer<typeof SourceDataSchema>;
+
 export const RulePackSchema = z.strictObject({
   id: z.string().min(1),
   version: z.string().regex(/^\d+\.\d+\.\d+$/),
@@ -65,5 +90,6 @@ export const RulePackSchema = z.strictObject({
   }),
   calculationDefaults: z.array(CalculationDefaultSchema),
   devices: DevicesSchema,
+  sourceData: SourceDataSchema,
 });
 export type RulePack = z.infer<typeof RulePackSchema>;

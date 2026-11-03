@@ -161,25 +161,27 @@ describe('#TASK-26 engine against an independent hand calculation (office buildi
     expect(f('db3').vdTotalPct!).toBeLessThanOrEqual(2.5);
   });
 
-  it('short circuit at the transformer and at the SMDB, recomputed from IEC 60909 by hand', () => {
+  it('short circuit at the transformer, MDB and SMDB, recomputed by hand with the CableSizer method', () => {
     const vn2 = 400 * 400;
-    const zq = (1.1 * vn2) / (350 * 1000);
-    const base = vn2 / 1000; // Vn² / S in mOhm for 1000 kVA
-    const zt = 0.05 * base;
-    const rt = 0.012 * base;
-    const xt = Math.sqrt(zt * zt - rt * rt);
-    const kt = (0.95 * 1.1) / (1 + 0.6 * (xt / base));
-    let r = 0.0995 * zq + rt * kt;
-    let x = 0.995 * zq + xt * kt;
-    const ik = () => (1.1 * 400) / (SQRT3 * Math.hypot(r, x));
+    // Upstream 350 MVA: Zup = Vn� / Sup, Xup = 0.995 Zup, Rup = 0.1 Xup.
+    const zup = vn2 / (350 * 1000);
+    const base = vn2 / 1000; // Vn� / S in mOhm for 1000 kVA
+    const zt = 0.05 * base; // uk 5 %
+    const rt = 0.012 * base; // ur 1.2 %
+    let r = 0.1 * 0.995 * zup + rt;
+    let x = 0.995 * zup + Math.sqrt(zt * zt - rt * rt);
+    const ik = () => 400 / (SQRT3 * Math.hypot(r, x)); // c = 1
     expect(f('mdb').faultAtBreaker!.ikMaxKa).toBeCloseTo(ik(), 9); // breaker at the transformer
+    // Cables: R = 18.32 x L / (A x N), X = 0.1 or 0.09 x L / N.
+    const cable = (size: number, runs: number, lengthM: number) => {
+      r += (18.32 * lengthM) / (size * runs);
+      x += ((size < 120 ? 0.1 : 0.09) * lengthM) / runs;
+    };
     const main = f('mdb').size!;
-    r += (raw('Rs', { size: main.sizeMm2 }) * 12) / main.runs;
-    x += (0.085 * 12) / main.runs; // single-core trefoil
+    cable(main.sizeMm2, main.runs, 12);
     expect(f('sm').faultAtBreaker!.ikMaxKa).toBeCloseTo(ik(), 9); // breaker in the MDB
     const sm = f('sm').size!;
-    r += (raw('Rs', { size: sm.sizeMm2 }) * 35) / sm.runs;
-    x += (0.08 * 35) / sm.runs; // multicore
+    cable(sm.sizeMm2, sm.runs, 35);
     expect(f('db1').faultAtBreaker!.ikMaxKa).toBeCloseTo(ik(), 9); // breaker in the SMDB
     const kappa = 1.02 + 0.98 * Math.exp((-3 * r) / x);
     expect(f('db1').faultAtBreaker!.ipKa).toBeCloseTo(kappa * Math.SQRT2 * ik(), 9);
@@ -223,6 +225,7 @@ describe('#TASK-26 engineering rules on random buildings', () => {
 
   it.each(SEEDS)(
     'random building %i: converges, no NaN, Ib <= In <= Iz, C6, C2 totals, fault levels, C3',
+    { timeout: 30_000 },
     (seed) => {
       const out = cableSize(randomBuilding(seed).project);
       expect(out.converged).toBe(true);

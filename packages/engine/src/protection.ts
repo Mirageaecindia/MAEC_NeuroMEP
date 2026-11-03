@@ -134,8 +134,9 @@ export function checkAll(project: Project, sized?: ReadonlyMap<string, Sizes>): 
         }
       : { state: 'not-calculated', detail: `No DEWA minimum above ${d.device.ratingA} A.` };
 
-    if (c.conductor !== 'Cu' || c.insulation === 'FR') {
-      const why = 'Earth conductor and loop tables cover Cu PVC / XLPE only (OI-18).';
+    // Fire-rated cable has 90 deg C XLPE-type insulation (FP600): its XLPE data applies.
+    if (c.conductor !== 'Cu') {
+      const why = 'Earth conductor and loop tables cover copper cables only.';
       if (ticked.letThroughEnergy) result.c4 = { state: 'not-calculated', detail: why };
       if (ticked.earthFaultLoopImpedance) result.c5 = { state: 'not-calculated', detail: why };
       return result;

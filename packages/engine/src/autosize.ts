@@ -14,6 +14,8 @@ import { checkFeeders, type FeederCheck, type Sizes } from './checks.js';
  */
 
 export const MAX_PASSES = 50;
+/** Parallel runs searched when the rule pack sets no limit. */
+export const MAX_RUNS_GUARD = 50;
 export type SizedBy = 'C1' | 'C2' | 'C6';
 
 export interface SizingRun {
@@ -41,7 +43,7 @@ export function sizeCables(project: Project): SizingRun {
         ? interim.value
         : typeof interim?.interimDefault === 'number'
           ? interim.interimDefault
-          : 1;
+          : MAX_RUNS_GUARD; // no limit (manager 3 Nov 2026); a guard for the search only
   const sizes = pack.devices.cableSizesMm2;
   const site = {
     airC: project.site.ambientAirC.value,
@@ -57,6 +59,13 @@ export function sizeCables(project: Project): SizingRun {
     const minArea = dewa.sizeMm2 * dewa.runs;
     const phases = f.ibCase === 'single-phase' ? 1 : 3;
     const out: Search = { c1: null, both: null, last: null };
+    // C2 cannot be met here when the drop upstream already reaches the limit: more copper on this
+    // cable cannot help, so the first size passing C1 is the answer.
+    const c2Unreachable =
+      f.vdUpstreamPct !== null && f.vdLimitPct !== null && f.vdUpstreamPct >= f.vdLimitPct;
+    // A construction with no rated size at all cannot be sized by adding runs (E2101).
+    const rated = sizes.some((sz) => cableRating(cable.construction, phases, sz, 1, site).ok);
+    if (!rated) return out;
     for (let runs = from.runs; runs <= Math.max(maxRuns, from.runs); runs++) {
       for (const sizeMm2 of sizes) {
         if (runs === from.runs && sizeMm2 < from.sizeMm2) continue;
@@ -70,6 +79,7 @@ export function sizeCables(project: Project): SizingRun {
         out.last = s;
         if (r.izA < f.device!.ratingA) continue;
         out.c1 ??= s;
+        if (c2Unreachable) return out;
         const v = voltageDrop(cable.construction, phases, sizeMm2, runs, f.ibA!, f.pf!, f.lengthM);
         // A size whose voltage drop cannot be worked out (e.g. PVC above 240 mm�) is not chosen
         // while a verifiable one exists; it stays the C1 fallback only.

@@ -1,5 +1,5 @@
 import type { Cable } from '@neuromep/shared';
-import { interpolated, tableValue, type TableValue } from './tables.js';
+import { conservativeStep, tableValue, type TableValue } from './tables.js';
 
 /**
  * Current-carrying capacity (C1, 10.6) and voltage drop (C2, 10.7) of one cable at a given size,
@@ -30,16 +30,19 @@ export interface Rating {
 type Construction = Cable['construction'];
 const SQRT3 = Math.sqrt(3);
 
-/** CableSizer insulation key; fire-rated cable has no mapped table yet (OI-18). */
+/**
+ * CableSizer insulation key. Fire-rated cable (BS 7846, e.g. Prysmian FP600) has the XLPE ratings
+ * and voltage drops in free air / on trays (catalogue received 3 Nov 2026); no ratings are given
+ * for conduit or buried installation, so those stay blocked.
+ */
 function insulationKey(c: Construction): string | Blocked {
-  if (c.insulation === 'FR') {
-    return {
-      ok: false,
-      code: 'E2102',
-      detail: 'Fire-rated cable is not mapped to a CableSizer table yet (OI-18).',
-    };
-  }
-  return c.insulation;
+  if (c.insulation !== 'FR') return c.insulation;
+  if (c.method === 'J') return 'XLPE';
+  return {
+    ok: false,
+    code: 'E2102',
+    detail: 'Fire-rated cable ratings are given for trays and free air only (FP600 catalogue).',
+  };
 }
 const methodKey = (c: Construction) => (c.method === 'B' ? 'B' : c.method === 'J' ? 'J' : 'D');
 const buryKey = (c: Construction) => (c.method === 'D-duct' ? 'DUCT' : 'DIRECT BURIED');
@@ -109,7 +112,7 @@ export function cableRating(
   const buried = methodKey(c) === 'D';
   const temp = buried ? site.groundC : site.airC;
   if (temp === null) return blocked(`Enter the ${buried ? 'ground' : 'air'} temperature (Page 1).`);
-  const k1 = take(interpolated('TEMPDE', { METHOD: methodKey(c), TYP: ins }, 'TEMP', temp));
+  const k1 = take(conservativeStep('TEMPDE', { METHOD: methodKey(c), TYP: ins }, 'TEMP', temp));
   if (isBlocked(k1)) return k1;
   const k2 = take(groupingFactor(c));
   if (isBlocked(k2)) return k2;
@@ -119,9 +122,9 @@ export function cableRating(
     if (site.soilResistivity === null) return blocked('Enter the soil resistivity (Page 1).');
     if (c.depthM === null) return blocked('Enter the depth of laying.');
     const base = { METHOD: buryKey(c), CORE: c.cores, size: sizeMm2 };
-    const r = take(interpolated('STR', base, 'RESISTIVITY', site.soilResistivity));
+    const r = take(conservativeStep('STR', base, 'RESISTIVITY', site.soilResistivity));
     if (isBlocked(r)) return r;
-    const d = take(interpolated('DLAY', base, 'DEPTH', c.depthM));
+    const d = take(conservativeStep('DLAY', base, 'DEPTH', c.depthM));
     if (isBlocked(d)) return d;
     kr = r;
     k3 = d;

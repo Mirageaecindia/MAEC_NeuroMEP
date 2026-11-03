@@ -40,7 +40,7 @@ export interface Builder {
 export function building(): Builder {
   const project = completeProject();
   project.calculation.upstreamFaultMva = 350;
-  project.calculation.defaultOverrides = { cableLengthAllowancePct: 0 };
+  project.calculation.defaultOverrides = { cableLengthAllowancePct: 0, cableLengthAdditionM: 1 };
   for (const code of Object.keys(project.calculation.demandFactors.byLoadType)) {
     project.calculation.demandFactors.byLoadType[code as '1'] = { value: 1, source: 'user' };
   }

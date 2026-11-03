@@ -97,18 +97,22 @@ describe('#TASK-13 routes and length (FR-15, A-05)', () => {
     ]);
   });
 
-  it('adds 1 m vertical and the allowance to the routed length', () => {
+  it('adds the fixed 5 m per measured cable (3 Nov 2026), and any percentage', () => {
     const route = [
       { x: 0, y: 0 },
       { x: 30, y: 0 },
       { x: 30, y: 9 },
     ];
-    expect(cableLength({ route, verticalM: 1 }, 10)).toEqual({
+    expect(cableLength({ route, verticalM: 1 }, { allowancePct: 0, additionM: 5 })).toEqual({
       routedM: 39,
-      verticalM: 1,
-      allowanceM: 4,
+      additionM: 5,
+      allowanceM: 0,
       totalM: 44,
     });
+    // Older rule (A-05): the cable's 1 m vertical run and 10 %.
+    expect(cableLength({ route, verticalM: 1 }, { allowancePct: 10, additionM: null }).totalM).toBe(
+      44,
+    );
   });
 });
 

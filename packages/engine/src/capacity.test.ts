@@ -45,12 +45,16 @@ describe('#TASK-21 current-carrying capacity C1 (10.6, CableSizer tables)', () =
     expect(one.ok && three.ok && three.izA / one.izA).toBeCloseTo(3, 9);
   });
 
-  it('interpolates the temperature factor between table steps (10.1)', () => {
+  it('between table steps takes the more conservative step (3 Nov 2026): 48 deg C uses 50 deg C', () => {
     const at = (airC: number) => {
       const r = cableRating(TRAY, 3, 10, 1, { ...SITE, airC });
-      return r.ok ? r.k1 : NaN;
+      return r.ok ? r : null;
     };
-    expect(at(47.5)).toBeCloseTo((at(45) + at(50)) / 2, 9);
+    expect(at(48)!.k1).toBe(at(50)!.k1);
+    expect(at(48)!.k1).toBeLessThan(at(45)!.k1);
+    expect(at(48)!.notes.join(' ')).toMatch(
+      /TEMP 48 between 45 and 50; 50 used \(lower factor, conservative\)/,
+    );
   });
 
   it('derates buried cables for ground temperature, soil resistivity and depth', () => {
@@ -88,7 +92,13 @@ describe('#TASK-21 current-carrying capacity C1 (10.6, CableSizer tables)', () =
     );
     expect(reason(TRAY, { ...SITE, airC: null })).toMatch(/air temperature/);
     expect(reason(TRAY, { ...SITE, airC: 70 })).toMatch(/outside the TEMPDE table range/);
-    expect(reason({ ...TRAY, insulation: 'FR' })).toMatch(/OI-18/);
+    // Fire-rated cable: XLPE ratings on trays (FP600); no catalogue rating in conduit or buried.
+    expect(
+      reason({ ...TRAY, insulation: 'FR', method: 'B', trays: null, separation: null }),
+    ).toMatch(/trays and free air only \(FP600 catalogue\)/);
+    const fr = cableRating({ ...TRAY, insulation: 'FR' }, 3, 10, 1, SITE);
+    const xlpe = cableRating(TRAY, 3, 10, 1, SITE);
+    expect(fr.ok && xlpe.ok && fr.izA === xlpe.izA).toBe(true);
     // Grouping beyond the table blocks (V-13): the buried table stops at 6 circuits.
     const sevenBuried: C = { ...TRAY, method: 'D-direct', separation: 'touching', depthM: 0.8 };
     expect(reason({ ...sevenBuried, groupedCircuits: 7 })).toMatch(
@@ -144,7 +154,8 @@ describe('#TASK-22 voltage drop C2 (10.7)', () => {
     expect(pvc300.ok ? '' : pvc300.code).toBe('E2102');
     const small = voltageDrop(TRAY, 3, 3, 1, 10, 0.85, 40);
     expect(small.ok ? '' : small.code).toBe('E2102');
-    expect(voltageDrop({ ...TRAY, insulation: 'FR' }, 3, 10, 1, 10, 0.85, 40).ok).toBe(false);
+    const frDrop = voltageDrop({ ...TRAY, insulation: 'FR' }, 3, 10, 1, 10, 0.85, 40);
+    expect(frDrop.ok && frDrop.vuMvAm).toBe(4); // FP600 4C 10 mm²: 4.0 mV/A/m, as XLPE
     const pvcSmallMissing = voltageDrop({ ...TRAY, insulation: 'PVC' }, 3, 95, 1, 100, 0.85, 40);
     expect(pvcSmallMissing.ok).toBe(true);
   });

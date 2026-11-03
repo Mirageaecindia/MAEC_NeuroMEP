@@ -48,7 +48,7 @@ import {
 import { CableProperty } from './CableProperty';
 import { SizingResult } from './SizingResult';
 import { tooltipLines } from './tooltip';
-import { defaultPf, lengthAllowance } from '../../workspace/projectDefaults';
+import { defaultPf, lengthRule } from '../../workspace/projectDefaults';
 import { ConstructionDialog } from './ConstructionDialog';
 import { EngineeringProperty } from './EngineeringProperty';
 import { LoadTable } from './LoadTable';
@@ -166,7 +166,7 @@ export function FloorSetupPage() {
     from: { elementId: string; port: 'out' };
     points: ModelPoint[];
   } | null>(null);
-  const allowance = lengthAllowance(project);
+  const length = lengthRule(project);
 
   function cableClick(at: PdfPoint, componentId: string | null) {
     if (!floor || !calibration || !construction) {
@@ -498,7 +498,7 @@ export function FloorSetupPage() {
                   tooltipLines(
                     project,
                     loadSummaries(project, defaultPf(project)),
-                    allowance?.pct ?? 0,
+                    length ?? { allowancePct: 0, additionM: null },
                     id,
                   )
                 }
@@ -531,7 +531,7 @@ export function FloorSetupPage() {
                   key={`${selectedCable.id}:${selectedCable.version}`}
                   cable={selectedCable}
                   elements={project.model.elements}
-                  allowance={allowance}
+                  length={length}
                   editable={editor.layers.includes('electrical')}
                   takenTags={project.model.cables
                     .filter((c) => c.id !== selectedCable.id)

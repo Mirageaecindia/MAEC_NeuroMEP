@@ -78,22 +78,26 @@ const segmentsLength = (route: ModelPoint[]) =>
 /** Vertical run added to every cable for the Z direction (A-05). */
 export const VERTICAL_RUN_M = 1;
 
+/** How a cable's length is built from its measured route (rule pack, 12.2). */
+export interface LengthRule {
+  /** Percentage added to route + addition (0 since 3 Nov 2026). */
+  allowancePct: number;
+  /** Fixed length added to every measured cable (5 m since 3 Nov 2026); null = the cable's own vertical run (A-05, 1 m). */
+  additionM: number | null;
+}
+
 /**
- * Cable length (FR-15, A-05): routed length on the plan (the route is already in metres) plus the
- * vertical run, plus the length allowance of 12.2 on that sum.
+ * Cable length (A-05 as amended 3 Nov 2026): the routed length measured on the plan, plus a fixed
+ * addition per cable (5 m in the Dubai pack, replacing 1 m + 10 %), plus any percentage allowance.
  */
 export function cableLength(
   cable: Pick<Cable, 'route' | 'verticalM'>,
-  allowancePct: number,
-): { routedM: number; verticalM: number; allowanceM: number; totalM: number } {
+  rule: LengthRule,
+): { routedM: number; additionM: number; allowanceM: number; totalM: number } {
   const routedM = segmentsLength(cable.route);
-  const allowanceM = ((routedM + cable.verticalM) * allowancePct) / 100;
-  return {
-    routedM,
-    verticalM: cable.verticalM,
-    allowanceM,
-    totalM: routedM + cable.verticalM + allowanceM,
-  };
+  const additionM = rule.additionM ?? cable.verticalM;
+  const allowanceM = ((routedM + additionM) * rule.allowancePct) / 100;
+  return { routedM, additionM, allowanceM, totalM: routedM + additionM + allowanceM };
 }
 
 // ----- outgoing ways and tags ---------------------------------------------------------------------

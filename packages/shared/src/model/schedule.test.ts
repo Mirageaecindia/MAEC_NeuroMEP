@@ -48,7 +48,7 @@ describe('#TASK-30 / #TASK-31 schematic tree and panel schedules (Section 14)', 
 
   it('fills a schedule from the model; sizes wait for Cable Size', () => {
     const p = network();
-    const s = boardSchedule(p, 'smdb', loadSummaries(p, 0.9), 0)!;
+    const s = boardSchedule(p, 'smdb', loadSummaries(p, 0.9), { allowancePct: 0, additionM: 5 })!;
     expect(s).toMatchObject({ connectedTo: 'Riser 1', transformer: 'TX-1', sizesPending: true });
     expect(s.incomer).toMatchObject({ feeder: 'INCOMER', cores: '-', breakerA: null });
     expect(s.ways).toHaveLength(1);

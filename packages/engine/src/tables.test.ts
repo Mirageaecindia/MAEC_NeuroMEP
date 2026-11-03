@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { interpolated, tableValue } from './tables.js';
+import { conservativeStep, tableValue } from './tables.js';
 
 describe('#TASK-21 CableSizer table access (V-14, OI-07)', () => {
   it('uses a row flagged for review, with its note', () => {
@@ -12,6 +12,8 @@ describe('#TASK-21 CableSizer table access (V-14, OI-07)', () => {
   });
 
   it('treats an unknown table as a programming error', () => {
-    expect(() => interpolated('NOT-A-TABLE', {}, 'X', 1)).toThrow(/Unknown CableSizer function/);
+    expect(() => conservativeStep('NOT-A-TABLE', {}, 'X', 1)).toThrow(
+      /Unknown CableSizer function/,
+    );
   });
 });

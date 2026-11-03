@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "region": "dubai",
   "name": "Dubai",
-  "sources": "Design doc v0.8: 12.1 (site defaults), 12.2 (calculation defaults), 10.7 (voltage-drop limits), Section 18 (open items and interim defaults). Site design temperatures await engineer sign-off (V-32: DEWA 2017 gives air 48 deg C, ground 40 deg C; ground 35 kept until confirmed). Devices: Appendix B (breaker ratings, cable sizes, DEWA minimum cable, tray widths) and 10.5 (breaker types, available fault ratings).",
+  "sources": "Design doc v0.8: 12.1 (site defaults), 12.2 (calculation defaults), 10.7 (voltage-drop limits), Section 18 (open items and interim defaults). Site design temperatures await engineer sign-off (V-32: DEWA 2017 gives air 48 deg C, ground 40 deg C; ground 35 kept until confirmed). Devices: Appendix B (breaker ratings, cable sizes, DEWA minimum cable, tray widths) and 10.5 (breaker types, available fault ratings). Manager's answers to the engineering questions (3 Nov 2026): ground 40 deg C (air 50 kept: catalogues have no 48 deg C factor); CableSizer short-circuit method (c = 1, no KT / KG); cable length = measured + 5 m; transformer loading 100 %; no limit on parallel runs; motor IL/IF 6.5; TN-S; transformer uk from the manufacturer catalogue; generator X\"d ranges.",
   "siteDefaults": {
     "ambientAirC": 50,
-    "ambientSoilC": 35,
+    "ambientSoilC": 40,
     "soilResistivity": 2.0
   },
   "demandFactors": {
@@ -62,16 +62,16 @@
       "group": "Supply",
       "label": "Voltage factor cmax (maximum fault currents)",
       "type": "number",
-      "value": 1.1,
-      "note": "V-03, awaiting engineer sign-off"
+      "value": 1.0,
+      "note": "CableSizer method (c = 1 for 230/400 V), decision 3 Nov 2026"
     },
     {
       "key": "voltageFactorCmin",
       "group": "Supply",
       "label": "Voltage factor cmin (minimum fault currents)",
       "type": "number",
-      "value": 0.95,
-      "note": "V-03, awaiting engineer sign-off"
+      "value": 1.0,
+      "note": "CableSizer method (c = 1 for 230/400 V), decision 3 Nov 2026"
     },
     {
       "key": "defaultLoadPowerFactor",
@@ -104,9 +104,17 @@
       "label": "Cable length allowance",
       "unit": "%",
       "type": "number",
-      "value": null,
-      "interimDefault": 10,
-      "openItem": "OI-17"
+      "value": 0,
+      "note": "Replaced by the fixed addition per cable (cableLengthAdditionM), manager 3 Nov 2026"
+    },
+    {
+      "key": "cableLengthAdditionM",
+      "group": "Cables",
+      "label": "Length added to every measured cable",
+      "unit": "m",
+      "type": "number",
+      "value": 5,
+      "note": "Measured route + 5 m (manager 3 Nov 2026, replaces 10 % + 1 m of A-05)"
     },
     {
       "key": "defaultCableConstruction",
@@ -123,9 +131,8 @@
       "label": "Transformer loading limit",
       "unit": "%",
       "type": "number",
-      "value": null,
-      "interimDefault": 80,
-      "openItem": "OI-16"
+      "value": 100,
+      "note": "100 % unless the user asks for less (manager 3 Nov 2026)"
     },
     {
       "key": "maxParallelRuns",
@@ -134,8 +141,7 @@
       "unit": "runs",
       "type": "number",
       "value": null,
-      "interimDefault": 4,
-      "openItem": "OI-21"
+      "note": "No limit (manager 3 Nov 2026): when to move to a busbar is up to the user"
     },
     {
       "key": "voltageDropLimitPct.MDB",
@@ -208,6 +214,22 @@
       "unit": "s",
       "type": "number",
       "value": 0.4
+    },
+    {
+      "key": "motorLockedRotorRatio",
+      "group": "Sources",
+      "label": "Motor locked-rotor current / full-load current (IL/IF)",
+      "type": "number",
+      "value": 6.5,
+      "note": "CableSizer value, manager 3 Nov 2026"
+    },
+    {
+      "key": "earthingSystem",
+      "group": "Supply",
+      "label": "Earthing system",
+      "type": "text",
+      "value": "TN-S",
+      "note": "Manager 3 Nov 2026"
     }
   ],
   "devices": {
@@ -381,6 +403,62 @@
         "faultRatingsKa": [50, 65, 85],
         "interim": false,
         "note": "800 A and above (10.5)"
+      }
+    ]
+  },
+  "sourceData": {
+    "transformerUkPct": [
+      {
+        "maxPrimaryKv": 12,
+        "rows": [
+          {
+            "maxKva": 630,
+            "ukPct": 4
+          },
+          {
+            "maxKva": 2500,
+            "ukPct": 6
+          },
+          {
+            "maxKva": 3150,
+            "ukPct": 7
+          }
+        ]
+      },
+      {
+        "maxPrimaryKv": 24,
+        "rows": [
+          {
+            "maxKva": 2500,
+            "ukPct": 6
+          },
+          {
+            "maxKva": 3150,
+            "ukPct": 7
+          }
+        ]
+      }
+    ],
+    "generatorXdPct": [
+      {
+        "maxKva": 500,
+        "low": 15,
+        "high": 20
+      },
+      {
+        "maxKva": 2000,
+        "low": 12,
+        "high": 16
+      },
+      {
+        "maxKva": 10000,
+        "low": 10,
+        "high": 14
+      },
+      {
+        "maxKva": 1000000,
+        "low": 8,
+        "high": 12
       }
     ]
   }

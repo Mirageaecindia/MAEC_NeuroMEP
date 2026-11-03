@@ -7,6 +7,7 @@ import {
   type Cable,
   type Element,
   type FeederType,
+  type LengthRule,
 } from '@neuromep/shared';
 import { useState } from 'react';
 
@@ -15,13 +16,13 @@ const m = (v: number) => `${v.toFixed(2)} m`;
 /**
  * Engineering Property of a selected feeder (FR-15): Cable or Busbar (decision 1 Nov 2026), tag,
  * ends, circuit reference, cable construction or busbar fields (12.3), and the length the engine
- * will use - routed + 1 m vertical (A-05) + the 12.2 allowance.
+ * will use - routed + the fixed addition per cable (5 m, 3 Nov 2026) + any 12.2 allowance.
  */
 export function CableProperty(props: {
   cable: Cable;
   elements: readonly Element[];
-  /** Length allowance (%) and whether it is the interim value of an open item (OI-17). */
-  allowance: { pct: number; interim: boolean } | null;
+  /** How lengths are built (rule pack); null without a rule pack. */
+  length: (LengthRule & { interim: boolean }) | null;
   editable: boolean;
   takenTags: string[];
   onChange: (patch: { tag?: string; feederType?: FeederType; busbar?: BusbarSpec }) => void;
@@ -40,7 +41,7 @@ export function CableProperty(props: {
     const e = props.elements.find((x) => x.id === id);
     return `${e?.tag ?? '?'}${port === 'normal' || port === 'standby' ? ` (${port})` : ''}`;
   };
-  const length = cableLength(cable, props.allowance?.pct ?? 0);
+  const length = cableLength(cable, props.length ?? { allowancePct: 0, additionM: null });
   const c = cable.construction;
   const from = props.elements.find((x) => x.id === cable.from.elementId);
   const busbarIssue = busbarFeederIssue(from);
@@ -172,16 +173,12 @@ export function CableProperty(props: {
         <dt>Length :</dt>
         <dd>
           <span>
-            <strong>
-              {props.allowance
-                ? m(length.totalM)
-                : `${m(length.routedM + length.verticalM)} + allowance TBC`}
-            </strong>
+            <strong>{m(length.totalM)}</strong>
           </span>
           <span className="muted">
-            routed {m(length.routedM)} + vertical {m(length.verticalM)}
-            {props.allowance &&
-              ` + ${props.allowance.pct} %${props.allowance.interim ? ' (interim, OI-17)' : ''} ${m(length.allowanceM)}`}
+            routed {m(length.routedM)} + {m(length.additionM)} added
+            {length.allowanceM > 0 &&
+              ` + ${props.length!.allowancePct} %${props.length!.interim ? ' (interim, OI-17)' : ''} ${m(length.allowanceM)}`}
           </span>
         </dd>
         {isBusbar ? (

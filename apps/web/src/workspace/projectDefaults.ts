@@ -1,4 +1,4 @@
-import type { Project } from '@neuromep/shared';
+import type { LengthRule, Project } from '@neuromep/shared';
 import { getRulePack } from '@neuromep/rulepacks';
 
 /** Default load power factor of the project's rule pack, or null without one. */
@@ -11,21 +11,26 @@ export function defaultPf(project: Project): number | null {
 }
 
 /**
- * Cable length allowance (12.2): the Technical Lead's override, else the rule-pack value, else its
- * interim default (OI-17: 10 %), labelled interim. Null without a rule pack.
+ * How cable lengths are built (12.2, amended 3 Nov 2026): the Technical Lead's override, else the
+ * rule-pack value, else its interim default (labelled interim). `additionM` is the fixed length
+ * added to every measured cable (5 m in the Dubai pack). Null without a rule pack.
  */
-export function lengthAllowance(project: {
+export function lengthRule(project: {
   rulePackId: string | null;
   rulePackVersion: string | null;
   calculation: { defaultOverrides: Record<string, number | string> };
-}): { pct: number; interim: boolean } | null {
-  const override = project.calculation.defaultOverrides.cableLengthAllowancePct;
-  if (typeof override === 'number') return { pct: override, interim: false };
+}): (LengthRule & { interim: boolean }) | null {
   if (!project.rulePackId || !project.rulePackVersion) return null;
-  const d = getRulePack(project.rulePackId, project.rulePackVersion).calculationDefaults.find(
-    (x) => x.key === 'cableLengthAllowancePct',
-  );
-  if (typeof d?.value === 'number') return { pct: d.value, interim: false };
-  if (typeof d?.interimDefault === 'number') return { pct: d.interimDefault, interim: true };
-  return null;
+  const defaults = getRulePack(project.rulePackId, project.rulePackVersion).calculationDefaults;
+  const pick = (key: string) => {
+    const o = project.calculation.defaultOverrides[key];
+    if (typeof o === 'number') return { v: o, interim: false };
+    const d = defaults.find((x) => x.key === key);
+    if (typeof d?.value === 'number') return { v: d.value, interim: false };
+    if (typeof d?.interimDefault === 'number') return { v: d.interimDefault, interim: true };
+    return null;
+  };
+  const pct = pick('cableLengthAllowancePct');
+  const add = pick('cableLengthAdditionM');
+  return { allowancePct: pct?.v ?? 0, additionM: add?.v ?? null, interim: !!pct?.interim };
 }

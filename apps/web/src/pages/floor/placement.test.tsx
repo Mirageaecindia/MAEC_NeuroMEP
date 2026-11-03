@@ -244,7 +244,7 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     expect(card).toHaveTextContent('To :DB-GF-01');
     expect(card).toHaveTextContent('Circuit :1RYB');
     expect(card).toHaveTextContent('4C Cu/XLPE/SWA/PVC, 600/1000 V, method B');
-    expect(card).toHaveTextContent('vertical 1.00 m + 10 % (interim, OI-17)');
+    expect(card).toHaveTextContent('+ 5.00 m added'); // measured route + 5 m (3 Nov 2026)
     expect(card).toHaveTextContent('Calculated by Cable Size');
 
     fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 450 }); // select the DB

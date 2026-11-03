@@ -35,7 +35,7 @@ function feeder(from: Element, to: Element, lengthM: number): Cable {
 function network(): Project {
   const p = completeProject();
   p.calculation.demandFactors.byLoadType['2'] = { value: 1, source: 'user' };
-  p.calculation.defaultOverrides = { cableLengthAllowancePct: 0 };
+  p.calculation.defaultOverrides = { cableLengthAllowancePct: 0, cableLengthAdditionM: 1 };
   const f = p.building.floors[0]!.id;
   const tx = { ...testElement('transformer', 'tx', f), tag: 'TX-1' };
   const mdb = { ...testElement('mdb', 'mdb', f), tag: 'MDB-1' };
@@ -135,7 +135,11 @@ describe('#TASK-21 / #TASK-22 C1 and C2 across the network (10.2 steps 4-6)', ()
     } as unknown as Element;
     p.model.elements.push(mcc, iso);
     p.model.cables.push(feeder(p.model.elements[1]!, mcc, 10), feeder(mcc, iso, 10));
-    p.calculation.defaultOverrides = { cableLengthAllowancePct: 0, 'voltageDropLimitPct.DB': 3 };
+    p.calculation.defaultOverrides = {
+      cableLengthAllowancePct: 0,
+      cableLengthAdditionM: 1,
+      'voltageDropLimitPct.DB': 3,
+    };
     const all = checkFeeders(p);
     expect(all.find((c) => c.toId === 'iso')?.vdLimitPct).toBe(4);
     expect(all.find((c) => c.toId === 'db')?.vdLimitPct).toBe(3);
@@ -175,9 +179,17 @@ describe('#TASK-21 / #TASK-22 C1 and C2 across the network (10.2 steps 4-6)', ()
     expect(d.warnings[0]).toMatch(/suspected table error/);
   });
 
-  it('blocks C1 and C2 for fire-rated cable until its table is mapped (OI-18)', () => {
+  it('sizes fire-rated cable on a tray with the XLPE values (FP600); blocks it in conduit', () => {
     const p = network();
     p.model.cables[1]!.construction = { ...TRAY, insulation: 'FR' };
+    expect(toDb(p)).toMatchObject({ c1: 'pass', c2: 'pass' });
+    p.model.cables[1]!.construction = {
+      ...TRAY,
+      insulation: 'FR',
+      method: 'B',
+      trays: null,
+      separation: null,
+    };
     expect(toDb(p)).toMatchObject({ c1: 'blocked', c2: 'blocked', status: 'blocked' });
   });
 

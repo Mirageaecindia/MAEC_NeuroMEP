@@ -23,10 +23,16 @@ export function tableValue(fn: string, input: LookupInput): TableValue {
 }
 
 /**
- * A factor at `x` between two table steps of `key` (10.1: temperature, soil resistivity and
- * depth are interpolated linearly inside the table range; outside it the element is blocked).
+ * A rating factor at `x` between two table steps of `key`: the neighbouring step with the lower
+ * factor, i.e. rounded up or down whichever is more conservative (manager's answer 3 Nov 2026,
+ * replaces the linear interpolation of 10.1). Outside the table range the element is blocked.
  */
-export function interpolated(fn: string, input: LookupInput, key: string, x: number): TableValue {
+export function conservativeStep(
+  fn: string,
+  input: LookupInput,
+  key: string,
+  x: number,
+): TableValue {
   const exact = tableValue(fn, { ...input, [key]: x });
   if (exact.found) return exact;
   const steps = new Set<number>();
@@ -49,9 +55,13 @@ export function interpolated(fn: string, input: LookupInput, key: string, x: num
   }
   const a = at(lo) as Extract<TableValue, { found: true }>;
   const b = at(hi) as Extract<TableValue, { found: true }>;
+  const [use, step] = a.value <= b.value ? [a, lo] : [b, hi];
   return {
     found: true,
-    value: a.value + ((b.value - a.value) * (x - lo)) / (hi - lo),
-    notes: [...a.notes, ...b.notes, `${fn}: ${key} ${x} interpolated between ${lo} and ${hi}.`],
+    value: use.value,
+    notes: [
+      ...use.notes,
+      `${fn}: ${key} ${x} between ${lo} and ${hi}; ${step} used (lower factor, conservative).`,
+    ],
   };
 }

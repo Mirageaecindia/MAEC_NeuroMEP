@@ -23,7 +23,7 @@ describe('rule packs', () => {
     expect(p.rulePackId).toBe('dubai');
     expect(p.rulePackVersion).toBe('1.0.0');
     expect(p.site.ambientAirC).toEqual({ value: 50, source: 'rulepack' });
-    expect(p.site.ambientSoilC).toEqual({ value: 35, source: 'rulepack' });
+    expect(p.site.ambientSoilC).toEqual({ value: 40, source: 'rulepack' }); // manager 3 Nov 2026
     expect(p.site.soilResistivity).toEqual({ value: 2, source: 'rulepack' });
     expect(p.calculation.system).toEqual({
       voltageLineV: { value: 400, source: 'rulepack' },
@@ -52,21 +52,26 @@ describe('rule packs', () => {
     }
   });
 
-  it('holds the 12.2 defaults, with open items null and their interim defaults recorded', () => {
+  it('holds the 12.2 defaults with the answers of 3 Nov 2026, open items null', () => {
     const d = Object.fromEntries(dubai.calculationDefaults.map((x) => [x.key, x]));
     expect(d.supplyVoltageLineV?.value).toBe(400);
     expect(d.supplyVoltagePhaseV?.value).toBe(230);
     expect(d.supplyFrequencyHz?.value).toBe(50);
     expect(d.defaultLoadPowerFactor?.value).toBe(0.85);
     expect(d.targetPowerFactor?.value).toBe(0.95);
-    expect(d.voltageFactorCmax?.value).toBe(1.1);
-    expect(d.voltageFactorCmin?.value).toBe(0.95);
+    // CableSizer short-circuit method: c = 1 for 230/400 V.
+    expect(d.voltageFactorCmax?.value).toBe(1);
+    expect(d.voltageFactorCmin?.value).toBe(1);
     expect(d.disconnectionTimeDistributionS?.value).toBe(5);
     expect(d.disconnectionTimeFinalS?.value).toBe(0.4);
     expect(d['voltageDropLimitPct.DB']?.value).toBe(2.5);
     expect(d['voltageDropLimitPct.Motor']?.value).toBe(4);
-    expect(d.cableLengthAllowancePct).toMatchObject({ value: null, interimDefault: 10 });
-    expect(d.transformerLoadingLimitPct).toMatchObject({ value: null, interimDefault: 80 });
+    expect(d.cableLengthAllowancePct?.value).toBe(0);
+    expect(d.cableLengthAdditionM?.value).toBe(5);
+    expect(d.transformerLoadingLimitPct?.value).toBe(100);
+    expect(d.maxParallelRuns?.value).toBeNull();
+    expect(d.motorLockedRotorRatio?.value).toBe(6.5);
+    expect(d.earthingSystem?.value).toBe('TN-S');
     expect(d.defaultDepthOfLayingM).toMatchObject({ value: null, interimDefault: null });
     expect(d.defaultCableConstruction).toMatchObject({ value: null, interimDefault: null });
   });
@@ -77,6 +82,15 @@ describe('rule packs', () => {
     const eff = Object.fromEntries(effectiveCalculationDefaults(p, dubai).map((x) => [x.key, x]));
     expect(eff.targetPowerFactor).toMatchObject({ effective: 0.95, overridden: true, tbc: false });
     expect(eff.defaultLoadPowerFactor).toMatchObject({ effective: 0.85, overridden: false });
-    expect(eff.transformerLoadingLimitPct).toMatchObject({ effective: null, tbc: true });
+    expect(eff.defaultDepthOfLayingM).toMatchObject({ effective: null, tbc: true });
+  });
+
+  it('holds the transformer uk and generator X"d data of 3 Nov 2026', () => {
+    expect(dubai.sourceData.transformerUkPct[0]).toMatchObject({ maxPrimaryKv: 12 });
+    expect(dubai.sourceData.generatorXdPct.find((g) => g.maxKva === 2000)).toEqual({
+      maxKva: 2000,
+      low: 12,
+      high: 16,
+    });
   });
 });

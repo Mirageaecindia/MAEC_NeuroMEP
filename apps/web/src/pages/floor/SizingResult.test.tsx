@@ -50,11 +50,11 @@ describe('#TASK-16 right-panel results and tooltips (FR-18, FR-21, FR-36)', () =
     const cable = testCable(mdb, db);
     p.model.elements.push(mdb);
     p.model.cables.push(cable);
-    const feeder = tooltipLines(p, new Map(), 0, cable.id)!;
+    const feeder = tooltipLines(p, new Map(), { allowancePct: 0, additionM: 5 }, cable.id)!;
     expect(feeder[0]).toBe(`${cable.tag} - Cable`);
     expect(feeder.some((l) => l.startsWith('Length: '))).toBe(true);
     expect(feeder.at(-1)).toMatch(/^Vd circuit: - · Vd total: -$/);
-    const board = tooltipLines(p, new Map(), 0, db.id)!;
+    const board = tooltipLines(p, new Map(), { allowancePct: 0, additionM: 5 }, db.id)!;
     expect(board[0]).toBe(db.tag);
     expect(board.some((l) => l.startsWith('Fed from: '))).toBe(true);
   });

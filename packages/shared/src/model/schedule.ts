@@ -3,7 +3,7 @@ import type { Cable } from './cable.js';
 import type { Element, ElementKind } from './elements.js';
 import type { LoadSummary } from './loads.js';
 import { resultOf } from './sizing.js';
-import { cableLength } from './wiring.js';
+import { cableLength, type LengthRule } from './wiring.js';
 
 /**
  * Schematic tree and panel schedules from the network model (WBS 1.5.3, #TASK-30 / #TASK-31,
@@ -97,7 +97,7 @@ export interface BoardSchedule {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-function feederColumns(p: Project, cable: Cable | undefined, allowancePct: number) {
+function feederColumns(p: Project, cable: Cable | undefined, length: LengthRule) {
   const found = cable ? resultOf(p, cable.id) : null;
   const r = found?.result;
   return {
@@ -115,7 +115,7 @@ function feederColumns(p: Project, cable: Cable | undefined, allowancePct: numbe
       : '-',
     sizeMm2: r?.size?.sizeMm2 ?? null,
     eccMm2: r?.size?.eccMm2 ?? null,
-    lengthM: cable ? round2(cableLength(cable, allowancePct).totalM) : null,
+    lengthM: cable ? round2(cableLength(cable, length).totalM) : null,
     pending: !found || found.outOfDate || !r?.size,
   };
 }
@@ -131,7 +131,7 @@ export function boardSchedule(
   p: Project,
   boardId: string,
   summaries: Map<string, LoadSummary>,
-  allowancePct: number,
+  length: LengthRule,
 ): BoardSchedule | null {
   const { elements, cables, risers } = p.model;
   const board = elements.find((e) => e.id === boardId);
@@ -143,7 +143,7 @@ export function boardSchedule(
   const inCable = cables.find((c) => c.to.elementId === board.id);
   const riser = risers.findIndex((r) => r.feeds.includes(board.id));
   const s = summaries.get(board.id);
-  const inCols = feederColumns(p, inCable, allowancePct);
+  const inCols = feederColumns(p, inCable, length);
   const incomer: ScheduleRow = {
     feeder: 'INCOMER',
     wayNo: '-',
@@ -160,7 +160,7 @@ export function boardSchedule(
   const ways = out.map((c): ScheduleRow => {
     const child = elements.find((e) => e.id === c.to.elementId);
     const cs = summaries.get(c.to.elementId);
-    const cols = feederColumns(p, c, allowancePct);
+    const cols = feederColumns(p, c, length);
     pending ||= cols.pending;
     return {
       feeder: child?.tag ?? '?',

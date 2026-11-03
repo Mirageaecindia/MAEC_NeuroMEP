@@ -1,4 +1,11 @@
-import { cableLength, fedFrom, resultOf, type LoadSummary, type Project } from '@neuromep/shared';
+import {
+  cableLength,
+  fedFrom,
+  resultOf,
+  type LengthRule,
+  type LoadSummary,
+  type Project,
+} from '@neuromep/shared';
 import { resultFigures } from './SizingResult';
 
 const val = (v: number | null | undefined, unit: string) => (v == null ? '-' : `${v} ${unit}`);
@@ -12,7 +19,7 @@ const kw = (v: number | null | undefined) => (v == null ? '-' : `${v.toFixed(1)}
 export function tooltipLines(
   project: Project,
   summaries: Map<string, LoadSummary>,
-  allowancePct: number,
+  length: LengthRule,
   id: string,
 ): string[] | null {
   const { elements, cables } = project.model;
@@ -32,7 +39,7 @@ export function tooltipLines(
       `Upstream breaker: ${val(r?.values.inA, 'A')}`,
       `Corrected ampacity: ${val(r?.values.izA, 'A')}`,
       `From ${tagOf(cable.from.elementId)} to ${tagOf(cable.to.elementId)}`,
-      `Length: ${cableLength(cable, allowancePct).totalM.toFixed(2)} m`,
+      `Length: ${cableLength(cable, length).totalM.toFixed(2)} m`,
       `Vd circuit: ${figures?.vdOwn ?? '-'} · Vd total: ${figures?.vdTotal ?? '-'}`,
       ...stale,
     ];

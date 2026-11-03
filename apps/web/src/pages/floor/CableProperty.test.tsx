@@ -12,7 +12,7 @@ function show(fromKey: string, feederType: 'cable' | 'busbar' = 'cable') {
     <CableProperty
       cable={{ ...testCable(from, to), feederType }}
       elements={[from, to]}
-      allowance={null}
+      length={null}
       editable
       takenTags={[]}
       onChange={onChange}

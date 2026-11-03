@@ -9,7 +9,7 @@ import {
 import { useState } from 'react';
 import { DisciplineTabs, Shell, useNotice } from '../../layout/Shell';
 import { Toolbar } from '../../layout/Toolbar';
-import { defaultPf, lengthAllowance } from '../../workspace/projectDefaults';
+import { defaultPf, lengthRule } from '../../workspace/projectDefaults';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { emptyMeters, missingMeters, ScheduleSheet, type BoardMeters } from './ScheduleSheet';
 import '../schematic/schematic.css';
@@ -74,9 +74,9 @@ export function OutputPage() {
     );
   const electrical = tab === 'All' || tab === 'Electrical';
   const summaries = loadSummaries(project, defaultPf(project));
-  const allowance = lengthAllowance(project)?.pct ?? 0;
+  const length = lengthRule(project) ?? { allowancePct: 0, additionM: null };
   const schedules = electrical
-    ? boards.map((b) => boardSchedule(project, b.id, summaries, allowance)!)
+    ? boards.map((b) => boardSchedule(project, b.id, summaries, length)!)
     : [];
   const missing = [
     ...(schedules.length && !logo ? ['logo'] : []),

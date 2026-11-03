@@ -41,7 +41,7 @@ function example1(): Project {
   const p = completeProject();
   p.calculation.upstreamFaultMva = 350;
   p.calculation.demandFactors.byLoadType['2'] = { value: 1, source: 'user' };
-  p.calculation.defaultOverrides = { cableLengthAllowancePct: 0 };
+  p.calculation.defaultOverrides = { cableLengthAllowancePct: 0, cableLengthAdditionM: 1 };
   const f = p.building.floors[0]!.id;
   const tx = {
     ...testElement('transformer', 'tx', f),
@@ -81,32 +81,66 @@ const okAt = (m: Map<string, FaultResult>, id: string) => {
   return r;
 };
 
-describe('#TASK-23 short-circuit currents to IEC 60909 (10.8, Appendix C example 1)', () => {
-  it('transformer terminals: Z 7.2202 mOhm, Ik" 35.18 kA, ip 78.4 kA', () => {
+describe('#TASK-23 short-circuit currents, CableSizer method (10.8, Appendix C example 1)', () => {
+  it('transformer terminals as the CableSizer workbook: Z 7.122 mOhm, Isc 32.43 kA (c = 1, no KT)', () => {
     const t = okAt(levels(example1()), 'tx');
-    expect(Math.hypot(t.rMax, t.xMax)).toBeCloseTo(7.2202, 3);
-    expect(t.ikMaxKa).toBeCloseTo(35.18, 2);
-    expect(t.ipKa).toBeCloseTo(78.4, 1);
+    expect(t.rMax).toBeCloseTo(1.325, 3); // workbook column BY
+    expect(t.xMax).toBeCloseTo(6.997, 3); // BZ
+    expect(Math.hypot(t.rMax, t.xMax)).toBeCloseTo(7.122, 3); // CA
+    expect(t.ikMaxKa).toBeCloseTo(32.43, 2); // CC
+    const kappa = 1.02 + 0.98 * Math.exp((-3 * t.rMax) / t.xMax);
+    expect(t.ipKa).toBeCloseTo(kappa * Math.SQRT2 * t.ikMaxKa, 9);
   });
 
-  it('LV panel after 3 x 630 mm² trefoil, 15 m: Z 7.6643 mOhm, Ik" 33.15 kA', () => {
+  it('LV panel after 3 x 1C 630 mm², 15 m (R 18.32 L / A N, X 0.09 L / N): Z 7.591 mOhm, 30.42 kA', () => {
     const lv = okAt(levels(example1()), 'lv');
-    expect(Math.hypot(lv.rMax, lv.xMax)).toBeCloseTo(7.6643, 3);
-    expect(lv.ikMaxKa).toBeCloseTo(33.15, 2);
+    expect(lv.rMax).toBeCloseTo(1.471, 3);
+    expect(lv.xMax).toBeCloseTo(7.447, 3);
+    expect(Math.hypot(lv.rMax, lv.xMax)).toBeCloseTo(7.591, 3);
+    expect(lv.ikMaxKa).toBeCloseTo(30.42, 2);
   });
 
-  it('minimum fault is lower (cmin, hot conductors, flat) and flagged for OI-33', () => {
-    const db = okAt(levels(example1()), 'db');
+  it('minimum fault uses conductor resistance at fault temperature (x 1.6 XLPE)', () => {
+    const m = levels(example1());
+    const lv = okAt(m, 'lv');
+    const db = okAt(m, 'db');
     expect(db.ikMinKa).toBeLessThan(db.ikMaxKa);
-    expect(db.notes.join(' ')).toMatch(/OI-33/);
+    // At the LV panel only the main cable differs: R hot = 1.6 x cold.
+    const rHot = lv.rMax + 0.6 * ((18.32 * 15) / (630 * 3));
+    expect(lv.ikMinKa).toBeCloseTo(400 / (Math.sqrt(3) * Math.hypot(rHot, lv.xMax)), 9);
   });
 
-  it('uses the IEC 60076-5 minimum uk and the CableSizer ur when not entered', () => {
+  it('takes uk from the manufacturer catalogue and ur from CableSizer when not entered', () => {
     const p = example1();
-    p.model.elements[0] = { ...p.model.elements[0]!, ukPct: null, urPct: null } as Element;
+    p.model.elements[0] = {
+      ...p.model.elements[0]!,
+      ukPct: null,
+      urPct: null,
+      primaryV: null,
+    } as Element;
     const t = okAt(levels(p), 'tx');
-    expect(t.notes.join(' ')).toMatch(/uk 6 % \(IEC 60076-5 minimum for 1500 kVA\)/);
+    expect(t.notes.join(' ')).toMatch(/uk 6 % \(manufacturer catalogue, 1500 kVA, 11 kV assumed/);
     expect(t.notes.join(' ')).toMatch(/ur [\d.]+ % \(CableSizer table\)/);
+    const q = example1();
+    q.model.elements[0] = {
+      ...q.model.elements[0]!,
+      kva: 500,
+      ukPct: null,
+      primaryV: 11000,
+    } as Element;
+    expect(okAt(levels(q), 'tx').notes.join(' ')).toMatch(
+      /uk 4 % \(manufacturer catalogue, 500 kVA, 11 kV\)/,
+    );
+    const r = example1();
+    r.model.elements[0] = {
+      ...r.model.elements[0]!,
+      kva: 500,
+      ukPct: null,
+      primaryV: 20000,
+    } as Element;
+    expect(okAt(levels(r), 'tx').notes.join(' ')).toMatch(
+      /uk 6 % \(manufacturer catalogue, 500 kVA, 20 kV\)/,
+    );
   });
 
   it('blocks without source data (E2301)', () => {
@@ -127,16 +161,49 @@ describe('#TASK-23 short-circuit currents to IEC 60909 (10.8, Appendix C example
     expect(okAt(m, 'db').ikMinKa).toBeNull();
   });
 
-  it('notes that motor contribution is not included while IL/IF is open (OI-30)', () => {
+  it('adds the motor group in parallel at the main LV panel (IL/IF 6.5, X 0.922 Z, R 0.42 X)', () => {
     const p = example1();
-    p.model.elements.push({
-      ...testElement('mdb', 'm', p.building.floors[0]!.id),
+    const f = p.building.floors[0]!.id;
+    const motor = {
+      ...testElement('mdb', 'm', f),
+      tag: 'M-1',
       kind: 'motor',
-    } as unknown as Element);
-    expect(okAt(levels(p), 'tx').notes.join(' ')).toMatch(/OI-30/);
+      poles: 'TP',
+      loadCategory: 'normal',
+      demandCategory: null,
+      manualLoads: [{ method: 'kw', loadType: '8', kwL1: 10, kwL2: 10, kwL3: 10 }],
+      standbyKw: null,
+      earthLeakage: 'none',
+      efficiency: 0.9,
+      starter: null,
+    } as unknown as Element;
+    p.model.elements.push(motor);
+    p.model.cables.push({ ...feeder(p.model.elements[1]!, motor, 20), id: 'c-lv-m' });
+    const without = okAt(levels(example1()), 'lv');
+    const lv = okAt(levels(p), 'lv');
+    // By hand: SrM = 30 kW / (0.9 x 0.85), ZM = Vn² / (6.5 SrM), in parallel with the network.
+    const srm = 30 / (0.9 * 0.85);
+    const zm = (400 * 400) / (6.5 * srm);
+    const m = { r: 0.42 * 0.922 * zm, x: 0.922 * zm };
+    const n = { r: without.rMax, x: without.xMax };
+    const num = { r: n.r * m.r - n.x * m.x, x: n.r * m.x + n.x * m.r };
+    const den = { r: n.r + m.r, x: n.x + m.x };
+    const d2 = den.r ** 2 + den.x ** 2;
+    const z = { r: (num.r * den.r + num.x * den.x) / d2, x: (num.x * den.r - num.r * den.x) / d2 };
+    expect(lv.rMax).toBeCloseTo(z.r, 9);
+    expect(lv.xMax).toBeCloseTo(z.x, 9);
+    expect(lv.ikMaxKa).toBeGreaterThan(without.ikMaxKa);
+    expect(lv.notes.join(' ')).toMatch(
+      /Motor contribution included: 39.2 kVA of motors, IL\/IF 6.5/,
+    );
+    // A motor without efficiency is left out, and says so.
+    (p.model.elements.at(-1) as unknown as { efficiency: number | null }).efficiency = null;
+    const none = okAt(levels(p), 'lv');
+    expect(none.ikMaxKa).toBeCloseTo(without.ikMaxKa, 9);
+    expect(none.notes.join(' ')).toMatch(/without M-1 \(efficiency missing\)/);
   });
 
-  it('standby: generator X"d with KG, reached only through the ATS standby input', () => {
+  it('standby: generator X"d Vn² / S, R 0.1 X (no KG), reached only through the ATS standby input', () => {
     const p = example1();
     const f = p.building.floors[0]!.id;
     const gen = {
@@ -156,15 +223,14 @@ describe('#TASK-23 short-circuit currents to IEC 60909 (10.8, Appendix C example
     const lengths = new Map(p.model.cables.map((c) => [c.id, 5]));
     const standby = faultLevels(p, 'standby', sizes, lengths);
     const g = okAt(standby, 'gen');
-    const base = (400 * 400) / 500;
-    const x = 0.14 * base * (1.1 / (1 + 0.14 * 0.6));
-    expect(g.ikMaxKa).toBeCloseTo((1.1 * 400) / (Math.sqrt(3) * Math.hypot(0.15 * x, x)), 9);
-    expect(g.ikMinKa).toBeCloseTo(3 / Math.hypot(0.15, 1), 9); // sustained 3 kA, RG = 0.15 XG
+    const x = 0.14 * ((400 * 400) / 500);
+    expect(g.ikMaxKa).toBeCloseTo(400 / (Math.sqrt(3) * Math.hypot(0.1 * x, x)), 9);
+    expect(g.ikMinKa).toBeCloseTo(3 / Math.hypot(0.1, 1), 9); // sustained 3 kA, R = 0.1 X
     expect(okAt(standby, 'ats').ikMaxKa).toBeLessThan(g.ikMaxKa);
     expect(standby.has('tx')).toBe(false);
     // Normal supply reaches the ATS only through its normal input, never the generator.
     expect(faultLevels(p, 'normal', sizes, lengths).has('gen')).toBe(false);
-    const noData = { ...gen, xdSubtransientPct: null } as Element;
+    const noData = { ...gen, kvaOverride: null } as Element;
     p.model.elements[3] = noData;
     expect(faultLevels(p, 'standby', sizes, lengths).get('gen')).toMatchObject({
       ok: false,
@@ -181,28 +247,35 @@ describe('#TASK-23 short-circuit currents to IEC 60909 (10.8, Appendix C example
     expect(okAt(m, 'lv').notes.join(' ')).toMatch(/Busbar impedance not included/);
   });
 
-  it('notes a generator without its sustained short-circuit current (minimum from X"d)', () => {
+  it('generator without X"d: lowest of the typical range for the maximum, highest for the minimum', () => {
     const p = example1();
     const gen = {
       ...testElement('generator', 'gen', p.building.floors[0]!.id),
       tag: 'GEN-1',
-      kvaOverride: 500,
-      xdSubtransientPct: 14,
+      kvaOverride: 1000,
+      xdSubtransientPct: null,
       sustainedScKa: null,
     } as Element;
     p.model.elements.push(gen);
     const g = okAt(faultLevels(p, 'standby', new Map(), new Map()), 'gen');
-    expect(g.notes.join(' ')).toMatch(/sustained short-circuit current not entered/);
-    expect(g.ikMinKa).toBeCloseTo((0.95 / 1.1) * g.ikMaxKa, 9);
+    const ikAt = (xd: number) => {
+      const x = (xd / 100) * ((400 * 400) / 1000);
+      return 400 / (Math.sqrt(3) * Math.hypot(0.1 * x, x));
+    };
+    expect(g.ikMaxKa).toBeCloseTo(ikAt(12), 9); // 500 - 2000 kVA: 12 - 16 %
+    expect(g.ikMinKa).toBeCloseTo(ikAt(16), 9);
+    expect(g.notes.join(' ')).toMatch(/X"d 12 - 16 % typical for 1000 kVA/);
   });
 
-  it('blocks aluminium cables and cables without a size on the fault path', () => {
+  it('calculates aluminium cables (rho 30.34) and blocks cables without a size', () => {
     const p = example1();
     p.model.cables[1] = {
       ...p.model.cables[1]!,
       construction: { ...p.model.cables[1]!.construction, conductor: 'Al' },
     };
-    expect(levels(p).get('db')).toMatchObject({ ok: false, code: 'E2102' });
+    const al = okAt(levels(p), 'db');
+    const cu = okAt(levels(example1()), 'db');
+    expect(al.rMax - cu.rMax).toBeCloseTo(((30.34 - 18.32) * 30) / 16, 9);
     const empty = faultLevels(example1(), 'normal', new Map(), new Map());
     expect(empty.get('lv')).toMatchObject({
       ok: false,
@@ -246,14 +319,15 @@ describe('#TASK-23 fault duty C3 / C7 (V-10)', () => {
     p.model.elements[1] = { ...p.model.elements[1]!, icwKa: 50, ipkKa: 105 } as Element;
     const all = checkNetwork(p);
     const main = all.find((c) => c.toId === 'lv')!;
-    expect(main.faultAtBreaker?.ikMaxKa).toBeCloseTo(35.18, 2);
-    // 180 kW needs an MCCB; 36 kA covers Ik" but its Icm (75.6 kA) is below ip 78.4 kA -> 50 kA.
-    expect(main.duty).toMatchObject({ type: 'MCCB', icuKa: 50 });
+    expect(main.faultAtBreaker?.ikMaxKa).toBeCloseTo(32.43, 2);
+    // 180 kW needs an MCCB; 36 kA covers Ik" 32.43 kA and its Icm 75.6 kA covers ip 72.2 kA.
+    expect(main.faultAtBreaker?.ipKa).toBeCloseTo(72.2, 1);
+    expect(main.duty).toMatchObject({ type: 'MCCB', icuKa: 36 });
     expect(main.c3).toBe('pass');
     expect(main.c7?.state).toBe('pass');
-    expect(main.ikMinFarKa).toBeLessThan(33.15);
+    expect(main.ikMinFarKa).toBeLessThan(30.42);
     const db = all.find((c) => c.toId === 'db')!;
-    expect(db.faultAtBreaker?.ikMaxKa).toBeCloseTo(33.15, 2);
+    expect(db.faultAtBreaker?.ikMaxKa).toBeCloseTo(30.42, 2);
     expect(db.c7).toBeNull(); // a DB has no Icw field
   });
 

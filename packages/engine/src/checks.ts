@@ -59,7 +59,11 @@ export function checkFeeders(
         ? d.interimDefault
         : null;
   };
-  const allowancePct = num('cableLengthAllowancePct') ?? 0;
+  // Length: measured route + the fixed addition per cable (5 m) + any percentage (12.2, 3 Nov 2026).
+  const length = {
+    allowancePct: num('cableLengthAllowancePct') ?? 0,
+    additionM: num('cableLengthAdditionM'),
+  };
   const site = {
     airC: project.site.ambientAirC.value,
     groundC: project.site.ambientSoilC.value,
@@ -84,7 +88,7 @@ export function checkFeeders(
       ...d,
       size: null,
       vdUpstreamPct: null,
-      lengthM: cableLength(cable, allowancePct).totalM,
+      lengthM: cableLength(cable, length).totalM,
       rating: null,
       drop: null,
       vdTotalPct: null,
