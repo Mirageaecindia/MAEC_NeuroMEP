@@ -68,6 +68,18 @@ jobs:
             test-results/
           if-no-files-found: ignore
 
+  independent-checker:
+    name: Independent Python checker of the engine (WBS 1.6.8)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run check:independent -w @neuromep/engine
+
   dependency-audit:
     name: Dependency audit (high-risk issues block)
     runs-on: ubuntu-24.04

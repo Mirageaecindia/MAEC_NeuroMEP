@@ -14,7 +14,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:independent": "tsx --conditions=source checker/run.ts"
   },
   "dependencies": {
     "@neuromep/rulepacks": "0.1.0",
