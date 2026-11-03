@@ -109,12 +109,12 @@ describe('#TASK-21 / #TASK-22 C1 and C2 across the network (10.2 steps 4-6)', ()
     expect(db.trace.find((t) => /full allowance 2 %/.test(t.detail))).toBeTruthy();
   });
 
-  it('busbar feeders wait for the busbar datasheet (OI-13)', () => {
+  it('busbar feeders wait for the busbar manufacturer (Import File)', () => {
     const p = network();
     p.model.cables[0]!.feederType = 'busbar';
     const mdb = checkFeeders(p).find((c) => c.toId === 'mdb')!;
     expect(mdb).toMatchObject({ c1: 'blocked', status: 'blocked' });
-    expect(mdb.trace.at(-1)?.detail).toMatch(/OI-13/);
+    expect(mdb.trace.at(-1)?.detail).toBe('Choose the busbar manufacturer on Import File.');
   });
 
   it('takes the limit of the board fed (MCC 2 %, final circuits 4 %) and the Lead override', () => {

@@ -1,5 +1,6 @@
-import { cableLength, type ElementKind, type Project } from '@neuromep/shared';
-import { dewaMinimum, getRulePack } from '@neuromep/rulepacks';
+import { cableLength, loadSummaries, type ElementKind, type Project } from '@neuromep/shared';
+import { dewaMinimum, getRulePack, standardRating } from '@neuromep/rulepacks';
+import { busbarChoices, busbarDropPct, distributionFactor, type BusbarChoice } from './busbar.js';
 import { cableRating, voltageDrop, type Blocked, type Drop, type Rating } from './capacity.js';
 import { designFeeders, type FeederDesign } from './design.js';
 
@@ -29,6 +30,27 @@ export interface FeederCheck extends FeederDesign {
   c1: CheckState;
   c2: CheckState;
   warnings: string[];
+  /** A busbar feeder: the chosen rating of the project's busbar maker (3 Nov 2026). */
+  busbar: BusbarChoice | null;
+}
+
+/** A riser (Building tab): a busbar carrying the demand of the boards on its tap-offs. */
+export interface RiserCheck {
+  riserId: string;
+  /** 1-based number as shown in the Building tab. */
+  index: number;
+  ibA: number | null;
+  inA: number | null;
+  busbar: BusbarChoice | null;
+  /** Load distribution factor (n + 1) / 2n for n tap-offs. */
+  k: number;
+  lengthM: number | null;
+  vdPct: number | null;
+  /** Drop at the tap-offs (upstream + riser); null when not calculable. */
+  vdTotalPct: number | null;
+  vdLimitPct: number | null;
+  c2: CheckState;
+  notes: string[];
 }
 
 const SOURCES = new Set<ElementKind>(['transformer', 'generator', 'ups']);
@@ -47,6 +69,14 @@ export function checkFeeders(
   project: Project,
   sized: ReadonlyMap<string, Sizes> = new Map(),
 ): FeederCheck[] {
+  return checkNetworkFeeders(project, sized).feeders;
+}
+
+/** Feeders and risers together: risers sit between the feeders above and below them. */
+export function checkNetworkFeeders(
+  project: Project,
+  sized: ReadonlyMap<string, Sizes> = new Map(),
+): { feeders: FeederCheck[]; risers: RiserCheck[] } {
   const pack = getRulePack(project.rulePackId!, project.rulePackVersion!);
   const defaults = new Map(pack.calculationDefaults.map((d) => [d.key, d]));
   const num = (key: string) => {
@@ -76,6 +106,89 @@ export function checkFeeders(
   const into = new Map<string, FeederDesign[]>();
   for (const d of designs) into.set(d.toId, [...(into.get(d.toId) ?? []), d]);
 
+  const maker = project.calculation.busbarMaker;
+  const pfDefault = num('defaultLoadPowerFactor');
+  let summaries: ReturnType<typeof loadSummaries> | null = null;
+  const summaryOf = (id: string) => (summaries ??= loadSummaries(project, pfDefault)).get(id);
+
+  /** Drop up to a board: 0 at a source, the worst feeder into it, else through its riser. */
+  const upstreamOf = (boardId: string | undefined): number | null => {
+    const board = boardId ? elements.get(boardId) : undefined;
+    if (!board) return null;
+    if (SOURCES.has(board.kind)) return 0;
+    const known = (into.get(board.id) ?? [])
+      .map((u) => check(u).vdTotalPct)
+      .filter((v): v is number => v !== null);
+    if (known.length) return Math.max(...known);
+    const r = project.model.risers.findIndex((x) => x.feeds.includes(board.id));
+    return r >= 0 ? riser(r).vdTotalPct : null;
+  };
+
+  const riserChecks = new Map<number, RiserCheck>();
+  const riser = (i: number): RiserCheck => {
+    const done = riserChecks.get(i);
+    if (done) return done;
+    const r = project.model.risers[i]!;
+    const limit = num('voltageDropLimitPct.Busduct');
+    const result: RiserCheck = {
+      riserId: r.id,
+      index: i + 1,
+      ibA: null,
+      inA: null,
+      busbar: null,
+      k: distributionFactor(r.feeds.length),
+      lengthM: r.lengthM,
+      vdPct: null,
+      vdTotalPct: null,
+      vdLimitPct: limit,
+      c2: 'not-run',
+      notes: [],
+    };
+    riserChecks.set(i, result);
+    if (!r.fedFromId || r.feeds.length === 0) return result;
+    // Current: the demand of the boards on its tap-offs, largest phase (10.4).
+    const subs = r.feeds.map((id) => summaryOf(id)).filter((x) => !!x);
+    const d = subs.reduce(
+      (t, x) => ({ L1: t.L1 + x.demand.L1, L2: t.L2 + x.demand.L2, L3: t.L3 + x.demand.L3 }),
+      { L1: 0, L2: 0, L3: 0 },
+    );
+    const p = d.L1 + d.L2 + d.L3;
+    const q = subs.reduce((t, x) => t + (x.pf ? x.maxDemandKw * Math.tan(Math.acos(x.pf)) : 0), 0);
+    const pf = p > 0 ? p / Math.hypot(p, q) : pfDefault;
+    if (!pf || p <= 0) return result;
+    result.ibA =
+      d.L1 === d.L2 && d.L2 === d.L3
+        ? (p * 1000) / (Math.sqrt(3) * 400 * pf)
+        : (Math.max(d.L1, d.L2, d.L3) * 1000) / (230 * pf);
+    result.inA = standardRating(pack.devices, result.ibA);
+    if (!maker) {
+      result.notes.push('Choose the busbar manufacturer on Import File to calculate the riser.');
+      return result;
+    }
+    if (!r.lengthM) {
+      result.notes.push(`Enter the length of Riser ${i + 1} in the Building tab.`);
+      return result;
+    }
+    const options = busbarChoices(pack, maker).filter((b) => b.ratingA >= (result.inA ?? Infinity));
+    if (!options.length) {
+      result.notes.push(
+        `No ${maker} busbar rating at or above ${result.inA ?? '-'} A in the data.`,
+      );
+      return result;
+    }
+    const up = upstreamOf(r.fedFromId) ?? 0;
+    const drop = (b: BusbarChoice) => busbarDropPct(b, result.ibA!, pf, r.lengthM!, result.k);
+    const pick = options.find((b) => limit === null || up + drop(b) <= limit) ?? options[0]!;
+    result.busbar = pick;
+    result.vdPct = drop(pick);
+    result.vdTotalPct = up + result.vdPct;
+    result.c2 = limit === null ? 'not-run' : result.vdTotalPct <= limit ? 'pass' : 'fail';
+    result.notes.push(
+      `${pick.ratingA} A ${maker} busbar, ${r.lengthM} m, k ${result.k.toFixed(3)} (${r.feeds.length} tap-offs): Vd ${result.vdPct.toFixed(2)} %, total ${result.vdTotalPct.toFixed(2)} % vs ${limit ?? '-'} %`,
+    );
+    return result;
+  };
+
   const checked = new Map<string, FeederCheck>();
   const check = (d: FeederDesign): FeederCheck => {
     const done = checked.get(d.cableId);
@@ -96,6 +209,7 @@ export function checkFeeders(
       c1: 'not-run',
       c2: 'not-run',
       warnings: [],
+      busbar: null,
       errors: [...d.errors],
       trace: [...d.trace],
     };
@@ -107,15 +221,57 @@ export function checkFeeders(
       result.trace.push({ step: which.toUpperCase(), detail: b.detail });
     };
 
-    if (cable.feederType === 'busbar') {
+    if (cable.feederType === 'busbar' && !maker) {
       block(
-        {
-          ok: false,
-          code: 'E2102',
-          detail: 'Busbar rating and R / X need the busbar datasheet (OI-13).',
-        },
+        { ok: false, code: 'E2102', detail: 'Choose the busbar manufacturer on Import File.' },
         'c1',
       );
+      return result;
+    } else if (
+      cable.feederType === 'busbar' &&
+      d.status !== 'blocked' &&
+      d.ibA !== null &&
+      d.device &&
+      d.pf !== null
+    ) {
+      // Busbar feeder: the smallest rating >= In (C1), moving up if C2 needs it.
+      const options = busbarChoices(pack, maker!).filter((b) => b.ratingA >= d.device!.ratingA);
+      if (!options.length) {
+        block(
+          {
+            ok: false,
+            code: 'E2101',
+            detail: `No ${maker} busbar rating at or above ${d.device.ratingA} A in the data.`,
+          },
+          'c1',
+        );
+        return result;
+      }
+      const up = upstreamOf(cable.from.elementId);
+      const pct = (b: BusbarChoice) => busbarDropPct(b, d.ibA!, d.pf!, result.lengthM);
+      const pick =
+        options.find((b) => up === null || limit === null || up + pct(b) <= limit) ?? options[0]!;
+      const vu = Math.sqrt(3) * (pick.rHotMohmM * d.pf + pick.xMohmM * Math.sin(Math.acos(d.pf)));
+      result.busbar = pick;
+      result.c1 = 'pass';
+      result.drop = {
+        vuMvAm: vu,
+        vcV: (vu * d.ibA * result.lengthM) / 1000,
+        vcPct: pct(pick),
+      };
+      result.vdUpstreamPct = up;
+      if (up !== null) {
+        result.vdTotalPct = up + result.drop.vcPct;
+        result.c2 = limit === null ? 'not-run' : result.vdTotalPct <= limit ? 'pass' : 'fail';
+      }
+      result.trace.push({
+        step: 'C1',
+        detail: `${pick.ratingA} A ${maker} busbar (R95 ${pick.rHotMohmM.toFixed(4)}, X ${pick.xMohmM} mOhm/m) vs In ${d.device.ratingA} A: pass`,
+      });
+      result.trace.push({
+        step: 'C2',
+        detail: `Vd ${result.drop.vcPct.toFixed(2)} %, total ${result.vdTotalPct === null ? '-' : `${result.vdTotalPct.toFixed(2)} %`} vs ${limit ?? '-'} %`,
+      });
       return result;
     }
     if (d.status === 'blocked' || d.ibA === null || !d.device || d.pf === null) return result;
@@ -172,11 +328,7 @@ export function checkFeeders(
       // Cumulative drop: from a source it starts at 0; otherwise the worst feeder into the source
       // board (normal or standby input of an ATS). When that is unknown - a riser (busbar
       // datasheet, OI-13) or no supply path - the level above is taken at its full allowance (10.13).
-      const known = (from ? (into.get(from.id) ?? []) : [])
-        .map((u) => check(u).vdTotalPct)
-        .filter((v): v is number => v !== null);
-      let upPct: number | null =
-        from && SOURCES.has(from.kind) ? 0 : known.length ? Math.max(...known) : null;
+      let upPct = upstreamOf(from?.id);
       if (upPct === null && from) {
         upPct = num(`voltageDropLimitPct.${limitKey(from.kind)}`);
         result.trace.push({
@@ -196,5 +348,6 @@ export function checkFeeders(
     }
     return result;
   };
-  return designs.map(check);
+  const feeders = designs.map(check);
+  return { feeders, risers: project.model.risers.map((_, i) => riser(i)) };
 }

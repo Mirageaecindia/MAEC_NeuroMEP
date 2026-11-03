@@ -481,5 +481,151 @@
       },
       "secondLevel": 0.8
     }
+  },
+  "busbars": {
+    "note": "Busbar Data.xlsx (manager 3 Nov 2026): use R at 95 deg C and X; R(T) = R20 x (1 + 0.00393 x (T - 20)). Icw / Ipk from the catalogue extracts in the same file (Schneider I-LINE H, Powerbar; Powerbar 2000 / 2500 A: the lower of the variants shown). Gersan: no Icw / Ipk given.",
+    "alpha": 0.00393,
+    "operatingC": 95,
+    "makers": {
+      "gersan": [
+        {
+          "ratingA": 800,
+          "r20MohmM": 0.047,
+          "xMohmM": 0.011,
+          "icwKa": null,
+          "ipkKa": null
+        },
+        {
+          "ratingA": 1000,
+          "r20MohmM": 0.051,
+          "xMohmM": 0.022,
+          "icwKa": null,
+          "ipkKa": null
+        },
+        {
+          "ratingA": 1250,
+          "r20MohmM": 0.04,
+          "xMohmM": 0.016,
+          "icwKa": null,
+          "ipkKa": null
+        },
+        {
+          "ratingA": 1600,
+          "r20MohmM": 0.021,
+          "xMohmM": 0.014,
+          "icwKa": null,
+          "ipkKa": null
+        },
+        {
+          "ratingA": 2000,
+          "r20MohmM": 0.017,
+          "xMohmM": 0.011,
+          "icwKa": null,
+          "ipkKa": null
+        },
+        {
+          "ratingA": 2500,
+          "r20MohmM": 0.016,
+          "xMohmM": 0.012,
+          "icwKa": null,
+          "ipkKa": null
+        }
+      ],
+      "powerbar": [
+        {
+          "ratingA": 800,
+          "r20MohmM": 0.085,
+          "xMohmM": 0.032,
+          "icwKa": 36,
+          "ipkKa": 76
+        },
+        {
+          "ratingA": 1000,
+          "r20MohmM": 0.065,
+          "xMohmM": 0.026,
+          "icwKa": 50,
+          "ipkKa": 105
+        },
+        {
+          "ratingA": 1250,
+          "r20MohmM": 0.051,
+          "xMohmM": 0.022,
+          "icwKa": 65,
+          "ipkKa": 143
+        },
+        {
+          "ratingA": 1600,
+          "r20MohmM": 0.033,
+          "xMohmM": 0.013,
+          "icwKa": 70,
+          "ipkKa": 154
+        },
+        {
+          "ratingA": 2000,
+          "r20MohmM": 0.023,
+          "xMohmM": 0.01,
+          "icwKa": 85,
+          "ipkKa": 187
+        },
+        {
+          "ratingA": 2500,
+          "r20MohmM": 0.021,
+          "xMohmM": 0.009,
+          "icwKa": 85,
+          "ipkKa": 187
+        },
+        {
+          "ratingA": 3200,
+          "r20MohmM": 0.016,
+          "xMohmM": 0.0077,
+          "icwKa": null,
+          "ipkKa": null
+        }
+      ],
+      "schneider": [
+        {
+          "ratingA": 800,
+          "r20MohmM": 0.074,
+          "xMohmM": 0.022,
+          "icwKa": 30,
+          "ipkKa": 63
+        },
+        {
+          "ratingA": 1000,
+          "r20MohmM": 0.056,
+          "xMohmM": 0.016,
+          "icwKa": 50,
+          "ipkKa": 110
+        },
+        {
+          "ratingA": 1250,
+          "r20MohmM": 0.042,
+          "xMohmM": 0.012,
+          "icwKa": 65,
+          "ipkKa": 143
+        },
+        {
+          "ratingA": 1600,
+          "r20MohmM": 0.032,
+          "xMohmM": 0.009,
+          "icwKa": 65,
+          "ipkKa": 143
+        },
+        {
+          "ratingA": 2000,
+          "r20MohmM": 0.025,
+          "xMohmM": 0.008,
+          "icwKa": 80,
+          "ipkKa": 176
+        },
+        {
+          "ratingA": 2500,
+          "r20MohmM": 0.019,
+          "xMohmM": 0.007,
+          "icwKa": 80,
+          "ipkKa": 176
+        }
+      ]
+    }
   }
 }

@@ -71,11 +71,20 @@ export function parallel(a: Z, b: Z): Z {
  * Fault levels at every component reached from a source in one scenario. `sizes` and `lengths`
  * give each feeder's size and length (from the C1 / C2 step).
  */
+/** Busbar run impedance per metre (mOhm/m): R20 for maximum, R at 95 deg C for minimum faults. */
+export interface BusbarZ {
+  r20: number;
+  rHot: number;
+  x: number;
+}
+
 export function faultLevels(
   project: Project,
   scenario: Scenario,
   sizes: ReadonlyMap<string, Sizes>,
   lengths: ReadonlyMap<string, number>,
+  /** Busbar feeders (by cable id) and risers (by riser id) with a chosen busbar. */
+  busbars: ReadonlyMap<string, BusbarZ> = new Map(),
 ): Map<string, FaultResult> {
   const pack = getRulePack(project.rulePackId!, project.rulePackVersion!);
   const factor = (key: string) =>
@@ -226,7 +235,25 @@ export function faultLevels(
       if (to.kind === 'ats' && cable.to.port !== scenario) continue;
       const next = new Set([...seen, to.id]);
       if (cable.feederType === 'busbar') {
-        visit(to, max, null, [...notes, 'Busbar impedance not included (datasheet, OI-13).'], next);
+        const b = busbars.get(cable.id);
+        const len = lengths.get(cable.id);
+        if (!b || len === undefined) {
+          visit(
+            to,
+            max,
+            null,
+            [...notes, 'Busbar impedance not included (no busbar chosen).'],
+            next,
+          );
+        } else {
+          visit(
+            to,
+            add(max, { r: b.r20 * len, x: b.x * len }),
+            min ? add(min, { r: b.rHot * len, x: b.x * len }) : null,
+            notes,
+            next,
+          );
+        }
         continue;
       }
       const s = sizes.get(cable.id);
@@ -247,17 +274,29 @@ export function faultLevels(
     }
     for (const r of risers) {
       if (r.fedFromId !== e.id) continue;
+      const b = busbars.get(r.id);
       for (const id of r.feeds) {
         const to = byId.get(id);
         if (!to || seen.has(id)) continue;
-        // Riser busbar R / X unknown: the maximum ignores it (higher, safe side), no minimum.
-        visit(
-          to,
-          max,
-          null,
-          [...notes, 'Riser impedance not included (busbar datasheet, OI-13).'],
-          new Set([...seen, id]),
-        );
+        const next = new Set([...seen, id]);
+        if (b && r.lengthM) {
+          visit(
+            to,
+            add(max, { r: b.r20 * r.lengthM, x: b.x * r.lengthM }),
+            min ? add(min, { r: b.rHot * r.lengthM, x: b.x * r.lengthM }) : null,
+            notes,
+            next,
+          );
+        } else {
+          // Riser busbar unknown (no maker or length): ignored for the maximum (safe side), no minimum.
+          visit(
+            to,
+            max,
+            null,
+            [...notes, 'Riser impedance not included (busbar or length missing).'],
+            next,
+          );
+        }
       }
     }
   };

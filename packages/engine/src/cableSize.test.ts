@@ -62,6 +62,24 @@ describe('#TASK-27 safety rules C8 / C9 (10.14)', () => {
     expect(feederTo(b, 'crit').c8.state).toBe('pass');
   });
 
+  it('C8 / C9 follow the supply through a riser: UPS above the riser, FLS below it', () => {
+    const b = safetyBuilding();
+    b.add('ups', 'ups');
+    b.add('smdb', 'sm');
+    b.project.model.cables = b.project.model.cables.filter(
+      (c) => !['fls', 'crit'].includes(c.to.elementId),
+    );
+    b.feed('esmdb', 'ups', 5);
+    b.project.model.risers = [{ id: 'r', lengthM: 20, widthM: 1, fedFromId: 'ups', feeds: ['sm'] }];
+    b.feed('sm', 'crit', 10);
+    b.feed('sm', 'fls', 10);
+    const out = cableSize(b.project).feeders;
+    expect(out.find((f) => f.toId === 'crit')!.c8.state).toBe('pass');
+    // FLS below the riser: its feeder and the cables up to the generator are on the FLS path.
+    expect(out.find((f) => f.toId === 'fls')!.c9.state).toBe('fail');
+    expect(out.find((f) => f.cableId === 'c-gen-ats')!.c9.state).toBe('fail');
+  });
+
   it('C8 is not required for normal loads', () => {
     const b = safetyBuilding();
     b.db('norm', [1, 1, 1]);

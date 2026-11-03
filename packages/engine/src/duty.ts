@@ -1,7 +1,7 @@
 import type { Element, Project } from '@neuromep/shared';
 import { getRulePack, type BreakerType } from '@neuromep/rulepacks';
-import { checkFeeders, type CheckState, type FeederCheck, type Sizes } from './checks.js';
-import { faultLevels, type FaultResult } from './shortCircuit.js';
+import { checkNetworkFeeders, type CheckState, type FeederCheck, type Sizes } from './checks.js';
+import { faultLevels, type BusbarZ, type FaultResult } from './shortCircuit.js';
 
 /**
  * Fault duty (10.8, V-10): breaker breaking / making capacity (C3) at the board where it is
@@ -71,12 +71,31 @@ export interface DutyCheck extends FeederCheck {
   duty: BreakerDuty | null;
   c3: CheckState | 'not-calculated';
   c7: Withstand | null;
+  /** A busbar feeder's own short-time withstand (C7) at the fault level where it starts. */
+  busbarWithstand: Withstand | null;
 }
 
 /** C1 / C2 (checks.ts), then the fault levels at the sizes found and C3 / C7 on every feeder. */
 export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes>): DutyCheck[] {
   const pack = getRulePack(project.rulePackId!, project.rulePackVersion!);
-  const feeders = checkFeeders(project, sized);
+  const { feeders, risers } = checkNetworkFeeders(project, sized);
+  const busbars = new Map<string, BusbarZ>();
+  for (const f of feeders) {
+    if (f.busbar)
+      busbars.set(f.cableId, {
+        r20: f.busbar.r20MohmM,
+        rHot: f.busbar.rHotMohmM,
+        x: f.busbar.xMohmM,
+      });
+  }
+  for (const r of risers) {
+    if (r.busbar)
+      busbars.set(r.riserId, {
+        r20: r.busbar.r20MohmM,
+        rHot: r.busbar.rHotMohmM,
+        x: r.busbar.xMohmM,
+      });
+  }
   const sizes = new Map<string, Sizes>();
   const lengths = new Map<string, number>();
   for (const f of feeders) {
@@ -84,7 +103,7 @@ export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes
     lengths.set(f.cableId, f.lengthM);
   }
   const levels = (['normal', 'standby'] as const).map((s) =>
-    faultLevels(project, s, sizes, lengths),
+    faultLevels(project, s, sizes, lengths, busbars),
   );
   const ok = (r: FaultResult | undefined) => (r?.ok ? r : null);
   const elements = new Map(project.model.elements.map((e) => [e.id, e]));
@@ -113,6 +132,7 @@ export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes
       duty: null,
       c3: 'not-calculated',
       c7: null,
+      busbarWithstand: null,
     };
     for (const n of new Set(at.flatMap((x) => x.notes)))
       result.trace.push({ step: 'C3', detail: n });
@@ -136,6 +156,23 @@ export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes
             : 'above the highest rating (85 kA)'
         }`,
       });
+    }
+    // C7 of a busbar feeder itself: its Icw / Ipk against the fault where it starts.
+    if (f.busbar && fault) {
+      const { icwKa, ipkKa, ratingA } = f.busbar;
+      if (icwKa === null || ipkKa === null) {
+        result.busbarWithstand = {
+          state: 'not-calculated',
+          detail: `Icw / Ipk of the ${ratingA} A ${f.busbar.maker} busbar are not in the data.`,
+        };
+      } else {
+        const ok = icwKa >= fault.ikMaxKa && ipkKa >= fault.ipKa;
+        result.busbarWithstand = {
+          state: ok ? 'pass' : 'fail',
+          detail: `${ratingA} A busbar: Icw ${icwKa} kA vs ${fault.ikMaxKa.toFixed(2)} kA, Ipk ${ipkKa} kA vs ip ${fault.ipKa.toFixed(2)} kA`,
+        };
+      }
+      result.trace.push({ step: 'C7', detail: result.busbarWithstand.detail });
     }
     // C7 on the board this feeder supplies.
     const to = elements.get(f.toId)!;

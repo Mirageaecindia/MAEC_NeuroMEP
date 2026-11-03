@@ -72,6 +72,20 @@ export const SourceDataSchema = z.strictObject({
 });
 export type SourceData = z.infer<typeof SourceDataSchema>;
 
+/**
+ * Busbar trunking data per manufacturer (manager's answers 3 Nov 2026, "Busbar Data.xlsx"):
+ * R at 20 deg C and X in mOhm/m per rating; short-time withstand Icw (1 s) and Ipk where the
+ * catalogue gives them (null otherwise).
+ */
+export const BusbarRowSchema = z.strictObject({
+  ratingA: z.number().positive(),
+  r20MohmM: z.number().positive(),
+  xMohmM: z.number().positive(),
+  icwKa: z.number().positive().nullable(),
+  ipkKa: z.number().positive().nullable(),
+});
+export type BusbarRow = z.infer<typeof BusbarRowSchema>;
+
 /** Dubai demand-category factor sets (manager's answers 3 Nov 2026). */
 export const DemandMethodSetSchema = z.strictObject({
   byCategory: z.record(DemandCategorySchema, z.number().min(0).max(1)),
@@ -98,6 +112,17 @@ export const RulePackSchema = z.strictObject({
   calculationDefaults: z.array(CalculationDefaultSchema),
   devices: DevicesSchema,
   sourceData: SourceDataSchema,
+  busbars: z.strictObject({
+    note: z.string(),
+    /** Temperature coefficient of resistance and the temperature of the R used (95 deg C). */
+    alpha: z.number().positive(),
+    operatingC: z.number(),
+    makers: z.strictObject({
+      gersan: z.array(BusbarRowSchema),
+      powerbar: z.array(BusbarRowSchema),
+      schneider: z.array(BusbarRowSchema),
+    }),
+  }),
   demandMethods: z.strictObject({
     'dubai-non-emaar': DemandMethodSetSchema,
     'dubai-emaar': DemandMethodSetSchema,
