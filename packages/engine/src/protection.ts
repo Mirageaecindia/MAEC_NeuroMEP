@@ -1,5 +1,6 @@
 import type { Element, Project } from '@neuromep/shared';
 import { dewaMinimum, getRulePack } from '@neuromep/rulepacks';
+import type { Sizes } from './checks.js';
 import { checkNetwork, type DutyCheck } from './duty.js';
 import { faultLevels, type FaultResult } from './shortCircuit.js';
 import { tableValue } from './tables.js';
@@ -78,10 +79,10 @@ function loopPerMetre(
 }
 
 /** C1 - C3, C7 (checkNetwork), then the earth conductor and C4 - C6 on every feeder. */
-export function checkAll(project: Project): FullCheck[] {
+export function checkAll(project: Project, sized?: ReadonlyMap<string, Sizes>): FullCheck[] {
   const pack = getRulePack(project.rulePackId!, project.rulePackVersion!);
   const ticked = project.calculation.checks;
-  const duties = checkNetwork(project);
+  const duties = checkNetwork(project, sized);
   const elements = new Map(project.model.elements.map((e) => [e.id, e]));
   const cables = new Map(project.model.cables.map((c) => [c.id, c]));
   const byTo = new Map(duties.map((d) => [d.toId, d]));

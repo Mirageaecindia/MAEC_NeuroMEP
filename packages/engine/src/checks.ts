@@ -4,15 +4,22 @@ import { cableRating, voltageDrop, type Blocked, type Drop, type Rating } from '
 import { designFeeders, type FeederDesign } from './design.js';
 
 /**
- * C1 and C2 for every feeder (10.6, 10.7) at its starting size (10.2 step 4: the locked size,
- * else the DEWA minimum for the breaker, C6), with the voltage drop accumulated top-down from the
- * source. Auto-sizing (re-running with larger sizes until every check passes) is WBS 1.6.6.
+ * C1 and C2 for every feeder (10.6, 10.7) at a given size: the locked size, else a size chosen by
+ * the sizing loop (sizing.ts), else the starting size - the DEWA minimum for the breaker (10.2
+ * step 4, C6) - with the voltage drop accumulated top-down from the source.
  */
+
+export interface Sizes {
+  sizeMm2: number;
+  runs: number;
+}
 
 export type CheckState = 'pass' | 'fail' | 'blocked' | 'not-run';
 
 export interface FeederCheck extends FeederDesign {
-  size: { sizeMm2: number; runs: number; from: 'locked' | 'dewa-minimum' } | null;
+  size: (Sizes & { from: 'locked' | 'dewa-minimum' | 'sized' }) | null;
+  /** Voltage drop up to the feeder's source board (worst incoming path); null when unknown. */
+  vdUpstreamPct: number | null;
   lengthM: number;
   rating: Rating | null;
   drop: Drop | null;
@@ -27,7 +34,7 @@ export interface FeederCheck extends FeederDesign {
 const SOURCES = new Set<ElementKind>(['transformer', 'generator', 'ups']);
 
 /** Rule-pack limit key for the board a feeder supplies (10.7, Ti sheet). */
-function limitKey(kind: ElementKind): string {
+export function limitKey(kind: ElementKind): string {
   if (['lv-panel', 'mdb', 'emdb', 'acb-panel'].includes(kind)) return 'MDB';
   if (['smdb', 'esmdb'].includes(kind)) return 'SMDB';
   if (['mcc', 'emcc'].includes(kind)) return 'MCC';
@@ -36,7 +43,10 @@ function limitKey(kind: ElementKind): string {
   return 'FinalCircuits';
 }
 
-export function checkFeeders(project: Project): FeederCheck[] {
+export function checkFeeders(
+  project: Project,
+  sized: ReadonlyMap<string, Sizes> = new Map(),
+): FeederCheck[] {
   const pack = getRulePack(project.rulePackId!, project.rulePackVersion!);
   const defaults = new Map(pack.calculationDefaults.map((d) => [d.key, d]));
   const num = (key: string) => {
@@ -58,7 +68,9 @@ export function checkFeeders(project: Project): FeederCheck[] {
   const elements = new Map(project.model.elements.map((e) => [e.id, e]));
   const cables = new Map(project.model.cables.map((c) => [c.id, c]));
   const designs = designFeeders(project);
-  const byTo = new Map(designs.map((d) => [d.toId, d]));
+  // Feeders into each component: an ATS has two (normal and standby input).
+  const into = new Map<string, FeederDesign[]>();
+  for (const d of designs) into.set(d.toId, [...(into.get(d.toId) ?? []), d]);
 
   const checked = new Map<string, FeederCheck>();
   const check = (d: FeederDesign): FeederCheck => {
@@ -71,6 +83,7 @@ export function checkFeeders(project: Project): FeederCheck[] {
     const result: FeederCheck = {
       ...d,
       size: null,
+      vdUpstreamPct: null,
       lengthM: cableLength(cable, allowancePct).totalM,
       rating: null,
       drop: null,
@@ -106,11 +119,14 @@ export function checkFeeders(project: Project): FeederCheck[] {
     // Starting size: locked by the engineer, else the DEWA minimum for the breaker (C6).
     const locked = cable.locks.sizeMm2;
     const dewa = dewaMinimum(pack.devices, d.device.ratingA);
+    const chosen = sized.get(d.cableId);
     result.size = locked
       ? { sizeMm2: locked, runs: cable.locks.runs ?? 1, from: 'locked' }
-      : dewa
-        ? { sizeMm2: dewa.sizeMm2, runs: dewa.runs, from: 'dewa-minimum' }
-        : null;
+      : chosen
+        ? { ...chosen, from: 'sized' }
+        : dewa
+          ? { sizeMm2: dewa.sizeMm2, runs: dewa.runs, from: 'dewa-minimum' }
+          : null;
     if (!result.size) {
       block(
         { ok: false, code: 'E2101', detail: `No DEWA minimum size for ${d.device.ratingA} A.` },
@@ -149,18 +165,23 @@ export function checkFeeders(project: Project): FeederCheck[] {
     else {
       result.drop = drop;
       for (const n of drop.notes) result.trace.push({ step: 'C2', detail: n });
-      // Cumulative drop: from a source it starts at 0; otherwise add the feeder into the source
-      // board. A riser between them has no voltage drop yet (busbar datasheet, OI-13).
-      const upstream = from && byTo.get(from.id);
-      const upPct =
-        from && SOURCES.has(from.kind) ? 0 : upstream ? check(upstream).vdTotalPct : null;
-      if (upPct === null) {
+      // Cumulative drop: from a source it starts at 0; otherwise the worst feeder into the source
+      // board (normal or standby input of an ATS). When that is unknown - a riser (busbar
+      // datasheet, OI-13) or no supply path - the level above is taken at its full allowance (10.13).
+      const known = (from ? (into.get(from.id) ?? []) : [])
+        .map((u) => check(u).vdTotalPct)
+        .filter((v): v is number => v !== null);
+      let upPct: number | null =
+        from && SOURCES.has(from.kind) ? 0 : known.length ? Math.max(...known) : null;
+      if (upPct === null && from) {
+        upPct = num(`voltageDropLimitPct.${limitKey(from.kind)}`);
         result.trace.push({
           step: 'C2',
-          detail:
-            'Upstream voltage drop unknown (riser busbar or no supply path), total not calculated.',
+          detail: `Upstream voltage drop unknown (riser busbar or no supply path): ${from.tag} taken at its full allowance ${upPct ?? '-'} % (10.13).`,
         });
-      } else {
+      }
+      result.vdUpstreamPct = upPct;
+      if (upPct !== null) {
         result.vdTotalPct = upPct + drop.vcPct;
         result.c2 = limit === null ? 'not-run' : result.vdTotalPct <= limit ? 'pass' : 'fail';
       }

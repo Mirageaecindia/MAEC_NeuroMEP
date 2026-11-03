@@ -94,7 +94,7 @@ describe('#TASK-21 / #TASK-22 C1 and C2 across the network (10.2 steps 4-6)', ()
     expect(db.c2).toBe('pass');
   });
 
-  it('does not total the drop across a riser yet (busbar datasheet, OI-13)', () => {
+  it('across a riser (drop unknown, OI-13) takes the board above at its full allowance (10.13)', () => {
     const p = network();
     p.model.cables = [p.model.cables[0]!];
     p.model.risers = [{ id: 'r1', lengthM: 30, widthM: 1, fedFromId: 'mdb', feeds: ['db'] }];
@@ -103,9 +103,10 @@ describe('#TASK-21 / #TASK-22 C1 and C2 across the network (10.2 steps 4-6)', ()
     p.model.risers[0]!.feeds = ['sm'];
     p.model.cables.push(feeder(sm, p.model.elements[2]!, 40));
     const db = toDb(p);
-    expect(db.vdTotalPct).toBeNull();
-    expect(db.c2).toBe('not-run');
-    expect(db.drop?.vcPct).toBeCloseTo(1.36, 2);
+    expect(db.vdUpstreamPct).toBe(2); // SMDB limit
+    expect(db.vdTotalPct).toBeCloseTo(2 + 1.36, 2);
+    expect(db.c2).toBe('fail'); // 3.36 % > DB 2.5 %
+    expect(db.trace.find((t) => /full allowance 2 %/.test(t.detail))).toBeTruthy();
   });
 
   it('busbar feeders wait for the busbar datasheet (OI-13)', () => {

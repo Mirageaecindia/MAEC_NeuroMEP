@@ -1,7 +1,7 @@
 import type { Element, Project } from '@neuromep/shared';
 import { getRulePack, type BreakerType } from '@neuromep/rulepacks';
-import { checkFeeders, type CheckState, type FeederCheck } from './checks.js';
-import { faultLevels, type FaultResult, type Sizes } from './shortCircuit.js';
+import { checkFeeders, type CheckState, type FeederCheck, type Sizes } from './checks.js';
+import { faultLevels, type FaultResult } from './shortCircuit.js';
 
 /**
  * Fault duty (10.8, V-10): breaker breaking / making capacity (C3) at the board where it is
@@ -74,9 +74,9 @@ export interface DutyCheck extends FeederCheck {
 }
 
 /** C1 / C2 (checks.ts), then the fault levels at the sizes found and C3 / C7 on every feeder. */
-export function checkNetwork(project: Project): DutyCheck[] {
+export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes>): DutyCheck[] {
   const pack = getRulePack(project.rulePackId!, project.rulePackVersion!);
-  const feeders = checkFeeders(project);
+  const feeders = checkFeeders(project, sized);
   const sizes = new Map<string, Sizes>();
   const lengths = new Map<string, number>();
   for (const f of feeders) {

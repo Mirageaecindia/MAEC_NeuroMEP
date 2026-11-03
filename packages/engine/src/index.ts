@@ -12,3 +12,5 @@ export * from './checks.js';
 export * from './shortCircuit.js';
 export * from './duty.js';
 export * from './protection.js';
+export * from './autosize.js';
+export * from './cableSize.js';

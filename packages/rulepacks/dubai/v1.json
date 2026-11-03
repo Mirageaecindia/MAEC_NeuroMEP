@@ -128,6 +128,16 @@
       "openItem": "OI-16"
     },
     {
+      "key": "maxParallelRuns",
+      "group": "Cables",
+      "label": "Maximum parallel runs",
+      "unit": "runs",
+      "type": "number",
+      "value": null,
+      "interimDefault": 4,
+      "openItem": "OI-21"
+    },
+    {
       "key": "voltageDropLimitPct.MDB",
       "group": "Voltage-drop limits (cumulative)",
       "label": "MDB",

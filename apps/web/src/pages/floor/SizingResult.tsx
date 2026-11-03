@@ -12,6 +12,7 @@ import {
 const REASONS: Record<StoredResult['provisionalReasons'][number], string> = {
   'upstream-not-connected': 'upstream not connected',
   'demand-factors-tbc': 'demand factors TBC (E1901)',
+  'device-data-required': 'breaker data required (E2402)',
   'unverified-ampacity-tables': 'ampacity tables not verified (V-12)',
 };
 

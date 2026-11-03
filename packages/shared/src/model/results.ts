@@ -55,6 +55,8 @@ export const ResultStatusSchema = z.enum([
 export const ProvisionalReasonSchema = z.enum([
   'upstream-not-connected',
   'demand-factors-tbc',
+  /** A ticked check (C4 / C5) waits for breaker catalogue data (OI-03, E2402). */
+  'device-data-required',
   /** No longer produced since 2 Nov 2026 (CableSizer tables approved); kept for stored results. */
   'unverified-ampacity-tables',
 ]);

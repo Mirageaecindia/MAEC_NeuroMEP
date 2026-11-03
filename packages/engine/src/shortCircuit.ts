@@ -1,5 +1,6 @@
 import type { Cable, Element, Project } from '@neuromep/shared';
 import { getRulePack } from '@neuromep/rulepacks';
+import type { Sizes } from './checks.js';
 import { tableValue } from './tables.js';
 
 /**
@@ -10,10 +11,7 @@ import { tableValue } from './tables.js';
  */
 
 export type Scenario = 'normal' | 'standby';
-export interface Sizes {
-  sizeMm2: number;
-  runs: number;
-}
+export type { Sizes } from './checks.js';
 
 /** R and X in mOhm. */
 interface Z {
