@@ -155,6 +155,7 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
 
   it('marks results Provisional: upstream not connected, TBC factors (E1901), not the CableSizer tables', () => {
     const p = network([5, 5, 5]);
+    p.calculation.demandMethod = 'manual';
     p.calculation.demandFactors.byLoadType['2'] = { value: null, source: 'rulepack' };
     p.model.cables = p.model.cables.slice(1); // TX no longer feeds the MDB
     const d = feederTo(p, 'db');

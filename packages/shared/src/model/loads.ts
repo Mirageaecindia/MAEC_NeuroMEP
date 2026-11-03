@@ -1,4 +1,9 @@
-import { LoadTypeCodeSchema, type LoadTypeCode } from '../project/enums.js';
+import {
+  DemandCategorySchema,
+  LoadTypeCodeSchema,
+  type DemandCategory,
+  type LoadTypeCode,
+} from '../project/enums.js';
 import type { Project } from '../project/schema.js';
 import type { Element, ElementKind, LoadLine } from './elements.js';
 
@@ -6,10 +11,11 @@ import type { Element, ElementKind, LoadLine } from './elements.js';
  * Live load aggregation (design doc 10.3; 10.2 step 2 only - the right-side load table, FR-18).
  * Not the engine: no cable sizes, no fault levels. Updated on every model change.
  *
- * Demand factors (decision 29 Oct 2026, until OI-02): the load-type factor is applied once at each
- * board to its connected load per type (never multiplied down the tree); a TBC factor counts as
- * 1.0 (E1901); demand-category factors are not applied until OI-02 says how they combine, so the
- * maximum demand stays Provisional.
+ * Demand factors are applied once at a board to its connected load (never multiplied down the
+ * tree); a TBC factor counts as 1.0 (E1901). Two methods (`calculation.demandMethod`):
+ * - Dubai (manager's answer 3 Nov 2026): the demand-category factor of each category at the LV
+ *   panel / MDB level only, the SMDB-level factor at SMDBs (1.0, Emaar 0.8), 100 % elsewhere.
+ * - Manual (A-15): the load-type factor at every board, with panel overrides (D-03).
  */
 
 export interface PhaseKw {
@@ -40,11 +46,22 @@ export interface LoadSummary {
   pf: number | null;
   /** Largest phase current at maximum demand, Ib = max(P_phase x 1000 / (230 x pf)) (10.4). */
   currentA: number | null;
-  /** Load types whose demand factor is TBC and counted as 1.0 (E1901). */
+  /** Connected load per demand category and phase (kW); loads without a category are 'none'. */
+  byCategory: Partial<Record<DemandCategory | 'none', PhaseKw>>;
+  /** Load types (manual) or categories (Dubai) whose factor is TBC and counted as 1.0 (E1901). */
   tbcFactors: LoadTypeCode[];
+  tbcCategories: DemandCategory[];
 }
 
-/** Boards apply the demand factor of each load type to their connected load (10.3). */
+/** Main boards: the Dubai category factors apply here (LV panel / MDB level). */
+const MAIN = new Set<ElementKind>(['lv-panel', 'mdb', 'emdb', 'acb-panel']);
+const SECOND = new Set<ElementKind>(['smdb', 'esmdb']);
+
+/** Demand category of a load: its DB's or load point's own category; none for panel lines. */
+const categoryOf = (e: Element): DemandCategory | 'none' =>
+  'demandCategory' in e && e.demandCategory ? e.demandCategory : 'none';
+
+/** Boards apply the demand factor of each load type to their connected load (10.3, manual). */
 const BOARDS = new Set<ElementKind>([
   'lv-panel',
   'mdb',
@@ -96,6 +113,9 @@ export function loadSummaries(
   // Boards on a riser tap-off are fed by the riser's source (FR-20).
   for (const r of risers ?? []) if (r.fedFromId) for (const id of r.feeds) link(r.fedFromId, id);
   const factors = project.calculation.demandFactors.byLoadType;
+  const method = project.calculation.demandMethod ?? 'dubai-non-emaar';
+  const catFactors = project.calculation.demandFactors.byCategory;
+  const secondLevel = project.calculation.demandFactors.secondLevel?.value ?? null;
   const out = new Map<string, LoadSummary & { q: number }>();
 
   const visit = (e: Element, path: Set<string>): LoadSummary & { q: number } => {
@@ -112,10 +132,41 @@ export function loadSummaries(
     for (const s of sub)
       for (const [code, kw] of Object.entries(s.byType)) addType(code as LoadTypeCode, kw);
 
+    const byCategory: Partial<Record<DemandCategory | 'none', PhaseKw>> = {};
+    const addCat = (cat: DemandCategory | 'none', kw: PhaseKw) =>
+      (byCategory[cat] = add(byCategory[cat] ?? zero(), kw));
+    for (const line of ownLines(e)) addCat(categoryOf(e), lineKw(line));
+    for (const s of sub)
+      for (const [cat, kw] of Object.entries(s.byCategory)) addCat(cat as DemandCategory, kw);
+
     const connected = Object.values(byType).reduce(add, zero());
     const tbc = new Set<LoadTypeCode>(sub.flatMap((s) => s.tbcFactors));
+    const tbcCat = new Set<DemandCategory>(sub.flatMap((s) => s.tbcCategories));
     let demand: PhaseKw;
-    if (BOARDS.has(e.kind)) {
+    if (method !== 'manual') {
+      if (MAIN.has(e.kind)) {
+        // Dubai: each category's connected load x its factor, once, at the LV panel / MDB.
+        demand = zero();
+        for (const [cat, kw] of Object.entries(byCategory) as [
+          DemandCategory | 'none',
+          PhaseKw,
+        ][]) {
+          const df = cat === 'none' ? 1 : catFactors[cat].value;
+          if (df === null && cat !== 'none') tbcCat.add(cat);
+          demand = add(demand, scale(kw, df ?? 1));
+        }
+      } else if (SECOND.has(e.kind)) {
+        demand = scale(connected, secondLevel ?? 1);
+      } else {
+        // 100 % below the SMDB, and at sources / ATS: what they feed plus their own load.
+        demand = ownLines(e)
+          .map(lineKw)
+          .reduce(
+            add,
+            sub.reduce((d, s) => add(d, s.demand), zero()),
+          );
+      }
+    } else if (BOARDS.has(e.kind)) {
       // Once at this board, per load type: a panel override (D-03) or the Page 1 factor.
       demand = zero();
       for (const [code, kw] of Object.entries(byType) as [LoadTypeCode, PhaseKw][]) {
@@ -161,7 +212,9 @@ export function loadSummaries(
       standbyKw,
       pf,
       currentA,
+      byCategory,
       tbcFactors: LoadTypeCodeSchema.options.filter((c) => tbc.has(c)),
+      tbcCategories: DemandCategorySchema.options.filter((c) => tbcCat.has(c)),
       q,
     };
     out.set(e.id, summary);
@@ -171,6 +224,7 @@ export function loadSummaries(
   return new Map([...out].map(([id, { q: _q, ...s }]) => [id, s]));
 }
 
-/** Whether any demand-category factor has been entered: they are not applied until OI-02. */
+/** Manual method only: category factors entered but not applied (A-15). */
 export const categoryFactorsPending = (project: Pick<Project, 'calculation'>) =>
+  project.calculation.demandMethod === 'manual' &&
   Object.values(project.calculation.demandFactors.byCategory).some((f) => f.value !== null);

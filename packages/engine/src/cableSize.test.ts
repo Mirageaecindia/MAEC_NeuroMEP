@@ -117,6 +117,7 @@ describe('#TASK-26 result status (10.13)', () => {
 
   it('Provisional with TBC demand factors (E1901)', () => {
     const b = simple();
+    b.project.calculation.demandMethod = 'manual';
     b.project.calculation.demandFactors.byLoadType['2'] = { value: null, source: 'rulepack' };
     expect(feederTo(b, 'db').provisionalReasons).toContain('demand-factors-tbc');
   });

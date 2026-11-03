@@ -78,6 +78,7 @@ describe('#TASK-16 load aggregation for the live load table (10.3, 10.2 step 2)'
 
   it('applies load-type factors once per board, TBC as 1.0, and sums them at the transformer', () => {
     const project = completeProject();
+    project.calculation.demandMethod = 'manual'; // load-type factors at every board (A-15)
     project.calculation.demandFactors.byLoadType['1'] = { value: 0.8, source: 'user' }; // Lighting
     // Power ('2') stays TBC.
     const db1 = el('db', 'DB1', {
@@ -124,6 +125,7 @@ describe('#TASK-16 load aggregation for the live load table (10.3, 10.2 step 2)'
 
   it('uses a panel override before the Page 1 factor (D-03) and an equivalent pf for sums', () => {
     const project = completeProject();
+    project.calculation.demandMethod = 'manual'; // load-type factors at every board (A-15)
     const db = el('db', 'DB', {
       powerFactor: 1,
       loads: [{ method: 'kw', loadType: '1', kwL1: 3, kwL2: 3, kwL3: 3 }],
@@ -146,8 +148,86 @@ describe('#TASK-16 load aggregation for the live load table (10.3, 10.2 step 2)'
 
   it('flags entered demand-category factors as not applied yet (OI-02)', () => {
     const project = completeProject();
+    project.calculation.demandMethod = 'manual'; // load-type factors at every board (A-15)
     expect(categoryFactorsPending(project)).toBe(false);
     project.calculation.demandFactors.byCategory.office = { value: 0.7, source: 'user' };
     expect(categoryFactorsPending(project)).toBe(true);
+  });
+});
+
+describe('#TASK-19 Dubai demand method (manager 3 Nov 2026)', () => {
+  /** TX > MDB > SMDB > residential DB (30 kW) and office DB (10 kW); a residential DB on the MDB. */
+  function dubai(method: 'dubai-non-emaar' | 'dubai-emaar', secondLevel: number) {
+    const project = completeProject();
+    project.calculation.demandMethod = method;
+    const cat = method === 'dubai-emaar' ? [0.6, 0.75, 0.8, 0.8] : [0.65, 0.8, 0.8, 0.8];
+    const df = project.calculation.demandFactors;
+    df.byCategory = {
+      residential: { value: cat[0]!, source: 'rulepack' },
+      landlord: { value: cat[1]!, source: 'rulepack' },
+      office: { value: cat[2]!, source: 'rulepack' },
+      retail: { value: cat[3]!, source: 'rulepack' },
+    };
+    df.secondLevel = { value: secondLevel, source: 'rulepack' };
+    const tx = el('transformer', 'tx');
+    const mdb = el('mdb', 'mdb');
+    const sm = el('smdb', 'sm');
+    const res = el('db', 'res', {
+      demandCategory: 'residential',
+      loads: [{ method: 'kw', loadType: '2', kwL1: 10, kwL2: 10, kwL3: 10 }],
+    });
+    const off = el('db', 'off', {
+      demandCategory: 'office',
+      loads: [{ method: 'kw', loadType: '1', kwL1: 4, kwL2: 3, kwL3: 3 }],
+    });
+    const res2 = el('db', 'res2', {
+      demandCategory: 'residential',
+      loads: [{ method: 'kw', loadType: '2', kwL1: 2, kwL2: 2, kwL3: 2 }],
+    });
+    project.model.elements = [tx, mdb, sm, res, off, res2];
+    project.model.cables = wire([
+      [tx, mdb],
+      [mdb, sm],
+      [sm, res],
+      [sm, off],
+      [mdb, res2],
+    ]);
+    return loadSummaries(project, 0.85);
+  }
+
+  it('non-Emaar: 100 % below the MDB; at the MDB residential x 0.65, office x 0.8', () => {
+    const s = dubai('dubai-non-emaar', 1);
+    expect(s.get('res')!.maxDemandKw).toBe(30); // DB at 100 %
+    expect(s.get('sm')!.maxDemandKw).toBe(40); // SMDB at 100 % (non-Emaar)
+    // MDB: residential (30 + 6) x 0.65 + office 10 x 0.8 = 31.4 kW.
+    expect(s.get('mdb')!.maxDemandKw).toBeCloseTo(36 * 0.65 + 10 * 0.8, 9);
+    expect(s.get('tx')!.maxDemandKw).toBeCloseTo(36 * 0.65 + 10 * 0.8, 9);
+    expect(s.get('mdb')!.byCategory).toMatchObject({ residential: { L1: 12 }, office: { L1: 4 } });
+  });
+
+  it('Emaar: 0.8 at the SMDB; the MDB applies its factors to connected load, never multiplied', () => {
+    const s = dubai('dubai-emaar', 0.8);
+    expect(s.get('res')!.maxDemandKw).toBe(30);
+    expect(s.get('sm')!.maxDemandKw).toBeCloseTo(40 * 0.8, 9);
+    expect(s.get('mdb')!.maxDemandKw).toBeCloseTo(36 * 0.6 + 10 * 0.8, 9);
+  });
+
+  it('a TBC category factor counts as 1.0 and is reported (E1901)', () => {
+    const project = completeProject();
+    project.calculation.demandMethod = 'dubai-non-emaar';
+    const tx = el('transformer', 'tx');
+    const mdb = el('mdb', 'mdb');
+    const res = el('db', 'res', {
+      demandCategory: 'residential',
+      loads: [{ method: 'kw', loadType: '2', kwL1: 1, kwL2: 1, kwL3: 1 }],
+    });
+    project.model.elements = [tx, mdb, res];
+    project.model.cables = wire([
+      [tx, mdb],
+      [mdb, res],
+    ]);
+    const s = loadSummaries(project, 0.85); // completeProject: category factors TBC
+    expect(s.get('mdb')!.maxDemandKw).toBe(3);
+    expect(s.get('mdb')!.tbcCategories).toEqual(['residential']);
   });
 });

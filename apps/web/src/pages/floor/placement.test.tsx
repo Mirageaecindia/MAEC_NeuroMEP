@@ -408,7 +408,8 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
       within(table).getByRole('row', { name: /DB-GF-01 2\.0 2\.0 2\.0 0\.85/ }),
     ).toBeInTheDocument();
     expect(table).toHaveTextContent('Connected 6.0 kW · Max demand 6.0 kW');
-    expect(table).toHaveTextContent('demand factors TBC, 1.0 used (E1901)');
+    // Dubai method (default): a DB on its own is at 100 %, nothing TBC.
+    expect(table).not.toHaveTextContent('E1901');
     // Not fed yet: the DB is itself a top-level component, 6 kW / 0.85 = 7 kVA.
     expect(screen.getByText('7 kVA')).toBeInTheDocument();
 

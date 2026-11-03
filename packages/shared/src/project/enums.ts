@@ -83,6 +83,29 @@ export const LOAD_TYPE_LABELS: Record<LoadTypeCode, string> = {
 
 /** Demand-factor categories for Dubai (design doc 12.1). */
 export const DemandCategorySchema = z.enum(['residential', 'landlord', 'office', 'retail']);
+
+/**
+ * How maximum demand is worked out (manager's answer 3 Nov 2026): the Dubai method applies the
+ * demand-category factors only at the LV panel / MDB (and busbar) level - Emaar and non-Emaar
+ * projects use different factors, Emaar also 0.8 at SMDBs - with 100 % below; the manual method
+ * applies the 12 load-type factors at every board (A-15).
+ */
+export const DemandMethodSchema = z.enum(['dubai-non-emaar', 'dubai-emaar', 'manual']);
+export type DemandMethod = z.infer<typeof DemandMethodSchema>;
+export const DEMAND_METHOD_LABELS: Record<DemandMethod, string> = {
+  'dubai-non-emaar': 'Dubai - Non-Emaar',
+  'dubai-emaar': 'Dubai - Emaar',
+  manual: 'Manual factors per load type',
+};
+
+/** Busbar trunking manufacturer whose data (R, X, Icw, Ipk) the engine uses (3 Nov 2026). */
+export const BusbarMakerSchema = z.enum(['gersan', 'powerbar', 'schneider']);
+export type BusbarMaker = z.infer<typeof BusbarMakerSchema>;
+export const BUSBAR_MAKER_LABELS: Record<BusbarMaker, string> = {
+  gersan: 'Gersan',
+  powerbar: 'Powerbar',
+  schneider: 'Schneider (I-LINE H)',
+};
 export type DemandCategory = z.infer<typeof DemandCategorySchema>;
 export const DEMAND_CATEGORY_LABELS: Record<DemandCategory, string> = {
   residential: 'Residential',

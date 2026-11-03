@@ -72,6 +72,13 @@ export const SourceDataSchema = z.strictObject({
 });
 export type SourceData = z.infer<typeof SourceDataSchema>;
 
+/** Dubai demand-category factor sets (manager's answers 3 Nov 2026). */
+export const DemandMethodSetSchema = z.strictObject({
+  byCategory: z.record(DemandCategorySchema, z.number().min(0).max(1)),
+  /** Factor at the SMDB level; 1 = none. */
+  secondLevel: z.number().min(0).max(1),
+});
+
 export const RulePackSchema = z.strictObject({
   id: z.string().min(1),
   version: z.string().regex(/^\d+\.\d+\.\d+$/),
@@ -91,5 +98,9 @@ export const RulePackSchema = z.strictObject({
   calculationDefaults: z.array(CalculationDefaultSchema),
   devices: DevicesSchema,
   sourceData: SourceDataSchema,
+  demandMethods: z.strictObject({
+    'dubai-non-emaar': DemandMethodSetSchema,
+    'dubai-emaar': DemandMethodSetSchema,
+  }),
 });
 export type RulePack = z.infer<typeof RulePackSchema>;

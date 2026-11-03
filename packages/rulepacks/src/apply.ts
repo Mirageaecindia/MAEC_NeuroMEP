@@ -14,6 +14,23 @@ function fillRecord<K extends string>(
 }
 
 /**
+ * Demand factors for a method: the Dubai methods fill the category and SMDB factors from the rule
+ * pack's set; the manual method keeps the pack's load-type defaults. Values the user typed stay.
+ */
+export function demandFactorsFor(
+  method: Project['calculation']['demandMethod'],
+  df: Project['calculation']['demandFactors'],
+  pack: RulePack,
+): Project['calculation']['demandFactors'] {
+  const set = method === 'manual' ? null : pack.demandMethods[method];
+  return {
+    byLoadType: fillRecord(df.byLoadType, pack.demandFactors.byLoadType),
+    byCategory: fillRecord(df.byCategory, set?.byCategory ?? pack.demandFactors.byCategory),
+    secondLevel: fill(df.secondLevel, set?.secondLevel ?? null),
+  };
+}
+
+/**
  * Loads a rule pack into a project (FR-04): records the pack id and version, and pre-fills site
  * defaults, system voltage / frequency and demand factors - only fields the user has not edited. TBC values stay null.
  */
@@ -42,10 +59,7 @@ export function applyRulePackDefaults(project: Project, pack: RulePack): Project
         voltagePhaseV: fill(sys.voltagePhaseV, num('supplyVoltagePhaseV')),
         frequencyHz: fill(sys.frequencyHz, num('supplyFrequencyHz')),
       },
-      demandFactors: {
-        byLoadType: fillRecord(df.byLoadType, pack.demandFactors.byLoadType),
-        byCategory: fillRecord(df.byCategory, pack.demandFactors.byCategory),
-      },
+      demandFactors: demandFactorsFor(project.calculation.demandMethod, df, pack),
     },
   };
 }

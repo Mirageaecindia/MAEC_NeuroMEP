@@ -45,7 +45,10 @@ export function createEmptyProject(args: { id: string; userId: string; now: stri
         byCategory: Object.fromEntries(
           DemandCategorySchema.options.map((c) => [c, untouched()]),
         ) as Project['calculation']['demandFactors']['byCategory'],
+        secondLevel: untouched(),
       },
+      demandMethod: 'dubai-non-emaar',
+      busbarMaker: null,
       defaultOverrides: {},
     },
     building: {

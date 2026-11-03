@@ -59,6 +59,14 @@ export type ProjectAction =
       value: number | null;
       audit: AuditMeta;
     }
+  /** Demand method (3 Nov 2026) with the factors it brings (rule-pack set, user values kept). */
+  | {
+      type: 'demandMethod';
+      method: Project['calculation']['demandMethod'];
+      factors: Project['calculation']['demandFactors'];
+    }
+  | { type: 'secondLevelFactor'; value: number | null; audit: AuditMeta }
+  | { type: 'busbarMaker'; maker: Project['calculation']['busbarMaker'] }
   | {
       type: 'defaultOverride';
       key: string;
@@ -177,6 +185,24 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
           checks: { ...p.calculation.checks, [a.check]: a.enabled },
         },
       };
+    case 'demandMethod':
+      return {
+        ...p,
+        calculation: { ...p.calculation, demandMethod: a.method, demandFactors: a.factors },
+      };
+    case 'secondLevelFactor':
+      return {
+        ...p,
+        calculation: {
+          ...p.calculation,
+          demandFactors: {
+            ...p.calculation.demandFactors,
+            secondLevel: { value: a.value, source: 'user' },
+          },
+        },
+      };
+    case 'busbarMaker':
+      return { ...p, calculation: { ...p.calculation, busbarMaker: a.maker } };
     case 'demandFactor': {
       const table = p.calculation.demandFactors[a.table] as Record<
         string,

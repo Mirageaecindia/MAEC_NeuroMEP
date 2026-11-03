@@ -283,6 +283,27 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
     expect(tool('Next')).toBeEnabled();
   });
 
+  it('Demand Method switches the factor sets; Busbar Manufacturer is chosen per project (3 Nov 2026)', async () => {
+    const api = fakeApi(completeProject());
+    renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
+    const method = await screen.findByLabelText('Demand Method');
+    expect(method).toHaveValue('dubai-non-emaar');
+    await userEvent.selectOptions(method, 'dubai-emaar');
+    expect(screen.getByLabelText(/^Residential/)).toHaveValue('0.6');
+    expect(screen.getByLabelText(/^SMDB level/)).toHaveValue('0.8');
+    await userEvent.selectOptions(method, 'manual');
+    expect(screen.queryByLabelText(/^SMDB level/)).not.toBeInTheDocument();
+    expect(screen.getByText('The load-type factors apply at every board.')).toBeInTheDocument();
+    await userEvent.selectOptions(screen.getByLabelText('Busbar Manufacturer'), 'schneider');
+    await userEvent.click(tool('Save'));
+    await waitFor(async () =>
+      expect((await api.getProject('p-1')).project.calculation).toMatchObject({
+        demandMethod: 'manual',
+        busbarMaker: 'schneider',
+      }),
+    );
+  });
+
   it('Next on an incomplete project shows inline errors and keeps Floor Setup closed', async () => {
     const empty = {
       ...createEmptyProject({ id: 'p-2', userId: 'u-lead', now: FIXED_NOW }),

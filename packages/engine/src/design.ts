@@ -94,12 +94,12 @@ export function designFeeders(project: Project): FeederDesign[] {
     // CableSizer tables are the working tables (decision 2 Nov 2026, amends V-12): not a reason.
     const reasons: ProvisionalReason[] = [];
     if (!supplied.has(to.id)) reasons.unshift('upstream-not-connected');
-    if (s.tbcFactors.length) {
+    if (s.tbcFactors.length || s.tbcCategories.length) {
       reasons.push('demand-factors-tbc');
       errors.push('E1901');
       trace.push({
         step: 'Demand',
-        detail: `TBC factors counted as 1.0: ${s.tbcFactors.join(', ')}`,
+        detail: `TBC factors counted as 1.0: ${[...s.tbcFactors, ...s.tbcCategories].join(', ')}`,
       });
     }
     const d = s.demand;

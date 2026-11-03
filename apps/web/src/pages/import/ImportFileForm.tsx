@@ -15,8 +15,12 @@ import {
   type LoadTypeCode,
   type RegistryChange,
   type UserSummary,
+  BUSBAR_MAKER_LABELS,
+  BusbarMakerSchema,
+  DEMAND_METHOD_LABELS,
+  DemandMethodSchema,
 } from '@neuromep/shared';
-import { REGION_RULE_PACKS } from '@neuromep/rulepacks';
+import { demandFactorsFor, getRulePack, REGION_RULE_PACKS } from '@neuromep/rulepacks';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useApi } from '../../auth/AuthContext';
 import { fieldDomId, Modal, NumberInput } from '../../components/fields';
@@ -342,6 +346,28 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
             onChange={(value) => dispatch({ type: 'upstreamMva', value })}
           />
         </Row>
+        <Row label="Busbar Manufacturer" field="calculation.busbarMaker" error={null}>
+          <select
+            id={fieldDomId('calculation.busbarMaker')}
+            className="pill-input pill-select"
+            value={c.busbarMaker ?? ''}
+            disabled={readOnly}
+            title="R, X, Icw and Ipk of busbar feeders and risers come from this maker's data"
+            onChange={(e) =>
+              dispatch({
+                type: 'busbarMaker',
+                maker: (e.target.value || null) as typeof c.busbarMaker,
+              })
+            }
+          >
+            <option value="">Select</option>
+            {BusbarMakerSchema.options.map((m) => (
+              <option key={m} value={m}>
+                {BUSBAR_MAKER_LABELS[m]}
+              </option>
+            ))}
+          </select>
+        </Row>
         <div className="form-row checks-row">
           <span className="form-label">
             Calculation Based On<span className="req">*</span>
@@ -368,8 +394,39 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
           </div>
         </div>
 
+        <Row label="Demand Method" field="calculation.demandMethod" error={null}>
+          <select
+            id={fieldDomId('calculation.demandMethod')}
+            className="pill-input pill-select"
+            value={c.demandMethod}
+            disabled={readOnly}
+            onChange={(e) => {
+              const method = e.target.value as typeof c.demandMethod;
+              const pack =
+                project.rulePackId && project.rulePackVersion
+                  ? getRulePack(project.rulePackId, project.rulePackVersion)
+                  : null;
+              dispatch({
+                type: 'demandMethod',
+                method,
+                factors: pack ? demandFactorsFor(method, c.demandFactors, pack) : c.demandFactors,
+              });
+            }}
+          >
+            {DemandMethodSchema.options.map((m) => (
+              <option key={m} value={m}>
+                {DEMAND_METHOD_LABELS[m]}
+              </option>
+            ))}
+          </select>
+        </Row>
+        <p className="field-hint">
+          {c.demandMethod === 'manual'
+            ? 'The load-type factors apply at every board.'
+            : 'Category factors apply at the LV panel / MDB only; SMDBs take the SMDB-level factor and everything below is at 100 %.'}
+        </p>
         <div className="df-grid">
-          <div className="df-col">
+          <div className={`df-col${c.demandMethod === 'manual' ? ' df-unused' : ''}`}>
             <h3>Demand Load Category</h3>
             {CATEGORIES.map((cat) => (
               <DfInput
@@ -389,8 +446,19 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
                 }
               />
             ))}
+            {c.demandMethod !== 'manual' && (
+              <DfInput
+                label="SMDB level"
+                field="calculation.demandFactors.secondLevel"
+                value={c.demandFactors.secondLevel.value}
+                {...props}
+                onCommit={(value) =>
+                  dispatch({ type: 'secondLevelFactor', value, audit: newAudit(user) })
+                }
+              />
+            )}
           </div>
-          <div className="df-col df-types">
+          <div className={`df-col df-types${c.demandMethod === 'manual' ? '' : ' df-unused'}`}>
             <h3>Load Type</h3>
             <div className="df-type-grid">
               {LOAD_TYPE_GRID.map((code) => (

@@ -155,3 +155,8 @@
 .plan-match td {
   padding: 4px 0;
 }
+
+/* The demand-factor column the chosen method does not use (3 Nov 2026). */
+.df-unused {
+  opacity: 0.45;
+}

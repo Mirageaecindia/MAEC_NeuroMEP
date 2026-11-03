@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "region": "dubai",
   "name": "Dubai",
-  "sources": "Design doc v0.8: 12.1 (site defaults), 12.2 (calculation defaults), 10.7 (voltage-drop limits), Section 18 (open items and interim defaults). Site design temperatures await engineer sign-off (V-32: DEWA 2017 gives air 48 deg C, ground 40 deg C; ground 35 kept until confirmed). Devices: Appendix B (breaker ratings, cable sizes, DEWA minimum cable, tray widths) and 10.5 (breaker types, available fault ratings). Manager's answers to the engineering questions (3 Nov 2026): ground 40 deg C (air 50 kept: catalogues have no 48 deg C factor); CableSizer short-circuit method (c = 1, no KT / KG); cable length = measured + 5 m; transformer loading 100 %; no limit on parallel runs; motor IL/IF 6.5; TN-S; transformer uk from the manufacturer catalogue; generator X\"d ranges.",
+  "sources": "Design doc v0.8: 12.1 (site defaults), 12.2 (calculation defaults), 10.7 (voltage-drop limits), Section 18 (open items and interim defaults). Site design temperatures await engineer sign-off (V-32: DEWA 2017 gives air 48 deg C, ground 40 deg C; ground 35 kept until confirmed). Devices: Appendix B (breaker ratings, cable sizes, DEWA minimum cable, tray widths) and 10.5 (breaker types, available fault ratings). Manager's answers to the engineering questions (3 Nov 2026): ground 40 deg C (air 50 kept: catalogues have no 48 deg C factor); CableSizer short-circuit method (c = 1, no KT / KG); cable length = measured + 5 m; transformer loading 100 %; no limit on parallel runs; motor IL/IF 6.5; TN-S; transformer uk from the manufacturer catalogue; generator X\"d ranges. Demand: Dubai method - category factors at busbar / LV panel level only (non-Emaar residential 0.65, landlord 0.8, retail / office / hotel 0.8; Emaar 0.6 / 0.75 / 0.8 and 0.8 at SMDBs), 100 % below.",
   "siteDefaults": {
     "ambientAirC": 50,
     "ambientSoilC": 40,
@@ -461,5 +461,25 @@
         "high": 12
       }
     ]
+  },
+  "demandMethods": {
+    "dubai-non-emaar": {
+      "byCategory": {
+        "residential": 0.65,
+        "landlord": 0.8,
+        "office": 0.8,
+        "retail": 0.8
+      },
+      "secondLevel": 1
+    },
+    "dubai-emaar": {
+      "byCategory": {
+        "residential": 0.6,
+        "landlord": 0.75,
+        "office": 0.8,
+        "retail": 0.8
+      },
+      "secondLevel": 0.8
+    }
   }
 }

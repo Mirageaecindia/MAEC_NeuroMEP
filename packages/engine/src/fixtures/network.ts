@@ -41,6 +41,11 @@ export function building(): Builder {
   const project = completeProject();
   project.calculation.upstreamFaultMva = 350;
   project.calculation.defaultOverrides = { cableLengthAllowancePct: 0, cableLengthAdditionM: 1 };
+  // Confirmed factors of 1.0, so the hand calculations see the loads as entered.
+  for (const cat of Object.keys(project.calculation.demandFactors.byCategory)) {
+    project.calculation.demandFactors.byCategory[cat as 'office'] = { value: 1, source: 'user' };
+  }
+  project.calculation.demandFactors.secondLevel = { value: 1, source: 'user' };
   for (const code of Object.keys(project.calculation.demandFactors.byLoadType)) {
     project.calculation.demandFactors.byLoadType[code as '1'] = { value: 1, source: 'user' };
   }

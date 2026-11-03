@@ -5,7 +5,9 @@ import { StoredResultSchema } from '../model/sizing.js';
 import { FloorFlagSchema } from '../model/floorFlags.js';
 import { RiserSchema } from '../model/riser.js';
 import {
+  BusbarMakerSchema,
   DemandCategorySchema,
+  DemandMethodSchema,
   DesignStageSchema,
   LoadTypeCodeSchema,
   PageKeySchema,
@@ -186,10 +188,16 @@ export const ProjectSchema = z.object({
       letThroughEnergy: z.boolean(),
       earthFaultLoopImpedance: z.boolean(),
     }),
+    /** Dubai category method (default) or manual load-type factors (3 Nov 2026). */
+    demandMethod: DemandMethodSchema.default('dubai-non-emaar'),
     demandFactors: z.object({
       byLoadType: z.record(LoadTypeCodeSchema, DefaultableNumberSchema),
       byCategory: z.record(DemandCategorySchema, DefaultableNumberSchema),
+      /** Dubai method: factor at the SMDB level (1.0 non-Emaar, 0.8 Emaar). */
+      secondLevel: DefaultableNumberSchema.default({ value: null, source: 'rulepack' }),
     }),
+    /** Busbar data used for busbar feeders and risers; null until chosen. */
+    busbarMaker: BusbarMakerSchema.nullable().default(null),
     /** Technical Lead overrides of rule-pack calculation defaults (12.2), keyed by default key. */
     defaultOverrides: z.record(z.string(), z.union([z.number(), z.string()])),
   }),

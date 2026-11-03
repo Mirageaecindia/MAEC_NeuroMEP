@@ -42,14 +42,25 @@ describe('rule packs', () => {
     expect(q.calculation.demandFactors.byLoadType['1']).toEqual({ value: 0.9, source: 'user' });
   });
 
-  it('keeps TBC demand factors null (OI-01) - no invented values', () => {
+  it('keeps the TBC load-type factors null (OI-01); fills the Dubai category factors (3 Nov 2026)', () => {
     const q = applyRulePackDefaults(empty(), dubai);
-    for (const df of [
-      ...Object.values(q.calculation.demandFactors.byLoadType),
-      ...Object.values(q.calculation.demandFactors.byCategory),
-    ]) {
+    for (const df of Object.values(q.calculation.demandFactors.byLoadType)) {
       expect(df).toEqual({ value: null, source: 'rulepack' });
     }
+    const f = q.calculation.demandFactors;
+    expect(Object.fromEntries(Object.entries(f.byCategory).map(([k, v]) => [k, v.value]))).toEqual({
+      residential: 0.65,
+      landlord: 0.8,
+      office: 0.8,
+      retail: 0.8,
+    });
+    expect(f.secondLevel).toEqual({ value: 1, source: 'rulepack' });
+    const emaar = applyRulePackDefaults(
+      { ...empty(), calculation: { ...empty().calculation, demandMethod: 'dubai-emaar' } },
+      dubai,
+    );
+    expect(emaar.calculation.demandFactors.byCategory.residential.value).toBe(0.6);
+    expect(emaar.calculation.demandFactors.secondLevel.value).toBe(0.8);
   });
 
   it('holds the 12.2 defaults with the answers of 3 Nov 2026, open items null', () => {
