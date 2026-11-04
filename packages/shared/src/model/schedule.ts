@@ -2,13 +2,13 @@ import type { Project } from '../project/schema.js';
 import type { Cable } from './cable.js';
 import type { Element, ElementKind } from './elements.js';
 import type { LoadSummary } from './loads.js';
-import { resultOf } from './sizing.js';
+import { inputsKey, resultOf, type StoredResult } from './sizing.js';
 import { cableLength, type LengthRule } from './wiring.js';
 
 /**
- * Schematic tree and panel schedules from the network model (WBS 1.5.3, #TASK-30 / #TASK-31,
- * Section 14). Calculated columns (breaker, fault duty, size, ECC) come from the last Cable Size
- * result and are null until the engine fills them (WBS 1.6); loads come from the live load table.
+ * Schematic tree and panel schedules from the network model (WBS 1.5.3 / 1.7.2, #TASK-30 /
+ * #TASK-31, Section 14). Calculated columns (breaker, fault duty, size, ECC) come from the last
+ * Cable Size result; loads come from the live load table.
  */
 
 /** Report Library levels (Figma screen 5, decision 2 Nov 2026). */
@@ -62,7 +62,7 @@ export function sldTree(model: Project['model'], rootId: string): SldNode | null
 
 // ----- Panel schedule ------------------------------------------------------------------------
 
-/** One row of a schedule: the incomer or an outgoing way (Section 14 columns). */
+/** One row of a schedule: an incomer or an outgoing way (Section 14 columns). */
 export interface ScheduleRow {
   feeder: string;
   wayNo: string;
@@ -77,16 +77,26 @@ export interface ScheduleRow {
   kw: { R: number; Y: number; B: number };
   tclKw: number;
   mdKw: number;
+  /** Earth leakage of the circuit, motor starter (MCC schedule), tap-off or standby input. */
+  remarks: string;
+  /** Why the row's result blocks an export (E3101): blocked or a failing check; null if none. */
+  problem: string | null;
 }
 
 export interface BoardSchedule {
-  board: Element;
+  /** The board, or the riser of a busbar schedule. */
+  id: string;
+  tag: string;
+  kind: 'board' | 'busbar';
+  /** Busbar schedule: "<tag> - <A> A TPN+E" (Section 14); null for a board. */
+  description: string | null;
   project: string;
   location: string;
   /** What feeds the board (e.g. "MDB-GF-01" or "Riser 1") and the transformer upstream. */
   connectedTo: string | null;
   transformer: string | null;
-  incomer: ScheduleRow;
+  /** Incomers 1 - 2: a board fed through both inputs of an ATS has two. */
+  incomers: ScheduleRow[];
   ways: ScheduleRow[];
   totals: { kw: { R: number; Y: number; B: number }; tclKw: number; mdKw: number };
   /** Maximum demand / total connected (shown "DEMAND FACTOR"); null without load. */
@@ -95,36 +105,107 @@ export interface BoardSchedule {
   sizesPending: boolean;
 }
 
+type Columns = Pick<
+  ScheduleRow,
+  'breakerA' | 'faultDutyKa' | 'cores' | 'type' | 'sizeMm2' | 'eccMm2' | 'lengthM'
+>;
+
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-function feederColumns(p: Project, cable: Cable | undefined, length: LengthRule) {
-  const found = cable ? resultOf(p, cable.id) : null;
-  const r = found?.result;
+/** The last result of an item (feeder, tap-off board or riser) and whether it is usable. */
+function lastResult(p: Project, id: string, key: string) {
+  const found = resultOf(p, id, key);
+  const result: StoredResult | undefined = found?.result;
+  const failing = result
+    ? (Object.entries(result.checks) as [string, { state: string }][])
+        .filter(([, c]) => c.state === 'fail')
+        .map(([code]) => code)
+    : [];
+  const problem =
+    result?.status === 'blocked'
+      ? `blocked ${result.errors.join(', ')}`.trim()
+      : failing.length
+        ? `${failing.join(', ')} failing`
+        : null;
   return {
-    breakerA: r?.device?.ratingA ?? null,
-    faultDutyKa: r?.device?.faultRatingKa ?? null,
-    cores: cable
-      ? cable.feederType === 'busbar'
-        ? 'TPN+E'
-        : `${r?.size ? `${r.size.runs} x ` : ''}${cable.construction.cores}`
-      : '-',
-    type: cable
-      ? cable.feederType === 'busbar'
-        ? `Busbar ${cable.busbar?.conductor ?? 'Cu'}`
-        : cable.construction.insulation
-      : '-',
-    sizeMm2: r?.size?.sizeMm2 ?? null,
-    eccMm2: r?.size?.eccMm2 ?? null,
-    lengthM: cable ? round2(cableLength(cable, length).totalM) : null,
-    pending: !found || found.outOfDate || !r?.size,
+    result,
+    pending: !found || found.outOfDate || result?.status === 'awaiting-load',
+    problem,
   };
 }
 
-const kwOf = (s: LoadSummary | undefined) => ({
-  R: round2(s?.connected.L1 ?? 0),
-  Y: round2(s?.connected.L2 ?? 0),
-  B: round2(s?.connected.L3 ?? 0),
+/** Breaker, fault duty and cable columns of a feeder from its last Cable Size result. */
+function feederColumns(p: Project, cable: Cable, length: LengthRule, key: string) {
+  const { result: r, pending, problem } = lastResult(p, cable.id, key);
+  const busbar = cable.feederType === 'busbar';
+  const cols: Columns = {
+    breakerA: r?.device?.ratingA ?? null,
+    faultDutyKa: r?.device?.faultRatingKa ?? null,
+    cores: busbar ? 'TPN+E' : `${r?.size ? `${r.size.runs} x ` : ''}${cable.construction.cores}`,
+    type: busbar
+      ? `Busbar ${cable.busbar?.conductor ?? 'Cu'} ${r?.values.izA ?? '-'} A`
+      : cable.construction.insulation,
+    sizeMm2: r?.size?.sizeMm2 ?? null,
+    eccMm2: r?.size?.eccMm2 ?? null,
+    lengthM: round2(cableLength(cable, length).totalM),
+  };
+  return { cols, pending: pending || (!busbar && !r?.size), problem };
+}
+
+/** A tap-off box: its breaker, no cable (Section 14 "outgoing ratings from tap-off boxes"). */
+function tapOffColumns(p: Project, boardId: string, key: string) {
+  const { result: r, pending, problem } = lastResult(p, boardId, key);
+  const cols: Columns = {
+    breakerA: r?.device?.ratingA ?? null,
+    faultDutyKa: r?.device?.faultRatingKa ?? null,
+    cores: '-',
+    type: 'Tap-off box',
+    sizeMm2: null,
+    eccMm2: null,
+    lengthM: null,
+  };
+  return { cols, pending, problem };
+}
+
+const loadColumns = (s: LoadSummary | undefined) => ({
+  kw: {
+    R: round2(s?.connected.L1 ?? 0),
+    Y: round2(s?.connected.L2 ?? 0),
+    B: round2(s?.connected.L3 ?? 0),
+  },
+  tclKw: round2(s?.connectedKw ?? 0),
+  mdKw: round2(s?.maxDemandKw ?? 0),
 });
+
+const polesOf = (e: Element | undefined): 'SP' | 'TP' =>
+  e && 'poles' in e && e.poles === 'SPN' ? 'SP' : 'TP';
+
+/** Remarks of a circuit (Section 14): earth leakage of the fed component, motor starter. */
+function remarksOf(e: Element | undefined): string {
+  const parts: string[] = [];
+  if (e && 'earthLeakage' in e && e.earthLeakage && e.earthLeakage !== 'none') {
+    parts.push(e.earthLeakage);
+  }
+  if (e?.kind === 'motor' && e.starter) {
+    parts.push(e.starter === 'star-delta' ? 'Star-delta (two cable sets)' : e.starter);
+  }
+  return parts.join('; ');
+}
+
+/** The transformer at the top of the supply path of a component. */
+function transformerAbove(model: Project['model'], id: string | null): string | null {
+  const parentOf = (x: string): string | null =>
+    model.cables.find((c) => c.to.elementId === x)?.from.elementId ??
+    model.risers.find((r) => r.feeds.includes(x))?.fedFromId ??
+    null;
+  for (let cur = id, n = 0; cur && n < 50; cur = parentOf(cur), n++) {
+    const e = model.elements.find((x) => x.id === cur);
+    if (e?.kind === 'transformer') return e.tag;
+  }
+  return null;
+}
+
+const demandFactorOf = (tcl: number, md: number) => (tcl > 0 ? round2(md / tcl) : null);
 
 /** The schedule of a board, in the company format (Figma screen 5, Section 14). */
 export function boardSchedule(
@@ -136,68 +217,175 @@ export function boardSchedule(
   const { elements, cables, risers } = p.model;
   const board = elements.find((e) => e.id === boardId);
   if (!board) return null;
+  const key = inputsKey(p);
   const tagOf = (id: string | null | undefined) => elements.find((e) => e.id === id)?.tag ?? null;
-  const polesOf = (e: Element | undefined): 'SP' | 'TP' =>
-    e && 'poles' in e && e.poles === 'SPN' ? 'SP' : 'TP';
-
-  const inCable = cables.find((c) => c.to.elementId === board.id);
-  const riser = risers.findIndex((r) => r.feeds.includes(board.id));
   const s = summaries.get(board.id);
-  const inCols = feederColumns(p, inCable, length);
-  const incomer: ScheduleRow = {
-    feeder: 'INCOMER',
-    wayNo: '-',
-    poles: polesOf(board),
-    ...inCols,
-    kw: kwOf(s),
-    tclKw: round2(s?.connectedKw ?? 0),
-    mdKw: round2(s?.maxDemandKw ?? 0),
-  };
-  const out = cables
-    .filter((c) => c.from.elementId === board.id)
-    .sort((a, b) => a.circuitRef.localeCompare(b.circuitRef, undefined, { numeric: true }));
-  let pending = inCols.pending;
-  const ways = out.map((c): ScheduleRow => {
-    const child = elements.find((e) => e.id === c.to.elementId);
-    const cs = summaries.get(c.to.elementId);
-    const cols = feederColumns(p, c, length);
-    pending ||= cols.pending;
+  let pending = false;
+
+  // Incomers: the feeders into the board (normal input first), else its riser tap-off box.
+  const inCables = cables
+    .filter((c) => c.to.elementId === board.id)
+    .sort((a, b) => Number(a.to.port === 'standby') - Number(b.to.port === 'standby'));
+  const riser = risers.findIndex((r) => r.feeds.includes(board.id));
+  const incomers = inCables.map((c, i): ScheduleRow => {
+    const { cols, pending: wait, problem } = feederColumns(p, c, length, key);
+    pending ||= wait;
     return {
-      feeder: child?.tag ?? '?',
-      wayNo: c.circuitRef,
-      poles: polesOf(child),
+      problem,
+      feeder: inCables.length > 1 ? `INCOMER ${i + 1}` : 'INCOMER',
+      wayNo: '-',
+      poles: polesOf(board),
       ...cols,
-      kw: kwOf(cs),
-      tclKw: round2(cs?.connectedKw ?? 0),
-      mdKw: round2(cs?.maxDemandKw ?? 0),
+      ...loadColumns(s),
+      remarks: c.to.port === 'standby' ? `Standby from ${tagOf(c.from.elementId) ?? '?'}` : '',
     };
   });
-
-  // Upstream: the feeding board or riser, and the transformer at the top of the path.
-  const parentOf = (id: string): string | null =>
-    cables.find((c) => c.to.elementId === id)?.from.elementId ??
-    risers.find((r) => r.feeds.includes(id))?.fedFromId ??
-    null;
-  let transformer: string | null = null;
-  for (let id = parentOf(board.id), n = 0; id && n < 50; id = parentOf(id), n++) {
-    const e = elements.find((x) => x.id === id);
-    if (e?.kind === 'transformer') {
-      transformer = e.tag;
-      break;
-    }
+  if (incomers.length === 0) {
+    const tapOff = riser >= 0 ? tapOffColumns(p, board.id, key) : null;
+    pending ||= tapOff?.pending ?? false;
+    incomers.push({
+      problem: tapOff?.problem ?? null,
+      feeder: 'INCOMER',
+      wayNo: '-',
+      poles: polesOf(board),
+      ...(tapOff?.cols ?? {
+        breakerA: null,
+        faultDutyKa: null,
+        cores: '-',
+        type: '-',
+        sizeMm2: null,
+        eccMm2: null,
+        lengthM: null,
+      }),
+      ...loadColumns(s),
+      remarks: riser >= 0 ? `Tap-off from Riser ${riser + 1}` : '',
+    });
   }
 
-  const tcl = s?.connectedKw ?? 0;
+  const ways = cables
+    .filter((c) => c.from.elementId === board.id)
+    .sort((a, b) => a.circuitRef.localeCompare(b.circuitRef, undefined, { numeric: true }))
+    .map((c): ScheduleRow => {
+      const child = elements.find((e) => e.id === c.to.elementId);
+      const { cols, pending: wait, problem } = feederColumns(p, c, length, key);
+      pending ||= wait;
+      return {
+        problem,
+        feeder: child?.tag ?? '?',
+        wayNo: c.circuitRef,
+        poles: polesOf(child),
+        ...cols,
+        ...loadColumns(summaries.get(c.to.elementId)),
+        remarks: remarksOf(child),
+      };
+    });
+
+  const totals = loadColumns(s);
   return {
-    board,
+    id: board.id,
+    tag: board.tag,
+    kind: 'board',
+    description: null,
     project: p.details.name,
     location: board.location,
-    connectedTo: inCable ? tagOf(inCable.from.elementId) : riser >= 0 ? `Riser ${riser + 1}` : null,
-    transformer,
-    incomer,
+    connectedTo: inCables.length
+      ? inCables.map((c) => tagOf(c.from.elementId)).join(' / ')
+      : riser >= 0
+        ? `Riser ${riser + 1}`
+        : null,
+    transformer: transformerAbove(p.model, board.id),
+    incomers,
     ways,
-    totals: { kw: kwOf(s), tclKw: round2(tcl), mdKw: round2(s?.maxDemandKw ?? 0) },
-    demandFactor: tcl > 0 ? round2((s?.maxDemandKw ?? 0) / tcl) : null,
+    totals,
+    demandFactor: demandFactorOf(totals.tclKw, totals.mdKw),
     sizesPending: pending,
   };
+}
+
+/**
+ * Busbar schedule of a riser (Section 14): "<tag> - <A> A TPN+E"; the incomer from the board that
+ * feeds it, and one way per board on its tap-offs with the tap-off box breaker.
+ */
+export function busbarSchedule(
+  p: Project,
+  riserId: string,
+  summaries: Map<string, LoadSummary>,
+): BoardSchedule | null {
+  const { elements, risers } = p.model;
+  const index = risers.findIndex((r) => r.id === riserId);
+  const riser = risers[index];
+  if (!riser) return null;
+  const key = inputsKey(p);
+  const tag = `Riser ${index + 1}`;
+  const own = lastResult(p, riser.id, key);
+  const rating = own.result?.values.izA ?? null;
+  let pending = own.pending;
+
+  const boards = riser.feeds
+    .map((id) => elements.find((e) => e.id === id))
+    .filter((e): e is Element => !!e);
+  const ways = boards.map((b, k): ScheduleRow => {
+    const { cols, pending: wait, problem } = tapOffColumns(p, b.id, key);
+    pending ||= wait;
+    return {
+      problem,
+      feeder: b.tag,
+      wayNo: `T${k + 1}`,
+      poles: polesOf(b),
+      ...cols,
+      ...loadColumns(summaries.get(b.id)),
+      remarks: remarksOf(b),
+    };
+  });
+  const add = (f: (r: ScheduleRow) => number) => round2(ways.reduce((t, w) => t + f(w), 0));
+  const totals = {
+    kw: { R: add((w) => w.kw.R), Y: add((w) => w.kw.Y), B: add((w) => w.kw.B) },
+    tclKw: add((w) => w.tclKw),
+    mdKw: add((w) => w.mdKw),
+  };
+  const source = elements.find((e) => e.id === riser.fedFromId);
+  return {
+    id: riser.id,
+    tag,
+    kind: 'busbar',
+    description: `${tag} - ${rating ?? '-'} A TPN+E`,
+    project: p.details.name,
+    location: '',
+    connectedTo: source?.tag ?? null,
+    transformer: transformerAbove(p.model, riser.fedFromId),
+    incomers: [
+      {
+        feeder: 'INCOMER',
+        wayNo: '-',
+        poles: 'TP',
+        breakerA: own.result?.values.inA ?? null,
+        faultDutyKa: null,
+        cores: 'TPN+E',
+        type: `Busbar ${rating ?? '-'} A`,
+        sizeMm2: null,
+        eccMm2: null,
+        lengthM: riser.lengthM,
+        ...totals,
+        remarks: source ? `From ${source.tag}` : 'Not fed',
+        problem: own.problem,
+      },
+    ],
+    ways,
+    totals,
+    demandFactor: demandFactorOf(totals.tclKw, totals.mdKw),
+    sizesPending: pending,
+  };
+}
+
+/**
+ * What stops the export of these schedules (E3101): results out of date or not run, blocked
+ * results and failing checks - one line per board or row.
+ */
+export function exportProblems(schedules: readonly BoardSchedule[]): string[] {
+  return schedules.flatMap((s) => [
+    ...(s.sizesPending ? [`${s.tag}: results out of date or not calculated`] : []),
+    ...[...s.incomers, ...s.ways].flatMap((r) =>
+      r.problem ? [`${s.tag} ${r.feeder === 'INCOMER' ? 'incomer' : r.feeder}: ${r.problem}`] : [],
+    ),
+  ]);
 }

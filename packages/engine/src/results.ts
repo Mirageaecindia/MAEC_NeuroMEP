@@ -1,5 +1,5 @@
 import { loadSummaries, type CheckCode, type ElementResult, type Project } from '@neuromep/shared';
-import { getRulePack } from '@neuromep/rulepacks';
+import { breakerTypeFor, getRulePack } from '@neuromep/rulepacks';
 import type { CableSizeOutcome, SizedFeeder } from './cableSize.js';
 import type { RiserCheck } from './checks.js';
 
@@ -119,7 +119,102 @@ export function elementResults(project: Project, outcome: CableSizeOutcome): Ele
     const r = incoming.get(e.id);
     return r ? [{ ...r, elementId: e.id }] : [];
   });
-  return [...feeders, ...components];
+  const risers = outcome.risers.flatMap((r) => riserResults(project, r, summaries, incoming));
+  return [...feeders, ...components, ...risers];
+}
+
+const EMPTY_VALUES: ElementResult['values'] = {
+  ibA: null,
+  inA: null,
+  izA: null,
+  vdOwnPct: null,
+  vdTotalPct: null,
+  ikMaxKa: null,
+  ikMinKa: null,
+  ipKa: null,
+  zsMohm: null,
+};
+
+/**
+ * A riser (Building tab) and the boards on its tap-offs (Section 14 busbar schedule): the riser
+ * with its busbar rating and voltage drop; each board fed only by the riser gets the result of its
+ * tap-off box - the breaker rating for its demand and the drop at the tap-off.
+ */
+function riserResults(
+  project: Project,
+  r: RiserCheck,
+  summaries: ReturnType<typeof loadSummaries>,
+  fedByFeeder: ReadonlyMap<string, ElementResult>,
+): ElementResult[] {
+  const pack = getRulePack(project.rulePackId!, project.rulePackVersion!);
+  const status: ElementResult['status'] =
+    r.ibA === null ? 'awaiting-load' : r.busbar ? 'final' : 'blocked';
+  const trace = r.notes.map((detail) => ({ step: 'Riser', detail }));
+  const c2: Check =
+    r.c2 === 'not-run'
+      ? { state: 'not-calculated', detail: r.notes.at(-1) ?? 'No busbar yet.' }
+      : { state: r.c2, detail: r.notes.at(-1) };
+  const riser: ElementResult = {
+    elementId: r.riserId,
+    status,
+    provisionalReasons: [],
+    errors: status === 'blocked' ? ['E2102'] : [],
+    sizedBy: null,
+    checks: {
+      C1: r.busbar
+        ? { state: 'pass', detail: `${r.busbar.ratingA} A busbar vs In ${r.inA} A` }
+        : { state: 'not-calculated', detail: r.notes.at(-1) ?? 'No load on the tap-offs.' },
+      C2: c2,
+    },
+    size: null,
+    device: null,
+    load: null,
+    values: {
+      ...EMPTY_VALUES,
+      ibA: r.ibA,
+      inA: r.inA,
+      izA: r.busbar?.ratingA ?? null,
+      vdOwnPct: r.vdPct,
+      vdTotalPct: r.vdTotalPct,
+    },
+    trace,
+  };
+  const tapOffs = r.tapOffs
+    .filter((t) => !fedByFeeder.has(t.boardId))
+    .map((t): ElementResult => {
+      const s = summaries.get(t.boardId);
+      const board = project.model.elements.find((e) => e.id === t.boardId);
+      const single = board && 'poles' in board && board.poles === 'SPN';
+      const type = t.inA === null ? null : breakerTypeFor(pack.devices, t.inA);
+      return {
+        elementId: t.boardId,
+        status: t.ibA === null ? 'awaiting-load' : status,
+        provisionalReasons: [],
+        errors: status === 'blocked' && t.ibA !== null ? ['E2102'] : [],
+        sizedBy: null,
+        checks: {
+          C2: c2,
+          C3: { state: 'not-calculated', detail: 'Tap-off breaker fault duty not calculated yet.' },
+        },
+        size: null,
+        device:
+          t.inA !== null && type
+            ? { type: type.type, ratingA: t.inA, poles: single ? '1P' : '3P', faultRatingKa: null }
+            : null,
+        load: s
+          ? { connectedKw: s.connected, maxDemandKw: s.maxDemandKw, standbyKw: s.standbyKw }
+          : null,
+        values: { ...EMPTY_VALUES, ibA: t.ibA, inA: t.inA, vdTotalPct: r.vdTotalPct },
+        trace: [
+          ...trace,
+          {
+            step: 'Tap-off',
+            detail: `Tap-off box on Riser ${r.index}: Ib ${t.ibA?.toFixed(1) ?? '-'} A, breaker ${t.inA ?? '-'} A.`,
+          },
+        ],
+      };
+    });
+  return [riser, ...tapOffs];
 }
 
 export interface RiserCost {

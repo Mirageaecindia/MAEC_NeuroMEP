@@ -51,9 +51,20 @@ export interface RiserCheck {
   vdLimitPct: number | null;
   c2: CheckState;
   notes: string[];
+  /** Tap-off box of each board on the riser (Section 14): current and breaker rating. */
+  tapOffs: { boardId: string; ibA: number | null; inA: number | null }[];
 }
 
 const SOURCES = new Set<ElementKind>(['transformer', 'generator', 'ups']);
+
+/** Ib of a demand (10.4): balanced three-phase on 400 V, else the largest phase on 230 V. */
+function phaseCurrent(d: { L1: number; L2: number; L3: number }, pf: number | null): number | null {
+  const p = d.L1 + d.L2 + d.L3;
+  if (!pf || p <= 0) return null;
+  return d.L1 === d.L2 && d.L2 === d.L3
+    ? (p * 1000) / (Math.sqrt(3) * 400 * pf)
+    : (Math.max(d.L1, d.L2, d.L3) * 1000) / (230 * pf);
+}
 
 /** Rule-pack limit key for the board a feeder supplies (10.7, Ti sheet). */
 export function limitKey(kind: ElementKind): string {
@@ -143,9 +154,16 @@ export function checkNetworkFeeders(
       vdLimitPct: limit,
       c2: 'not-run',
       notes: [],
+      tapOffs: [],
     };
     riserChecks.set(i, result);
     if (!r.fedFromId || r.feeds.length === 0) return result;
+    // Tap-off box per board: In = standard rating >= the board's Ib (10.4, 10.5).
+    result.tapOffs = r.feeds.map((boardId) => {
+      const s = summaryOf(boardId);
+      const ib = s ? phaseCurrent(s.demand, s.pf ?? pfDefault) : null;
+      return { boardId, ibA: ib, inA: ib === null ? null : standardRating(pack.devices, ib) };
+    });
     // Current: the demand of the boards on its tap-offs, largest phase (10.4).
     const subs = r.feeds.map((id) => summaryOf(id)).filter((x) => !!x);
     const d = subs.reduce(
@@ -155,12 +173,11 @@ export function checkNetworkFeeders(
     const p = d.L1 + d.L2 + d.L3;
     const q = subs.reduce((t, x) => t + (x.pf ? x.maxDemandKw * Math.tan(Math.acos(x.pf)) : 0), 0);
     const pf = p > 0 ? p / Math.hypot(p, q) : pfDefault;
-    if (!pf || p <= 0) return result;
-    result.ibA =
-      d.L1 === d.L2 && d.L2 === d.L3
-        ? (p * 1000) / (Math.sqrt(3) * 400 * pf)
-        : (Math.max(d.L1, d.L2, d.L3) * 1000) / (230 * pf);
-    result.inA = standardRating(pack.devices, result.ibA);
+    if (!pf) return result;
+    const ib = phaseCurrent(d, pf);
+    if (ib === null) return result;
+    result.ibA = ib;
+    result.inA = standardRating(pack.devices, ib);
     if (!maker) {
       result.notes.push('Choose the busbar manufacturer on Import File to calculate the riser.');
       return result;

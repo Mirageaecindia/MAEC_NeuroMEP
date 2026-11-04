@@ -77,6 +77,7 @@ function fakeApi(project?: Project, projects: ProjectSummary[] = []): ApiClient 
       throw new ApiError(404, 'Plan file not found.');
     },
     symbols: async () => ({ symbols: [] }),
+    nextExportVersion: vi.fn(async () => ({ version: 1 })),
     setUnauthorizedHandler: (handler: () => void) => {
       endSession = handler;
       return () => undefined;
@@ -672,10 +673,7 @@ describe('#TASK-30 / #TASK-31 Schematic and Output (Figma 4, 5)', () => {
     await userEvent.selectOptions(screen.getByLabelText('DB-db-1 type of meter'), 'upto-125a-3ph');
     await userEvent.type(screen.getByLabelText('Planned completion date'), '2027-06-30');
     expect(download).toBeDisabled(); // the logo is still missing
-    const logo = new File(['<svg xmlns="http://www.w3.org/2000/svg"/>'], 'logo.svg', {
-      type: 'image/svg+xml',
-    });
-    await userEvent.upload(screen.getByLabelText('Logo'), logo);
+    await userEvent.upload(screen.getByLabelText('Logo'), PNG_LOGO);
     await waitFor(() => expect(download).toBeEnabled());
     expect(within(sheet).getByRole('img', { name: /logo/ })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('checkbox', { name: 'Generator Load Analysis' }));
@@ -684,6 +682,88 @@ describe('#TASK-30 / #TASK-31 Schematic and Output (Figma 4, 5)', () => {
     ).toBeVisible();
   });
 });
+
+describe('#TASK-31 schedule download (WBS 1.7.2)', () => {
+  /** TX 1000 kVA > DB-db-1 (60 kW) by a feeder; a riser from TX so Cable Size is enabled. */
+  function fedProject() {
+    const project = buildingProject();
+    project.meta.reachedPage = 'simulation-report';
+    const tx = project.model.elements.find((e) => e.id === 'tx')!;
+    const db = project.model.elements.find((e) => e.id === 'db-1')!;
+    Object.assign(tx, { kva: 1000, ukPct: 6, urPct: 1 });
+    Object.assign(db, { loads: [{ method: 'kw', loadType: '2', kwL1: 20, kwL2: 20, kwL3: 20 }] });
+    const cable = testCable(tx, db);
+    cable.construction = { ...cable.construction, groupedCircuits: 1 };
+    project.model.cables.push(cable);
+    project.model.risers = setRiser([], 'riser-1', { lengthM: 26, fedFromId: 'tx' });
+    return project;
+  }
+
+  async function fillAndDownload(project: Project) {
+    const api = fakeApi(project);
+    renderAt('/projects/p-1/output', new FakeAuth(LEAD), api);
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'Floor Level Schedule' }));
+    await userEvent.selectOptions(screen.getByLabelText('DB-db-1 type of meter'), 'upto-125a-3ph');
+    await userEvent.type(screen.getByLabelText('Planned completion date'), '2027-06-30');
+    await userEvent.upload(screen.getByLabelText('Logo'), PNG_LOGO);
+    const download = screen.getByRole('button', { name: 'Download' });
+    await waitFor(() => expect(download).toBeEnabled());
+    await userEvent.click(download);
+    return api;
+  }
+
+  it('runs Cable Size, then saves <project>_Schedules_v1.xlsx with a sheet per board', async () => {
+    let saved: Blob | null = null;
+    const create = vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => {
+      saved = b as Blob;
+      return 'blob:x';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const api = await fillAndDownload(fedProject());
+    expect(
+      await screen.findByText(/^Downloaded .*_Schedules_v1\.xlsx \(1 schedule\)\.$/),
+    ).toBeVisible();
+    expect(api.nextExportVersion).toHaveBeenCalledWith('p-1', 'schedules');
+    expect(click).toHaveBeenCalled();
+    const ExcelJS = (await import('exceljs')).default;
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(await saved!.arrayBuffer());
+    const ws = wb.getWorksheet('DB-db-1')!;
+    expect(String(ws.getCell('A1').value)).toMatch(/PLANNED COMPLETION DATE : 2027-06-30/);
+    expect(ws.getCell('A6').value).toBe('INCOMER');
+    // 60 kW at pf 0.85: Ib 101.9 A -> 125 A breaker; loads 20 / 20 / 20 kW.
+    expect(ws.getCell('D6').value).toBe(125);
+    expect([ws.getCell('K6').value, ws.getCell('N6').value]).toEqual([20, 60]);
+    expect(ws.getImages()).toHaveLength(1); // the logo
+    create.mockRestore();
+    click.mockRestore();
+  });
+
+  it('is blocked (E3101) while a result is blocked', async () => {
+    const project = fedProject();
+    // A single-phase load on 4-core cable: no CableSizer rating, the feeder is blocked (E2101).
+    const db = project.model.elements.find((e) => e.id === 'db-1')!;
+    Object.assign(db, { loads: [{ method: 'kw', loadType: '2', kwL1: 10, kwL2: 0, kwL3: 0 }] });
+    const api = await fillAndDownload(project);
+    expect(await screen.findByText(/^E3101 Export blocked - /)).toBeVisible();
+    expect(api.nextExportVersion).not.toHaveBeenCalled();
+  });
+});
+
+/** A 1 x 1 PNG: the logo (Excel takes PNG / JPEG). */
+const PNG_LOGO = new File(
+  [
+    Uint8Array.from(
+      atob(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
+      ),
+      (c) => c.charCodeAt(0),
+    ),
+  ],
+  'logo.png',
+  { type: 'image/png' },
+);
 
 /** modelledProject() with a transformer on the Ground Floor (Building tab). */
 function buildingProject(): Project {

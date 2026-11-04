@@ -3,6 +3,7 @@ import type { Project } from '../project/schema.js';
 import { stable } from '../stable.js';
 import type { Cable } from './cable.js';
 import type { Element } from './elements.js';
+import type { Riser } from './riser.js';
 import { ElementResultSchema, type ElementResult } from './results.js';
 
 /**
@@ -27,17 +28,24 @@ export type StoredResult = z.infer<typeof StoredResultSchema>;
 export type SizingScope =
   { kind: 'element'; id: string } | { kind: 'floor'; floorId: string } | { kind: 'project' };
 
-type Item = Element | Cable;
+type Item = Element | Cable | Riser;
 
-/** Electrical components and all feeders: the items Cable Size gives a result. */
+/** Electrical components, all feeders and the risers: the items Cable Size gives a result. */
 function sizedItems(p: Project): Item[] {
-  return [...p.model.elements.filter((e) => e.discipline === 'electrical'), ...p.model.cables];
+  return [
+    ...p.model.elements.filter((e) => e.discipline === 'electrical'),
+    ...p.model.cables,
+    ...p.model.risers,
+  ];
 }
 
+/** The items of a run's scope; risers belong to the building, not to a floor. */
 export function scopeItems(p: Project, scope: SizingScope): Item[] {
   const items = sizedItems(p);
   if (scope.kind === 'element') return items.filter((x) => x.id === scope.id);
-  if (scope.kind === 'floor') return items.filter((x) => x.floorId === scope.floorId);
+  if (scope.kind === 'floor') {
+    return items.filter((x) => 'floorId' in x && x.floorId === scope.floorId);
+  }
   return items;
 }
 

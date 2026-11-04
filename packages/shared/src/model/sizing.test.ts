@@ -68,6 +68,17 @@ describe('#TASK-16 Cable Size results and Out of date (FR-18, FR-21, FR-36)', ()
     expect(mergeRun(p, { kind: 'project' }, [], run(p)).map((r) => r.elementId)).toEqual([a!.id]);
   });
 
+  it('keeps riser results with the whole project, not with a floor', () => {
+    const p = network();
+    p.model.risers = [{ id: 'r1', lengthM: 20, widthM: 1, fedFromId: null, feeds: [] }];
+    const db = p.model.elements.find((e) => e.kind === 'db')!;
+    const fresh = [result('r1'), result(db.id)];
+    const floor = mergeRun(p, { kind: 'floor', floorId: db.floorId }, fresh, run(p));
+    expect(floor.map((r) => r.elementId)).toEqual([db.id]);
+    const all = mergeRun(p, { kind: 'project' }, fresh, run(p));
+    expect(all.map((r) => r.elementId)).toContain('r1');
+  });
+
   it('is Out of date after any network or set-up change, not after a tag or a move', () => {
     const p = network();
     const db = p.model.elements.find((e) => e.kind === 'db')!;

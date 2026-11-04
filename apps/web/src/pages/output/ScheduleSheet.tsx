@@ -26,12 +26,12 @@ const NO_METERS: WayMeters = { ph1: null, ph3: null, ct: null };
 /** Inputs still missing on a board before its schedule can be downloaded. */
 export function missingMeters(s: BoardSchedule, m: BoardMeters | undefined): string[] {
   const missing: string[] = [];
-  if (!m?.type) missing.push(`${s.board.tag}: type of meter`);
-  else if (m.type === 'lv-ct' && !m.ctRatio.trim()) missing.push(`${s.board.tag}: CT ratio`);
+  if (!m?.type) missing.push(`${s.tag}: type of meter`);
+  else if (m.type === 'lv-ct' && !m.ctRatio.trim()) missing.push(`${s.tag}: CT ratio`);
   for (const w of s.ways) {
     const v = m?.ways[w.wayNo] ?? NO_METERS;
     if (v.ph1 === null || v.ph3 === null || v.ct === null) {
-      missing.push(`${s.board.tag} ${w.wayNo}: kWh meters`);
+      missing.push(`${s.tag} ${w.wayNo}: kWh meters`);
     }
   }
   return missing;
@@ -97,7 +97,7 @@ export function ScheduleSheet(props: {
     });
 
   return (
-    <table className="schedule-sheet" aria-label={`Schedule ${s.board.tag}`}>
+    <table className="schedule-sheet" aria-label={`Schedule ${s.tag}`}>
       <tbody>
         <tr>
           <td colSpan={8} className="left strong">
@@ -106,7 +106,7 @@ export function ScheduleSheet(props: {
             PLANNED COMPLETION DATE : {props.completionDate || '—'}
             <br />
             <br />
-            <span className="sheet-board">{s.board.tag}</span>
+            <span className="sheet-board">{s.description ?? s.tag}</span>
           </td>
           <td colSpan={7} className="strong">
             DETAILS OF CONNECTED LOAD, MAX. DEMAND &amp; kWHR METERING
@@ -115,7 +115,7 @@ export function ScheduleSheet(props: {
             <div className="logo">
               {props.logo ? <img src={props.logo} alt={`${props.client} logo`} /> : props.client}
             </div>
-            LOCATION OF {s.board.tag}: {s.location || '—'}
+            LOCATION OF {s.tag}: {s.location || '—'}
           </td>
         </tr>
         <tr className="strong">
@@ -139,15 +139,19 @@ export function ScheduleSheet(props: {
           <td>LV CT</td>
           <td colSpan={2}>REMARKS</td>
         </tr>
-        <tr className="strong">
-          <td className="left">INCOMER</td>
-          <td>-</td>
-          {row(s.incomer, true)}
-          <td />
-          <td />
-          <td />
-          <td colSpan={2} />
-        </tr>
+        {s.incomers.map((r) => (
+          <tr key={r.feeder} className="strong">
+            <td className="left">{r.feeder}</td>
+            <td>-</td>
+            {row(r, true)}
+            <td />
+            <td />
+            <td />
+            <td colSpan={2} className="left">
+              {r.remarks}
+            </td>
+          </tr>
+        ))}
         <tr>
           <td colSpan={20} className="left strong">
             OUTGOING WAYS:
@@ -156,7 +160,7 @@ export function ScheduleSheet(props: {
         {s.ways.length === 0 && (
           <tr>
             <td colSpan={20} className="left muted">
-              No outgoing feeders drawn from {s.board.tag} yet.
+              No outgoing feeders drawn from {s.tag} yet.
             </td>
           </tr>
         )}
@@ -188,13 +192,15 @@ export function ScheduleSheet(props: {
                   onChange={(ct) => setWay(w.wayNo, { ct })}
                 />
               </td>
-              <td colSpan={2} />
+              <td colSpan={2} className="left">
+                {w.remarks}
+              </td>
             </tr>
           );
         })}
         <tr className="strong">
           <td colSpan={5} className="left">
-            {s.board.tag} CONNECTED TO: {s.connectedTo ?? '—'}
+            {s.tag} CONNECTED TO: {s.connectedTo ?? '—'}
             <br />
             TRANSFORMER: {s.transformer ?? '—'}
           </td>
@@ -220,7 +226,7 @@ export function ScheduleSheet(props: {
             <label className="meter-type">
               Type of Meter (rating of incomer):{' '}
               <select
-                aria-label={`${s.board.tag} type of meter`}
+                aria-label={`${s.tag} type of meter`}
                 className={m.type ? undefined : 'missing'}
                 value={m.type}
                 onChange={(e) =>
@@ -240,7 +246,7 @@ export function ScheduleSheet(props: {
                 {' '}
                 CT ratio:{' '}
                 <input
-                  aria-label={`${s.board.tag} CT ratio`}
+                  aria-label={`${s.tag} CT ratio`}
                   className={m.ctRatio.trim() ? undefined : 'missing'}
                   placeholder="e.g. 200/5 A"
                   value={m.ctRatio}

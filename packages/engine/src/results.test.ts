@@ -139,6 +139,35 @@ describe('Building tab Cost: busbar rating x 2.2 AED per riser (manager 3 Nov 20
     });
   });
 
+  it('gives the riser and each board on its tap-offs a result (Section 14 busbar schedule)', () => {
+    const { project } = withRiser();
+    const results = elementResults(project, cableSize(project));
+    const riser = results.find((r) => r.elementId === 'r1')!;
+    expect(riser).toMatchObject({ status: 'final', values: { inA: 630, izA: 800 } });
+    expect(riser.checks.C2?.state).toBe('pass');
+    // SMDB on the tap-off: 300 kW at pf 0.85 -> Ib 509.4 A, tap-off breaker 630 A MCCB.
+    const sm = results.find((r) => r.elementId === 'sm')!;
+    expect(sm.device).toEqual({ type: 'MCCB', ratingA: 630, poles: '3P', faultRatingKa: null });
+    expect(sm.values.ibA).toBeCloseTo(300_000 / (Math.sqrt(3) * 400 * 0.85), 6);
+    expect(sm.values.vdTotalPct).toBe(riser.values.vdTotalPct);
+    for (const r of results) expect(ElementResultSchema.safeParse(r).success).toBe(true);
+  });
+
+  it('without a busbar maker the riser and its loaded tap-offs are blocked; empty ones wait', () => {
+    const b = withRiser();
+    b.project.calculation.busbarMaker = null;
+    b.add('db', 'idle');
+    b.db('spn', [4, 0, 0], { poles: 'SPN' });
+    b.project.model.risers[0]!.feeds.push('idle', 'spn');
+    const results = elementResults(b.project, cableSize(b.project));
+    const of = (id: string) => results.find((r) => r.elementId === id)!;
+    expect(of('r1')).toMatchObject({ status: 'blocked', errors: ['E2102'] });
+    expect(of('r1').checks.C1?.detail).toMatch(/Choose the busbar manufacturer/);
+    expect(of('sm')).toMatchObject({ status: 'blocked', errors: ['E2102'] });
+    expect(of('idle')).toMatchObject({ status: 'awaiting-load', device: null, errors: [] });
+    expect(of('spn').device).toMatchObject({ poles: '1P', type: 'MCB' });
+  });
+
   it('has no total while a riser has no busbar rating (no maker chosen)', () => {
     const { project } = withRiser();
     project.calculation.busbarMaker = null;

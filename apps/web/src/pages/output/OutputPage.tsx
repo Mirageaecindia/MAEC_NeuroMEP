@@ -1,16 +1,24 @@
 import {
   boardSchedule,
+  busbarSchedule,
+  exportProblems,
   loadSummaries,
+  type BoardSchedule,
+  type Project,
   SCHEDULE_LEVELS,
   scheduleLevelOf,
   type ElementKind,
   type ScheduleLevel,
 } from '@neuromep/shared';
 import { useState } from 'react';
+import { useApi } from '../../auth/AuthContext';
 import { DisciplineTabs, Shell, useNotice } from '../../layout/Shell';
 import { Toolbar } from '../../layout/Toolbar';
+import { safeFileName, saveBlob } from '../../workspace/fileNames';
 import { defaultPf, lengthRule } from '../../workspace/projectDefaults';
+import { useCableSize } from '../../workspace/useCableSize';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
+import { scheduleWorkbook } from './scheduleExcel';
 import { emptyMeters, missingMeters, ScheduleSheet, type BoardMeters } from './ScheduleSheet';
 import '../schematic/schematic.css';
 
@@ -24,23 +32,33 @@ const REPORTS: { key: ScheduleLevel | 'completed' | 'generator'; label: string }
 ];
 type ReportKey = (typeof REPORTS)[number]['key'];
 
-/** Schedule Type narrows the ticked levels to one board type. */
-const SCHEDULE_TYPES: { label: string; kinds: readonly ElementKind[] | null }[] = [
-  { label: 'All schedules', kinds: null },
-  { label: 'DB Schedule', kinds: ['db'] },
-  { label: 'SMDB Schedule', kinds: ['smdb', 'esmdb'] },
-  { label: 'MDB Schedule', kinds: SCHEDULE_LEVELS.first },
-  { label: 'MCC Schedule', kinds: ['mcc', 'emcc'] },
+/**
+ * Schedule Type narrows the ticked levels to one board type. Busbar (riser) schedules go with the
+ * First Level - risers are fed from the main panels (Section 14).
+ */
+const SCHEDULE_TYPES: { label: string; kinds: readonly ElementKind[] | null; busbar: boolean }[] = [
+  { label: 'All schedules', kinds: null, busbar: true },
+  { label: 'DB Schedule', kinds: ['db'], busbar: false },
+  { label: 'SMDB Schedule', kinds: ['smdb', 'esmdb'], busbar: false },
+  { label: 'MDB Schedule', kinds: SCHEDULE_LEVELS.first, busbar: false },
+  { label: 'Busbar Schedule', kinds: [], busbar: true },
+  { label: 'MCC Schedule', kinds: ['mcc', 'emcc'], busbar: false },
 ];
+const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 /**
  * Output (Figma screen 5): Report Library, schedule previews from the model, and the inputs the
  * sheet needs before download (logo, planned completion date, kWh meters, type of meter) - asked
- * at every download and not stored (decision 2 Nov 2026). The schedule files come in WBS 1.7.2.
+ * at every download and not stored (decision 2 Nov 2026). Download (WBS 1.7.2) runs Cable Size
+ * first (FR-21), stops on results that are blocked or failing (E3101), then saves one Excel
+ * workbook `<project>_Schedules_v<n>.xlsx`, a sheet per board, never overwritten.
  */
 export function OutputPage() {
   const { project } = useWorkspace();
+  const api = useApi();
   const notice = useNotice();
+  const cableSize = useCableSize();
+  const [busy, setBusy] = useState(false);
   const [tab, setTab] = useState<'All' | 'Electrical' | 'Mechanical' | 'PHE'>('All');
   const [reports, setReports] = useState<Set<ReportKey>>(new Set());
   const [typeIndex, setTypeIndex] = useState(0);
@@ -58,32 +76,70 @@ export function OutputPage() {
       return n;
     });
 
-  // Boards in building order (lowest floor first), then by tag.
-  const floorOrder = new Map(project.building.floors.map((f, i) => [f.id, i]));
-  const kinds = SCHEDULE_TYPES[typeIndex]!.kinds;
-  const boards = project.model.elements
-    .filter((e) => {
-      const level = scheduleLevelOf(e.kind);
-      if (!level || (kinds && !kinds.includes(e.kind))) return false;
-      return reports.has('completed') || reports.has(level);
-    })
-    .sort(
-      (a, b) =>
-        (floorOrder.get(a.floorId) ?? 0) - (floorOrder.get(b.floorId) ?? 0) ||
-        a.tag.localeCompare(b.tag, undefined, { numeric: true }),
-    );
   const electrical = tab === 'All' || tab === 'Electrical';
-  const summaries = loadSummaries(project, defaultPf(project));
-  const length = lengthRule(project) ?? { allowancePct: 0, additionM: null };
-  const schedules = electrical
-    ? boards.map((b) => boardSchedule(project, b.id, summaries, length)!)
-    : [];
+  /** The ticked schedules of a project: boards in building order, then the risers. */
+  function schedulesOf(p: Project): BoardSchedule[] {
+    if (!electrical) return [];
+    const floorOrder = new Map(p.building.floors.map((f, i) => [f.id, i]));
+    const type = SCHEDULE_TYPES[typeIndex]!;
+    const boards = p.model.elements
+      .filter((e) => {
+        const level = scheduleLevelOf(e.kind);
+        if (!level || (type.kinds && !type.kinds.includes(e.kind))) return false;
+        return reports.has('completed') || reports.has(level);
+      })
+      .sort(
+        (a, b) =>
+          (floorOrder.get(a.floorId) ?? 0) - (floorOrder.get(b.floorId) ?? 0) ||
+          a.tag.localeCompare(b.tag, undefined, { numeric: true }),
+      );
+    const summaries = loadSummaries(p, defaultPf(p));
+    const length = lengthRule(p) ?? { allowancePct: 0, additionM: null };
+    const risers =
+      type.busbar && (reports.has('completed') || reports.has('first')) ? p.model.risers : [];
+    return [
+      ...boards.map((b) => boardSchedule(p, b.id, summaries, length)!),
+      ...risers.map((r) => busbarSchedule(p, r.id, summaries)!),
+    ];
+  }
+  const schedules = schedulesOf(project);
   const missing = [
     ...(schedules.length && !logo ? ['logo'] : []),
     ...(schedules.length && !completionDate ? ['planned completion date'] : []),
-    ...schedules.flatMap((s) => missingMeters(s, meters[s.board.id])),
+    ...schedules.flatMap((s) => missingMeters(s, meters[s.id])),
   ];
-  const canDownload = schedules.length > 0 && missing.length === 0;
+  const canDownload = schedules.length > 0 && missing.length === 0 && !busy;
+
+  async function download() {
+    setBusy(true);
+    try {
+      // Cable Size runs before every export (FR-21), on the whole project.
+      const run = await cableSize.run({ kind: 'project' }, 'the whole project');
+      if (!run) return;
+      const sheets = schedulesOf(run.project);
+      const problems = exportProblems(sheets);
+      if (problems.length) {
+        notice(
+          `E3101 Export blocked - ${problems.slice(0, 3).join('; ')}${problems.length > 3 ? ` and ${problems.length - 3} more` : ''}. Fix them, then download again.`,
+        );
+        return;
+      }
+      const { version } = await api.nextExportVersion(project.id, 'schedules');
+      const data = await scheduleWorkbook(sheets, {
+        logo,
+        completionDate,
+        client: project.details.clientName,
+        meters,
+      });
+      const name = `${safeFileName(project.details.name) || 'NeuroMEP'}_Schedules_v${version}.xlsx`;
+      saveBlob(new Blob([data], { type: XLSX }), name);
+      notice(`Downloaded ${name} (${sheets.length} schedule${sheets.length === 1 ? '' : 's'}).`);
+    } catch (err) {
+      notice(`Download failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <Shell
@@ -130,11 +186,9 @@ export function OutputPage() {
                 ? `Fill in before download: ${missing.slice(0, 4).join('; ')}${missing.length > 4 ? ' …' : ''}`
                 : 'Tick a schedule in the Report Library'
           }
-          onClick={() =>
-            notice('Schedule files (Excel / PDF, _v1, _v2) are produced in WBS 1.7.2.')
-          }
+          onClick={() => void download()}
         >
-          Download
+          {busy ? 'Preparing…' : 'Download'}
         </button>
       }
       toolbar={
@@ -172,7 +226,7 @@ export function OutputPage() {
                 Logo{' '}
                 <input
                   type="file"
-                  accept="image/png,image/jpeg,image/svg+xml"
+                  accept="image/png,image/jpeg"
                   aria-label="Logo"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
@@ -200,16 +254,16 @@ export function OutputPage() {
             </form>
             {schedules.some((s) => s.sizesPending) && (
               <p className="sample-note">
-                Breaker, fault duty, size and ECC come from Cable Size (engine in WBS 1.6).
+                Breaker, fault duty, size and ECC come from Cable Size; Download runs it first.
               </p>
             )}
             <div className="sheet-stack">
               {schedules.map((s) => (
                 <ScheduleSheet
-                  key={s.board.id}
+                  key={s.id}
                   schedule={s}
-                  meters={meters[s.board.id] ?? emptyMeters()}
-                  onMeters={(m) => setMeters((all) => ({ ...all, [s.board.id]: m }))}
+                  meters={meters[s.id] ?? emptyMeters()}
+                  onMeters={(m) => setMeters((all) => ({ ...all, [s.id]: m }))}
                   logo={logo}
                   completionDate={completionDate}
                   client={project.details.clientName}

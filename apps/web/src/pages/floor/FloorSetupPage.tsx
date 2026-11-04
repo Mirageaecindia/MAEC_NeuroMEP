@@ -456,7 +456,9 @@ export function FloorSetupPage() {
           readOnly={!editor.layers.includes('electrical')}
           onRisers={(risers) => editor.dispatch({ type: 'risers', risers })}
           onSave={() => void editor.save()}
-          onCableSize={() => cableSize.run({ kind: 'project' }, 'the whole project')}
+          onCableSize={() =>
+            cableSize.run({ kind: 'project' }, 'the whole project').then((r) => r?.reply ?? null)
+          }
         />
       ) : (
         <div className="floor-layout">
