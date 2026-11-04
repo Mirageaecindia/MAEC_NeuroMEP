@@ -19,6 +19,7 @@ import { defaultPf, lengthRule } from '../../workspace/projectDefaults';
 import { useCableSize } from '../../workspace/useCableSize';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { scheduleWorkbook } from './scheduleExcel';
+import { schedulePdf } from './schedulePdf';
 import { emptyMeters, missingMeters, ScheduleSheet, type BoardMeters } from './ScheduleSheet';
 import '../schematic/schematic.css';
 
@@ -44,14 +45,26 @@ const SCHEDULE_TYPES: { label: string; kinds: readonly ElementKind[] | null; bus
   { label: 'Busbar Schedule', kinds: [], busbar: true },
   { label: 'MCC Schedule', kinds: ['mcc', 'emcc'], busbar: false },
 ];
-const XLSX = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+/** Download formats (Section 14: Excel and PDF); picked beside Download (decision 5 Nov 2026). */
+const FORMATS = {
+  xlsx: {
+    label: 'Excel',
+    kind: 'schedules',
+    mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    make: scheduleWorkbook,
+  },
+  pdf: { label: 'PDF', kind: 'schedules-pdf', mime: 'application/pdf', make: schedulePdf },
+} as const;
+type Format = keyof typeof FORMATS;
 
 /**
  * Output (Figma screen 5): Report Library, schedule previews from the model, and the inputs the
  * sheet needs before download (logo, planned completion date, kWh meters, type of meter) - asked
  * at every download and not stored (decision 2 Nov 2026). Download (WBS 1.7.2) runs Cable Size
- * first (FR-21), stops on results that are blocked or failing (E3101), then saves one Excel
- * workbook `<project>_Schedules_v<n>.xlsx`, a sheet per board, never overwritten.
+ * first (FR-21), stops on results that are blocked or failing (E3101), then saves the file in the
+ * chosen format: one Excel workbook `<project>_Schedules_v<n>.xlsx` (a sheet per board) or one
+ * PDF `<project>_Schedules_v<n>.pdf` (a page per board), each numbered on its own, never
+ * overwritten.
  */
 export function OutputPage() {
   const { project } = useWorkspace();
@@ -59,6 +72,7 @@ export function OutputPage() {
   const notice = useNotice();
   const cableSize = useCableSize();
   const [busy, setBusy] = useState(false);
+  const [format, setFormat] = useState<Format>('xlsx');
   const [tab, setTab] = useState<'All' | 'Electrical' | 'Mechanical' | 'PHE'>('All');
   const [reports, setReports] = useState<Set<ReportKey>>(new Set());
   const [typeIndex, setTypeIndex] = useState(0);
@@ -124,15 +138,16 @@ export function OutputPage() {
         );
         return;
       }
-      const { version } = await api.nextExportVersion(project.id, 'schedules');
-      const data = await scheduleWorkbook(sheets, {
+      const f = FORMATS[format];
+      const { version } = await api.nextExportVersion(project.id, f.kind);
+      const data = await f.make(sheets, {
         logo,
         completionDate,
         client: project.details.clientName,
         meters,
       });
-      const name = `${safeFileName(project.details.name) || 'NeuroMEP'}_Schedules_v${version}.xlsx`;
-      saveBlob(new Blob([data], { type: XLSX }), name);
+      const name = `${safeFileName(project.details.name) || 'NeuroMEP'}_Schedules_v${version}.${format}`;
+      saveBlob(new Blob([data], { type: f.mime }), name);
       notice(`Downloaded ${name} (${sheets.length} schedule${sheets.length === 1 ? '' : 's'}).`);
     } catch (err) {
       notice(`Download failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -176,20 +191,33 @@ export function OutputPage() {
         </div>
       }
       sidebarFooter={
-        <button
-          className="btn btn-primary download-btn"
-          disabled={!canDownload}
-          title={
-            canDownload
-              ? undefined
-              : schedules.length
-                ? `Fill in before download: ${missing.slice(0, 4).join('; ')}${missing.length > 4 ? ' …' : ''}`
-                : 'Tick a schedule in the Report Library'
-          }
-          onClick={() => void download()}
-        >
-          {busy ? 'Preparing…' : 'Download'}
-        </button>
+        <div className="download-row">
+          <select
+            aria-label="Format"
+            value={format}
+            onChange={(e) => setFormat(e.target.value as Format)}
+          >
+            {(Object.keys(FORMATS) as Format[]).map((k) => (
+              <option key={k} value={k}>
+                {FORMATS[k].label}
+              </option>
+            ))}
+          </select>
+          <button
+            className="btn btn-primary download-btn"
+            disabled={!canDownload}
+            title={
+              canDownload
+                ? undefined
+                : schedules.length
+                  ? `Fill in before download: ${missing.slice(0, 4).join('; ')}${missing.length > 4 ? ' …' : ''}`
+                  : 'Tick a schedule in the Report Library'
+            }
+            onClick={() => void download()}
+          >
+            {busy ? 'Preparing…' : 'Download'}
+          </button>
+        </div>
       }
       toolbar={
         <Toolbar

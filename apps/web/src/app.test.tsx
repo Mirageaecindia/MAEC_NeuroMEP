@@ -684,6 +684,8 @@ describe('#TASK-30 / #TASK-31 Schematic and Output (Figma 4, 5)', () => {
 });
 
 describe('#TASK-31 schedule download (WBS 1.7.2)', () => {
+  /** ExcelJS / jsPDF load on demand: the first import is slow on a busy test machine. */
+  const SLOW = { timeout: 10_000 };
   /** TX 1000 kVA > DB-db-1 (60 kW) by a feeder; a riser from TX so Cable Size is enabled. */
   function fedProject() {
     const project = buildingProject();
@@ -699,10 +701,11 @@ describe('#TASK-31 schedule download (WBS 1.7.2)', () => {
     return project;
   }
 
-  async function fillAndDownload(project: Project) {
+  async function fillAndDownload(project: Project, format: 'xlsx' | 'pdf' = 'xlsx') {
     const api = fakeApi(project);
     renderAt('/projects/p-1/output', new FakeAuth(LEAD), api);
     await userEvent.click(await screen.findByRole('checkbox', { name: 'Floor Level Schedule' }));
+    await userEvent.selectOptions(screen.getByLabelText('Format'), format);
     await userEvent.selectOptions(screen.getByLabelText('DB-db-1 type of meter'), 'upto-125a-3ph');
     await userEvent.type(screen.getByLabelText('Planned completion date'), '2027-06-30');
     await userEvent.upload(screen.getByLabelText('Logo'), PNG_LOGO);
@@ -722,7 +725,7 @@ describe('#TASK-31 schedule download (WBS 1.7.2)', () => {
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
     const api = await fillAndDownload(fedProject());
     expect(
-      await screen.findByText(/^Downloaded .*_Schedules_v1\.xlsx \(1 schedule\)\.$/),
+      await screen.findByText(/^Downloaded .*_Schedules_v1\.xlsx \(1 schedule\)\.$/, {}, SLOW),
     ).toBeVisible();
     expect(api.nextExportVersion).toHaveBeenCalledWith('p-1', 'schedules');
     expect(click).toHaveBeenCalled();
@@ -736,6 +739,36 @@ describe('#TASK-31 schedule download (WBS 1.7.2)', () => {
     expect(ws.getCell('D6').value).toBe(125);
     expect([ws.getCell('K6').value, ws.getCell('N6').value]).toEqual([20, 60]);
     expect(ws.getImages()).toHaveLength(1); // the logo
+    create.mockRestore();
+    click.mockRestore();
+  });
+
+  it('saves <project>_Schedules_v1.pdf, numbered apart from the Excel files', async () => {
+    let saved: Blob | null = null;
+    const create = vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => {
+      saved = b as Blob;
+      return 'blob:x';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const api = await fillAndDownload(fedProject(), 'pdf');
+    expect(
+      await screen.findByText(/^Downloaded .*_Schedules_v1\.pdf \(1 schedule\)\.$/, {}, SLOW),
+    ).toBeVisible();
+    expect(api.nextExportVersion).toHaveBeenCalledWith('p-1', 'schedules-pdf');
+    expect(saved!.type).toBe('application/pdf');
+    const pdf = new TextDecoder('latin1').decode(await saved!.arrayBuffer());
+    expect(pdf.startsWith('%PDF-')).toBe(true);
+    for (const t of [
+      'INCOMER',
+      'OUTGOING WAYS:',
+      'DB-db-1',
+      '125',
+      'PLANNED COMPLETION DATE : 2027-06-30',
+    ]) {
+      expect(pdf).toContain(t);
+    }
+    expect(pdf).toMatch(/\/Subtype \/Image/); // the logo
     create.mockRestore();
     click.mockRestore();
   });
