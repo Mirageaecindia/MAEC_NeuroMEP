@@ -120,7 +120,10 @@ export class ApiClient {
     });
   }
   /** Next version of an export (_v1, _v2 ...): export files never overwrite. */
-  nextExportVersion(projectId: string, kind: 'sld' | 'schedules' | 'schedules-pdf') {
+  nextExportVersion(
+    projectId: string,
+    kind: 'sld' | 'schedules' | 'schedules-pdf' | 'calc-sheet' | 'calc-sheet-pdf',
+  ) {
     return this.request<{ version: number }>(
       `/api/projects/${encodeURIComponent(projectId)}/exports`,
       { method: 'POST', body: JSON.stringify({ kind }) },

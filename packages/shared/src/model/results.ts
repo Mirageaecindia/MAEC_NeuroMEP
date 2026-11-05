@@ -109,6 +109,33 @@ export const ElementResultSchema = z.object({
     ipKa: z.number().nullable(),
     zsMohm: z.number().nullable(),
   }),
+  /**
+   * Intermediate figures of the calculation steps for the calculation sheet (WBS 1.7.3, the
+   * CableSizer "cal" steps). Optional: results stored before 5 Nov 2026 do not have them.
+   */
+  calc: z
+    .object({
+      /** How Ib was worked out (10.4). */
+      ibCase: z.enum(['three-phase', 'single-phase', 'unbalanced', 'motor']).nullable(),
+      pf: z.number().nullable(),
+      /** Tabulated rating and correction factors (C1). */
+      itA: z.number().nullable(),
+      k1: z.number().nullable(),
+      k2: z.number().nullable(),
+      kr: z.number().nullable(),
+      k3: z.number().nullable(),
+      /** Unit voltage drop and the feeder's own drop in volts (C2). */
+      vuMvAm: z.number().nullable(),
+      vdOwnV: z.number().nullable(),
+      vdUpstreamPct: z.number().nullable(),
+      vdLimitPct: z.number().nullable(),
+      /** Busbar feeders and risers: rating of the chosen busbar. */
+      busbarA: z.number().nullable(),
+      /** Risers: length and load distribution factor k = (n + 1) / 2n. */
+      lengthM: z.number().nullable(),
+      loadFactorK: z.number().nullable(),
+    })
+    .optional(),
   /** Calculation trace: inputs, table values with reference, formulas (FR-18). */
   trace: z.array(z.object({ step: z.string(), detail: z.string() })),
 });

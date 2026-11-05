@@ -1,6 +1,7 @@
 import {
   boardSchedule,
   busbarSchedule,
+  calculationSheet,
   exportProblems,
   loadSummaries,
   type BoardSchedule,
@@ -18,17 +19,21 @@ import { safeFileName, saveBlob } from '../../workspace/fileNames';
 import { defaultPf, lengthRule } from '../../workspace/projectDefaults';
 import { useCableSize } from '../../workspace/useCableSize';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
+import { CalcSheetPreview } from './CalcSheetPreview';
+import { calcSheetPdf, calcSheetWorkbook } from './calcSheetFiles';
 import { scheduleWorkbook } from './scheduleExcel';
 import { schedulePdf } from './schedulePdf';
 import { emptyMeters, missingMeters, ScheduleSheet, type BoardMeters } from './ScheduleSheet';
 import '../schematic/schematic.css';
 
 /** Report Library (Figma screen 5); levels by board hierarchy (decision 2 Nov 2026). */
-const REPORTS: { key: ScheduleLevel | 'completed' | 'generator'; label: string }[] = [
+const REPORTS: { key: ScheduleLevel | 'completed' | 'calc' | 'generator'; label: string }[] = [
   { key: 'completed', label: 'Completed Schedule' },
   { key: 'first', label: 'First Level Schedule' },
   { key: 'second', label: 'Second Level Schedule' },
   { key: 'floor', label: 'Floor Level Schedule' },
+  // Not in Figma: Section 14 "Cable schedule", WBS 1.7.3 (user decision 5 Nov 2026).
+  { key: 'calc', label: 'Calculation Sheet' },
   { key: 'generator', label: 'Generator Load Analysis' },
 ];
 type ReportKey = (typeof REPORTS)[number]['key'];
@@ -54,6 +59,11 @@ const FORMATS = {
     make: scheduleWorkbook,
   },
   pdf: { label: 'PDF', kind: 'schedules-pdf', mime: 'application/pdf', make: schedulePdf },
+} as const;
+/** The calculation sheet in each format (its own _v1, _v2). */
+const CALC_FORMATS = {
+  xlsx: { kind: 'calc-sheet', make: calcSheetWorkbook },
+  pdf: { kind: 'calc-sheet-pdf', make: calcSheetPdf },
 } as const;
 type Format = keyof typeof FORMATS;
 
@@ -117,12 +127,15 @@ export function OutputPage() {
     ];
   }
   const schedules = schedulesOf(project);
+  const calcOf = (p: Project) =>
+    electrical && reports.has('calc') ? calculationSheet(p, loadSummaries(p, defaultPf(p))) : null;
+  const calc = calcOf(project);
   const missing = [
     ...(schedules.length && !logo ? ['logo'] : []),
     ...(schedules.length && !completionDate ? ['planned completion date'] : []),
     ...schedules.flatMap((s) => missingMeters(s, meters[s.id])),
   ];
-  const canDownload = schedules.length > 0 && missing.length === 0 && !busy;
+  const canDownload = (schedules.length > 0 || calc !== null) && missing.length === 0 && !busy;
 
   async function download() {
     setBusy(true);
@@ -131,6 +144,8 @@ export function OutputPage() {
       const run = await cableSize.run({ kind: 'project' }, 'the whole project');
       if (!run) return;
       const sheets = schedulesOf(run.project);
+      // Schedules are built from, so they wait for clean results; the calculation sheet records
+      // the results as they are (status and check columns) and is never blocked.
       const problems = exportProblems(sheets);
       if (problems.length) {
         notice(
@@ -139,16 +154,36 @@ export function OutputPage() {
         return;
       }
       const f = FORMATS[format];
-      const { version } = await api.nextExportVersion(project.id, f.kind);
-      const data = await f.make(sheets, {
-        logo,
-        completionDate,
-        client: project.details.clientName,
-        meters,
-      });
-      const name = `${safeFileName(project.details.name) || 'NeuroMEP'}_Schedules_v${version}.${format}`;
-      saveBlob(new Blob([data], { type: f.mime }), name);
-      notice(`Downloaded ${name} (${sheets.length} schedule${sheets.length === 1 ? '' : 's'}).`);
+      const base = safeFileName(project.details.name) || 'NeuroMEP';
+      const saved: string[] = [];
+      if (sheets.length) {
+        const { version } = await api.nextExportVersion(project.id, f.kind);
+        const data = await f.make(sheets, {
+          logo,
+          completionDate,
+          client: project.details.clientName,
+          meters,
+        });
+        const name = `${base}_Schedules_v${version}.${format}`;
+        saveBlob(new Blob([data], { type: f.mime }), name);
+        saved.push(`${name} (${sheets.length} schedule${sheets.length === 1 ? '' : 's'})`);
+      }
+      const sheet = calcOf(run.project);
+      if (sheet) {
+        const c = CALC_FORMATS[format];
+        const last = run.project.model.results[0];
+        const { version } = await api.nextExportVersion(project.id, c.kind);
+        const data = await c.make(sheet, {
+          client: project.details.clientName,
+          run: last
+            ? `${last.ranAt.slice(0, 16).replace('T', ' ')} UTC - engine ${last.engineVersion}`
+            : '-',
+        });
+        const name = `${base}_CalculationSheet_v${version}.${format}`;
+        saveBlob(new Blob([data], { type: f.mime }), name);
+        saved.push(`${name} (${sheet.rows.length} row${sheet.rows.length === 1 ? '' : 's'})`);
+      }
+      notice(`Downloaded ${saved.join(' and ')}.`);
     } catch (err) {
       notice(`Download failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
@@ -211,7 +246,7 @@ export function OutputPage() {
                 ? undefined
                 : schedules.length
                   ? `Fill in before download: ${missing.slice(0, 4).join('; ')}${missing.length > 4 ? ' …' : ''}`
-                  : 'Tick a schedule in the Report Library'
+                  : 'Tick a report in the Report Library'
             }
             onClick={() => void download()}
           >
@@ -239,9 +274,13 @@ export function OutputPage() {
             Phase 1 schedules are electrical; {tab.toLowerCase()} components supply electrical data.
           </p>
         )}
-        {electrical && reports.size > 0 && schedules.length === 0 && !reports.has('generator') && (
-          <p className="muted">No boards of the ticked levels in this project yet.</p>
-        )}
+        {electrical &&
+          reports.size > 0 &&
+          schedules.length === 0 &&
+          !calc &&
+          !reports.has('generator') && (
+            <p className="muted">No boards of the ticked levels in this project yet.</p>
+          )}
         {schedules.length > 0 && (
           <>
             <form
@@ -298,6 +337,16 @@ export function OutputPage() {
                 />
               ))}
             </div>
+          </>
+        )}
+        {calc && (
+          <>
+            {calc.sizesPending && (
+              <p className="sample-note">
+                Figures come from Cable Size; Download runs it on the whole project first.
+              </p>
+            )}
+            <CalcSheetPreview sheet={calc} />
           </>
         )}
       </section>

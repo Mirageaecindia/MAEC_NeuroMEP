@@ -35,7 +35,13 @@ export type SaveResult =
 const key = (projectId: string, id: string) => `${projectId}/${id}`;
 
 /** Exported file types; each is numbered on its own. */
-export const EXPORT_KINDS = ['sld', 'schedules', 'schedules-pdf'] as const;
+export const EXPORT_KINDS = [
+  'sld',
+  'schedules',
+  'schedules-pdf',
+  'calc-sheet',
+  'calc-sheet-pdf',
+] as const;
 export type ExportKind = (typeof EXPORT_KINDS)[number];
 
 /** `exports` collection: the last version number of each export of a project. */

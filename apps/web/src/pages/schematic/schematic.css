@@ -138,3 +138,46 @@
 .sheet-board {
   font-size: 13px;
 }
+/* Calculation sheet preview (WBS 1.7.3): wide table, scrolls sideways inside the panel. */
+.calc-sheet {
+  margin-top: 28px;
+}
+.calc-sheet-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+}
+.calc-sheet-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.calc-sheet table {
+  border-collapse: collapse;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.calc-sheet th,
+.calc-sheet td {
+  border: 1px solid var(--border);
+  padding: 3px 5px;
+  text-align: center;
+}
+.calc-sheet thead th {
+  background: var(--surface-muted);
+}
+.calc-sheet td:nth-child(-n + 4) {
+  text-align: left;
+}
+.calc-unit {
+  color: var(--text-faint);
+  font-weight: normal;
+}
+.calc-Pass {
+  color: var(--success);
+}
+.calc-Fail,
+.calc-Blocked {
+  color: var(--danger);
+}
+.calc-Warning {
+  color: var(--warning);
+}

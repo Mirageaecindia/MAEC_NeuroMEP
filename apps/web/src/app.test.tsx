@@ -784,6 +784,85 @@ describe('#TASK-31 schedule download (WBS 1.7.2)', () => {
   });
 });
 
+describe('#TASK-31 calculation sheet (WBS 1.7.3)', () => {
+  const SLOW = { timeout: 10_000 };
+
+  function fedProject() {
+    const project = buildingProject();
+    project.meta.reachedPage = 'simulation-report';
+    const tx = project.model.elements.find((e) => e.id === 'tx')!;
+    const db = project.model.elements.find((e) => e.id === 'db-1')!;
+    Object.assign(tx, { kva: 1000, ukPct: 6, urPct: 1 });
+    Object.assign(db, { loads: [{ method: 'kw', loadType: '2', kwL1: 20, kwL2: 20, kwL3: 20 }] });
+    const cable = testCable(tx, db);
+    cable.construction = { ...cable.construction, groupedCircuits: 1 };
+    project.model.cables.push({ ...cable, tag: 'F0-1' });
+    project.model.risers = setRiser([], 'riser-1', { lengthM: 26, fedFromId: 'tx' });
+    return project;
+  }
+
+  /** Ticks only the Calculation Sheet (no schedule inputs needed) and downloads it. */
+  async function download(project: Project, format: 'xlsx' | 'pdf') {
+    let saved: Blob | null = null;
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => {
+      saved = b as Blob;
+      return 'blob:x';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const api = fakeApi(project);
+    renderAt('/projects/p-1/output', new FakeAuth(LEAD), api);
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'Calculation Sheet' }));
+    expect(screen.getByLabelText('Calculation sheet')).toHaveTextContent('F0-1');
+    await userEvent.selectOptions(screen.getByLabelText('Format'), format);
+    const button = screen.getByRole('button', { name: 'Download' });
+    expect(button).toBeEnabled(); // no logo, date or meters asked for this sheet
+    await userEvent.click(button);
+    // The cable, and Riser 1 (in the data: fed from the transformer, no tap-offs yet).
+    const name = new RegExp(`^Downloaded .*_CalculationSheet_v1\\.${format} \\(2 rows\\)\\.$`);
+    expect(await screen.findByText(name, {}, SLOW)).toBeVisible();
+    expect(api.nextExportVersion).toHaveBeenCalledWith(
+      'p-1',
+      format === 'xlsx' ? 'calc-sheet' : 'calc-sheet-pdf',
+    );
+    vi.restoreAllMocks();
+    return saved! as Blob;
+  }
+
+  it('runs Cable Size, then saves one Excel row per cable with inputs, results and checks', async () => {
+    const blob = await download(fedProject(), 'xlsx');
+    const ExcelJS = (await import('exceljs')).default;
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(await blob.arrayBuffer());
+    const ws = wb.getWorksheet('Calculation Sheet')!;
+    expect(String(ws.getCell('A1').value)).toMatch(/^CALCULATION SHEET - PROJECT : /);
+    const head = (ws.getRow(5).values as unknown[]).slice(1);
+    const at = (label: string) => head.indexOf(label) + 1;
+    const row = ws.getRow(7);
+    expect([row.getCell(1).value, row.getCell(3).value, row.getCell(4).value]).toEqual([
+      'F0-1',
+      'TX-1',
+      'DB-db-1',
+    ]);
+    expect([ws.getCell('A8').value, ws.getCell('B8').value]).toEqual(['Riser 1', 'Riser']);
+    // 60 kW at pf 0.85: Ib 101.9 A, 125 A breaker; C1 and C2 pass.
+    expect(row.getCell(at('Load current Ib')).value).toBeCloseTo(101.88, 1);
+    expect(row.getCell(at('Rating In')).value).toBe(125);
+    expect([row.getCell(at('C1')).value, row.getCell(at('C2')).value]).toEqual(['Pass', 'Pass']);
+    expect(row.getCell(at('Status')).value).not.toBe('Out of date');
+  });
+
+  it('saves the PDF and is not blocked by a blocked feeder (the sheet records it)', async () => {
+    const project = fedProject();
+    const db = project.model.elements.find((e) => e.id === 'db-1')!;
+    Object.assign(db, { loads: [{ method: 'kw', loadType: '2', kwL1: 10, kwL2: 0, kwL3: 0 }] });
+    const blob = await download(project, 'pdf');
+    const pdf = new TextDecoder('latin1').decode(await blob.arrayBuffer());
+    expect(pdf.startsWith('%PDF-')).toBe(true);
+    for (const t of ['CALCULATION SHEET', 'F0-1', 'Blocked', 'E2101']) expect(pdf).toContain(t);
+  });
+});
+
 /** A 1 x 1 PNG: the logo (Excel takes PNG / JPEG). */
 const PNG_LOGO = new File(
   [

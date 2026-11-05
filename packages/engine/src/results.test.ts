@@ -1,4 +1,10 @@
-import { ElementResultSchema } from '@neuromep/shared';
+import {
+  calculationSheet,
+  ElementResultSchema,
+  inputsKey,
+  loadSummaries,
+  mergeRun,
+} from '@neuromep/shared';
 import { describe, expect, it } from 'vitest';
 import { cableSize } from './cableSize.js';
 import { building } from './fixtures/network.js';
@@ -183,5 +189,41 @@ describe('Building tab Cost: busbar rating x 2.2 AED per riser (manager 3 Nov 20
       riserCostAedPerA: 3,
     };
     expect(riserCosts(project, cableSize(project).risers).totalAed).toBe(2400);
+  });
+});
+
+describe('#TASK-31 calculation sheet from a real run (WBS 1.7.3)', () => {
+  it('rows agree with the engine: Iz = It x Ktot x runs, V and % drop, total = upstream + own', () => {
+    const b = small();
+    b.project.calculation.busbarMaker = 'schneider';
+    b.add('smdb', 'sm');
+    b.db('db2', [100, 100, 100]);
+    b.feed('sm', 'db2', 10, { ...SINGLE, separation: 'touching' });
+    b.project.model.risers = [
+      { id: 'r1', lengthM: 30, widthM: 1, fedFromId: 'mdb', feeds: ['sm'] },
+    ];
+    const p = b.project;
+    const run = { runId: 'r', at: '2026-11-05T08:00:00Z', engineVersion: 't' };
+    p.model.results = mergeRun(p, { kind: 'project' }, elementResults(p, cableSize(p)), {
+      ...run,
+      inputsKey: inputsKey(p),
+    });
+    const sheet = calculationSheet(p, loadSummaries(p, 0.85));
+    expect(sheet.sizesPending).toBe(false);
+    expect(sheet.rows.map((r) => r.kind)).toEqual(['Cable', 'Cable', 'Riser', 'Cable']);
+    for (const r of sheet.rows.filter((x) => x.kind === 'Cable')) {
+      const n = (k: string) => r[k] as number;
+      expect(n('izA')).toBeCloseTo(n('itA') * n('ktot') * n('runs'), 6);
+      expect(n('vdOwnPct')).toBeCloseTo((n('vdOwnV') / n('voltageV')) * 100, 6);
+      expect(n('vdTotalPct')).toBeCloseTo(n('vdUpstreamPct') + n('vdOwnPct'), 9);
+      expect(r.C1).toBe('Pass');
+    }
+    const riser = sheet.rows.find((r) => r.kind === 'Riser')!;
+    // One tap-off: k = (1 + 1) / 2 = 1; 800 A Schneider busbar for In 630 A.
+    expect(riser).toMatchObject({ from: 'MDB', to: 'SM', busbarA: 800, loadFactorK: 1 });
+    expect(riser.vdTotalPct as number).toBeCloseTo(
+      (riser.vdUpstreamPct as number) + (riser.vdOwnPct as number),
+      9,
+    );
   });
 });
