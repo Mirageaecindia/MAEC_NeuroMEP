@@ -9,3 +9,8 @@ playwright-report/
 test-results/
 .data/
 e2e/.fixture/
+# Docker deployment secrets (compose.yaml, docker/README.md)
+.env.docker
+docker/users.json
+docker/certs/*
+!docker/certs/.gitkeep

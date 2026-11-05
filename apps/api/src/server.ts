@@ -27,14 +27,18 @@ await sessions.init();
 const app = createApp({
   auth: new ConfigAuthProvider(users),
   sessions,
-  secureCookies: config.production,
+  secureCookies: config.secureCookies,
   projects,
   plans,
   symbols: loadSymbols(config.SYMBOLS_DIR),
 });
 
-// Behind Nginx on the same VPS: take the client address from X-Forwarded-For (login limits).
-if (config.production) app.set('trust proxy', 'loopback');
+// Behind Nginx (same host or the web container): take the client address from X-Forwarded-For
+// (login limits). Which proxies are trusted comes from TRUST_PROXY.
+if (config.production) app.set('trust proxy', config.TRUST_PROXY);
+if (config.production && !config.secureCookies) {
+  console.warn('COOKIE_SECURE=false: session cookies are sent over plain HTTP (staging only).');
+}
 
 const server = app.listen(config.API_PORT, () => {
   console.log(`NeuroMEP API listening on http://localhost:${config.API_PORT}`);

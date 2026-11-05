@@ -20,12 +20,24 @@ const EnvSchema = z.object({
   /** Legend symbols of the component library (A-11). Default: the draft set in apps/api/symbols. */
   SYMBOLS_DIR: z.string().optional(),
   NODE_ENV: z.string().default('development'),
+  /**
+   * Production: proxies whose X-Forwarded-For is trusted for the client address (login limits,
+   * E0103), in Express "trust proxy" form. Nginx on the same host: "loopback"; the web container
+   * in front of the API container: "loopback,uniquelocal" (private Docker network addresses).
+   */
+  TRUST_PROXY: z.string().default('loopback'),
+  /**
+   * Session cookie "Secure" flag; default on in production. "false" only for a staging server
+   * reached over plain HTTP (browsers drop Secure cookies there) - never on a public server.
+   */
+  COOKIE_SECURE: z.enum(['true', 'false']).optional(),
 });
 
 export type Config = z.infer<typeof EnvSchema> & {
   usersFile: string;
   plansDir: string;
   production: boolean;
+  secureCookies: boolean;
 };
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
@@ -38,5 +50,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     usersFile: parsed.USERS_FILE ?? DEV_USERS_FILE,
     plansDir: parsed.PLANS_DIR ?? join(parsed.DATA_DIR, 'plans'),
     production,
+    secureCookies: parsed.COOKIE_SECURE ? parsed.COOKIE_SECURE === 'true' : production,
   };
 }

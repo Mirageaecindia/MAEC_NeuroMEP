@@ -1,0 +1,25 @@
+# Plain HTTP (no certificates mounted): TLS ends at a proxy in front, or this is a test server.
+# Docker's DNS: the API address is looked up again when its container restarts.
+resolver ${RESOLVER} valid=10s ipv6=off;
+
+upstream neuromep_api {
+    zone neuromep_api 64k;
+    server ${API_UPSTREAM} resolve;
+    keepalive 16;
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${SERVER_NAME};
+    server_tokens off;
+    set $hsts "";
+
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    include /etc/neuromep/app.conf;
+}

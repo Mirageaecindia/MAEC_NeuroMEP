@@ -1,0 +1,24 @@
+# Only sources and lockfile go into the image build; everything is installed and built inside.
+**/node_modules
+**/dist
+**/coverage
+**/.data
+**/.vite
+**/*.tsbuildinfo
+.git
+.github
+.env
+.env.*
+!.env.example
+docs
+NeuroMEP UI
+prompts
+revit-addin
+e2e
+test-results
+playwright-report
+docker/users.json
+docker/certs
+compose.yaml
+Dockerfile
+.dockerignore

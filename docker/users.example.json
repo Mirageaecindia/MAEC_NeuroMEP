@@ -1,0 +1,11 @@
+{
+  "users": [
+    {
+      "id": "u-lead",
+      "name": "Technical Lead",
+      "email": "lead@example.com",
+      "role": "TECHNICAL_LEAD",
+      "passwordHash": "REPLACE_WITH_THE_OUTPUT_OF_hash-password"
+    }
+  ]
+}

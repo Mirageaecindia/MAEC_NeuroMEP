@@ -1,0 +1,79 @@
+# NeuroMEP on one server with Docker only (WBS 1.8.3): web (Nginx) -> api (Node) -> db (MongoDB).
+# Only the web container is published; api and db are reachable on the private network only.
+#   cp .env.docker.example .env.docker                 # then fill in the passwords
+#   cp docker/users.example.json docker/users.json     # then add the real users (docker/README.md)
+#   docker compose --env-file .env.docker up -d --build
+name: neuromep
+
+services:
+  db:
+    build:
+      context: .
+      target: db
+    image: neuromep-db:${NEUROMEP_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?set MONGO_ROOT_PASSWORD in .env.docker}
+      MONGO_APP_USERNAME: ${MONGO_APP_USERNAME:-neuromep}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?set MONGO_APP_PASSWORD in .env.docker}
+      MONGO_APP_DB: ${MONGODB_DB:-neuromep}
+    volumes:
+      - mongo-data:/data/db
+      - mongo-config:/data/configdb
+    networks: [backend]
+
+  api:
+    build:
+      context: .
+      target: api
+    image: neuromep-api:${NEUROMEP_TAG:-latest}
+    restart: unless-stopped
+    init: true
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      API_PORT: 4000
+      MONGODB_URI: mongodb://${MONGO_APP_USERNAME:-neuromep}:${MONGO_APP_PASSWORD}@db:27017/?replicaSet=rs0&authSource=admin
+      MONGODB_DB: ${MONGODB_DB:-neuromep}
+      USERS_FILE: /run/neuromep/users.json
+      # Client address for the login limits comes through the web container (private network).
+      TRUST_PROXY: loopback,uniquelocal
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+    volumes:
+      - plans:/data/plans
+      - ./docker/users.json:/run/neuromep/users.json:ro
+    networks: [backend]
+
+  web:
+    build:
+      context: .
+      target: web
+      args:
+        VITE_DEMO_EMAIL: ${VITE_DEMO_EMAIL:-}
+        VITE_DEMO_PASSWORD: ${VITE_DEMO_PASSWORD:-}
+    image: neuromep-web:${NEUROMEP_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-_}
+      PUBLIC_HTTPS_PORT: ${HTTPS_PORT:-443}
+    ports:
+      - ${HTTP_PORT:-80}:80
+      - ${HTTPS_PORT:-443}:443
+    volumes:
+      # fullchain.pem + privkey.pem here switch the site to HTTPS (docker/README.md).
+      - ./docker/certs:/etc/nginx/certs:ro
+    networks: [backend]
+
+volumes:
+  mongo-data:
+  mongo-config:
+  plans:
+
+networks:
+  backend:
