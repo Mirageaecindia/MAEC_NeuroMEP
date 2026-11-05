@@ -168,7 +168,7 @@ function riserResults(
   const trace = r.notes.map((detail) => ({ step: 'Riser', detail }));
   const c2: Check =
     r.c2 === 'not-run'
-      ? { state: 'not-calculated', detail: r.notes.at(-1) ?? 'No busbar yet.' }
+      ? { state: 'not-calculated', detail: r.notes.join(' ') }
       : { state: r.c2, detail: r.notes.at(-1) };
   const riser: ElementResult = {
     elementId: r.riserId,
@@ -179,7 +179,7 @@ function riserResults(
     checks: {
       C1: r.busbar
         ? { state: 'pass', detail: `${r.busbar.ratingA} A busbar vs In ${r.inA} A` }
-        : { state: 'not-calculated', detail: r.notes.at(-1) ?? 'No load on the tap-offs.' },
+        : { state: 'not-calculated', detail: r.notes.join(' ') },
       C2: c2,
     },
     size: null,
@@ -255,6 +255,8 @@ export interface RiserCost {
   ratingA: number | null;
   costAed: number | null;
   detail: string;
+  /** Why there is no price yet, one sentence per missing input (empty once priced). */
+  reasons: string[];
 }
 
 /**
@@ -271,25 +273,28 @@ export function riserCosts(
     typeof override === 'number'
       ? override
       : pack.calculationDefaults.find((d) => d.key === 'riserCostAedPerA')?.value;
-  const rows = risers
-    .filter((r) => r.lengthM)
-    .map((r): RiserCost => {
-      const ratingA = r.busbar?.ratingA ?? null;
-      const costAed =
-        ratingA !== null && typeof rate === 'number'
-          ? Math.round(ratingA * rate * 100) / 100
-          : null; // AED to 2 decimals
-      return {
-        riserId: r.riserId,
-        index: r.index,
-        ratingA,
-        costAed,
-        detail:
-          costAed !== null
-            ? `Riser ${r.index}: ${ratingA} A x ${rate} AED = ${costAed.toFixed(0)} AED`
-            : `Riser ${r.index}: ${r.notes.at(-1) ?? 'no busbar rating yet'}`,
-      };
-    });
+  // A riser in use: any of length, source or tap-offs entered (empty Riser Design rows are not).
+  const used = (r: RiserCheck) => {
+    const stored = project.model.risers[r.index - 1];
+    return !!(r.lengthM || stored?.fedFromId || stored?.feeds.length);
+  };
+  const rows = risers.filter(used).map((r): RiserCost => {
+    const ratingA = r.busbar?.ratingA ?? null;
+    const costAed =
+      ratingA !== null && typeof rate === 'number' ? Math.round(ratingA * rate * 100) / 100 : null; // AED to 2 decimals
+    return {
+      riserId: r.riserId,
+      index: r.index,
+      ratingA,
+      costAed,
+      detail:
+        costAed !== null
+          ? `Riser ${r.index}: ${ratingA} A x ${rate} AED = ${costAed.toFixed(0)} AED`
+          : `Riser ${r.index}: ${r.notes.join(' ')}`,
+      // The riser check leaves a note at every point it stops, so these are never empty.
+      reasons: costAed !== null ? [] : r.notes,
+    };
+  });
   const known = rows.filter((r) => r.costAed !== null);
   return {
     risers: rows,

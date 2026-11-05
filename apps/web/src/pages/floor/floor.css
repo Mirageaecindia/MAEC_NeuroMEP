@@ -159,9 +159,13 @@
 .network-issues {
   margin: 0;
   padding-left: 16px;
-  max-height: 72px;
+  max-height: 96px;
   overflow: auto;
   color: #92400e;
+}
+/* What to do about a warning (E1801 / E1802), under its cause. */
+.issue-fix {
+  color: #374151;
 }
 .floor-line {
   stroke: #9ca3af;
@@ -274,6 +278,38 @@
 .summary-cost {
   font-size: 10px;
   margin: 4px 0 0;
+}
+/* Why Cable Size or the Cost is not available yet, in plain words. */
+.summary-hint {
+  font-size: 9px;
+  line-height: 1.35;
+  color: #7c2d12;
+  margin: 4px 0 0;
+}
+.summary-hint p {
+  margin: 0;
+}
+.summary-hint ul {
+  margin: 2px 0 0;
+  padding-left: 14px;
+}
+.tx-box.dead,
+.source-link.dead {
+  stroke: #b45309;
+  stroke-dasharray: 4 3;
+}
+.source-warning {
+  font-size: 9px;
+  fill: #b45309;
+  text-anchor: middle;
+}
+.riser-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+.riser-label.unfed {
+  fill: #b45309;
 }
 .summary-actions {
   display: flex;

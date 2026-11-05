@@ -157,7 +157,29 @@ export function checkNetworkFeeders(
       tapOffs: [],
     };
     riserChecks.set(i, result);
-    if (!r.fedFromId || r.feeds.length === 0) return result;
+    // Every input still missing, in words the engineer can act on (shown under the Cost).
+    const n = i + 1;
+    const missing: string[] = [];
+    if (!r.fedFromId) {
+      missing.push(
+        `Riser ${n} has no source: click the riser in the diagram to choose the transformer, LV panel or MDB that feeds it.`,
+      );
+    }
+    if (r.feeds.length === 0) {
+      missing.push(
+        `Riser ${n} feeds no boards: click a board on a floor to connect it to a tap-off of this riser.`,
+      );
+    }
+    if (!r.lengthM) missing.push(`Riser ${n} has no length: enter it in Riser Design.`);
+    if (!maker) {
+      missing.push(
+        'No busbar manufacturer chosen: choose it on Import File (Busbar Manufacturer).',
+      );
+    }
+    if (!r.fedFromId || r.feeds.length === 0) {
+      result.notes.push(...missing);
+      return result;
+    }
     // Tap-off box per board: In = standard rating >= the board's Ib (10.4, 10.5).
     result.tapOffs = r.feeds.map((boardId) => {
       const s = summaryOf(boardId);
@@ -172,18 +194,24 @@ export function checkNetworkFeeders(
     );
     const p = d.L1 + d.L2 + d.L3;
     const q = subs.reduce((t, x) => t + (x.pf ? x.maxDemandKw * Math.tan(Math.acos(x.pf)) : 0), 0);
-    const pf = p > 0 ? p / Math.hypot(p, q) : pfDefault;
-    if (!pf) return result;
-    const ib = phaseCurrent(d, pf);
-    if (ib === null) return result;
-    result.ibA = ib;
-    result.inA = standardRating(pack.devices, ib);
-    if (!maker) {
-      result.notes.push('Choose the busbar manufacturer on Import File to calculate the riser.');
+    // A loaded board without a power factor gives the riser none either - never assumed (V-14).
+    const pfMissing = subs.some((x) => x.maxDemandKw > 0 && !x.pf);
+    const pf = pfMissing ? null : p > 0 ? p / Math.hypot(p, q) : pfDefault;
+    const ib = pf ? phaseCurrent(d, pf) : null;
+    if (ib === null) {
+      const tags = r.feeds.map((id) => elements.get(id)?.tag ?? id).join(', ');
+      missing.unshift(
+        p > 0
+          ? `No power factor for the load on Riser ${n} (E2003).`
+          : `No load reaches Riser ${n}: enter the loads of the DBs fed from ${tags} in Floor Setup.`,
+      );
+      result.notes.push(...missing);
       return result;
     }
-    if (!r.lengthM) {
-      result.notes.push(`Enter the length of Riser ${i + 1} in the Building tab.`);
+    result.ibA = ib;
+    result.inA = standardRating(pack.devices, ib);
+    if (missing.length || !maker || !r.lengthM) {
+      result.notes.push(...missing);
       return result;
     }
     const options = busbarChoices(pack, maker).filter((b) => b.ratingA >= (result.inA ?? Infinity));
@@ -194,7 +222,7 @@ export function checkNetworkFeeders(
       return result;
     }
     const up = upstreamOf(r.fedFromId) ?? 0;
-    const drop = (b: BusbarChoice) => busbarDropPct(b, result.ibA!, pf, r.lengthM!, result.k);
+    const drop = (b: BusbarChoice) => busbarDropPct(b, result.ibA!, pf!, r.lengthM!, result.k);
     const pick = options.find((b) => limit === null || up + drop(b) <= limit) ?? options[0]!;
     result.busbar = pick;
     result.vdPct = drop(pick);

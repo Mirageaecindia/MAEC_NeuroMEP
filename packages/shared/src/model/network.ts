@@ -96,6 +96,77 @@ export function completenessIssues(m: Network, floors: readonly Floor[]): Networ
   return issues;
 }
 
+/** Where a supply path breaks (E1801), with what it cuts off and how to fix it. */
+export interface SupplyBreak {
+  /** The component without an incoming feeder, or the riser without a source. */
+  at: { kind: 'element'; id: string; tag: string } | { kind: 'riser'; index: number };
+  message: string;
+  fix: string;
+  /** Components below the break that have no supply because of it. */
+  cutOff: string[];
+}
+
+const MAIN_PANELS: ElementKind[] = ['lv-panel', 'mdb', 'emdb', 'acb-panel', 'ats'];
+
+/**
+ * E1801 grouped by cause (Building tab): for every component without a path to a source, walk up
+ * its feeders and risers to where the chain stops - a component nothing feeds, or a riser with no
+ * source - and report that point once with everything it cuts off.
+ */
+export function supplyBreaks(m: Network): SupplyBreak[] {
+  const supplied = new Set([...suppliedIn(m, 'normal'), ...suppliedIn(m, 'standby')]);
+  const byId = new Map(m.elements.map((e) => [e.id, e]));
+  /** The break above an unsupplied component (first incoming path; all of them are dead). */
+  const breakOf = (id: string): SupplyBreak['at'] => {
+    const seen = new Set<string>();
+    let current = id;
+    for (;;) {
+      seen.add(current);
+      const cable = m.cables.find((c) => c.to.elementId === current);
+      const riser = m.risers.findIndex((r) => r.feeds.includes(current));
+      const next = cable
+        ? cable.from.elementId
+        : riser >= 0
+          ? m.risers[riser]!.fedFromId
+          : undefined;
+      if (riser >= 0 && !cable && !next) return { kind: 'riser', index: riser + 1 };
+      if (!next || seen.has(next) || !byId.has(next)) {
+        return { kind: 'element', id: current, tag: byId.get(current)!.tag };
+      }
+      current = next;
+    }
+  };
+  const breaks = new Map<string, SupplyBreak>();
+  for (const e of needsSupply(m)) {
+    if (supplied.has(e.id)) continue;
+    const at = breakOf(e.id);
+    const key = at.kind === 'riser' ? `riser-${at.index}` : at.id;
+    let b = breaks.get(key);
+    if (!b) {
+      const main = at.kind === 'element' && MAIN_PANELS.includes(byId.get(at.id)!.kind);
+      b =
+        at.kind === 'riser'
+          ? {
+              at,
+              message: `Riser ${at.index} has no source`,
+              fix: `Click Riser ${at.index} in the diagram to choose the transformer, LV panel or MDB that feeds it.`,
+              cutOff: [],
+            }
+          : {
+              at,
+              message: `${at.tag} has no incoming feeder`,
+              fix: main
+                ? `In Floor Setup, draw a feeder to ${at.tag} from the transformer (or from the generator through an ATS).`
+                : `In Floor Setup, draw a feeder to ${at.tag} from a panel above it, or click it in this diagram to put it on a riser tap-off.`,
+              cutOff: [],
+            };
+      breaks.set(key, b);
+    }
+    if (at.kind === 'riser' || at.id !== e.id) b.cutOff.push(e.tag);
+  }
+  return [...breaks.values()];
+}
+
 /** Components supplied and not supplied in a scenario (the Building tab scenario switch). */
 export function scenarioSupply(m: Network, scenario: Scenario) {
   const on = suppliedIn(m, scenario);

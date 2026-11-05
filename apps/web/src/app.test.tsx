@@ -3,12 +3,19 @@ import {
   isPlaceable,
   libraryItem,
   placeElement,
+  setBoardRiser,
   setRiser,
   type Project,
   type ProjectSummary,
   type UserSummary,
 } from '@neuromep/shared';
-import { completeProject, FIXED_NOW, modelledProject, testCable } from '@neuromep/shared/testing';
+import {
+  completeProject,
+  FIXED_NOW,
+  modelledProject,
+  testCable,
+  testElement,
+} from '@neuromep/shared/testing';
 import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
@@ -479,7 +486,12 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     );
     // Cost: the riser's busbar (smallest Schneider rating, 800 A) x 2.2 AED (3 Nov 2026).
     expect(summary).toHaveTextContent('Cost : 1760 AED');
-    expect(screen.getByText('Cable Size ran on the whole project.')).toBeVisible();
+    // The riser is sized; the two feeders of the sample plan have no load yet.
+    expect(
+      screen.getByText(
+        'Cable Size ran on the whole project: 1 sized, 2 waiting for load - select an item to see why in the right panel.',
+      ),
+    ).toBeVisible();
     await userEvent.click(within(summary).getByRole('button', { name: 'Save' }));
     await waitFor(async () =>
       expect((await api.getProject('p-1')).project.model.risers[0]?.feeds).toEqual(['db-1']),
@@ -551,11 +563,68 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(warnings).toHaveTextContent(
       'E1802 Ground Floor has boards but no tap-off from a riser.',
     );
-    expect(warnings).toHaveTextContent('E1801 DB-db-1 has no path to a transformer or generator.');
+    // Where the chain breaks, and what to do about it.
+    expect(warnings).toHaveTextContent(
+      'E1801 DB-db-1 has no incoming feeder. In Floor Setup, draw a feeder to DB-db-1 from a panel above it, or click it in this diagram to put it on a riser tap-off.',
+    );
     await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
     expect(within(check).getByText('Every component has a path to a source.')).toBeVisible();
     await userEvent.click(within(check).getByRole('radio', { name: 'Standby' }));
     expect(within(check).getByText(/On generator supply: 0 of 1 components/)).toBeVisible();
+  });
+
+  it('#TASK-18 a riser fed from an MDB with no feeder: one warning naming the MDB, source marked', async () => {
+    const project = buildingProject();
+    const gf = project.building.floors.find((f) => f.code === 'GF')!.id;
+    project.model.elements.push({ ...testElement('mdb', 'mdb', gf), tag: 'MDB-GF-01' });
+    project.model.risers = setRiser([], 'riser-1', { lengthM: 26, fedFromId: 'mdb' });
+    project.model.risers = setRiser(project.model.risers, 'riser-2', {
+      lengthM: 10,
+      fedFromId: 'tx',
+    });
+    project.model.risers = setBoardRiser(project.model.risers, 'db-1', 'riser-1');
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(project));
+    const check = await screen.findByRole('region', { name: 'Network check' });
+    const warnings = within(check).getByRole('list', { name: 'Network warnings' });
+    expect(warnings).toHaveTextContent(
+      'E1801 MDB-GF-01 has no incoming feeder - 1 component below it has no supply: DB-db-1. In Floor Setup, draw a feeder to MDB-GF-01 from the transformer (or from the generator through an ATS).',
+    );
+    // A source box per riser source, labelled with its own tag; the MDB is marked "no supply".
+    const diagram = screen.getByRole('img', { name: 'Riser diagram' });
+    expect(within(diagram).getByLabelText('Source TX-1')).toBeInTheDocument();
+    expect(within(diagram).getByLabelText('Source MDB-GF-01')).toHaveTextContent('no supply');
+  });
+
+  it('#TASK-27 Cost "-" lists why: no load and no busbar manufacturer', async () => {
+    const project = buildingProject();
+    project.model.risers = setRiser([], 'riser-1', { lengthM: 26, fedFromId: 'tx' });
+    project.model.risers = setBoardRiser(project.model.risers, 'db-1', 'riser-1');
+    project.calculation.busbarMaker = null;
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(project));
+    await userEvent.click(await screen.findByRole('button', { name: 'Cable Size Calculator' }));
+    const why = await screen.findByLabelText('Why there is no cost');
+    expect(screen.getByText(/^Cost :/).closest('p')).toHaveTextContent('Cost : - AED');
+    expect(why).toHaveTextContent(
+      'No load reaches Riser 1: enter the loads of the DBs fed from DB-db-1 in Floor Setup.',
+    );
+    expect(why).toHaveTextContent(
+      'No busbar manufacturer chosen: choose it on Import File (Busbar Manufacturer).',
+    );
+    // The run's notice says what it found, not only that it ran.
+    expect(
+      screen.getByText(
+        /^Cable Size ran on the whole project: .*waiting for load - select an item to see why/,
+      ),
+    ).toBeVisible();
+  });
+
+  it('#TASK-27 says why the Cable Size Calculator is not available yet', async () => {
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(buildingProject()));
+    const button = await screen.findByRole('button', { name: 'Cable Size Calculator' });
+    expect(button).toBeDisabled();
+    expect(
+      screen.getByText(/^Enter a riser length in Riser Design, then click the riser/),
+    ).toBeVisible();
   });
 
   it('#TASK-10 an engineer flags a connected floor done; it locks until the Lead reopens it (A-08)', async () => {

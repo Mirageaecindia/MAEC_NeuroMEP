@@ -1,9 +1,43 @@
-import { inputsKey, mergeRun, type Project, type SizingScope } from '@neuromep/shared';
+import {
+  inputsKey,
+  mergeRun,
+  scopeItems,
+  type ElementResult,
+  type Project,
+  type SizingScope,
+} from '@neuromep/shared';
 import { useState } from 'react';
 import { useNotice } from '../layout/Shell';
 import { runEngine } from './engineClient';
 import type { EngineReply } from './engineRun';
 import { useWorkspace } from './ProjectWorkspace';
+
+/**
+ * What a run found for the feeders and risers in scope, e.g. ": 4 sized, 1 blocked - select an
+ * item to see why" - empty when everything was sized and passes.
+ */
+function outcome(p: Project, scope: SizingScope, reply: EngineReply): string {
+  const ids = new Set(
+    scopeItems(p, scope)
+      .filter((x) => !('kind' in x))
+      .map((x) => x.id),
+  );
+  const results = reply.results.filter((r) => ids.has(r.elementId));
+  const failing = (r: ElementResult) => Object.values(r.checks).some((c) => c?.state === 'fail');
+  const counts: [number, string][] = [
+    [results.filter((r) => r.status === 'blocked').length, 'blocked'],
+    [results.filter((r) => r.status !== 'blocked' && failing(r)).length, 'failing a check'],
+    [results.filter((r) => r.status === 'awaiting-load').length, 'waiting for load'],
+  ];
+  const problems = counts.filter(([n]) => n > 0);
+  if (problems.length === 0) return '';
+  const sized = results.length - problems.reduce((t, [n]) => t + n, 0);
+  const parts = [
+    ...(sized > 0 ? [`${sized} sized`] : []),
+    ...problems.map(([n, what]) => `${n} ${what}`),
+  ];
+  return `: ${parts.join(', ')} - select an item to see why in the right panel`;
+}
 
 /** A finished run: the engine's reply and the project with the scope's results merged in. */
 export interface CableSizeRun {
@@ -36,7 +70,9 @@ export function useCableSize() {
       if (editor.layers.includes('electrical')) {
         editor.dispatch({ type: 'cableSize', scope, results: reply.results, run: info });
       }
-      notice(`Cable Size ran on ${name}${reply.converged ? '' : ' - no stable size (E2601)'}.`);
+      notice(
+        `Cable Size ran on ${name}${reply.converged ? '' : ' - no stable size (E2601)'}${outcome(project, scope, reply)}.`,
+      );
       const results = mergeRun(project, scope, reply.results, info);
       return { reply, project: { ...project, model: { ...project.model, results } } };
     } catch (err) {

@@ -2,6 +2,8 @@ import {
   completenessIssues,
   riserBoards,
   scenarioSupply,
+  suppliedIn,
+  supplyBreaks,
   type Scenario,
   riserOf,
   riserRows,
@@ -29,6 +31,9 @@ const TOP = 40;
 const RISER_X = [330, 352, 374];
 const BOARD_X = 760;
 const BOARD_GAP = 56;
+const SOURCE_X = 16;
+const SOURCE_W = 78;
+const SOURCE_GAP = 92;
 
 /** The next item after `current` in `list`, then none, then the first again (click to cycle). */
 function cycle<T>(list: readonly T[], current: T | null): T | null {
@@ -112,7 +117,17 @@ export function BuildingTab(props: {
   const status = (f: Floor, d: Discipline) => STATUS_ICON[floorStatus(model, f.id, d)];
   const connected = sourceConnected({ ...model, risers });
   const fedRisers = risers.flatMap((r, i) => (r.lengthM && r.fedFromId ? [i] : []));
-  const sourceTags = [...new Set(fedRisers.map((i) => tag(risers[i]!.fedFromId)))].join(', ');
+  /** One box per source, in riser order; a source with no supply of its own is marked. */
+  const sources = [...new Set(fedRisers.map((i) => risers[i]!.fedFromId!))];
+  const supplied = new Set([
+    ...suppliedIn({ ...model, risers }, 'normal'),
+    ...suppliedIn({ ...model, risers }, 'standby'),
+  ]);
+  const whyNotReady = connected
+    ? null
+    : risers.some((r) => r.lengthM && r.fedFromId)
+      ? 'No riser leads back to a transformer yet: feed a riser from the transformer, or from an LV panel / MDB that has a feeder from the transformer.'
+      : 'Enter a riser length in Riser Design, then click the riser in the diagram to choose what feeds it (the transformer, an LV panel or an MDB).';
 
   return (
     <div className="building-tab">
@@ -125,8 +140,8 @@ export function BuildingTab(props: {
         />
         <svg
           width={width * props.zoom}
-          height={(bottomY + 40) * props.zoom}
-          viewBox={`0 0 ${width} ${bottomY + 40}`}
+          height={(bottomY + 50) * props.zoom}
+          viewBox={`0 0 ${width} ${bottomY + 50}`}
           role="img"
           aria-label="Riser diagram"
         >
@@ -196,33 +211,72 @@ export function BuildingTab(props: {
                 onClick={() => chooseSource(r, idx + 1)}
               >
                 <title>
-                  {r.fedFromId ? `Fed from ${tag(r.fedFromId)}` : 'Click to choose what feeds it'}
+                  {r.fedFromId
+                    ? `Riser ${idx + 1}: fed from ${tag(r.fedFromId)} (click to change)`
+                    : `Riser ${idx + 1}: no source - click to choose what feeds it`}
                 </title>
               </rect>
             ) : null,
           )}
-          {maxLen > 0 && (
-            <g aria-label="Source">
-              {fedRisers.length > 0 && (
-                <line
-                  x1="60"
-                  y1={bottomY}
-                  x2={RISER_X[Math.max(...fedRisers)]! + 9}
-                  y2={bottomY}
-                  className="source-link"
-                />
-              )}
-              <rect x="20" y={bottomY - 18} width="36" height="36" rx="6" className="tx-box" />
-              <text x="38" y={bottomY + 5} className="tx-text">
-                Tx
+          {risers.map((r, idx) =>
+            r.lengthM ? (
+              <text
+                key={`label-${r.id}`}
+                x={RISER_X[idx]! + 4.5}
+                y={riserTop(r) - 4}
+                className={`riser-label${r.fedFromId ? '' : ' unfed'}`}
+              >
+                R{idx + 1}
               </text>
-              {sourceTags && (
-                <text x="38" y={bottomY + 32} className="floor-label">
-                  {sourceTags}
-                </text>
-              )}
-            </g>
+            ) : null,
           )}
+          {sources.map((id, k) => {
+            const x = SOURCE_X + k * SOURCE_GAP;
+            const source = model.elements.find((e) => e.id === id);
+            const dead = source?.kind !== 'transformer' && !supplied.has(id);
+            const label = tag(id) ?? '?';
+            const fed = fedRisers.filter((i) => risers[i]!.fedFromId === id);
+            return (
+              <g key={id} aria-label={`Source ${label}`}>
+                {fed.map((i) => (
+                  <path
+                    key={i}
+                    className={`source-link${dead ? ' dead' : ''}`}
+                    d={`M ${x + SOURCE_W / 2} ${bottomY + 16} V ${bottomY + 24 + k * 6} H ${RISER_X[i]! + 4.5} V ${bottomY}`}
+                  />
+                ))}
+                <rect
+                  x={x}
+                  y={bottomY - 16}
+                  width={SOURCE_W}
+                  height="32"
+                  rx="6"
+                  className={`tx-box${dead ? ' dead' : ''}`}
+                >
+                  <title>
+                    {dead
+                      ? `${label} has no supply itself: draw a feeder to it from the transformer in Floor Setup.`
+                      : `${label} feeds ${fed.map((i) => `Riser ${i + 1}`).join(', ')}`}
+                  </title>
+                </rect>
+                <text
+                  x={x + SOURCE_W / 2}
+                  y={bottomY + 4}
+                  className="tx-text"
+                  {...(label.length > 10
+                    ? { textLength: SOURCE_W - 8, lengthAdjust: 'spacingAndGlyphs' }
+                    : {})}
+                >
+                  {label}
+                </text>
+                {dead && (
+                  <text x={x + SOURCE_W / 2} y={bottomY - 21} className="source-warning">
+                    no supply
+                  </text>
+                )}
+              </g>
+            );
+          })}
         </svg>
       </div>
 
@@ -297,7 +351,7 @@ export function BuildingTab(props: {
         <button
           className={`summary-btn${connected ? ' ready' : ''}`}
           disabled={!connected || props.readOnly || running}
-          title={connected ? undefined : 'Connect the transformer to the risers first (A-07)'}
+          title={whyNotReady ?? undefined}
           onClick={async () => {
             setRunning(true);
             const reply = await props.onCableSize();
@@ -309,10 +363,22 @@ export function BuildingTab(props: {
         >
           {running ? 'Sizing…' : 'Cable Size Calculator'}
         </button>
+        {whyNotReady && !props.readOnly && <p className="summary-hint">{whyNotReady}</p>}
         <p className="summary-cost" title={cost?.risers.map((r) => r.detail).join('\n')}>
           <strong>Cost :</strong>{' '}
           {sized && cost ? (cost.totalAed === null ? '-' : formatAed(cost.totalAed)) : ''} AED
         </p>
+        {sized && cost && cost.totalAed === null && (
+          <div className="summary-hint" aria-label="Why there is no cost">
+            <p>No cost yet - every riser needs a busbar rating:</p>
+            <ul>
+              {cost.risers.length === 0 && (
+                <li>No riser in use: enter a length in Riser Design and choose what feeds it.</li>
+              )}
+              {cost.risers.flatMap((r) => r.reasons.map((why) => <li key={why}>{why}</li>))}
+            </ul>
+          </div>
+        )}
         <hr />
         <div className="summary-actions">
           <button
@@ -352,7 +418,12 @@ function NetworkCheck(props: {
   scenario: Scenario;
   onScenario: (s: Scenario) => void;
 }) {
-  const issues = completenessIssues(props.model, props.floors);
+  // E1802 per floor; E1801 grouped by where the supply chain breaks, with the fix.
+  const floorIssues = completenessIssues(props.model, props.floors).filter(
+    (i) => i.code === 'E1802',
+  );
+  const breaks = supplyBreaks(props.model);
+  const count = floorIssues.length + breaks.length;
   const standby = scenarioSupply(props.model, 'standby');
   return (
     <section className="network-check" aria-label="Network check">
@@ -370,13 +441,25 @@ function NetworkCheck(props: {
         ))}
       </div>
       {props.scenario === 'normal' ? (
-        issues.length === 0 ? (
+        count === 0 ? (
           <p className="muted">Every component has a path to a source.</p>
         ) : (
           <ul className="network-issues" aria-label="Network warnings">
-            {issues.map((i) => (
-              <li key={`${i.code}-${i.elementId ?? i.floorId}`}>
+            {breaks.map((b) => (
+              <li key={b.at.kind === 'riser' ? `riser-${b.at.index}` : b.at.id}>
+                <strong>E1801</strong> {b.message}
+                {b.cutOff.length > 0 &&
+                  ` - ${b.cutOff.length} component${b.cutOff.length === 1 ? '' : 's'} below it ${b.cutOff.length === 1 ? 'has' : 'have'} no supply: ${b.cutOff.join(', ')}`}
+                .<span className="issue-fix"> {b.fix}</span>
+              </li>
+            ))}
+            {floorIssues.map((i) => (
+              <li key={`${i.code}-${i.floorId}`}>
                 <strong>{i.code}</strong> {i.message}
+                <span className="issue-fix">
+                  {' '}
+                  Click a board on that floor in this diagram to put it on a riser tap-off.
+                </span>
               </li>
             ))}
           </ul>

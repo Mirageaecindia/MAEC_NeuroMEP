@@ -137,7 +137,9 @@ describe('#TASK-22 / #TASK-23 risers as busbars (k = (n + 1) / 2n)', () => {
   it('without a busbar maker the riser is not calculated and the allowance rule stays', () => {
     const { risers, feeders } = checkNetworkFeeders(riserBuilding(null).project);
     expect(risers[0]!.busbar).toBeNull();
-    expect(risers[0]!.notes.join(' ')).toMatch(/Choose the busbar manufacturer/);
+    expect(risers[0]!.notes.join(' ')).toMatch(
+      /No busbar manufacturer chosen: choose it on Import File/,
+    );
     expect(feeders.find((f) => f.toId === 'db')!.vdUpstreamPct).toBe(2);
   });
 
@@ -167,14 +169,33 @@ describe('#TASK-22 riser and busbar edge cases', () => {
     const empty = riserBuilding();
     empty.project.model.risers[0]!.feeds = [];
     expect(checkNetworkFeeders(empty.project).risers[0]!.ibA).toBeNull();
+    expect(checkNetworkFeeders(empty.project).risers[0]!.notes).toEqual([
+      'Riser 1 feeds no boards: click a board on a floor to connect it to a tap-off of this riser.',
+    ]);
     const noLoad = riserBuilding();
     for (const e of noLoad.project.model.elements) if (e.kind === 'db') e.loads = [];
     expect(checkNetworkFeeders(noLoad.project).risers[0]!.ibA).toBeNull();
+    expect(checkNetworkFeeders(noLoad.project).risers[0]!.notes[0]).toMatch(
+      /^No load reaches Riser 1: enter the loads of the DBs fed from /,
+    );
     const noLength = riserBuilding();
     noLength.project.model.risers[0]!.lengthM = null;
-    expect(checkNetworkFeeders(noLength.project).risers[0]!.notes.join(' ')).toMatch(
-      /Enter the length of Riser 1/,
-    );
+    expect(checkNetworkFeeders(noLength.project).risers[0]!.notes).toEqual([
+      'Riser 1 has no length: enter it in Riser Design.',
+    ]);
+    // Everything missing at once is listed together, not one reason at a time.
+    const bare = riserBuilding();
+    bare.project.calculation.busbarMaker = null;
+    bare.project.model.risers[0] = {
+      ...bare.project.model.risers[0]!,
+      fedFromId: null,
+      lengthM: null,
+    };
+    expect(checkNetworkFeeders(bare.project).risers[0]!.notes).toEqual([
+      'Riser 1 has no source: click the riser in the diagram to choose the transformer, LV panel or MDB that feeds it.',
+      'Riser 1 has no length: enter it in Riser Design.',
+      'No busbar manufacturer chosen: choose it on Import File (Busbar Manufacturer).',
+    ]);
     const huge = riserBuilding();
     for (const e of huge.project.model.elements) {
       if (e.kind === 'db')

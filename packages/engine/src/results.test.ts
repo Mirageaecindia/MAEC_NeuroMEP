@@ -168,7 +168,9 @@ describe('Building tab Cost: busbar rating x 2.2 AED per riser (manager 3 Nov 20
     const results = elementResults(b.project, cableSize(b.project));
     const of = (id: string) => results.find((r) => r.elementId === id)!;
     expect(of('r1')).toMatchObject({ status: 'blocked', errors: ['E2102'] });
-    expect(of('r1').checks.C1?.detail).toMatch(/Choose the busbar manufacturer/);
+    expect(of('r1').checks.C1?.detail).toMatch(
+      /No busbar manufacturer chosen: choose it on Import File/,
+    );
     expect(of('sm')).toMatchObject({ status: 'blocked', errors: ['E2102'] });
     expect(of('idle')).toMatchObject({ status: 'awaiting-load', device: null, errors: [] });
     expect(of('spn').device).toMatchObject({ poles: '1P', type: 'MCB' });
@@ -179,7 +181,9 @@ describe('Building tab Cost: busbar rating x 2.2 AED per riser (manager 3 Nov 20
     project.calculation.busbarMaker = null;
     const cost = riserCosts(project, cableSize(project).risers);
     expect(cost.totalAed).toBeNull();
-    expect(cost.risers[0]!.detail).toMatch(/Choose the busbar manufacturer/);
+    expect(cost.risers[0]!.detail).toMatch(
+      /No busbar manufacturer chosen: choose it on Import File/,
+    );
   });
 
   it('uses the Technical Lead override of the rate', () => {
@@ -189,6 +193,39 @@ describe('Building tab Cost: busbar rating x 2.2 AED per riser (manager 3 Nov 20
       riserCostAedPerA: 3,
     };
     expect(riserCosts(project, cableSize(project).risers).totalAed).toBe(2400);
+  });
+});
+
+describe('Building tab Cost reasons (5 Nov 2026)', () => {
+  it('lists a riser that has a source but no length, with what is missing', () => {
+    const b = small();
+    b.project.calculation.busbarMaker = 'schneider';
+    b.add('smdb', 'sm');
+    b.project.model.risers = [
+      { id: 'r1', lengthM: null, widthM: null, fedFromId: 'mdb', feeds: [] },
+      { id: 'r2', lengthM: null, widthM: null, fedFromId: null, feeds: [] }, // not in use
+    ];
+    const cost = riserCosts(b.project, cableSize(b.project).risers);
+    expect(cost.totalAed).toBeNull();
+    expect(cost.risers.map((r) => r.reasons)).toEqual([
+      [
+        'Riser 1 feeds no boards: click a board on a floor to connect it to a tap-off of this riser.',
+        'Riser 1 has no length: enter it in Riser Design.',
+      ],
+    ]);
+  });
+
+  it('has no reasons once the riser is priced', () => {
+    const b = small();
+    b.project.calculation.busbarMaker = 'schneider';
+    b.add('smdb', 'sm');
+    b.db('db2', [100, 100, 100]);
+    b.feed('sm', 'db2', 10, { ...SINGLE, separation: 'touching' });
+    b.project.model.risers = [
+      { id: 'r1', lengthM: 30, widthM: 1, fedFromId: 'mdb', feeds: ['sm'] },
+    ];
+    const [riser] = riserCosts(b.project, cableSize(b.project).risers).risers;
+    expect(riser).toMatchObject({ costAed: 1760, reasons: [] });
   });
 });
 

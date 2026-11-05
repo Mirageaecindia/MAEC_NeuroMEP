@@ -59,7 +59,7 @@ test('#TASK-16 login, Import File, Floor Setup, Building tab and Cable Size', as
   await page.getByRole('button', { name: 'DB-db-1 board' }).click();
   await expect(calculator).toBeEnabled();
   await calculator.click();
-  await expect(page.getByText('Cable Size ran on the whole project.')).toBeVisible();
+  await expect(page.getByText(/^Cable Size ran on the whole project/)).toBeVisible();
   await expect(summary.getByText(/^Cost :/)).toBeVisible();
   await summary.getByRole('button', { name: 'Save' }).click();
 

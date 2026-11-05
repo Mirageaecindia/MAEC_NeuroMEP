@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Floor } from '../project/schema.js';
 import { testCable as cable, testElement as el } from '../testing.js';
-import { completenessIssues, scenarioSupply, suppliedIn } from './network.js';
+import { completenessIssues, scenarioSupply, suppliedIn, supplyBreaks } from './network.js';
 import { setBoardRiser, setRiser } from './riser.js';
 
 const floor = (id: string, name: string): Floor => ({
@@ -83,5 +83,43 @@ describe('#TASK-18 network completeness (FR-20, E1801 / E1802)', () => {
     const m = network();
     m.cables = m.cables.filter((c) => c.to.port !== 'standby');
     expect(scenarioSupply(m, 'standby').supplied).toEqual([]);
+  });
+});
+
+describe('#TASK-18 where the supply breaks (E1801 grouped by cause)', () => {
+  it('names the panel with no incoming feeder once, with everything below it', () => {
+    const m = network();
+    m.cables = m.cables.filter((c) => c.to.elementId !== 'MDB'); // ATS no longer feeds the MDB
+    expect(supplyBreaks(m)).toEqual([
+      {
+        at: { kind: 'element', id: 'MDB', tag: 'MDB' },
+        message: 'MDB has no incoming feeder',
+        fix: 'In Floor Setup, draw a feeder to MDB from the transformer (or from the generator through an ATS).',
+        cutOff: ['SMDB-1', 'DB-1'],
+      },
+      {
+        at: { kind: 'element', id: 'DB-2', tag: 'DB-2' },
+        message: 'DB-2 has no incoming feeder',
+        fix: 'In Floor Setup, draw a feeder to DB-2 from a panel above it, or click it in this diagram to put it on a riser tap-off.',
+        cutOff: [],
+      },
+    ]);
+  });
+
+  it('names a riser with no source', () => {
+    const m = network();
+    m.risers = setRiser(m.risers, 'riser-1', { fedFromId: null });
+    const [riser] = supplyBreaks(m);
+    expect(riser).toMatchObject({
+      at: { kind: 'riser', index: 1 },
+      message: 'Riser 1 has no source',
+      cutOff: ['SMDB-1', 'DB-1'],
+    });
+  });
+
+  it('has nothing to report when every component has a path to a source', () => {
+    const m = network();
+    m.elements = m.elements.filter((e) => e.id !== 'DB-2');
+    expect(supplyBreaks(m)).toEqual([]);
   });
 });

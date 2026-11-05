@@ -38,3 +38,23 @@ describe('#TASK-20 missing power factor (V-14)', () => {
     expect(d.trace.at(-1)?.detail).toBe('Power factor missing on the load.');
   });
 });
+
+describe('#TASK-22 riser with a load but no power factor (V-14)', () => {
+  it('says so instead of sizing the riser', async () => {
+    const { checkNetworkFeeders } = await import('./checks.js');
+    const p = completeProject();
+    const f = p.building.floors[0]!.id;
+    const tx = testElement('transformer', 'tx', f);
+    const db = {
+      ...sampleDb(f, 'db'),
+      tag: 'DB-1',
+      powerFactor: null,
+      loads: [{ method: 'kw' as const, loadType: '2' as const, kwL1: 1, kwL2: 1, kwL3: 1 }],
+    } as Element;
+    p.model.elements = [tx, db];
+    p.model.risers = [{ id: 'r1', lengthM: 10, widthM: 1, fedFromId: 'tx', feeds: ['db'] }];
+    const riser = checkNetworkFeeders(p).risers[0]!;
+    expect(riser.ibA).toBeNull();
+    expect(riser.notes[0]).toBe('No power factor for the load on Riser 1 (E2003).');
+  });
+});
