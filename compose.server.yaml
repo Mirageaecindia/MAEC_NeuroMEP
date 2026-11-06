@@ -1,9 +1,27 @@
-# Company server (maec-newapp, 6 Nov 2026): a reverse proxy on the host ends TLS and forwards to
+# Company server (maec-neuromep, 6 Nov 2026): Caddy on the host ends TLS and forwards to
 # 127.0.0.1:8085; the stack gets a fixed subnet so it never collides with the other apps there.
-#   docker compose --env-file .env.docker -f compose.yaml -f compose.server.yaml up -d --build
-name: maec-newapp
+# Set COMPOSE_FILE=compose.yaml:compose.server.yaml in .env.docker, then:
+#   docker compose --env-file .env.docker up -d --build
+# The project name names the volumes (maec-neuromep_mongo-data / _mongo-config / _plans): never
+# change it once data exists, or the app starts on new, empty volumes.
+name: maec-neuromep
 
 services:
+  db:
+    # Shared server: cap the WiredTiger cache (default about half the RAM). The Dockerfile's
+    # command, plus the limit; other machines keep the default.
+    command:
+      [
+        'mongod',
+        '--replSet',
+        'rs0',
+        '--keyFile',
+        '/data/configdb/keyfile',
+        '--bind_ip_all',
+        '--wiredTigerCacheSizeGB',
+        '0.5',
+      ]
+
   frontend:
     # Replaces the 80 / 443 of compose.yaml: plain HTTP, reachable from the host only.
     ports: !override

@@ -43,35 +43,49 @@ Passwords go into the API's connection string, so use only letters, digits, `-` 
 `openssl rand -hex` output qualifies). The MongoDB accounts are created on the **first start
 only**. To change them later, change them in MongoDB as well, or start over with empty volumes.
 
-## Company server (maec-newapp)
+## Company server (maec-neuromep)
 
-On the company server a reverse proxy on the host ends TLS and forwards the site to
-`127.0.0.1:8085`. `compose.server.yaml` sets that up on top of `compose.yaml`:
+On the company server Caddy on the host ends TLS and forwards the site to `127.0.0.1:8085`.
+`compose.server.yaml` sets that up on top of `compose.yaml`:
 
-- the project is called `maec-newapp` (containers, volumes and network take that prefix);
+- the project is called `maec-neuromep`; containers, the network and the volumes take that
+  prefix (`maec-neuromep_mongo-data`, `_mongo-config`, `_plans`). **Never rename it once data
+  exists**: the app would start on new, empty volumes and the data would sit under the old name;
 - `frontend` publishes only `127.0.0.1:8085` -> 80, plain HTTP, instead of 80 / 443;
-- the project network has the fixed subnet `10.231.4.0/24`.
+- the project network has the fixed subnet `10.231.4.0/24`;
+- MongoDB's cache is capped at 0.5 GB (`--wiredTigerCacheSizeGB`), as the server is shared.
 
-Add both files to every command, or set them once for the shell:
+Check the server first:
 
 ```sh
-export COMPOSE_FILE=compose.yaml:compose.server.yaml   # then plain "docker compose ..." uses both
-docker compose --env-file .env.docker up -d --build
-docker compose --env-file .env.docker ps                # frontend shows 127.0.0.1:8085->80/tcp
-curl -s http://127.0.0.1:8085/healthz                   # ok
+grep -c -w avx /proc/cpuinfo   # above 0: MongoDB 8 needs AVX; 0 means it crashes on start
+free -h                        # room for one more database
+docker compose version         # 2.24.4 or newer: compose.server.yaml uses "!override"
 ```
 
-Leave `docker/certs/` empty there: the certificate belongs to the host's proxy. Keep
-`COOKIE_SECURE=true` when the proxy serves the site over HTTPS (browsers then keep the session
-cookie). The proxy should pass the client address on, for the sign-in limits (E0103):
+Set the two files in `.env.docker`, so every `docker compose --env-file .env.docker ...`
+command uses both - an `export` would last for one shell only:
 
-```nginx
-location / {
-    proxy_pass http://127.0.0.1:8085;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-    client_max_body_size 25m;   # floor plans up to 20 MB
+```sh
+# in .env.docker (the line is in .env.docker.example, commented out):
+COMPOSE_FILE=compose.yaml:compose.server.yaml
+```
+
+```sh
+docker compose --env-file .env.docker config | head -1   # name: maec-neuromep
+docker compose --env-file .env.docker up -d --build
+docker compose --env-file .env.docker ps                 # frontend shows 127.0.0.1:8085->80/tcp
+curl -s http://127.0.0.1:8085/healthz                    # ok
+```
+
+Leave `docker/certs/` empty there: the certificate belongs to Caddy. Keep `COOKIE_SECURE=true`
+(Caddy serves the site over HTTPS, so browsers keep the session cookie). Caddy passes `Host`,
+`X-Forwarded-For` and `X-Forwarded-Proto` on and sets no upload limit by default, which is what
+the sign-in limits (E0103) and the 20 MB floor plans need:
+
+```caddy
+neuromep.example.com {
+    reverse_proxy 127.0.0.1:8085
 }
 ```
 
@@ -110,8 +124,9 @@ docker image prune -f                                    # removes the old image
 # Database: a compressed archive of the neuromep database
 docker compose --env-file .env.docker exec -T db sh -c 'mongodump --quiet --username "$MONGO_INITDB_ROOT_USERNAME" --password "$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --db neuromep --archive --gzip' > neuromep-$(date +%F).archive.gz
 
-# Floor plans: the plans volume as a tar file
-docker run --rm -v neuromep_plans:/data/plans -v "$PWD":/backup alpine tar czf /backup/plans-$(date +%F).tar.gz -C /data plans
+# Floor plans: the plans volume as a tar file (maec-neuromep_plans on the company server,
+# neuromep_plans without compose.server.yaml)
+docker run --rm -v maec-neuromep_plans:/data/plans -v "$PWD":/backup alpine tar czf /backup/plans-$(date +%F).tar.gz -C /data plans
 ```
 
 To restore, pipe the archive into `mongorestore` with the same flags, adding `--drop`. Run both
