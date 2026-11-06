@@ -1,4 +1,4 @@
-import { suppliedIn, type Element, type Project } from '@neuromep/shared';
+import { flsPaths, isFireRated, suppliedIn, type Element, type Project } from '@neuromep/shared';
 import { MAX_PASSES, sizeCables, type SizedBy } from './autosize.js';
 import { checkNetworkFeeders, type RiserCheck } from './checks.js';
 import { checkAll, type FullCheck, type ProtectionCheck } from './protection.js';
@@ -46,34 +46,6 @@ function ancestorsOf(project: Project, id: string): Set<string> {
   return seen;
 }
 
-/**
- * Cables from each FLS load back to the generator (10.14): the feeder into the load, then up
- * through the standby input of an ATS, to the generator.
- */
-function flsPathCables(project: Project, fls: Element[]): Set<string> {
-  const onPath = new Set<string>();
-  const byId = new Map(project.model.elements.map((e) => [e.id, e]));
-  for (const load of fls) {
-    const stack = [load.id];
-    const seen = new Set<string>();
-    while (stack.length) {
-      const cur = stack.pop()!;
-      if (seen.has(cur)) continue;
-      seen.add(cur);
-      const ats = byId.get(cur)?.kind === 'ats';
-      for (const c of project.model.cables) {
-        if (c.to.elementId !== cur || (ats && c.to.port !== 'standby')) continue;
-        onPath.add(c.id);
-        stack.push(c.from.elementId);
-      }
-      for (const r of project.model.risers) {
-        if (r.fedFromId && r.feeds.includes(cur)) stack.push(r.fedFromId);
-      }
-    }
-  }
-  return onPath;
-}
-
 export function cableSize(project: Project): CableSizeOutcome {
   const run = sizeCables(project);
   const checks = checkAll(project, run.sized);
@@ -81,8 +53,7 @@ export function cableSize(project: Project): CableSizeOutcome {
   const onGenerator = suppliedIn(project.model, 'standby');
   const cables = new Map(project.model.cables.map((c) => [c.id, c]));
   const category = (e: Element | undefined) => (e && 'loadCategory' in e ? e.loadCategory : null);
-  const fls = project.model.elements.filter((e) => category(e) === 'fls');
-  const flsPath = flsPathCables(project, fls);
+  const flsPath = flsPaths(project.model);
 
   const feeders = checks.map((f): SizedFeeder => {
     const to = byId.get(f.toId);
@@ -112,11 +83,7 @@ export function cableSize(project: Project): CableSizeOutcome {
     // C9 (10.14): every cable from an FLS load to the generator should be fire-rated (warning).
     if (flsPath.has(f.cableId)) {
       const cable = cables.get(f.cableId)!;
-      const fireRated =
-        cable.feederType === 'busbar'
-          ? (cable.busbar?.fireRated ?? false)
-          : cable.construction.insulation === 'FR';
-      result.c9 = fireRated
+      result.c9 = isFireRated(cable)
         ? { state: 'pass', detail: 'Fire-rated, on a fire & life-safety path.' }
         : {
             state: 'fail',

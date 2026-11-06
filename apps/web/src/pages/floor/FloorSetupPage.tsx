@@ -6,7 +6,10 @@ import {
   type LoadImportPlan,
   closeRoute,
   capacitySummary,
+  fireRatedFlags,
+  type FireRatedFlag,
   loadSummaries,
+  type Cable,
   type CapacitySummary,
   connectionProblem,
   drawCable,
@@ -748,6 +751,21 @@ function CapacityChecks({ capacity }: { capacity: CapacitySummary }) {
   );
 }
 
+/** Fire-rated feeder flags (E2701 / E2702, briefing page 9): live, the cable is never changed. */
+function FireRatedChecks({ flags }: { flags: FireRatedFlag[] }) {
+  if (flags.length === 0) return null;
+  return (
+    <ul className="capacity-checks fire-checks" aria-label="Fire-rated feeders">
+      {flags.map((f) => (
+        <li key={f.cableId} className="over">
+          <strong>{f.code} </strong>
+          {f.message}. {f.fix}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** Right panel (Figma 3.1 - 3.3): transformer capacity and connected load; Cable Size (A-07). */
 function RightPanel(props: {
   floor: Floor | null;
@@ -807,6 +825,10 @@ function RightPanel(props: {
     : [];
   const tops = scope ? scope.tops.map((e) => summaries.get(e.id)!) : [];
   const fedFromSource = sourceConnected(project.model);
+  const floorOf = new Map(project.model.elements.map((e) => [e.id, e.floorId]));
+  const onFloor = (c: Cable) =>
+    !!props.floor &&
+    [c.from.elementId, c.to.elementId].some((id) => floorOf.get(id) === props.floor!.id);
   // Cable Size scope (FR-21, decision 1 Nov 2026): the selected component or feeder, else the floor.
   const selectedItem =
     selected ?? project.model.cables.find((c) => c.id === props.selectedId) ?? null;
@@ -860,6 +882,13 @@ function RightPanel(props: {
           <p className="field-hint">Calibrate the plan before placing components (E0701).</p>
         )}
         {props.property}
+        <FireRatedChecks
+          flags={fireRatedFlags(project.model).filter((f) =>
+            selectedItem
+              ? f.cableId === selectedItem.id
+              : onFloor(project.model.cables.find((c) => c.id === f.cableId)!),
+          )}
+        />
         {selectedItem && <SizingResult project={project} id={selectedItem.id} />}
         {scope && (
           <LoadTable

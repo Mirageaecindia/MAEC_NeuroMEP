@@ -4,6 +4,7 @@ import {
   scenarioSupply,
   suppliedIn,
   supplyBreaks,
+  fireRatedFlags,
   type Scenario,
   riserOf,
   riserRows,
@@ -423,7 +424,8 @@ function NetworkCheck(props: {
     (i) => i.code === 'E1802',
   );
   const breaks = supplyBreaks(props.model);
-  const count = floorIssues.length + breaks.length;
+  const fire = fireRatedFlags(props.model);
+  const count = floorIssues.length + breaks.length + fire.length;
   const standby = scenarioSupply(props.model, 'standby');
   return (
     <section className="network-check" aria-label="Network check">
@@ -442,7 +444,9 @@ function NetworkCheck(props: {
       </div>
       {props.scenario === 'normal' ? (
         count === 0 ? (
-          <p className="muted">Every component has a path to a source.</p>
+          <p className="muted">
+            Every component has a path to a source; fire-rated feeders are where needed.
+          </p>
         ) : (
           <ul className="network-issues" aria-label="Network warnings">
             {breaks.map((b) => (
@@ -451,6 +455,11 @@ function NetworkCheck(props: {
                 {b.cutOff.length > 0 &&
                   ` - ${b.cutOff.length} component${b.cutOff.length === 1 ? '' : 's'} below it ${b.cutOff.length === 1 ? 'has' : 'have'} no supply: ${b.cutOff.join(', ')}`}
                 .<span className="issue-fix"> {b.fix}</span>
+              </li>
+            ))}
+            {fire.map((f) => (
+              <li key={f.cableId}>
+                <strong>{f.code}</strong> {f.message}.<span className="issue-fix"> {f.fix}</span>
               </li>
             ))}
             {floorIssues.map((i) => (

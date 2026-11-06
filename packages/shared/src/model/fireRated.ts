@@ -1,0 +1,84 @@
+import type { Cable } from './cable.js';
+import type { Element } from './elements.js';
+import type { Riser } from './riser.js';
+
+/**
+ * Fire-rated feeders (10.14, briefing page 9, 6 Nov 2026). Every feeder from a fire & life-safety
+ * load back to the generator must be fire-rated: the feeder into the load, then up through the
+ * standby input of an ATS to the generator (manager 3 Nov 2026: FR only on the generator side).
+ * The flags are live and never change a cable (user decision 6 Nov 2026): a feeder on that path
+ * that is not fire-rated (E2701), and a fire-rated one with no FLS load below it (E2702).
+ */
+
+interface Network {
+  elements: readonly Element[];
+  cables: readonly Cable[];
+  risers: readonly Riser[];
+}
+
+const isFls = (e: Element) => 'loadCategory' in e && e.loadCategory === 'fls';
+
+export const isFireRated = (c: Cable) =>
+  c.feederType === 'busbar' ? (c.busbar?.fireRated ?? false) : c.construction.insulation === 'FR';
+
+/** Feeders on the path from each FLS load to the generator, with the FLS loads each one serves. */
+export function flsPaths(m: Network): Map<string, string[]> {
+  const byId = new Map(m.elements.map((e) => [e.id, e]));
+  const onPath = new Map<string, string[]>();
+  for (const load of m.elements.filter(isFls)) {
+    const stack = [load.id];
+    const seen = new Set<string>();
+    while (stack.length) {
+      const cur = stack.pop()!;
+      if (seen.has(cur)) continue;
+      seen.add(cur);
+      const ats = byId.get(cur)?.kind === 'ats';
+      for (const c of m.cables) {
+        if (c.to.elementId !== cur || (ats && c.to.port !== 'standby')) continue;
+        onPath.set(c.id, [...new Set([...(onPath.get(c.id) ?? []), load.tag])]);
+        stack.push(c.from.elementId);
+      }
+      for (const r of m.risers) if (r.fedFromId && r.feeds.includes(cur)) stack.push(r.fedFromId);
+    }
+  }
+  return onPath;
+}
+
+export interface FireRatedFlag {
+  cableId: string;
+  code: 'E2701' | 'E2702';
+  message: string;
+  fix: string;
+}
+
+export function fireRatedFlags(m: Network): FireRatedFlag[] {
+  const paths = flsPaths(m);
+  return m.cables.flatMap((c): FireRatedFlag[] => {
+    const loads = paths.get(c.id);
+    const fr = isFireRated(c);
+    if (loads && !fr) {
+      return [
+        {
+          cableId: c.id,
+          code: 'E2701',
+          message: `${c.tag} feeds fire & life-safety load ${loads.join(', ')} and is not fire-rated`,
+          fix:
+            c.feederType === 'busbar'
+              ? 'Select it and tick Fire Rated in its Engineering Property.'
+              : 'Select it and choose FR insulation in its Engineering Property.',
+        },
+      ];
+    }
+    if (!loads && fr) {
+      return [
+        {
+          cableId: c.id,
+          code: 'E2702',
+          message: `${c.tag} is fire-rated but has no fire & life-safety load below it on the generator side`,
+          fix: 'Use a normal cable unless it is needed for another reason.',
+        },
+      ];
+    }
+    return [];
+  });
+}

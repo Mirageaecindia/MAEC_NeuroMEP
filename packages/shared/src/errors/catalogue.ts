@@ -330,6 +330,21 @@ export const ERROR_CATALOGUE = [
     'Press Cable Size again; if it repeats, report the run ID to support.',
     true,
   ),
+  // #TASK-27 Safety rules: fire-rated feeders (10.14; briefing page 9, 6 Nov 2026)
+  e(
+    'E2701',
+    'Feeder to a fire & life-safety load not fire-rated',
+    'warning',
+    'Every feeder from an FLS load back to the generator must be fire-rated so it keeps working in a fire.',
+    'Choose FR insulation (or a fire-rated busbar) for the feeder.',
+  ),
+  e(
+    'E2702',
+    'Fire-rated feeder not needed',
+    'warning',
+    'The feeder is fire-rated but no fire & life-safety load is fed through it from the generator.',
+    'Use a normal cable unless it is needed for another reason.',
+  ),
   // #TASK-28 Transformer loading (10.15; briefing page 9, 6 Nov 2026)
   e(
     'E2801',

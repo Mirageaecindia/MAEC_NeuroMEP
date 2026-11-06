@@ -489,6 +489,18 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     );
   });
 
+  it('#TASK-27 flags a feeder to an FLS load that is not fire-rated (E2701), live', async () => {
+    const project = buildingProject();
+    const tx = project.model.elements.find((e) => e.id === 'tx')!;
+    const db = project.model.elements.find((e) => e.id === 'db-1')!;
+    Object.assign(db, { loadCategory: 'fls' });
+    project.model.cables.push({ ...testCable(tx, db), tag: 'F-01' });
+    renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(project));
+    expect(await screen.findByRole('list', { name: 'Fire-rated feeders' })).toHaveTextContent(
+      'E2701 F-01 feeds fire & life-safety load DB-db-1 and is not fire-rated. Select it and choose FR insulation in its Engineering Property.',
+    );
+  });
+
   it('Import File ticks the 80 % transformer loading limit as a Lead override (6 Nov 2026)', async () => {
     const api = fakeApi(completeProject());
     renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
@@ -624,7 +636,7 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
       'E1801 DB-db-1 has no incoming feeder. In Floor Setup, draw a feeder to DB-db-1 from a panel above it, or click it in this diagram to put it on a riser tap-off.',
     );
     await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
-    expect(within(check).getByText('Every component has a path to a source.')).toBeVisible();
+    expect(within(check).getByText(/^Every component has a path to a source;/)).toBeVisible();
     await userEvent.click(within(check).getByRole('radio', { name: 'Standby' }));
     expect(within(check).getByText(/On generator supply: 0 of 1 components/)).toBeVisible();
   });
