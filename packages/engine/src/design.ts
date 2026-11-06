@@ -128,6 +128,13 @@ export function designFeeders(project: Project): FeederDesign[] {
     };
     if (to.kind === 'pfc-bank')
       return [blocked('Capacitor bank rating (kVAr) not calculated yet (10.15).')];
+    if (s.incomplete.length) {
+      return [
+        blocked(
+          `Efficiency missing on motor-driven equipment ${s.incomplete.join(', ')}: input kW = rated kW / efficiency.`,
+        ),
+      ];
+    }
     if (phases === 0) {
       return [
         { ...base, ibA: 0, ibCase: null, neutralA: null, device: null, status: 'awaiting-load' },

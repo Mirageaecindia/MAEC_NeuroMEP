@@ -54,6 +54,8 @@ export interface PlanCable {
   points: PdfPoint[];
   /** A busbar feeder, drawn thicker than a cable. */
   busbar?: boolean;
+  /** Equipment to its isolator ("Fed from", 6 Nov 2026): dashed, not a cable, not selectable. */
+  link?: boolean;
 }
 
 /** Data type of a library item dragged onto the plan. */
@@ -279,12 +281,14 @@ export function PlanViewer(props: {
   /** The cable under a screen point (within 6 px of a leg), if any. */
   const hitCable = (s: { x: number; y: number }) =>
     page
-      ? cables.find((c) =>
-          c.points.slice(1).some((b, i) => {
-            const a = pdfToScreen(c.points[i]!, view, page.transform);
-            const q = pdfToScreen(b, view, page.transform);
-            return distanceToSegment(s, a, q) <= 6;
-          }),
+      ? cables.find(
+          (c) =>
+            !c.link &&
+            c.points.slice(1).some((b, i) => {
+              const a = pdfToScreen(c.points[i]!, view, page.transform);
+              const q = pdfToScreen(b, view, page.transform);
+              return distanceToSegment(s, a, q) <= 6;
+            }),
         )
       : undefined;
   /** The component under a screen point, if any. */
@@ -637,9 +641,11 @@ export function PlanViewer(props: {
               return (
                 <g
                   key={c.id}
-                  className={`plan-cable${c.busbar ? ' busbar' : ''}${selected ? ' selected' : ''}`}
+                  className={`plan-cable${c.busbar ? ' busbar' : ''}${c.link ? ' link' : ''}${selected ? ' selected' : ''}`}
                   role="img"
-                  aria-label={`Cable ${c.tag}${selected ? ' (selected)' : ''}`}
+                  aria-label={
+                    c.link ? `Link ${c.tag}` : `Cable ${c.tag}${selected ? ' (selected)' : ''}`
+                  }
                 >
                   <polyline points={pts.map((p) => `${p.x},${p.y}`).join(' ')} />
                   <text x={label.x} y={label.y - 5} textAnchor="middle" className="cable-tag">

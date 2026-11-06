@@ -73,6 +73,12 @@ export function tooltipLines(
     case 'motor':
       lines.push(from, `Vd total: ${figures?.vdTotal ?? '-'}`);
       break;
+    case 'equipment':
+      lines.push(
+        `${val(e.kw, 'kW')} rated · ${e.phases} · ${e.fls ? 'FLS' : 'non-FLS'}`,
+        e.fedFromId ? `Fed from ${tagOf(e.fedFromId)}` : 'Not connected to a panel (E1803)',
+      );
+      break;
     case 'eb-utility':
     case 'ats':
     case 'pfc-bank':

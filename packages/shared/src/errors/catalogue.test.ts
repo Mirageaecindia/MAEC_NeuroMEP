@@ -15,6 +15,7 @@ const APPENDIX_D = [
   'E1503',
   'E1801',
   'E1802',
+  'E1803',
   'E1901',
   'E2001',
   'E2002',
@@ -42,7 +43,7 @@ describe('#TASK-32 error catalogue', () => {
     }
   });
 
-  it('contains the 26 engineer-facing errors of Appendix D (22 + 4 of A-16)', () => {
+  it('contains the 27 engineer-facing errors of Appendix D (22 + 5 added by A-16)', () => {
     expect(ERROR_CATALOGUE.filter((x) => x.appendixD).map((x) => x.code)).toEqual(APPENDIX_D);
   });
 

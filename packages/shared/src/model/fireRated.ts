@@ -1,5 +1,5 @@
 import type { Cable } from './cable.js';
-import type { Element } from './elements.js';
+import type { Element, LoadCategory } from './elements.js';
 import type { Riser } from './riser.js';
 
 /**
@@ -16,7 +16,17 @@ interface Network {
   risers: readonly Riser[];
 }
 
-const isFls = (e: Element) => 'loadCategory' in e && e.loadCategory === 'fls';
+/**
+ * Load category a component counts with: its own, except that an isolator / connection unit
+ * feeding FLS equipment counts as FLS (user decision 6 Nov 2026: the equipment's layer cannot
+ * change the electrical isolator, so this is worked out, not stored). Equipment: FLS / normal.
+ */
+export function loadCategoryOf(e: Element, elements: readonly Element[]): LoadCategory | null {
+  if (e.kind === 'equipment') return e.fls ? 'fls' : 'normal';
+  if (!('loadCategory' in e)) return null;
+  const flsBelow = elements.some((x) => x.kind === 'equipment' && x.fedFromId === e.id && x.fls);
+  return flsBelow ? 'fls' : e.loadCategory;
+}
 
 export const isFireRated = (c: Cable) =>
   c.feederType === 'busbar' ? (c.busbar?.fireRated ?? false) : c.construction.insulation === 'FR';
@@ -25,7 +35,9 @@ export const isFireRated = (c: Cable) =>
 export function flsPaths(m: Network): Map<string, string[]> {
   const byId = new Map(m.elements.map((e) => [e.id, e]));
   const onPath = new Map<string, string[]>();
-  for (const load of m.elements.filter(isFls)) {
+  for (const load of m.elements.filter(
+    (e) => e.kind !== 'equipment' && loadCategoryOf(e, m.elements) === 'fls',
+  )) {
     const stack = [load.id];
     const seen = new Set<string>();
     while (stack.length) {

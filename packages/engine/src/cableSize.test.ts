@@ -62,6 +62,26 @@ describe('#TASK-27 safety rules C8 / C9 (10.14)', () => {
     });
   });
 
+  it('equipment on an isolator: Ib from rated kW / efficiency; no efficiency with a starter blocks (E2003)', () => {
+    const b = safetyBuilding();
+    b.add('isolator-tp', 'iso');
+    b.feed('esmdb', 'iso', 15);
+    b.add('mechanical-equipment', 'pump', {
+      kw: 7.5,
+      starter: 'DOL',
+      powerFactor: 0.85,
+      fedFromId: 'iso',
+    });
+    const blocked = feederTo(b, 'iso');
+    expect(blocked).toMatchObject({ status: 'blocked', ibA: null });
+    expect(blocked.errors).toContain('E2003');
+    expect(blocked.trace.map((t) => t.detail).join(' ')).toMatch(/Efficiency missing on .*PUMP/);
+    const pump = b.project.model.elements.find((e) => e.id === 'pump')!;
+    Object.assign(pump, { efficiency: 0.9 });
+    // 7.5 / 0.9 = 8.33 kW balanced at pf 0.85: Ib = 8333 / (sqrt3 x 400 x 0.85).
+    expect(feederTo(b, 'iso').ibA).toBeCloseTo(8333.333 / (Math.sqrt(3) * 400 * 0.85), 2);
+  });
+
   it('C8: a critical load needs a UPS as well as the generator', () => {
     const c8 = feederTo(safetyBuilding(), 'crit').c8;
     expect(c8.state).toBe('fail');

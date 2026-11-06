@@ -6,6 +6,9 @@ import {
   type LoadImportPlan,
   closeRoute,
   capacitySummary,
+  loadCategoryOf,
+  unlinkedEquipment,
+  EQUIPMENT_FEEDERS,
   fireRatedFlags,
   type FireRatedFlag,
   loadSummaries,
@@ -187,6 +190,11 @@ export function FloorSetupPage() {
     const m = calibration.metresPerUnit;
     const point = { x: at.x * m, y: at.y * m };
     const target = componentId ? onFloor.find((e) => e.id === componentId) : undefined;
+    if (target?.kind === 'equipment') {
+      return notice(
+        `${target.tag} is linked to its isolator or connection unit through Fed from in its Engineering Property, not by a feeder.`,
+      );
+    }
     if (!draft) {
       if (!target) return notice('Click the component the cable starts from.');
       if (!portsOf(target).some(isOutput)) {
@@ -308,12 +316,28 @@ export function FloorSetupPage() {
   const toPdf = (p: ModelPoint) =>
     calibration ? { x: p.x / calibration.metresPerUnit, y: p.y / calibration.metresPerUnit } : p;
   const planCables: PlanCable[] = calibration
-    ? floorCables.map((c) => ({
-        id: c.id,
-        tag: c.tag,
-        points: c.route.map(toPdf),
-        busbar: c.feederType === 'busbar',
-      }))
+    ? [
+        ...floorCables.map((c) => ({
+          id: c.id,
+          tag: c.tag,
+          points: c.route.map(toPdf),
+          busbar: c.feederType === 'busbar',
+        })),
+        // Equipment to the isolator it is fed from, when both are on this floor (dashed).
+        ...onFloor.flatMap((e) => {
+          const to = e.kind === 'equipment' && onFloor.find((x) => x.id === e.fedFromId);
+          return to
+            ? [
+                {
+                  id: `link-${e.id}`,
+                  tag: `${e.tag} - ${to.tag}`,
+                  points: [e.position, to.position].map(toPdf),
+                  link: true,
+                },
+              ]
+            : [];
+        }),
+      ]
     : [];
 
   async function upload(target: Floor, file: File) {
@@ -562,6 +586,21 @@ export function FloorSetupPage() {
                       editor.dispatch({ type: 'updateElement', id: selected.id, patch })
                     }
                     fedFrom={fedFrom(selected, project.model)}
+                    flsEquipment={
+                      'loadCategory' in selected &&
+                      selected.loadCategory !== 'fls' &&
+                      loadCategoryOf(selected, project.model.elements) === 'fls'
+                        ? project.model.elements
+                            .filter(
+                              (e) => e.kind === 'equipment' && e.fedFromId === selected.id && e.fls,
+                            )
+                            .map((e) => e.tag)
+                        : []
+                    }
+                    feeders={project.model.elements
+                      .filter((e) => EQUIPMENT_FEEDERS.includes(e.kind))
+                      .map((e) => ({ id: e.id, tag: e.tag }))
+                      .sort((a, b) => a.tag.localeCompare(b.tag, undefined, { numeric: true }))}
                     onDelete={() => {
                       editor.dispatch({ type: 'removeElements', ids: [selected.id] });
                       setSelectedId(null);
@@ -751,6 +790,21 @@ function CapacityChecks({ capacity }: { capacity: CapacitySummary }) {
   );
 }
 
+/** Equipment not connected to a panel (E1803, briefing page 9): live, per floor or selection. */
+function UnlinkedEquipment({ items }: { items: { id: string; tag: string }[] }) {
+  if (items.length === 0) return null;
+  return (
+    <ul className="capacity-checks fire-checks" aria-label="Equipment not connected">
+      {items.map((e) => (
+        <li key={e.id} className="over">
+          <strong>E1803 </strong>
+          {e.tag} is not connected to a panel: choose its isolator or connection unit in Fed from.
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 /** Fire-rated feeder flags (E2701 / E2702, briefing page 9): live, the cable is never changed. */
 function FireRatedChecks({ flags }: { flags: FireRatedFlag[] }) {
   if (flags.length === 0) return null;
@@ -882,6 +936,11 @@ function RightPanel(props: {
           <p className="field-hint">Calibrate the plan before placing components (E0701).</p>
         )}
         {props.property}
+        <UnlinkedEquipment
+          items={unlinkedEquipment(project.model).filter((e) =>
+            selectedItem ? e.id === selectedItem.id : e.floorId === props.floor?.id,
+          )}
+        />
         <FireRatedChecks
           flags={fireRatedFlags(project.model).filter((f) =>
             selectedItem

@@ -55,7 +55,10 @@ export function flagBlockers(
     m.elements.filter((e) => e.discipline === discipline).map((e) => e.id),
   );
   return completenessIssues(m, floors).filter(
-    (i) => i.code === 'E1801' && i.floorId === floorId && ofDiscipline.has(i.elementId!),
+    (i) =>
+      (i.code === 'E1801' || i.code === 'E1803') &&
+      i.floorId === floorId &&
+      ofDiscipline.has(i.elementId!),
   );
 }
 

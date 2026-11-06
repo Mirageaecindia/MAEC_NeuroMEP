@@ -50,6 +50,7 @@ function topLevel(project: Pick<Project, 'model'>) {
       .map((c) => c.to.elementId),
   );
   for (const r of risers ?? []) if (r.fedFromId) for (const id of r.feeds) normal.add(id);
+  for (const e of elements) if (e.kind === 'equipment' && e.fedFromId) normal.add(e.id);
   return elements.filter((e) => e.kind !== 'generator' && !normal.has(e.id));
 }
 

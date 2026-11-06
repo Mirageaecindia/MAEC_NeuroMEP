@@ -5,7 +5,7 @@ import {
   type LoadTypeCode,
 } from '../project/enums.js';
 import type { Project } from '../project/schema.js';
-import type { Element, ElementKind, LoadLine } from './elements.js';
+import type { Element, ElementKind, Equipment, LoadLine } from './elements.js';
 
 /**
  * Live load aggregation (design doc 10.3; 10.2 step 2 only - the right-side load table, FR-18).
@@ -51,6 +51,8 @@ export interface LoadSummary {
   /** Load types (manual) or categories (Dubai) whose factor is TBC and counted as 1.0 (E1901). */
   tbcFactors: LoadTypeCode[];
   tbcCategories: DemandCategory[];
+  /** Equipment at or below whose input load cannot be worked out (no efficiency, E2003). */
+  incomplete: string[];
 }
 
 /**
@@ -92,14 +94,33 @@ export function lineKw(line: LoadLine): PhaseKw {
   return { ...zero(), [line.phases]: kw };
 }
 
+/**
+ * Input load of mechanical / PHE equipment (kW): rated output / efficiency. Motor-driven equipment
+ * (with a starter) needs its efficiency - null when missing, never assumed (E2003); other
+ * equipment takes 1.0 when none is entered (user decision 6 Nov 2026). 0 without a kW.
+ */
+export function equipmentInputKw(e: Equipment): number | null {
+  if (e.kw === null) return 0;
+  const eff = e.efficiency ?? (e.starter ? null : 1);
+  return eff ? e.kw / eff : null;
+}
+
 /** Load lines entered on the element itself: DB loads, or manual loads of unconnected ways. */
 export function ownLines(e: Element): LoadLine[] {
   if (e.kind === 'db') return e.loads;
   if ('manualLoads' in e) return e.manualLoads;
+  if (e.kind === 'equipment') {
+    const kw = equipmentInputKw(e);
+    if (!kw) return [];
+    const third = e.phases === '3P' ? kw / 3 : 0;
+    const on = (ph: 'L1' | 'L2' | 'L3') => (e.phases === ph ? kw : third);
+    return [{ method: 'kw', loadType: e.loadType, kwL1: on('L1'), kwL2: on('L2'), kwL3: on('L3') }];
+  }
   return [];
 }
 
-const ownPf = (e: Element): number | null => (e.kind === 'db' ? e.powerFactor : null);
+const ownPf = (e: Element): number | null =>
+  e.kind === 'db' || e.kind === 'equipment' ? e.powerFactor : null;
 const ownStandby = (e: Element): number | null => ('standbyKw' in e ? e.standbyKw : null);
 const reactive = (p: number, pf: number | null | undefined) =>
   pf && pf > 0 && pf < 1 ? p * Math.tan(Math.acos(pf)) : 0;
@@ -129,6 +150,8 @@ export function loadSummaries(
   for (const c of cables) link(c.from.elementId, c.to.elementId);
   // Boards on a riser tap-off are fed by the riser's source (FR-20).
   for (const r of risers ?? []) if (r.fedFromId) for (const id of r.feeds) link(r.fedFromId, id);
+  // Equipment hands its load to the isolator / connection unit it is fed from (6 Nov 2026).
+  for (const e of elements) if (e.kind === 'equipment' && e.fedFromId) link(e.fedFromId, e.id);
   const factors = project.calculation.demandFactors.byLoadType;
   const method = project.calculation.demandMethod ?? 'dubai-non-emaar';
   const catFactors = project.calculation.demandFactors.byCategory;
@@ -247,6 +270,10 @@ export function loadSummaries(
       byCategory,
       tbcFactors: LoadTypeCodeSchema.options.filter((c) => tbc.has(c)),
       tbcCategories: DemandCategorySchema.options.filter((c) => tbcCat.has(c)),
+      incomplete: [
+        ...(e.kind === 'equipment' && equipmentInputKw(e) === null ? [e.tag] : []),
+        ...sub.flatMap((x) => x.incomplete),
+      ],
       q,
     };
     out.set(e.id, summary);

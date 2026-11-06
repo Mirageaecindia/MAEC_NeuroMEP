@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Project } from '../project/schema.js';
-import type { Element, LoadCategory } from './elements.js';
+import type { LoadCategory } from './elements.js';
+import { loadCategoryOf } from './fireRated.js';
 import { lineKw, ownLines, type LoadSummary, type PhaseKw } from './loads.js';
 
 /**
@@ -76,8 +77,6 @@ export const startingFactors = (category: LoadCategory) => ({
   fire: category === 'fls' ? 1 : 0,
 });
 
-const categoryOf = (e: Element): LoadCategory => ('loadCategory' in e ? e.loadCategory : 'normal');
-
 /** The stored factors with one load's changed (added at `start` the first time). */
 export function setGeneratorFactor(
   list: readonly GeneratorFactor[],
@@ -103,10 +102,12 @@ export function generatorAnalyses(
     children.set(from, [...(children.get(from) ?? []), to]);
   for (const c of cables) link(c.from.elementId, c.to.elementId);
   for (const r of risers) if (r.fedFromId) for (const id of r.feeds) link(r.fedFromId, id);
+  // Equipment below its isolator / connection unit (6 Nov 2026).
+  for (const e of elements) if (e.kind === 'equipment' && e.fedFromId) link(e.fedFromId, e.id);
 
   const row = (id: string, from: string, to: string, kw: PhaseKw): GeneratorRow => {
     const f = saved.get(id);
-    const category = categoryOf(byId.get(id)!);
+    const category = loadCategoryOf(byId.get(id)!, elements) ?? 'normal';
     const factors = f
       ? { normal: f.normal, powerFailure: f.powerFailure, fire: f.fire }
       : startingFactors(category);

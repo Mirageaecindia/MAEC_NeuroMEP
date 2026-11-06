@@ -23,6 +23,9 @@ export function portsOf(e: Pick<Element, 'kind'>): Port[] {
     case 'motor':
     case 'pfc-bank':
       return ['in'];
+    // Equipment is linked to its isolator through "Fed from", never by a cable (6 Nov 2026).
+    case 'equipment':
+      return [];
     default:
       return ['in', 'out'];
   }

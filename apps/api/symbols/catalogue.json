@@ -96,6 +96,18 @@
       "cmpCode": null,
       "file": "connection-unit.svg",
       "status": "draft"
+    },
+    {
+      "key": "mechanical-equipment",
+      "cmpCode": null,
+      "file": "mechanical-equipment.svg",
+      "status": "draft"
+    },
+    {
+      "key": "phe-equipment",
+      "cmpCode": null,
+      "file": "phe-equipment.svg",
+      "status": "draft"
     }
   ]
 }

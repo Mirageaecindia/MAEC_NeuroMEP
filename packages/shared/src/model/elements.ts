@@ -169,6 +169,26 @@ export const PfcBankSchema = z.object({
   detuned: z.boolean(),
 });
 
+/**
+ * Mechanical / PHE equipment (briefing page 9, user request 6 Nov 2026): placed by the mechanical
+ * or PHE engineer on their own layer and linked to the isolator or connection unit that feeds it
+ * ("Fed from", no cable - Phase 1 ends at the isolator). kW is the rated output; the input load is
+ * kW / efficiency - required with a starter (motor-driven), 1.0 when empty otherwise.
+ */
+export const EquipmentSchema = z.object({
+  ...base,
+  kind: z.literal('equipment'),
+  fedFromId: Id.nullable(),
+  kw: z.number().positive().nullable(),
+  phases: z.enum(['3P', 'L1', 'L2', 'L3']),
+  powerFactor: z.number().min(0.5).max(1).nullable(),
+  efficiency: z.number().min(0.5).max(1).nullable(),
+  starter: StarterSchema.nullable(),
+  loadType: LoadTypeCodeSchema,
+  fls: z.boolean(),
+});
+export type Equipment = z.infer<typeof EquipmentSchema>;
+
 export const ElementSchema = z.discriminatedUnion('kind', [
   EbUtilitySchema,
   TransformerSchema,
@@ -180,12 +200,14 @@ export const ElementSchema = z.discriminatedUnion('kind', [
   BusbarSchema,
   LoadPointSchema,
   PfcBankSchema,
+  EquipmentSchema,
 ]);
 export type Element = z.infer<typeof ElementSchema>;
 export type ElementKind = Element['kind'];
 
 /** Hierarchy level of each kind (design doc Section 3). */
-export const ELEMENT_LEVEL: Record<ElementKind, 'L0' | 'L1' | 'L2' | 'L3' | 'L4' | 'L5'> = {
+/** L6: equipment below an isolator / connection unit, outside the sized LV network. */
+export const ELEMENT_LEVEL: Record<ElementKind, 'L0' | 'L1' | 'L2' | 'L3' | 'L4' | 'L5' | 'L6'> = {
   'eb-utility': 'L0',
   transformer: 'L1',
   generator: 'L1',
@@ -206,4 +228,5 @@ export const ELEMENT_LEVEL: Record<ElementKind, 'L0' | 'L1' | 'L2' | 'L3' | 'L4'
   'connection-unit': 'L5',
   motor: 'L5',
   'pfc-bank': 'L2',
+  equipment: 'L6',
 };

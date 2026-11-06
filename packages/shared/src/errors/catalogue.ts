@@ -1,6 +1,6 @@
 /**
  * Error code catalogue (design doc Section 4, Appendix D). Code = E + #TASK number (2 digits) +
- * sequence (2 digits). Each code is listed once. `appendixD: true` marks the 26 errors engineers
+ * sequence (2 digits). Each code is listed once. `appendixD: true` marks the 27 errors engineers
  * meet in normal use; the others are shown by the system or used by developers.
  * Failed engineering checks are not errors: they are check codes C1-C12 (Section 10.12).
  */
@@ -244,6 +244,14 @@ export const ERROR_CATALOGUE = [
     true,
   ),
   // #TASK-19..#TASK-26 Engine
+  e(
+    'E1803',
+    'Equipment not connected to a panel',
+    'warning',
+    'Mechanical / PHE equipment has no isolator or connection unit in Fed from, so its load reaches no panel.',
+    'Choose the isolator or connection unit that feeds it in its Engineering Property.',
+    true,
+  ),
   e(
     'E1901',
     'Demand factor not confirmed',

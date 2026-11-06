@@ -16,6 +16,10 @@ export function EngineeringProperty(props: {
   fedFrom: string | null;
   onChange: (patch: Record<string, unknown>) => void;
   onDelete: () => void;
+  /** Isolators / connection units equipment may be fed from. */
+  feeders?: readonly { id: string; tag: string }[];
+  /** FLS equipment it feeds while its own category is not FLS: it counts as FLS (6 Nov 2026). */
+  flsEquipment?: readonly string[];
 }) {
   const { element } = props;
   const item = itemOfElement(element);
@@ -76,8 +80,12 @@ export function EngineeringProperty(props: {
             }}
           />
         </dd>
-        <dt>Fed From :</dt>
-        <dd>{props.fedFrom ?? '-'}</dd>
+        {element.kind !== 'equipment' && (
+          <>
+            <dt>Fed From :</dt>
+            <dd>{props.fedFrom ?? '-'}</dd>
+          </>
+        )}
         {loadsKey && (
           <>
             <dt>{loadsKey === 'loads' ? 'Loads :' : 'Manual loads :'}</dt>
@@ -97,7 +105,18 @@ export function EngineeringProperty(props: {
             </dd>
           </>
         )}
-        <ElementFields element={element} editable={props.editable} onChange={props.onChange} />
+        <ElementFields
+          element={element}
+          editable={props.editable}
+          feeders={props.feeders}
+          onChange={props.onChange}
+        />
+        {props.flsEquipment && props.flsEquipment.length > 0 && (
+          <p className="field-hint" role="note">
+            Counts as FLS: it feeds FLS equipment {props.flsEquipment.join(', ')}
+            {'fireRated' in element && !element.fireRated ? ' - tick Fire rated.' : '.'}
+          </p>
+        )}
         <dt>Symbol :</dt>
         <dd>{item ? `${item.cmpCode ?? 'no CMP code yet'} (draft)` : '-'}</dd>
       </dl>

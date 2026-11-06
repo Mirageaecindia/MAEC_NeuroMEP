@@ -1,4 +1,11 @@
-import { flsPaths, isFireRated, suppliedIn, type Element, type Project } from '@neuromep/shared';
+import {
+  flsPaths,
+  isFireRated,
+  loadCategoryOf,
+  suppliedIn,
+  type Element,
+  type Project,
+} from '@neuromep/shared';
 import { MAX_PASSES, sizeCables, type SizedBy } from './autosize.js';
 import { checkNetworkFeeders, type RiserCheck } from './checks.js';
 import { checkAll, type FullCheck, type ProtectionCheck } from './protection.js';
@@ -52,7 +59,8 @@ export function cableSize(project: Project): CableSizeOutcome {
   const byId = new Map(project.model.elements.map((e) => [e.id, e]));
   const onGenerator = suppliedIn(project.model, 'standby');
   const cables = new Map(project.model.cables.map((c) => [c.id, c]));
-  const category = (e: Element | undefined) => (e && 'loadCategory' in e ? e.loadCategory : null);
+  const category = (e: Element | undefined) =>
+    e ? loadCategoryOf(e, project.model.elements) : null;
   const flsPath = flsPaths(project.model);
 
   const feeders = checks.map((f): SizedFeeder => {

@@ -421,7 +421,7 @@ function NetworkCheck(props: {
 }) {
   // E1802 per floor; E1801 grouped by where the supply chain breaks, with the fix.
   const floorIssues = completenessIssues(props.model, props.floors).filter(
-    (i) => i.code === 'E1802',
+    (i) => i.code === 'E1802' || i.code === 'E1803',
   );
   const breaks = supplyBreaks(props.model);
   const fire = fireRatedFlags(props.model);
@@ -463,12 +463,14 @@ function NetworkCheck(props: {
               </li>
             ))}
             {floorIssues.map((i) => (
-              <li key={`${i.code}-${i.floorId}`}>
+              <li key={`${i.code}-${i.elementId ?? i.floorId}`}>
                 <strong>{i.code}</strong> {i.message}
-                <span className="issue-fix">
-                  {' '}
-                  Click a board on that floor in this diagram to put it on a riser tap-off.
-                </span>
+                {i.code === 'E1802' && (
+                  <span className="issue-fix">
+                    {' '}
+                    Click a board on that floor in this diagram to put it on a riser tap-off.
+                  </span>
+                )}
               </li>
             ))}
           </ul>

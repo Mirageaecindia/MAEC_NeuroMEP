@@ -33,6 +33,9 @@ describe('#TASK-11 component library (A-11, Section 13)', () => {
       'Isolator 1P',
       'Isolator 3P',
       'Connection Unit',
+      // Briefing page 9 (6 Nov 2026): equipment on the mechanical / PHE layers.
+      'Mechanical Equipment',
+      'PHE Equipment',
     ]);
     expect(LIBRARY_ITEMS.filter((i) => !isPlaceable(i)).map((i) => i.key)).toEqual(['cable']);
   });
@@ -43,9 +46,22 @@ describe('#TASK-11 component library (A-11, Section 13)', () => {
       expect(e).toMatchObject({
         floorId: 'f-gf',
         position: { x: 10, y: 5 },
-        discipline: 'electrical',
+        discipline: item.discipline,
       });
     }
+    expect(LIBRARY_ITEMS.filter((i) => i.discipline !== 'electrical').map((i) => i.key)).toEqual([
+      'mechanical-equipment',
+      'phe-equipment',
+    ]);
+    expect(place('mechanical-equipment')).toMatchObject({
+      kind: 'equipment',
+      discipline: 'mechanical',
+      fedFromId: null,
+      kw: null,
+      efficiency: null,
+      starter: null,
+      fls: false,
+    });
     expect(place('transformer')).toMatchObject({ kind: 'transformer', kva: null, ukPct: null });
     expect(place('lighting')).toMatchObject({ kind: 'db', description: 'Lighting' });
     expect(place('rmu')).toMatchObject({ kind: 'eb-utility', description: 'RMU' });

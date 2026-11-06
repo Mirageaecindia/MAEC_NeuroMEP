@@ -456,6 +456,42 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     await userEvent.selectOptions(within(props).getByLabelText('Load category :'), 'fls');
     expect(within(card()).getByLabelText('Fire rated :')).toBeChecked();
   });
+
+  it('#TASK-18 mechanical equipment: E1803 until Fed from names its isolator, then a dashed link', async () => {
+    open(LEAD);
+    await planReady();
+    await placeAt('Isolator 3P', 300, 300);
+    await placeAt('Mechanical Equipment', 300, 500);
+    const props = card();
+    expect(props).toHaveTextContent('Name :Mechanical Equipment');
+    expect(screen.getByRole('list', { name: 'Equipment not connected' })).toHaveTextContent(
+      'E1803 ME-GF-01 is not connected to a panel',
+    );
+    await userEvent.type(within(props).getByLabelText('Rated power :'), '7.5');
+    await userEvent.tab();
+    await userEvent.selectOptions(within(card()).getByLabelText('Fed from :'), 'ISO-GF-01');
+    expect(screen.queryByRole('list', { name: 'Equipment not connected' })).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Link ME-GF-01 - ISO-GF-01' })).toBeInTheDocument();
+    // A feeder cannot be drawn to equipment.
+    await userEvent.click(chip('Feeder'));
+    const c = await screen.findByRole('dialog', { name: 'Cable construction' });
+    for (const [label, value] of [
+      ['Cores', '4C'],
+      ['Conductor', 'Cu'],
+      ['Insulation', 'XLPE'],
+      ['Armour', 'SWA'],
+      ['Sheath', 'PVC'],
+      ['Voltage grade', '600/1000 V'],
+      ['Installation method', 'B'],
+    ]) {
+      await userEvent.selectOptions(within(c).getByLabelText(label!), value!);
+    }
+    await userEvent.click(within(c).getByRole('button', { name: 'Use this construction' }));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 500 });
+    expect(
+      await screen.findByText(/is linked to its isolator or connection unit through Fed from/),
+    ).toBeVisible();
+  });
 });
 
 describe('#TASK-15 DB loads from Excel (FR-35)', () => {

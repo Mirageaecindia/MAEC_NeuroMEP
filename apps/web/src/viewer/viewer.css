@@ -215,3 +215,13 @@
 .plan-tooltip > div:first-child {
   font-weight: 700;
 }
+
+/* Equipment to its isolator ("Fed from", 6 Nov 2026): a link, not a cable. */
+.plan-cable.link polyline {
+  stroke: #6b7280;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+.plan-cable.link .cable-tag {
+  display: none;
+}

@@ -90,6 +90,20 @@ const loadPoint = (kind: 'isolator' | 'connection-unit', poles: 'SP' | 'TP') => 
   efficiency: null,
   starter: null,
 });
+/** Mechanical / PHE equipment on its own layer (briefing page 9, 6 Nov 2026); no CMP code yet. */
+const equipment = (discipline: 'mechanical' | 'phe') => () => ({
+  ...common,
+  discipline,
+  kind: 'equipment' as const,
+  fedFromId: null,
+  kw: null,
+  phases: '3P' as const,
+  powerFactor: null,
+  efficiency: null,
+  starter: null,
+  loadType: discipline === 'phe' ? ('8' as const) : ('3' as const),
+  fls: false,
+});
 const proposal = (prefix: string): TagRule => ({
   pattern: `${prefix}-{floor}-{nn}`,
   source: 'proposal',
@@ -234,6 +248,22 @@ export const LIBRARY_ITEMS: readonly LibraryItem[] = [
     cmpCode: null,
     tag: proposal('FCU'),
     create: loadPoint('connection-unit', 'SP'),
+  },
+  {
+    key: 'mechanical-equipment',
+    label: 'Mechanical Equipment',
+    discipline: 'mechanical',
+    cmpCode: null,
+    tag: proposal('ME'),
+    create: equipment('mechanical'),
+  },
+  {
+    key: 'phe-equipment',
+    label: 'PHE Equipment',
+    discipline: 'phe',
+    cmpCode: null,
+    tag: proposal('PHE'),
+    create: equipment('phe'),
   },
 ];
 

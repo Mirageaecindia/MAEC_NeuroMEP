@@ -5,6 +5,9 @@ import {
   ElementSchema,
   IpRatingSchema,
   LoadCategorySchema,
+  LoadTypeCodeSchema,
+  LOAD_TYPE_LABELS,
+  StarterSchema,
   MountingSchema,
   type Element,
 } from '@neuromep/shared';
@@ -12,10 +15,18 @@ import { useState } from 'react';
 import { NumberInput } from '../../components/fields';
 
 type FieldDef =
-  | { key: string; label: string; type: 'number'; unit?: string }
+  | { key: string; label: string; type: 'number'; unit?: string; placeholder?: string }
   | { key: string; label: string; type: 'text' }
   | { key: string; label: string; type: 'bool' }
-  | { key: string; label: string; type: 'select'; options: readonly string[]; empty?: string }
+  | {
+      key: string;
+      label: string;
+      type: 'select';
+      options: readonly string[];
+      empty?: string;
+      /** Shown text per option (the value is stored). */
+      labels?: Record<string, string>;
+    }
   | { key: string; label: string; type: 'multi'; options: readonly string[] };
 
 const num = (key: string, label: string, unit?: string): FieldDef => ({
@@ -52,8 +63,32 @@ const BOARD: FieldDef[] = [
 ];
 
 /** Equipment fields per kind (design doc 12.3); calculated values are not entered here. */
-function fieldsFor(e: Element): FieldDef[] {
+function fieldsFor(e: Element, feeders: readonly { id: string; tag: string }[]): FieldDef[] {
   switch (e.kind) {
+    // Mechanical / PHE equipment (briefing page 9, 6 Nov 2026): its load goes to its isolator.
+    case 'equipment':
+      return [
+        {
+          ...select(
+            'fedFromId',
+            'Fed from',
+            feeders.map((f) => f.id),
+            'Not connected (E1803)',
+          ),
+          labels: Object.fromEntries(feeders.map((f) => [f.id, f.tag])),
+        } as FieldDef,
+        num('kw', 'Rated power', 'kW'),
+        select('phases', 'Phases', ['3P', 'L1', 'L2', 'L3']),
+        {
+          ...select('loadType', 'Load type', LoadTypeCodeSchema.options),
+          labels: LOAD_TYPE_LABELS,
+        } as FieldDef,
+        { ...num('powerFactor', 'Power factor'), placeholder: 'Load type' } as FieldDef,
+        select('starter', 'Starter', StarterSchema.options, '-'),
+        // Motor-driven (with a starter): required; otherwise 1.0 when empty (user decision).
+        { ...num('efficiency', 'Efficiency'), placeholder: e.starter ? 'TBC' : '1.0' } as FieldDef,
+        { key: 'fls', label: 'FLS', type: 'bool' },
+      ];
     case 'db':
       return [
         select('demandCategory', 'Demand category', DemandCategorySchema.options, '-'),
@@ -133,6 +168,8 @@ function fieldsFor(e: Element): FieldDef[] {
 export function ElementFields(props: {
   element: Element;
   editable: boolean;
+  /** Isolators / connection units equipment may be fed from (tag order). */
+  feeders?: readonly { id: string; tag: string }[];
   onChange: (patch: Record<string, unknown>) => void;
 }) {
   const { element } = props;
@@ -152,7 +189,7 @@ export function ElementFields(props: {
 
   return (
     <>
-      {[...fieldsFor(element), ...COMMON].map((f) => {
+      {[...fieldsFor(element, props.feeders ?? []), ...COMMON].map((f) => {
         const id = `prop-${f.key}`;
         const value = values[f.key];
         return (
@@ -168,7 +205,7 @@ export function ElementFields(props: {
                     className="pill-input"
                     value={(value as number | null) ?? null}
                     commit="blur"
-                    placeholder="TBC"
+                    placeholder={f.placeholder ?? 'TBC'}
                     disabled={!props.editable}
                     invalid={error?.key === f.key}
                     onChange={(v) => commit(f.key, v)}
@@ -201,7 +238,9 @@ export function ElementFields(props: {
                 >
                   {f.empty !== undefined && <option value="">{f.empty}</option>}
                   {f.options.map((o) => (
-                    <option key={o}>{o}</option>
+                    <option key={o} value={o}>
+                      {f.labels?.[o] ?? o}
+                    </option>
                   ))}
                 </select>
               ) : (

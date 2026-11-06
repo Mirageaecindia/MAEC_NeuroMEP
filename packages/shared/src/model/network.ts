@@ -55,12 +55,28 @@ export function suppliedIn(m: Network, scenario: Scenario): Set<string> {
   return new Set(m.elements.filter((e) => supplied(e.id, new Set())).map((e) => e.id));
 }
 
-/** LV components below the sources (those that need a supply). */
+/**
+ * LV components below the sources (those that need a supply). Equipment is checked on its own:
+ * linked to an isolator / connection unit (E1803), which carries the supply check.
+ */
 const needsSupply = (m: Pick<Network, 'elements'>) =>
-  m.elements.filter((e) => !UPSTREAM.includes(e.kind));
+  m.elements.filter((e) => !UPSTREAM.includes(e.kind) && e.kind !== 'equipment');
+
+/** What equipment may be fed from (6 Nov 2026). */
+export const EQUIPMENT_FEEDERS: ElementKind[] = ['isolator', 'connection-unit'];
+
+/** E1803: mechanical / PHE equipment not linked to an isolator or connection unit. */
+export function unlinkedEquipment(m: Pick<Network, 'elements'>): Element[] {
+  const byId = new Map(m.elements.map((e) => [e.id, e]));
+  return m.elements.filter((e) => {
+    if (e.kind !== 'equipment') return false;
+    const feeder = e.fedFromId ? byId.get(e.fedFromId) : undefined;
+    return !feeder || !EQUIPMENT_FEEDERS.includes(feeder.kind);
+  });
+}
 
 export interface NetworkIssue {
-  code: 'E1801' | 'E1802';
+  code: 'E1801' | 'E1802' | 'E1803';
   floorId: string;
   elementId?: string;
   message: string;
@@ -69,6 +85,7 @@ export interface NetworkIssue {
 /**
  * E1801: a component with no path to a transformer or generator (results stay Provisional).
  * E1802: a floor with boards not fed by a cable, none of them fed from a riser tap-off.
+ * E1803: mechanical / PHE equipment not connected to a panel (briefing page 9).
  */
 export function completenessIssues(m: Network, floors: readonly Floor[]): NetworkIssue[] {
   const normal = suppliedIn(m, 'normal');
@@ -91,6 +108,14 @@ export function completenessIssues(m: Network, floors: readonly Floor[]): Networ
       floorId: e.floorId,
       elementId: e.id,
       message: `${e.tag} has no path to a transformer or generator.`,
+    });
+  }
+  for (const e of unlinkedEquipment(m)) {
+    issues.push({
+      code: 'E1803',
+      floorId: e.floorId,
+      elementId: e.id,
+      message: `${e.tag} is not connected to a panel: choose its isolator or connection unit in Fed from.`,
     });
   }
   return issues;
