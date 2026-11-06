@@ -41,17 +41,27 @@ export interface AppDeps {
 const SignInBody = z.object({ email: z.string(), password: z.string() });
 /** One single-page PDF per floor, at most 20 MB (FR-07, A-02). */
 export const MAX_PLAN_BYTES = 20 * 1024 * 1024;
+/** JSON bodies: whole projects are large; everything else (sign-in, exports) is small. */
+export const MAX_PROJECT_JSON = '20mb';
+export const MAX_OTHER_JSON = '100kb';
 
 /** Builds the Express app without listening, so tests can drive it directly. */
 export function createApp(deps?: AppDeps): Express {
   const app = express();
-  app.use(express.json({ limit: '20mb' }));
+  // Security review (WBS 1.8.2): do not name the server software in every reply.
+  app.disable('x-powered-by');
+  // Only signed-in project saves may send large bodies; a sign-in attempt cannot send 20 MB.
+  app.use('/api/projects', express.json({ limit: MAX_PROJECT_JSON }));
+  app.use(express.json({ limit: MAX_OTHER_JSON }));
 
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', service: 'neuromep-api' });
   });
 
-  if (!deps) return app;
+  if (!deps) {
+    app.use(errorReply);
+    return app;
+  }
   const { auth, sessions, projects, plans } = deps;
   const now = deps.now ?? (() => new Date().toISOString());
   const newId = deps.newId ?? randomUUID;
@@ -230,7 +240,7 @@ export function createApp(deps?: AppDeps): Express {
         sendError(res, 400, check.code, check.pages ? { pages: check.pages } : {});
         return;
       }
-      const fileName = decodeURIComponent(req.get('x-file-name') ?? 'plan.pdf');
+      const fileName = fileNameOf(req.get('x-file-name'));
       res
         .status(201)
         .json(
@@ -261,6 +271,39 @@ export function createApp(deps?: AppDeps): Express {
     }
     next(err);
   });
+  app.use(errorReply);
 
   return app;
+}
+
+/** The uploaded file's name (display only; never part of a path), '' -> plan.pdf. */
+function fileNameOf(header: string | undefined): string {
+  if (!header) return 'plan.pdf';
+  try {
+    return decodeURIComponent(header).slice(0, 255) || 'plan.pdf';
+  } catch {
+    return 'plan.pdf'; // malformed %-encoding
+  }
+}
+
+/**
+ * Last error handler (security review, WBS 1.8.2): unreadable bodies get 400 / 413, anything else
+ * a plain 500 - always the catalogue JSON, never Express's HTML page or a stack trace. The
+ * details go to the server log only (log line format, Section 4).
+ */
+function errorReply(err: unknown, req: Request, res: Response, next: NextFunction): void {
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
+  const type = (err as { type?: string } | null)?.type;
+  if (type === 'entity.parse.failed' || type === 'entity.too.large') {
+    sendError(res, type === 'entity.too.large' ? 413 : 400, 'E3202');
+    return;
+  }
+  const message = err instanceof Error ? (err.stack ?? err.message) : String(err);
+  console.error(
+    `[${new Date().toISOString()}] [error] [#TASK-32] [E3201] ${req.method} ${req.path}: ${message}`,
+  );
+  sendError(res, 500, 'E3201');
 }

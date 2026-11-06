@@ -592,3 +592,95 @@ describe('#TASK-11 legend symbols (A-11)', () => {
     expect(() => loadSymbols(dir)).toThrow(/not a plain SVG/);
   });
 });
+
+describe('#TASK-32 security review (WBS 1.8.2)', () => {
+  it('needs a session on every API route except sign-in and health (E0102)', async () => {
+    const routes: [string, string][] = [
+      ['get', '/api/auth/me'],
+      ['get', '/api/symbols'],
+      ['get', '/api/users'],
+      ['get', '/api/projects'],
+      ['post', '/api/projects'],
+      ['get', '/api/projects/p-1'],
+      ['put', '/api/projects/p-1'],
+      ['post', '/api/projects/p-1/exports'],
+      ['post', '/api/projects/p-1/plans'],
+      ['get', '/api/projects/p-1/plans/f-1'],
+    ];
+    for (const [method, path] of routes) {
+      const res = await (request(app) as unknown as Record<string, (p: string) => request.Test>)[
+        method
+      ]!(path).set('cookie', 'neuromep_session=forged-token');
+      expect([path, res.status, res.body.code]).toEqual([path, 401, 'E0102']);
+    }
+  });
+
+  it('does not name the server software', async () => {
+    const health = await request(app).get('/api/health');
+    expect(health.headers['x-powered-by']).toBeUndefined();
+    const denied = await request(app).get('/api/projects');
+    expect(denied.headers['x-powered-by']).toBeUndefined();
+  });
+
+  it('answers unreadable bodies with the catalogue JSON, never an HTML page (E3202)', async () => {
+    const bad = await request(app)
+      .post('/api/auth/sign-in')
+      .set('content-type', 'application/json')
+      .send('{"email": ');
+    expect([bad.status, bad.body.code]).toEqual([400, 'E3202']);
+    expect(bad.type).toBe('application/json');
+    expect(bad.text).not.toMatch(/<html|at .*\.js/i);
+    // A sign-in attempt cannot send a large body; signed-in project saves still can.
+    const huge = await request(app)
+      .post('/api/auth/sign-in')
+      .send({ email: LEAD, password: 'x'.repeat(200_000) });
+    expect([huge.status, huge.body.code]).toEqual([413, 'E3202']);
+    const auth = await tokenFor(LEAD);
+    const big = await request(app)
+      .post('/api/projects')
+      .set('cookie', auth)
+      .send({ project: { ...completeProject(), workingDirectory: 'x'.repeat(200_000) } });
+    expect(big.status).toBe(201);
+  });
+
+  it('keeps a malformed file name header from failing the upload', async () => {
+    const auth = await tokenFor(LEAD);
+    const project = (await request(app).post('/api/projects').set('cookie', auth).send({})).body
+      .project;
+    const up = await request(app)
+      .post(`/api/projects/${project.id}/plans`)
+      .set('cookie', auth)
+      .set('content-type', 'application/pdf')
+      .set('x-file-name', '%E0%A4%A')
+      .send(pdfWithPages(1));
+    expect([up.status, up.body.fileName]).toEqual([201, 'plan.pdf']);
+  });
+
+  it('hides unexpected errors behind E3201 and logs them on the server only', async () => {
+    const sessions = new MongoSessionStore(database.db, () => clock);
+    const failing = createApp({
+      auth: new ConfigAuthProvider(DEV_USERS),
+      sessions,
+      projects: {
+        listSummaries: () => Promise.reject(new Error('secret connection string')),
+      } as unknown as ProjectRepository,
+      plans: new DiskPlanStorage(plansDir),
+    });
+    const login = await request(failing)
+      .post('/api/auth/sign-in')
+      .send({ email: LEAD, password: PASSWORD });
+    const logged: string[] = [];
+    const original = console.error;
+    console.error = (line: string) => logged.push(line);
+    try {
+      const res = await request(failing)
+        .get('/api/projects')
+        .set('cookie', cookieOf(login.headers['set-cookie']));
+      expect([res.status, res.body.code]).toEqual([500, 'E3201']);
+      expect(res.text).not.toContain('secret');
+    } finally {
+      console.error = original;
+    }
+    expect(logged[0]).toMatch(/\[error\] \[#TASK-32\] \[E3201\] GET \/api\/projects: .*secret/);
+  });
+});

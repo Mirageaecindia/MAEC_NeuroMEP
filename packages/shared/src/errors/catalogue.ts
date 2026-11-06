@@ -381,6 +381,21 @@ export const ERROR_CATALOGUE = [
     'Press Cable Size, then fix or accept the failing checks before exporting.',
     true,
   ),
+  // #TASK-32 Error logging (developer-only)
+  e(
+    'E3201',
+    'Something went wrong on the server.',
+    'error',
+    'An unexpected server error; the details are in the server log, never in the reply.',
+    'Try again; if it repeats, report the time to support.',
+  ),
+  e(
+    'E3202',
+    'The request could not be read.',
+    'error',
+    'The request body is not valid JSON or is larger than the server accepts.',
+    'Reload the page and try again; report the issue if it repeats.',
+  ),
 ] as const satisfies readonly ErrorEntry[];
 
 export type ErrorCode = (typeof ERROR_CATALOGUE)[number]['code'];

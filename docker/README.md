@@ -158,6 +158,27 @@ E2E_BASE_URL=https://<SERVER_NAME> npm run test:e2e      # from a development ma
 The Playwright smoke tests sign in with the development users, so run them only against a
 staging stack whose `docker/users.json` is a copy of `apps/api/config/users.dev.json`.
 
+### Port exposure (security review, WBS 1.8.2)
+
+The site must be reachable through Caddy only. The API (4000) and MongoDB (27017) must never be
+reachable from outside, and port 8085 only on `127.0.0.1`. `docker/check-exposure.sh` checks this:
+
+```sh
+docker/check-exposure.sh config    # compose files: db / api publish nothing, frontend only 127.0.0.1:8085
+docker/check-exposure.sh server    # on the server: + running containers, listening sockets, 8085 not on public addresses
+docker/check-exposure.sh remote <server-ip> https://<site>   # from your laptop: 8085 / 4000 / 27017 closed, site + headers through Caddy
+```
+
+`remote` tries only NeuroMEP's three ports and the site address, so it is not a port scan. Run
+`server` after every change to the compose files. Docker's published ports bypass a host
+firewall such as `ufw`, so the `127.0.0.1` binding is what keeps 8085 private, not the firewall.
+
+The web image sends a Content Security Policy in report-only mode
+(`Content-Security-Policy-Report-Only` in `docker/web/headers.conf`). Use the site for a while
+with the browser console open (Floor Setup with a plan, Cable Size, each Output download). If no
+"Content-Security-Policy" report appears, rename the header to `Content-Security-Policy` to
+enforce it.
+
 ## Settings
 
 | `.env.docker`                                 | Default               | Meaning                                                                           |
