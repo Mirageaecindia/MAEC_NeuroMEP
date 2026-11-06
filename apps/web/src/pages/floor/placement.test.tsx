@@ -445,6 +445,17 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     await userEvent.tab();
     expect(screen.getByText(/^Allowable:/)).toHaveTextContent('Allowable: 1500 kVA');
   });
+
+  it('#TASK-27 an isolator stands for equipment: FLS makes it fire rated (6 Nov 2026)', async () => {
+    open(LEAD);
+    await planReady();
+    await placeAt('Isolator 3P', 300, 300);
+    const props = card();
+    expect(props).toHaveTextContent('CMP-006 (draft)');
+    expect(within(props).getByLabelText('Fire rated :')).not.toBeChecked();
+    await userEvent.selectOptions(within(props).getByLabelText('Load category :'), 'fls');
+    expect(within(card()).getByLabelText('Fire rated :')).toBeChecked();
+  });
 });
 
 describe('#TASK-15 DB loads from Excel (FR-35)', () => {

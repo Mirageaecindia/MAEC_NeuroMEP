@@ -14,7 +14,7 @@ const place = (key: string, taken: string[] = [], floorCode = 'GF') => {
 };
 
 describe('#TASK-11 component library (A-11, Section 13)', () => {
-  it('has the Figma items in order, all enabled, Cable as a tool', () => {
+  it('has the Figma items in order, then the load points, all enabled, Cable as a tool', () => {
     expect(LIBRARY_ITEMS.map((i) => i.label)).toEqual([
       'ATS',
       'Generator',
@@ -29,6 +29,10 @@ describe('#TASK-11 component library (A-11, Section 13)', () => {
       'DB',
       'Feeder',
       'Lighting',
+      // Added 6 Nov 2026 (not in Figma): load points standing for mechanical / PHE equipment.
+      'Isolator 1P',
+      'Isolator 3P',
+      'Connection Unit',
     ]);
     expect(LIBRARY_ITEMS.filter((i) => !isPlaceable(i)).map((i) => i.key)).toEqual(['cable']);
   });

@@ -99,7 +99,7 @@ export function EngineeringProperty(props: {
         )}
         <ElementFields element={element} editable={props.editable} onChange={props.onChange} />
         <dt>Symbol :</dt>
-        <dd>{item ? `${item.cmpCode} (draft)` : '-'}</dd>
+        <dd>{item ? `${item.cmpCode ?? 'no CMP code yet'} (draft)` : '-'}</dd>
       </dl>
       {editingLoads && loadsKey && (
         <LoadsDialog

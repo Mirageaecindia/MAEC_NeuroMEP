@@ -39,6 +39,7 @@ The baseline is v0.3 exactly as issued (WBS 1.1.1), with only these amendments a
 | A-13 | Building tab | The Building Summary and the riser diagram list floors as in a building section: top floor first, then Ground, basements at the bottom. |
 | A-14 | Building tab, 10.2 | "Demand Factors" in the Building Summary (shown after Cable Size) reopens the 12 load-type demand factors of Import File so they can be changed; a change marks the cable sizes out of date until the Cable Size Calculator runs again. The Allowable kVA in the Floor Setup capacity panel is the transformer load needed to power the building's electrical connections. |
 | A-15 | 10.3, OI-02, FR-18 | Interim until OI-02 is answered (decision 29 Oct 2026): the live load table applies the load-type demand factor once at each board to its connected load per type (10.3; TBC = 1.0, E1901; a panel override first, D-03); demand-category factors are shown but not applied, and maximum demand is labelled Provisional - OI-02 open. Sources, ATS and busbars carry the maximum demand of what they feed. |
+| A-16 | Appendix D, 10.14, 10.15, Section 13 | Added 6 Nov 2026 (user request, briefing PDF page 9): four engineer-facing warnings - E2701 feeder on an FLS path to the generator not fire-rated, E2702 fire-rated feeder with no FLS load below it, E2801 transformer above its loading limit, E2802 project maximum demand above the plot allocation; Appendix D now lists 26 errors. Isolators (CMP-005 / CMP-006) and the connection unit are added to the component library (not in Figma) and stand for the mechanical / PHE equipment they feed (Phase 1; mechanical components in Phase 2): load category Normal / Essential / Critical / FLS, FLS defaults the isolator to fire rated, a Fire Pumps load defaults it to FLS. |
 
 **UI question of 27-Oct-2026, answered 3-Nov-2026 (manager):** Building tab "Cost" = for each riser, its busbar ampere rating x 2.2 AED, one price per riser whatever its length; risers only. The rate is a rule-pack value (`riserCostAedPerA`). The "Demand Factors" button is settled by A-14.
 
@@ -143,7 +144,7 @@ Every feature has a permanent code **#TASK-nn**. The code is used in requirement
 
 ## Error & Log Code Convention
 
-- **Error code:** E + task number (2 digits) + sequence (2 digits), e.g. **E2203** = third error of #TASK-22 (voltage drop). Each code is listed once in the code catalogue (\`packages/shared/errors\`) with message, severity and suggested action. Appendix D lists the 22 errors engineers will meet in normal use.
+- **Error code:** E + task number (2 digits) + sequence (2 digits), e.g. **E2203** = third error of #TASK-22 (voltage drop). Each code is listed once in the code catalogue (\`packages/shared/errors\`) with message, severity and suggested action. Appendix D lists the 26 errors engineers will meet in normal use (22 in the baseline, 4 added by A-16).
 
 - **Calculation check codes:** C1-C12 (Section 10.12) identify which check failed on an element; they appear in the properties panel, schedules and reports.
 
@@ -721,4 +722,8 @@ These are the errors shown to users during normal work. \"Blocks\" means the ite
 | E2402 | Device data required | **Warning** | Breaker let-through (I2t) data is missing, so the thermal check cannot pass. | Add the manufacturer data or choose a catalogued device. |
 | E2601 | Cable Size could not find a solution | **Blocks** | No size passes all checks after 50 attempts. | Review the failing check shown (e.g. C2 voltage drop) and change length, route or limits. |
 | E2690 | Results differ between screen and server | **Warning** | The server re-check on save or export got a different result. | Press Cable Size again; if it repeats, report the run ID to support. |
+| E2701 | Feeder to a fire & life-safety load not fire-rated | **Warning** | Every feeder from an FLS load back to the generator must be fire-rated so it keeps working in a fire. | Choose FR insulation (or a fire-rated busbar) for the feeder. |
+| E2702 | Fire-rated feeder not needed | **Warning** | The feeder is fire-rated but no fire & life-safety load is fed through it from the generator. | Use a normal cable unless it is needed for another reason. |
+| E2801 | Transformer loaded above its limit | **Warning** | The maximum demand on a transformer is above its kVA rating x the loading limit (100 %, or 80 % when ticked on Import File). | Move loads to another transformer, add a transformer or choose a larger rating. |
+| E2802 | Project load above the plot allocation | **Warning** | The maximum demand of the whole project (all transformers) is above the plot load allocation entered on Import File. | Check the loads and demand factors, or confirm a higher allocation with the authority. |
 | E3101 | Export blocked | **Blocks** | Results are Out of date or have failing checks. | Press Cable Size, then fix or accept the failing checks before exporting. |

@@ -40,7 +40,7 @@ const analyse = (p: ReturnType<typeof project>) =>
   generatorAnalyses(p, loadSummaries(p, 0.85), { sparePct: 10, pf: 0.8 });
 
 describe('#TASK-28 Generator Load Analysis (OI-11, briefing page 8)', () => {
-  it('lists every load downstream of the generator, panel by panel, starting at 1.0', () => {
+  it('lists every load downstream of the generator, panel by panel, at the starting factors', () => {
     const [g] = analyse(project());
     expect(g!.tag).toBe('GEN');
     expect(g!.groups.map((x) => [x.from, x.to, x.rows.map((r) => r.to)])).toEqual([
@@ -52,7 +52,8 @@ describe('#TASK-28 Generator Load Analysis (OI-11, briefing page 8)', () => {
       from: 'ESMDB',
       kw: { L1: 5.5, L2: 5.5, L3: 5.5 },
       totalKw: 16.5,
-      factors: { normal: 1, powerFailure: 1, fire: 1 },
+      category: 'normal',
+      factors: { normal: 1, powerFailure: 1, fire: 0 }, // fire mode runs FLS loads only
       edited: false,
     });
     expect(g!.totals.connectedKw).toBeCloseTo(3 + 6 + 16.5 + 7.5, 9);

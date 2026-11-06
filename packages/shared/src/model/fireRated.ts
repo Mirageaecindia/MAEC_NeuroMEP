@@ -82,3 +82,30 @@ export function fireRatedFlags(m: Network): FireRatedFlag[] {
     return [];
   });
 }
+
+/** Load points that stand for equipment (components sheet: fire rated when their load is FLS). */
+const LOAD_POINTS = new Set<Element['kind']>(['isolator', 'connection-unit', 'tap-off-box']);
+const FIRE_PUMPS = '9';
+
+/**
+ * Defaults applied when a load point is edited (10.14, components sheet; user request 6 Nov 2026):
+ * adding a Fire Pumps load makes it FLS, and turning it FLS makes it fire rated. Both stay
+ * editable - a value the same edit sets itself wins.
+ */
+export function withSafetyDefaults(
+  e: Element,
+  patch: Record<string, unknown>,
+): Record<string, unknown> {
+  if (!LOAD_POINTS.has(e.kind) || !('loadCategory' in e)) return patch;
+  const out = { ...patch };
+  const lines = patch.manualLoads;
+  if (Array.isArray(lines) && !('loadCategory' in patch) && 'manualLoads' in e) {
+    const had = e.manualLoads.some((l) => l.loadType === FIRE_PUMPS);
+    const has = (lines as { loadType?: string }[]).some((l) => l.loadType === FIRE_PUMPS);
+    if (has && !had) out.loadCategory = 'fls';
+  }
+  if (out.loadCategory === 'fls' && e.loadCategory !== 'fls' && !('fireRated' in patch)) {
+    out.fireRated = true;
+  }
+  return out;
+}

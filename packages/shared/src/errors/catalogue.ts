@@ -1,6 +1,6 @@
 /**
  * Error code catalogue (design doc Section 4, Appendix D). Code = E + #TASK number (2 digits) +
- * sequence (2 digits). Each code is listed once. `appendixD: true` marks the 22 errors engineers
+ * sequence (2 digits). Each code is listed once. `appendixD: true` marks the 26 errors engineers
  * meet in normal use; the others are shown by the system or used by developers.
  * Failed engineering checks are not errors: they are check codes C1-C12 (Section 10.12).
  */
@@ -337,6 +337,7 @@ export const ERROR_CATALOGUE = [
     'warning',
     'Every feeder from an FLS load back to the generator must be fire-rated so it keeps working in a fire.',
     'Choose FR insulation (or a fire-rated busbar) for the feeder.',
+    true,
   ),
   e(
     'E2702',
@@ -344,6 +345,7 @@ export const ERROR_CATALOGUE = [
     'warning',
     'The feeder is fire-rated but no fire & life-safety load is fed through it from the generator.',
     'Use a normal cable unless it is needed for another reason.',
+    true,
   ),
   // #TASK-28 Transformer loading (10.15; briefing page 9, 6 Nov 2026)
   e(
@@ -352,6 +354,7 @@ export const ERROR_CATALOGUE = [
     'warning',
     'The maximum demand on a transformer is above its kVA rating x the loading limit (100 %, or 80 % when ticked on Import File).',
     'Move loads to another transformer, add a transformer or choose a larger rating.',
+    true,
   ),
   e(
     'E2802',
@@ -359,6 +362,7 @@ export const ERROR_CATALOGUE = [
     'warning',
     'The maximum demand of the whole project (all transformers) is above the plot load allocation entered on Import File.',
     'Check the loads and demand factors, or confirm a higher allocation with the authority.',
+    true,
   ),
   // #TASK-31 Exports
   e(

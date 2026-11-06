@@ -104,6 +104,18 @@ function fieldsFor(e: Element): FieldDef[] {
         num('xdSubtransientPct', "X''d", '%'),
         num('sustainedScKa', 'Sustained short-circuit', 'kA'),
       ];
+    // Isolators / connection units stand for the equipment they feed (user decision 6 Nov 2026):
+    // its description, load lines (kW per phase and load type) and load category.
+    case 'isolator':
+    case 'connection-unit':
+    case 'tap-off-box':
+    case 'motor':
+      return [
+        select('loadCategory', 'Load category', LoadCategorySchema.options),
+        select('demandCategory', 'Demand category', DemandCategorySchema.options, '-'),
+        num('standbyKw', 'Standby load', 'kW'),
+        select('earthLeakage', 'Earth leakage', EarthLeakageSchema.options),
+      ];
     case 'busbar':
       return [
         select('busbarType', 'Type', ['feeder', 'tap-off']),

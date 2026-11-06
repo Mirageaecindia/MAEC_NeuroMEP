@@ -1,7 +1,7 @@
-import type { GeneratorAnalysis, GeneratorFactor } from '@neuromep/shared';
+import type { GeneratorAnalysis, GeneratorFactor, GeneratorRow } from '@neuromep/shared';
 import { useState } from 'react';
 import { NumberInput } from '../../components/fields';
-import { GEN_HEADS, genSummary, kw } from './generatorFiles';
+import { CATEGORY_LABEL, GEN_HEADS, genSummary, kw } from './generatorFiles';
 
 type Patch = Partial<Omit<GeneratorFactor, 'elementId'>>;
 const CASES = [
@@ -18,7 +18,7 @@ export function GeneratorAnalysisSheet(props: {
   analysis: GeneratorAnalysis;
   project: string;
   readOnly: boolean;
-  onChange: (elementId: string, patch: Patch) => void;
+  onChange: (elementId: string, patch: Patch, start: GeneratorRow['factors']) => void;
 }) {
   const g = props.analysis;
   const unedited = g.groups.flatMap((x) => x.rows).filter((r) => !r.edited).length;
@@ -29,7 +29,8 @@ export function GeneratorAnalysisSheet(props: {
       </p>
       {unedited > 0 && (
         <p className="sample-note">
-          {unedited} load{unedited === 1 ? '' : 's'} still at 1.0 in every case (highlighted):
+          {unedited} load{unedited === 1 ? '' : 's'} still at the starting factors (highlighted:
+          1.0, fire 1.0 for FLS and 0 for the others):
           {props.readOnly ? ' the electrical engineer enters' : ' enter'} the demand factors for
           normal operation, power failure and fire.
         </p>
@@ -53,6 +54,9 @@ export function GeneratorAnalysisSheet(props: {
                 <tr key={r.elementId} className={r.edited ? undefined : 'gen-unedited'}>
                   <td>{r.from}</td>
                   <td>{r.to}</td>
+                  <td className={r.category === 'fls' ? 'gen-fls' : undefined}>
+                    {CATEGORY_LABEL[r.category]}
+                  </td>
                   <td>{kw(r.kw.L1)}</td>
                   <td>{kw(r.kw.L2)}</td>
                   <td>{kw(r.kw.L3)}</td>
@@ -63,7 +67,7 @@ export function GeneratorAnalysisSheet(props: {
                         label={`${label} factor ${r.to}`}
                         value={r.factors[key]}
                         disabled={props.readOnly}
-                        onCommit={(v) => props.onChange(r.elementId, { [key]: v })}
+                        onCommit={(v) => props.onChange(r.elementId, { [key]: v }, r.factors)}
                       />
                     </td>
                   ))}
@@ -75,7 +79,7 @@ export function GeneratorAnalysisSheet(props: {
                       label={`Remarks ${r.to}`}
                       value={r.remarks}
                       disabled={props.readOnly}
-                      onCommit={(remarks) => props.onChange(r.elementId, { remarks })}
+                      onCommit={(remarks) => props.onChange(r.elementId, { remarks }, r.factors)}
                     />
                   </td>
                 </tr>
@@ -90,7 +94,7 @@ export function GeneratorAnalysisSheet(props: {
               </tr>
             )}
             <tr className="gen-total">
-              <td colSpan={5}>TOTAL</td>
+              <td colSpan={6}>TOTAL</td>
               <td>{kw(g.totals.connectedKw)}</td>
               <td colSpan={3} />
               <td>{kw(g.totals.normalKw)}</td>

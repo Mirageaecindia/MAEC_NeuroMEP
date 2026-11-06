@@ -7,7 +7,9 @@ import { ElementSchema, type Discipline, type Element, type ModelPoint } from '.
  *
  * CMP codes: Section 13 gives CMP-001..003 for DB / SMDB / MCC and lists ten items for the nine
  * codes CMP-007..015; they are assigned in the listed order and stay drafts until the legend
- * symbols are supplied (OI-34).
+ * symbols are supplied (OI-34). Isolators (CMP-005 single-phase, CMP-006 three-phase) and the
+ * connection unit (no CMP code yet) are not in the Figma library: they stand for the mechanical /
+ * PHE equipment they feed, which is not modelled in Phase 1 (user decision 6 Nov 2026).
  */
 
 /** How a tag is proposed (Section 12.4, OI-24 to be confirmed). `{floor}` = floor code (GF, B1, 2). */
@@ -21,7 +23,8 @@ interface PlaceableItem {
   key: string;
   label: string;
   discipline: Discipline;
-  cmpCode: string;
+  /** Null while Section 13 gives the item no CMP code (connection unit). */
+  cmpCode: string | null;
   tag: TagRule;
   tool?: false;
   /** The element this item creates, without id, tag, floor and position. */
@@ -73,6 +76,19 @@ const db = (description: string) => () => ({
   loads: [],
   powerFactor: null,
   thirdHarmonicPct: null,
+});
+/** An isolator or connection unit: the load point that feeds a piece of equipment (FR-17). */
+const loadPoint = (kind: 'isolator' | 'connection-unit', poles: 'SP' | 'TP') => () => ({
+  ...common,
+  kind,
+  poles,
+  loadCategory: 'normal' as const,
+  demandCategory: null,
+  manualLoads: [],
+  standbyKw: null,
+  earthLeakage: 'none' as const,
+  efficiency: null,
+  starter: null,
 });
 const proposal = (prefix: string): TagRule => ({
   pattern: `${prefix}-{floor}-{nn}`,
@@ -193,6 +209,31 @@ export const LIBRARY_ITEMS: readonly LibraryItem[] = [
     cmpCode: 'CMP-001',
     tag: proposal('LDB'),
     create: db('Lighting'),
+  },
+  // Not in the Figma library: load points standing for equipment (user decision 6 Nov 2026).
+  {
+    key: 'isolator-sp',
+    label: 'Isolator 1P',
+    discipline: 'electrical',
+    cmpCode: 'CMP-005',
+    tag: proposal('ISO'),
+    create: loadPoint('isolator', 'SP'),
+  },
+  {
+    key: 'isolator-tp',
+    label: 'Isolator 3P',
+    discipline: 'electrical',
+    cmpCode: 'CMP-006',
+    tag: proposal('ISO'),
+    create: loadPoint('isolator', 'TP'),
+  },
+  {
+    key: 'connection-unit',
+    label: 'Connection Unit',
+    discipline: 'electrical',
+    cmpCode: null,
+    tag: proposal('FCU'),
+    create: loadPoint('connection-unit', 'SP'),
   },
 ];
 

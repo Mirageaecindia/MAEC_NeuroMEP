@@ -27,6 +27,7 @@ import {
   setFloorFlag,
   type Riser,
   setGeneratorFactor,
+  withSafetyDefaults,
   type GeneratorFactor,
   type RegistryChange,
 } from '@neuromep/shared';
@@ -117,6 +118,8 @@ export type ProjectAction =
       type: 'generatorFactor';
       elementId: string;
       patch: Partial<Omit<GeneratorFactor, 'elementId'>>;
+      /** The row's starting factors, kept for the cases this edit does not set. */
+      start: Pick<GeneratorFactor, 'normal' | 'powerFailure' | 'fire'>;
     }
   /** Results of a Cable Size run (FR-21): those of the scope replace the earlier ones. */
   | {
@@ -268,7 +271,11 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
           ...p.model,
           elements: p.model.elements.map((e) => {
             if (e.id !== a.id) return e;
-            const next = ElementSchema.safeParse({ ...e, ...change, version: e.version + 1 });
+            const next = ElementSchema.safeParse({
+              ...e,
+              ...withSafetyDefaults(e, change),
+              version: e.version + 1,
+            });
             return next.success ? next.data : e;
           }),
         },
@@ -314,7 +321,12 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
         ...p,
         model: {
           ...p.model,
-          generatorFactors: setGeneratorFactor(p.model.generatorFactors, a.elementId, a.patch),
+          generatorFactors: setGeneratorFactor(
+            p.model.generatorFactors,
+            a.elementId,
+            a.patch,
+            a.start,
+          ),
         },
       };
     case 'floorFlag': {

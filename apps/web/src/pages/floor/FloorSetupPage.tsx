@@ -404,7 +404,7 @@ export function FloorSetupPage() {
                   draggable={!building && canPlace && isPlaceable(item)}
                   title={
                     isPlaceable(item)
-                      ? `${item.label} (${item.cmpCode}, draft symbol): drag onto the plan, or click it and then click the plan`
+                      ? `${item.label} (${item.cmpCode ?? 'no CMP code yet'}, draft symbol): drag onto the plan, or click it and then click the plan`
                       : 'Draw a feeder (cable or busbar) between two components'
                   }
                   onDragStart={(e) => {

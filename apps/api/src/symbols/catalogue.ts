@@ -12,7 +12,10 @@ const CatalogueSchema = z.object({
     .array(
       z.object({
         key: z.string().regex(/^[a-z0-9-]+$/),
-        cmpCode: z.string().regex(/^CMP-\d{3}$/),
+        cmpCode: z
+          .string()
+          .regex(/^CMP-\d{3}$/)
+          .nullable(),
         file: z.string().regex(/^[a-z0-9-]+\.svg$/),
         status: z.enum(['draft', 'approved']),
       }),
@@ -22,7 +25,7 @@ const CatalogueSchema = z.object({
 
 export interface LegendSymbol {
   key: string;
-  cmpCode: string;
+  cmpCode: string | null;
   status: 'draft' | 'approved';
   svg: string;
 }

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { Project } from '../project/schema.js';
+import type { Element, LoadCategory } from './elements.js';
 import { lineKw, ownLines, type LoadSummary, type PhaseKw } from './loads.js';
 
 /**
@@ -8,7 +9,9 @@ import { lineKw, ownLines, type LoadSummary, type PhaseKw } from './loads.js';
  * edits three demand factors per load - normal operation, case 1 power failure, case 2 fire - and
  * the tool takes the higher of cases 1 and 2, adds the spare capacity and proposes the generator
  * rating: kVA = kW x (1 + spare) / pf (10 % and 0.8 in the briefing example, rule pack).
- * The one editable report; a load nobody has edited starts at 1.0 in every case (user decision).
+ * The one editable report. A load nobody has edited starts at 1.0 for normal and power failure,
+ * and for fire at 1.0 when it is FLS, else 0 (10.14: fire mode = FLS loads; user decisions
+ * 6 Nov 2026).
  */
 
 const Factor = z.number().min(0).max(1);
@@ -27,11 +30,13 @@ export interface GeneratorRow {
   elementId: string;
   from: string;
   to: string;
+  /** Load category of the load (its DB / isolator), or of the panel for its own loads. */
+  category: LoadCategory;
   kw: PhaseKw;
   totalKw: number;
   factors: Pick<GeneratorFactor, 'normal' | 'powerFailure' | 'fire'>;
   remarks: string;
-  /** False while every factor is still the starting 1.0 nobody has confirmed. */
+  /** False while the factors are still the starting values nobody has confirmed. */
   edited: boolean;
   normalKw: number;
   powerFailureKw: number;
@@ -64,15 +69,23 @@ export interface GeneratorAnalysis {
   adequate: boolean | null;
 }
 
-const START = { normal: 1, powerFailure: 1, fire: 1 };
+/** Starting factors of a load: fire mode runs the FLS loads (10.14). */
+export const startingFactors = (category: LoadCategory) => ({
+  normal: 1,
+  powerFailure: 1,
+  fire: category === 'fls' ? 1 : 0,
+});
 
-/** The stored factors with one load's changed (added at the starting 1.0 the first time). */
+const categoryOf = (e: Element): LoadCategory => ('loadCategory' in e ? e.loadCategory : 'normal');
+
+/** The stored factors with one load's changed (added at `start` the first time). */
 export function setGeneratorFactor(
   list: readonly GeneratorFactor[],
   elementId: string,
   patch: Partial<Omit<GeneratorFactor, 'elementId'>>,
+  start: Pick<GeneratorFactor, 'normal' | 'powerFailure' | 'fire'> = startingFactors('normal'),
 ): GeneratorFactor[] {
-  const old = list.find((f) => f.elementId === elementId) ?? { elementId, ...START, remarks: '' };
+  const old = list.find((f) => f.elementId === elementId) ?? { elementId, ...start, remarks: '' };
   return [...list.filter((f) => f.elementId !== elementId), { ...old, ...patch }];
 }
 
@@ -93,12 +106,16 @@ export function generatorAnalyses(
 
   const row = (id: string, from: string, to: string, kw: PhaseKw): GeneratorRow => {
     const f = saved.get(id);
-    const factors = f ? { normal: f.normal, powerFailure: f.powerFailure, fire: f.fire } : START;
+    const category = categoryOf(byId.get(id)!);
+    const factors = f
+      ? { normal: f.normal, powerFailure: f.powerFailure, fire: f.fire }
+      : startingFactors(category);
     const totalKw = kw.L1 + kw.L2 + kw.L3;
     return {
       elementId: id,
       from,
       to,
+      category,
       kw,
       totalKw,
       factors,

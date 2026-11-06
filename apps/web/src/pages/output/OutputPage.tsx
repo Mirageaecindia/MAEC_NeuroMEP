@@ -22,7 +22,13 @@ import { useCableSize } from '../../workspace/useCableSize';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { CalcSheetPreview } from './CalcSheetPreview';
 import { GeneratorAnalysisSheet } from './GeneratorAnalysisSheet';
-import { generatorPdf, generatorWorkbook } from './generatorFiles';
+import {
+  emptyGenTitle,
+  GEN_TITLE_FIELDS,
+  generatorPdf,
+  generatorWorkbook,
+  type GenTitle,
+} from './generatorFiles';
 import { calcSheetPdf, calcSheetWorkbook } from './calcSheetFiles';
 import { scheduleWorkbook } from './scheduleExcel';
 import { schedulePdf } from './schedulePdf';
@@ -97,6 +103,7 @@ export function OutputPage() {
   const [logo, setLogo] = useState<string | null>(null);
   const [completionDate, setCompletionDate] = useState('');
   const [meters, setMeters] = useState<Record<string, BoardMeters>>({});
+  const [genTitle, setGenTitle] = useState<GenTitle>(emptyGenTitle);
   const toolbar = useProjectToolbar('output', {
     status: () => notice('Floor status (A-08) is shown on Floor Setup.'),
   });
@@ -153,6 +160,11 @@ export function OutputPage() {
     ...(schedules.length && !logo ? ['logo'] : []),
     ...(schedules.length && !completionDate ? ['planned completion date'] : []),
     ...schedules.flatMap((s) => missingMeters(s, meters[s.id])),
+    ...(generators.length
+      ? GEN_TITLE_FIELDS.filter(([k]) => !genTitle[k].trim()).map(
+          ([, label]) => `generator analysis ${label.toLowerCase()}`,
+        )
+      : []),
   ];
   const canDownload =
     (schedules.length > 0 || calc !== null || generators.length > 0) &&
@@ -210,8 +222,10 @@ export function OutputPage() {
         const g = GEN_FORMATS[format];
         const { version } = await api.nextExportVersion(project.id, g.kind);
         const data = await g.make(gens, {
+          ...genTitle,
           project: project.details.name,
           client: project.details.clientName,
+          revision: project.details.revision,
         });
         const name = `${base}_GeneratorLoadAnalysis_v${version}.${format}`;
         saveBlob(new Blob([data], { type: f.mime }), name);
@@ -278,7 +292,7 @@ export function OutputPage() {
             title={
               canDownload
                 ? undefined
-                : schedules.length
+                : schedules.length || generators.length
                   ? `Fill in before download: ${missing.slice(0, 4).join('; ')}${missing.length > 4 ? ' …' : ''}`
                   : 'Tick a report in the Report Library'
             }
@@ -382,14 +396,35 @@ export function OutputPage() {
             <CalcSheetPreview sheet={calc} />
           </>
         )}
+        {generators.length > 0 && (
+          <form
+            className="download-inputs"
+            aria-label="Generator analysis title block"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            <strong>Before download</strong>
+            {GEN_TITLE_FIELDS.map(([key, label]) => (
+              <label key={key} className={genTitle[key].trim() ? undefined : 'missing'}>
+                {label}{' '}
+                <input
+                  type={key === 'date' ? 'date' : 'text'}
+                  aria-label={`Generator analysis ${label}`}
+                  value={genTitle[key]}
+                  maxLength={80}
+                  onChange={(e) => setGenTitle((t) => ({ ...t, [key]: e.target.value }))}
+                />
+              </label>
+            ))}
+          </form>
+        )}
         {generators.map((g) => (
           <GeneratorAnalysisSheet
             key={g.generatorId}
             analysis={g}
             project={project.details.name}
             readOnly={!editor.layers.includes('electrical')}
-            onChange={(elementId, patch) =>
-              editor.dispatch({ type: 'generatorFactor', elementId, patch })
+            onChange={(elementId, patch, start) =>
+              editor.dispatch({ type: 'generatorFactor', elementId, patch, start })
             }
           />
         ))}

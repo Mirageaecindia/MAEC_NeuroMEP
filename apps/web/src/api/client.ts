@@ -4,7 +4,7 @@ import type { Project, ProjectSummary, UserSummary } from '@neuromep/shared';
 /** A legend symbol as served by GET /api/symbols. */
 export interface LegendSymbol {
   key: string;
-  cmpCode: string;
+  cmpCode: string | null;
   status: 'draft' | 'approved';
   svg: string;
 }

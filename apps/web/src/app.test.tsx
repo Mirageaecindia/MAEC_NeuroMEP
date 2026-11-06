@@ -851,10 +851,12 @@ describe('#TASK-28 Generator Load Analysis (OI-11, briefing page 8)', () => {
     renderAt('/projects/p-1/output', new FakeAuth(LEAD), api);
     await userEvent.click(await screen.findByRole('checkbox', { name: 'Generator Load Analysis' }));
     const sheet = screen.getByLabelText('Generator load analysis GEN-1');
-    expect(sheet).toHaveTextContent('1 load still at 1.0 in every case');
+    expect(sheet).toHaveTextContent('1 load still at the starting factors');
+    // A normal load: 1.0 for normal and power failure, 0 in fire mode (10.14).
     expect(within(sheet).getByRole('row', { name: /DB-db-1/ })).toHaveTextContent(
-      'ATS-1DB-db-120.00020.00020.00060.000',
+      'ATS-1DB-db-1Normal20.00020.00020.00060.000',
     );
+    expect(within(sheet).getByLabelText('Case-2 factor DB-db-1')).toHaveValue('0');
     const fire = within(sheet).getByLabelText('Case-2 factor DB-db-1');
     await userEvent.clear(fire);
     await userEvent.type(fire, '0.5{Enter}');
@@ -871,7 +873,19 @@ describe('#TASK-28 Generator Load Analysis (OI-11, briefing page 8)', () => {
       ]),
     );
 
-    await userEvent.click(screen.getByRole('button', { name: 'Download' }));
+    const download = screen.getByRole('button', { name: 'Download' });
+    expect(download).toBeDisabled(); // the title block is asked first
+    for (const [label, value] of [
+      ['Originator', 'SA'],
+      ['Checker', 'CK'],
+      ['Reviewer', 'MD'],
+      ['Calc Ref', 'MLD-01'],
+    ]) {
+      await userEvent.type(screen.getByLabelText(`Generator analysis ${label}`), value!);
+    }
+    await userEvent.type(screen.getByLabelText('Generator analysis Date'), '2026-11-06');
+    await waitFor(() => expect(download).toBeEnabled());
+    await userEvent.click(download);
     expect(
       await screen.findByText(
         /_GeneratorLoadAnalysis_v1\.xlsx \(1 generator\)\.$/,
@@ -885,9 +899,14 @@ describe('#TASK-28 Generator Load Analysis (OI-11, briefing page 8)', () => {
     await wb.xlsx.load(await saved!.arrayBuffer());
     const ws = wb.getWorksheet('GEN-1')!;
     expect(ws.getCell('A1').value).toBe('LOAD ANALYSIS - GENERATORS - GEN-1');
+    expect(String(ws.getCell('A3').value)).toBe(
+      'ORIGINATOR : SA   CHECKER : CK   REVIEWER : MD   DATE : 2026-11-06',
+    );
+    expect(String(ws.getCell('A2').value)).toMatch(/CALC REF : MLD-01$/);
     expect([ws.getCell('A5').value, ws.getCell('B5').value]).toEqual(['GEN-1', 'ATS-1']);
-    expect([ws.getCell('B6').value, ws.getCell('F6').value, ws.getCell('L6').value]).toEqual([
+    expect(['B6', 'C6', 'G6', 'M6'].map((c) => ws.getCell(c).value)).toEqual([
       'DB-db-1',
+      'Normal',
       60,
       30,
     ]);

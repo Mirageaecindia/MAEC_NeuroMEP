@@ -1,4 +1,4 @@
-import type { GeneratorAnalysis } from '@neuromep/shared';
+import type { GeneratorAnalysis, LoadCategory } from '@neuromep/shared';
 
 /**
  * Generator Load Analysis files (briefing page 8): the columns of the example sheet, a coloured row
@@ -9,6 +9,7 @@ import type { GeneratorAnalysis } from '@neuromep/shared';
 export const GEN_HEADS = [
   'FROM',
   'TO',
+  'CATEGORY',
   'R-PH kW',
   'Y-PH kW',
   'B-PH kW',
@@ -22,9 +23,16 @@ export const GEN_HEADS = [
   'REMARKS',
 ];
 /** Relative widths (Excel characters; scaled to the page in the PDF). */
-const WIDTHS = [20, 26, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 16];
+const WIDTHS = [20, 26, 9, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 16];
 
 export const kw = (v: number) => v.toFixed(3);
+
+export const CATEGORY_LABEL: Record<LoadCategory, string> = {
+  normal: 'Normal',
+  essential: 'Essential',
+  critical: 'Critical',
+  fls: 'FLS',
+};
 
 export interface GenLine {
   kind: 'group' | 'row' | 'total';
@@ -44,6 +52,7 @@ export function genLines(g: GeneratorAnalysis): GenLine[] {
         cells: [
           r.from,
           r.to,
+          CATEGORY_LABEL[r.category],
           kw(r.kw.L1),
           kw(r.kw.L2),
           kw(r.kw.L3),
@@ -64,6 +73,7 @@ export function genLines(g: GeneratorAnalysis): GenLine[] {
     kind: 'total',
     cells: [
       'TOTAL',
+      '',
       '',
       '',
       '',
@@ -110,14 +120,39 @@ export function genSummary(g: GeneratorAnalysis): [string, string, string][] {
   ];
 }
 
-export interface GenInfo {
+/** Title block (briefing example): asked at every download, not stored (as the schedule inputs). */
+export interface GenTitle {
+  originator: string;
+  checker: string;
+  reviewer: string;
+  date: string;
+  calcRef: string;
+}
+export const emptyGenTitle = (): GenTitle => ({
+  originator: '',
+  checker: '',
+  reviewer: '',
+  date: '',
+  calcRef: '',
+});
+export const GEN_TITLE_FIELDS: [keyof GenTitle, string][] = [
+  ['originator', 'Originator'],
+  ['checker', 'Checker'],
+  ['reviewer', 'Reviewer'],
+  ['date', 'Date'],
+  ['calcRef', 'Calc Ref'],
+];
+
+export interface GenInfo extends GenTitle {
   project: string;
   client: string;
+  revision: string;
 }
 
 const title = (g: GeneratorAnalysis, info: GenInfo) => [
   `LOAD ANALYSIS - GENERATORS - ${g.tag}`,
-  `PROJECT : ${info.project}   CLIENT : ${info.client || '-'}`,
+  `PROJECT : ${info.project}   CLIENT : ${info.client || '-'}   REVISION : ${info.revision || '-'}   CALC REF : ${info.calcRef || '-'}`,
+  `ORIGINATOR : ${info.originator || '-'}   CHECKER : ${info.checker || '-'}   REVIEWER : ${info.reviewer || '-'}   DATE : ${info.date || '-'}`,
 ];
 
 /** One Excel worksheet per generator. */
@@ -146,7 +181,7 @@ export async function generatorWorkbook(
     for (const line of genLines(g)) {
       const row = ws.getRow(r);
       line.cells.forEach((v, k) => {
-        const num = k >= 2 && k <= 11 && v !== '' ? Number(v) : null;
+        const num = k >= 3 && k <= 12 && v !== '' ? Number(v) : null;
         row.getCell(k + 1).value = num ?? v;
         if (num !== null) row.getCell(k + 1).numFmt = '0.000';
       });
@@ -181,12 +216,12 @@ export async function generatorWorkbook(
     }
     r++;
     for (const [label, value, note] of genSummary(g)) {
-      ws.mergeCells(r, 2, r, 5);
+      ws.mergeCells(r, 2, r, 6);
       ws.getCell(r, 2).value = label;
-      ws.getCell(r, 6).value = value;
-      ws.mergeCells(r, 7, r, n);
-      ws.getCell(r, 7).value = note;
-      for (const c of [2, 6, 7]) ws.getCell(r, c).font = { name: 'Arial', size: 9, bold: c !== 7 };
+      ws.getCell(r, 7).value = value;
+      ws.mergeCells(r, 8, r, n);
+      ws.getCell(r, 8).value = note;
+      for (const c of [2, 7, 8]) ws.getCell(r, c).font = { name: 'Arial', size: 9, bold: c !== 8 };
       r++;
     }
   }
@@ -251,14 +286,14 @@ export async function generatorPdf(
     if (gi > 0) doc.addPage('a4', 'landscape');
     let y = MARGIN;
     const head = () => {
-      const [t, sub] = title(g, info);
+      const [t, ...sub] = title(g, info);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
       doc.text(t!, MARGIN, y + 10);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7.5);
-      doc.text(sub!, MARGIN, y + 21);
-      y += 28;
+      sub.forEach((line, i) => doc.text(line, MARGIN, y + 21 + i * 10));
+      y += 38;
       doc.setFontSize(FONT);
       const h = height(GEN_HEADS, true);
       row(y, GEN_HEADS, h, { bold: true });
@@ -296,9 +331,9 @@ export async function generatorPdf(
       }
       doc.setFont('helvetica', 'bold');
       doc.text(label, xs[1]!, y + 9);
-      doc.text(value, xs[5]!, y + 9);
+      doc.text(value, xs[6]!, y + 9);
       doc.setFont('helvetica', 'normal');
-      doc.text(note, xs[6]!, y + 9);
+      doc.text(note, xs[7]!, y + 9);
       y += 14;
     }
   });

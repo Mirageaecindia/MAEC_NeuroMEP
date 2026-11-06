@@ -78,6 +78,24 @@
       "cmpCode": "CMP-001",
       "file": "lighting.svg",
       "status": "draft"
+    },
+    {
+      "key": "isolator-sp",
+      "cmpCode": "CMP-005",
+      "file": "isolator-sp.svg",
+      "status": "draft"
+    },
+    {
+      "key": "isolator-tp",
+      "cmpCode": "CMP-006",
+      "file": "isolator-tp.svg",
+      "status": "draft"
+    },
+    {
+      "key": "connection-unit",
+      "cmpCode": null,
+      "file": "connection-unit.svg",
+      "status": "draft"
     }
   ]
 }

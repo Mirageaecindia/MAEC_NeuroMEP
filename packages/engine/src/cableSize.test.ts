@@ -40,6 +40,28 @@ describe('#TASK-27 safety rules C8 / C9 (10.14)', () => {
     expect(feederTo(safetyBuilding(), 'fls').c8.state).toBe('pass');
   });
 
+  it('C8 / C9: an FLS isolator (mechanical equipment, 6 Nov 2026) needs the generator and FR cable', () => {
+    const b = safetyBuilding();
+    const fan = [{ method: 'kw', loadType: '3', kwL1: 2.5, kwL2: 2.5, kwL3: 2.5 }];
+    b.add('isolator-tp', 'spf', {
+      loadCategory: 'fls',
+      description: 'SPF-1 smoke extract fan',
+      manualLoads: fan,
+    });
+    b.add('isolator-tp', 'spf2', { loadCategory: 'fls', manualLoads: fan });
+    b.feed('esmdb', 'spf', 15);
+    b.feed('mdb', 'spf2', 15); // on the transformer only
+    const out = cableSize(b.project).feeders;
+    const spf = out.find((f) => f.toId === 'spf')!;
+    expect(spf.c8.state).toBe('pass');
+    expect(spf.c9.state).toBe('fail'); // its feeder is not fire-rated
+    expect(spf.ibA).toBeGreaterThan(0);
+    expect(out.find((f) => f.toId === 'spf2')!.c8).toMatchObject({
+      state: 'fail',
+      detail: expect.stringMatching(/no generator/),
+    });
+  });
+
   it('C8: a critical load needs a UPS as well as the generator', () => {
     const c8 = feederTo(safetyBuilding(), 'crit').c8;
     expect(c8.state).toBe('fail');
