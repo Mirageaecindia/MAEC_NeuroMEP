@@ -94,6 +94,18 @@ describe('#TASK-24 / #TASK-25 protection checks C4 - C6 (10.9 - 10.11)', () => {
     );
   });
 
+  it('blocks a size the CPC table has no earth conductor for (V-14, cross-check pack)', () => {
+    // CableSizer CPC, Cu / XLPE phase with a PVC earth conductor: 300, 370, 480, 500 - no 400.
+    const p = network();
+    p.model.cables[1]!.locks = { sizeMm2: 400, runs: 1, eccMm2: null };
+    const d = toDb(p);
+    expect(d.eccMm2).toBeNull();
+    expect(d.status).toBe('blocked');
+    expect(d.errors).toContain('E2101');
+    expect(d.c4.detail).toMatch(/^No earth conductor size: No table value for CPC\(size=400/);
+    expect(d.c5.detail).toBe(d.c4.detail);
+  });
+
   it('C4 gives the cable withstand and waits for the breaker let-through (E2402)', () => {
     const d = toDb(network());
     expect(d.c4.state).toBe('device-data-required');

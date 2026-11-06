@@ -428,6 +428,8 @@ Every formula, factor and table in CableSizer v1.1 and the earlier drafts was in
 | V-31 | Tray width | Diameter only | Includes grouping spacing | Inconsistent - corrected |
 | V-32 | Site design conditions | Air 50 deg C, ground 35 deg C | DEWA 2017: air 48 deg C, ground 40 deg C at 2.0 K.m/W | Ground non-conservative - \[ENG\] |
 | V-33 | Discrimination between series devices | Not considered | Flag in Phase 1; full check Phase 2 | Flagged |
+| V-34 | Earth conductor for 400 mm² Cu / XLPE with a PVC ECC (found by the cross-check pack, WBS 1.7.5) | No CPC row (300, 370, 480, 500 only): the ECC was left empty and the result passed | Blocked with E2101 until the size is given (V-14) | Table gap - blocked \[ENG\] (OI-36) |
+| V-35 | Grouping factor of 2-core cables on trays (WBS 1.7.5) | GROUPJ has 1-core and 3 / 4-core rows only | Blocked with E2102 (never assumed) | Table gap - blocked \[ENG\] (OI-37) |
 
 # 12. Data Dictionary
 
@@ -600,6 +602,8 @@ Information needed from the Revit team (OI-35): Revit versions in use (Revit 202
 | OI-28 / 29 / 30 | MAEC One login timing; category mapping for mixed-use; motor defaults (IL/IF, efficiency) | TL / Sr. Elec. Eng. | No |
 | OI-32 | Must the transformer-side path of FLS loads also be fire-rated? | Sr. Elec. Eng. | No - generator path enforced |
 | OI-33 | DEWA minimum upstream fault level for minimum-fault checks | Sr. Elec. Eng. | No - minimum-fault checks flagged until provided |
+| OI-36 | Earth conductor size for 400 mm² Cu / XLPE phase conductors with a separate PVC ECC (V-34) | Sr. Elec. Eng. | No - such cables blocked (E2101) |
+| OI-37 | Grouping factors for 2-core cables on trays: the 3 / 4-core (multicore) row, or other values? (V-35) | Sr. Elec. Eng. | No - 2-core cables on trays blocked (E2102) |
 | OI-35 | Revit versions, model location, families, shared parameters, required outputs | Revit team | No (future) |
 
 | **ID** | **Decision Taken** |

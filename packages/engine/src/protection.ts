@@ -148,7 +148,14 @@ export function checkAll(project: Project, sized?: ReadonlyMap<string, Sizes>): 
       CPCINS: 'PVC',
     });
     if (!ecc.found) {
+      // V-14: no earth conductor from the table is never a pass - the cable is blocked (found by
+      // the engineer cross-check pack, WBS 1.7.5: the CPC table skips 400 mm² Cu/XLPE with PVC).
       result.trace.push({ step: 'ECC', detail: ecc.detail });
+      if (!result.errors.includes('E2101')) result.errors.push('E2101');
+      result.status = 'blocked';
+      const why = `No earth conductor size: ${ecc.detail}`;
+      if (ticked.letThroughEnergy) result.c4 = { state: 'not-calculated', detail: why };
+      if (ticked.earthFaultLoopImpedance) result.c5 = { state: 'not-calculated', detail: why };
       return result;
     }
     result.eccMm2 = ecc.value;

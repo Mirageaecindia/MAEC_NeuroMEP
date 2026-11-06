@@ -9,7 +9,8 @@
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "crosscheck": "tsx --conditions=source src/crosscheck/build.ts"
   },
   "dependencies": {
     "@neuromep/engine": "0.1.0",
