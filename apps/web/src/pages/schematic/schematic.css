@@ -181,3 +181,49 @@
 .calc-Warning {
   color: var(--warning);
 }
+
+/* Generator Load Analysis (briefing page 8): panel rows, loads not edited yet, totals. */
+.gen-sheet thead th {
+  white-space: normal;
+  min-width: 52px;
+}
+.gen-sheet td:nth-child(-n + 4) {
+  text-align: center;
+}
+.gen-sheet td:nth-child(-n + 2),
+.gen-sheet td:last-child {
+  text-align: left;
+}
+.gen-group td {
+  background: #fff59d;
+  color: #1f2937;
+  font-weight: 600;
+}
+.gen-unedited td {
+  background: var(--surface-muted);
+}
+.gen-total td {
+  background: #fad7c0;
+  color: #1f2937;
+  font-weight: 700;
+}
+.gen-input {
+  width: 48px;
+  font-size: 10px;
+  text-align: center;
+}
+.gen-remark {
+  width: 110px;
+  text-align: left;
+}
+.gen-summary {
+  margin-top: 10px;
+}
+.gen-summary th {
+  text-align: left;
+  background: transparent;
+}
+.gen-short td {
+  color: var(--danger);
+  font-weight: 600;
+}

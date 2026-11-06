@@ -26,6 +26,8 @@ import {
   withoutElements,
   setFloorFlag,
   type Riser,
+  setGeneratorFactor,
+  type GeneratorFactor,
   type RegistryChange,
 } from '@neuromep/shared';
 import { applyRulePackDefaults, rulePackForRegion } from '@neuromep/rulepacks';
@@ -110,6 +112,12 @@ export type ProjectAction =
   | { type: 'removeCables'; ids: string[] }
   /** Building tab risers (FR-20): Riser Design and connections, edited with the shared helpers. */
   | { type: 'risers'; risers: Riser[] }
+  /** Generator Load Analysis: the engineer's factors / remark of one load (OI-11). */
+  | {
+      type: 'generatorFactor';
+      elementId: string;
+      patch: Partial<Omit<GeneratorFactor, 'elementId'>>;
+    }
   /** Results of a Cable Size run (FR-21): those of the scope replace the earlier ones. */
   | {
       type: 'cableSize';
@@ -301,6 +309,14 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
       return { ...p, model: { ...p.model, risers: a.risers } };
     case 'cableSize':
       return { ...p, model: { ...p.model, results: mergeRun(p, a.scope, a.results, a.run) } };
+    case 'generatorFactor':
+      return {
+        ...p,
+        model: {
+          ...p.model,
+          generatorFactors: setGeneratorFactor(p.model.generatorFactors, a.elementId, a.patch),
+        },
+      };
     case 'floorFlag': {
       const floorFlags = setFloorFlag(p.model.floorFlags, a.floorId, a.discipline, a.flag);
       return { ...p, model: { ...p.model, floorFlags } };

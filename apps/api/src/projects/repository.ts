@@ -41,6 +41,8 @@ export const EXPORT_KINDS = [
   'schedules-pdf',
   'calc-sheet',
   'calc-sheet-pdf',
+  'generator-analysis',
+  'generator-analysis-pdf',
 ] as const;
 export type ExportKind = (typeof EXPORT_KINDS)[number];
 

@@ -5,6 +5,7 @@ import {
   placeElement,
   setBoardRiser,
   setRiser,
+  type Element,
   type Project,
   type ProjectSummary,
   type UserSummary,
@@ -814,9 +815,91 @@ describe('#TASK-30 / #TASK-31 Schematic and Output (Figma 4, 5)', () => {
     await waitFor(() => expect(download).toBeEnabled());
     expect(within(sheet).getByRole('img', { name: /logo/ })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('checkbox', { name: 'Generator Load Analysis' }));
+    expect(screen.getByText(/^No generator in this project yet/)).toBeVisible();
+  });
+});
+
+describe('#TASK-28 Generator Load Analysis (OI-11, briefing page 8)', () => {
+  /** TX and GEN 100 kVA into an ATS that feeds DB-db-1 (60 kW). */
+  function genProject() {
+    const project = buildingProject();
+    project.meta.reachedPage = 'simulation-report';
+    const tx = project.model.elements.find((e) => e.id === 'tx')!;
+    const db = project.model.elements.find((e) => e.id === 'db-1')!;
+    Object.assign(tx, { kva: 1000 });
+    Object.assign(db, { loads: [{ method: 'kw', loadType: '2', kwL1: 20, kwL2: 20, kwL3: 20 }] });
+    const gen = { ...testElement('generator', 'gen'), tag: 'GEN-1', kvaOverride: 100 } as Element;
+    const ats = { ...testElement('ats', 'ats'), tag: 'ATS-1' } as Element;
+    project.model.elements.push(gen, ats);
+    project.model.cables.push(
+      testCable(tx, ats, 'normal'),
+      testCable(gen, ats, 'standby'),
+      testCable(ats, db),
+    );
+    return project;
+  }
+
+  it('edits the factors per load, sizes the generator and downloads the sheet', async () => {
+    let saved: Blob | null = null;
+    const create = vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => {
+      saved = b as Blob;
+      return 'blob:x';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const api = fakeApi(genProject());
+    renderAt('/projects/p-1/output', new FakeAuth(LEAD), api);
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'Generator Load Analysis' }));
+    const sheet = screen.getByLabelText('Generator load analysis GEN-1');
+    expect(sheet).toHaveTextContent('1 load still at 1.0 in every case');
+    expect(within(sheet).getByRole('row', { name: /DB-db-1/ })).toHaveTextContent(
+      'ATS-1DB-db-120.00020.00020.00060.000',
+    );
+    const fire = within(sheet).getByLabelText('Case-2 factor DB-db-1');
+    await userEvent.clear(fire);
+    await userEvent.type(fire, '0.5{Enter}');
+    expect(sheet).not.toHaveTextContent('still at 1.0');
+    // Case 1 stays 60 kW (higher than fire 30 kW): + 10 % = 66 kW, / 0.8 = 83 kVA; 100 kVA chosen.
+    const rating = within(sheet).getByRole('table', { name: 'Generator rating GEN-1' });
+    expect(rating).toHaveTextContent('LOAD ON GENERATOR60 kW');
+    expect(rating).toHaveTextContent('GENERATOR RATING REQUIRED (kVA)83 kVA');
+    expect(rating).toHaveTextContent('GENERATOR RATING SELECTED (kVA)100 kVA');
+    await userEvent.click(tool('Save'));
+    await waitFor(async () =>
+      expect((await api.getProject('p-1')).project.model.generatorFactors).toEqual([
+        { elementId: 'db-1', normal: 1, powerFailure: 1, fire: 0.5, remarks: '' },
+      ]),
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Download' }));
     expect(
-      screen.getByText(/awaiting its definition by the Senior Electrical Engineer/),
+      await screen.findByText(
+        /_GeneratorLoadAnalysis_v1\.xlsx \(1 generator\)\.$/,
+        {},
+        { timeout: 10_000 },
+      ),
     ).toBeVisible();
+    expect(api.nextExportVersion).toHaveBeenCalledWith('p-1', 'generator-analysis');
+    const ExcelJS = (await import('exceljs')).default;
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(await saved!.arrayBuffer());
+    const ws = wb.getWorksheet('GEN-1')!;
+    expect(ws.getCell('A1').value).toBe('LOAD ANALYSIS - GENERATORS - GEN-1');
+    expect([ws.getCell('A5').value, ws.getCell('B5').value]).toEqual(['GEN-1', 'ATS-1']);
+    expect([ws.getCell('B6').value, ws.getCell('F6').value, ws.getCell('L6').value]).toEqual([
+      'DB-db-1',
+      60,
+      30,
+    ]);
+    create.mockRestore();
+    click.mockRestore();
+  });
+
+  it('is read-only for someone without the electrical layer', async () => {
+    const checker: UserSummary = { ...ELEC, id: 'u-check', role: 'CHECKER' };
+    renderAt('/projects/p-1/output', new FakeAuth(checker), fakeApi(genProject()));
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'Generator Load Analysis' }));
+    expect(screen.getByLabelText('Case-1 factor DB-db-1')).toBeDisabled();
   });
 });
 

@@ -34,7 +34,14 @@ export function migrateProjectData(data: unknown): unknown {
     calc.checks = { ...(calc.checks as object), currentCarryingCapacity: true };
     p.calculation = calc;
     p.workingDirectory ??= '';
-    p.model ??= { elements: [], cables: [], risers: [], floorFlags: [], results: [] };
+    p.model ??= {
+      elements: [],
+      cables: [],
+      risers: [],
+      floorFlags: [],
+      results: [],
+      generatorFactors: [],
+    };
     const meta = (p.meta ?? {}) as Record<string, unknown>;
     if (meta.lastPage === 'floor-modelling' || meta.lastPage === 'building-modelling') {
       meta.lastPage = 'modelling';

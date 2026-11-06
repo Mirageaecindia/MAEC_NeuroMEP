@@ -3,6 +3,7 @@ import {
   busbarSchedule,
   calculationSheet,
   exportProblems,
+  generatorAnalyses,
   loadSummaries,
   type BoardSchedule,
   type Project,
@@ -16,10 +17,12 @@ import { useApi } from '../../auth/AuthContext';
 import { DisciplineTabs, Shell, useNotice } from '../../layout/Shell';
 import { Toolbar } from '../../layout/Toolbar';
 import { safeFileName, saveBlob } from '../../workspace/fileNames';
-import { lengthRule, powerFactors } from '../../workspace/projectDefaults';
+import { calcDefault, lengthRule, powerFactors } from '../../workspace/projectDefaults';
 import { useCableSize } from '../../workspace/useCableSize';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { CalcSheetPreview } from './CalcSheetPreview';
+import { GeneratorAnalysisSheet } from './GeneratorAnalysisSheet';
+import { generatorPdf, generatorWorkbook } from './generatorFiles';
 import { calcSheetPdf, calcSheetWorkbook } from './calcSheetFiles';
 import { scheduleWorkbook } from './scheduleExcel';
 import { schedulePdf } from './schedulePdf';
@@ -65,6 +68,11 @@ const CALC_FORMATS = {
   xlsx: { kind: 'calc-sheet', make: calcSheetWorkbook },
   pdf: { kind: 'calc-sheet-pdf', make: calcSheetPdf },
 } as const;
+/** The Generator Load Analysis in each format (its own _v1, _v2). */
+const GEN_FORMATS = {
+  xlsx: { kind: 'generator-analysis', make: generatorWorkbook },
+  pdf: { kind: 'generator-analysis-pdf', make: generatorPdf },
+} as const;
 type Format = keyof typeof FORMATS;
 
 /**
@@ -77,7 +85,7 @@ type Format = keyof typeof FORMATS;
  * overwritten.
  */
 export function OutputPage() {
-  const { project } = useWorkspace();
+  const { project, editor } = useWorkspace();
   const api = useApi();
   const notice = useNotice();
   const cableSize = useCableSize();
@@ -132,12 +140,24 @@ export function OutputPage() {
       ? calculationSheet(p, loadSummaries(p, powerFactors(p)))
       : null;
   const calc = calcOf(project);
+  // Generator Load Analysis (OI-11, briefing page 8): one editable sheet per generator.
+  const generatorsOf = (p: Project) =>
+    electrical && reports.has('generator')
+      ? generatorAnalyses(p, loadSummaries(p, powerFactors(p)), {
+          sparePct: calcDefault(p, 'generatorSpareCapacityPct'),
+          pf: calcDefault(p, 'generatorPowerFactor'),
+        })
+      : [];
+  const generators = generatorsOf(project);
   const missing = [
     ...(schedules.length && !logo ? ['logo'] : []),
     ...(schedules.length && !completionDate ? ['planned completion date'] : []),
     ...schedules.flatMap((s) => missingMeters(s, meters[s.id])),
   ];
-  const canDownload = (schedules.length > 0 || calc !== null) && missing.length === 0 && !busy;
+  const canDownload =
+    (schedules.length > 0 || calc !== null || generators.length > 0) &&
+    missing.length === 0 &&
+    !busy;
 
   async function download() {
     setBusy(true);
@@ -184,6 +204,18 @@ export function OutputPage() {
         const name = `${base}_CalculationSheet_v${version}.${format}`;
         saveBlob(new Blob([data], { type: f.mime }), name);
         saved.push(`${name} (${sheet.rows.length} row${sheet.rows.length === 1 ? '' : 's'})`);
+      }
+      const gens = generatorsOf(run.project);
+      if (gens.length) {
+        const g = GEN_FORMATS[format];
+        const { version } = await api.nextExportVersion(project.id, g.kind);
+        const data = await g.make(gens, {
+          project: project.details.name,
+          client: project.details.clientName,
+        });
+        const name = `${base}_GeneratorLoadAnalysis_v${version}.${format}`;
+        saveBlob(new Blob([data], { type: f.mime }), name);
+        saved.push(`${name} (${gens.length} generator${gens.length === 1 ? '' : 's'})`);
       }
       notice(`Downloaded ${saved.join(' and ')}.`);
     } catch (err) {
@@ -265,10 +297,9 @@ export function OutputPage() {
     >
       <SaveBanner />
       <section className="panel drawing-area output-area" aria-label="Report preview">
-        {reports.has('generator') && (
-          <p className="banner banner-info">
-            Generator Load Analysis is awaiting its definition by the Senior Electrical Engineer
-            (which loads go on the generator, OI-11). It will be the one editable report.
+        {electrical && reports.has('generator') && generators.length === 0 && (
+          <p className="muted">
+            No generator in this project yet: place one in Floor Setup to see its load analysis.
           </p>
         )}
         {!electrical && reports.size > 0 && (
@@ -351,6 +382,17 @@ export function OutputPage() {
             <CalcSheetPreview sheet={calc} />
           </>
         )}
+        {generators.map((g) => (
+          <GeneratorAnalysisSheet
+            key={g.generatorId}
+            analysis={g}
+            project={project.details.name}
+            readOnly={!editor.layers.includes('electrical')}
+            onChange={(elementId, patch) =>
+              editor.dispatch({ type: 'generatorFactor', elementId, patch })
+            }
+          />
+        ))}
       </section>
     </Shell>
   );

@@ -47,3 +47,14 @@ export function loadingLimitPct(project: Project): number {
   )?.value;
   return typeof v === 'number' ? v : 100;
 }
+
+/** A number from the calculation defaults: the Lead's override, else the rule-pack value. */
+export function calcDefault(project: Project, key: string): number | null {
+  const o = project.calculation.defaultOverrides[key];
+  if (typeof o === 'number') return o;
+  if (!project.rulePackId || !project.rulePackVersion) return null;
+  const v = getRulePack(project.rulePackId, project.rulePackVersion).calculationDefaults.find(
+    (d) => d.key === key,
+  )?.value;
+  return typeof v === 'number' ? v : null;
+}

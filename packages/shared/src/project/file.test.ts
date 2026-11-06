@@ -48,6 +48,7 @@ describe('project file (.json)', () => {
       risers: [],
       floorFlags: [],
       results: [],
+      generatorFactors: [],
     });
     expect(result.project.meta.lastPage).toBe('modelling');
   });

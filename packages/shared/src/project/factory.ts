@@ -59,7 +59,14 @@ export function createEmptyProject(args: { id: string; userId: string; now: stri
     },
     workingDirectory: '',
     disciplines: { electrical: [], mechanical: [], phe: [] },
-    model: { elements: [], cables: [], risers: [], floorFlags: [], results: [] },
+    model: {
+      elements: [],
+      cables: [],
+      risers: [],
+      floorFlags: [],
+      results: [],
+      generatorFactors: [],
+    },
     auditLog: [],
     meta: { createdAt: args.now, createdBy: args.userId, updatedAt: args.now, lastPage: 'setup' },
   };

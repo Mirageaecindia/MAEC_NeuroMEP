@@ -3,6 +3,7 @@ import { CableSchema } from '../model/cable.js';
 import { ElementSchema } from '../model/elements.js';
 import { StoredResultSchema } from '../model/sizing.js';
 import { FloorFlagSchema } from '../model/floorFlags.js';
+import { GeneratorFactorSchema } from '../model/generator.js';
 import { RiserSchema } from '../model/riser.js';
 import {
   BusbarMakerSchema,
@@ -233,6 +234,8 @@ export const ProjectSchema = z.object({
     floorFlags: z.array(FloorFlagSchema).default([]),
     /** Last Cable Size result per component and feeder (FR-18, FR-21). */
     results: z.array(StoredResultSchema).default([]),
+    /** Generator Load Analysis: the engineer's demand factors and remark per load (OI-11). */
+    generatorFactors: z.array(GeneratorFactorSchema).default([]),
   }),
 
   auditLog: z.array(AuditEntrySchema),

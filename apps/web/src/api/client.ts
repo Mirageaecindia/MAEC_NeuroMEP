@@ -122,7 +122,14 @@ export class ApiClient {
   /** Next version of an export (_v1, _v2 ...): export files never overwrite. */
   nextExportVersion(
     projectId: string,
-    kind: 'sld' | 'schedules' | 'schedules-pdf' | 'calc-sheet' | 'calc-sheet-pdf',
+    kind:
+      | 'sld'
+      | 'schedules'
+      | 'schedules-pdf'
+      | 'calc-sheet'
+      | 'calc-sheet-pdf'
+      | 'generator-analysis'
+      | 'generator-analysis-pdf',
   ) {
     return this.request<{ version: number }>(
       `/api/projects/${encodeURIComponent(projectId)}/exports`,

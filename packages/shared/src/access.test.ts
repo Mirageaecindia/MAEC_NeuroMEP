@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { canEditFloorPlans, editableDisciplines, outsideEditRights } from './access.js';
+import { setGeneratorFactor } from './model/generator.js';
 import { setRiser } from './model/riser.js';
 import { modelledProject, sampleDb } from './testing.js';
 import type { UserSummary } from './users.js';
@@ -53,6 +54,19 @@ describe('#TASK-10 discipline layers (Section 2)', () => {
     before.disciplines.mechanical = [MECH.id];
     riser.disciplines.mechanical = [MECH.id];
     expect(outsideEditRights(MECH, before, riser)).toBe('risers (electrical)');
+  });
+
+  it('#TASK-28 keeps the Generator Load Analysis factors in the electrical layer', () => {
+    const before = modelledProject();
+    const edited = structuredClone(before);
+    edited.model.generatorFactors = setGeneratorFactor([], 'db-1', { fire: 0.6 });
+    expect(edited.model.generatorFactors).toEqual([
+      { elementId: 'db-1', normal: 1, powerFailure: 1, fire: 0.6, remarks: '' },
+    ]);
+    expect(outsideEditRights(ELEC, before, edited)).toBeNull();
+    before.disciplines.mechanical = [MECH.id];
+    edited.disciplines.mechanical = [MECH.id];
+    expect(outsideEditRights(MECH, before, edited)).toBe('Generator Load Analysis (electrical)');
   });
 
   it('refuses any change to Project Set-up, whatever the key order', () => {

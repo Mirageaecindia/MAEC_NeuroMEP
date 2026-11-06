@@ -124,6 +124,12 @@ export function outsideEditRights(
   if (!layers.has('electrical') && stable(before.model.results) !== stable(after.model.results)) {
     return 'Cable Size results (electrical)';
   }
+  if (
+    !layers.has('electrical') &&
+    stable(before.model.generatorFactors) !== stable(after.model.generatorFactors)
+  ) {
+    return 'Generator Load Analysis (electrical)';
+  }
   // Floor flags (A-08): engineers flag their own layer; only the Technical Lead reopens.
   const oldFlags = new Set(before.model.floorFlags.map(flagKey));
   const newFlags = new Set(after.model.floorFlags.map(flagKey));
