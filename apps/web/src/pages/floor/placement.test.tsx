@@ -411,7 +411,7 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     // Dubai method (default): a DB on its own is at 100 %, nothing TBC.
     expect(table).not.toHaveTextContent('E1901');
     // Not fed yet: the DB is itself a top-level component, 6 kW / 0.85 = 7 kVA.
-    expect(screen.getByText('7 kVA')).toBeInTheDocument();
+    expect(screen.getByText(/^Connected:/)).toHaveTextContent('Connected: 7 kVA');
 
     await userEvent.click(chip('Feeder'));
     const c = await screen.findByRole('dialog', { name: 'Cable construction' });
@@ -433,7 +433,7 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     const below = screen.getByRole('region', { name: 'Load table' });
     expect(below).toHaveTextContent('LOAD TABLE - below SMDB-GF-01');
     expect(below).toHaveTextContent('Connected 6.0 kW · Max demand 6.0 kW');
-    expect(screen.getByText('7 kVA')).toBeInTheDocument();
+    expect(screen.getByText(/^Connected:/)).toHaveTextContent('Connected: 7 kVA');
   });
 
   it("uses a transformer's kVA as the allowable load of the capacity panel", async () => {
@@ -443,7 +443,7 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     const kva = within(card()).getByLabelText('Capacity :');
     await userEvent.type(kva, '1500');
     await userEvent.tab();
-    expect(screen.getByText('1500 kVA')).toBeInTheDocument();
+    expect(screen.getByText(/^Allowable:/)).toHaveTextContent('Allowable: 1500 kVA');
   });
 });
 

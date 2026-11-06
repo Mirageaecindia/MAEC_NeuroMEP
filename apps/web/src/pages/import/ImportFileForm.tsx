@@ -379,6 +379,31 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
             ))}
           </select>
         </Row>
+        <Row label="Transformer Loading" field="calculation.transformerLoading" error={null}>
+          <label
+            className="check"
+            title="Maximum demand on each transformer is checked against this share of its kVA (10.15); 100 % when not ticked"
+          >
+            <input
+              id={fieldDomId('calculation.transformerLoading')}
+              type="checkbox"
+              checked={c.defaultOverrides.transformerLoadingLimitPct === 80}
+              disabled={readOnly || !pack}
+              onChange={(e) =>
+                dispatch({
+                  type: 'defaultOverride',
+                  key: 'transformerLoadingLimitPct',
+                  value: e.target.checked ? 80 : undefined,
+                  ruleValue:
+                    pack?.calculationDefaults.find((d) => d.key === 'transformerLoadingLimitPct')
+                      ?.value ?? null,
+                  audit: newAudit(user),
+                })
+              }
+            />
+            Limit to 80 %
+          </label>
+        </Row>
         <div className="form-row checks-row">
           <span className="form-label">
             Calculation Based On<span className="req">*</span>

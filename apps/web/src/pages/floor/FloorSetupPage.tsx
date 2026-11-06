@@ -5,7 +5,9 @@ import {
   planLoadImport,
   type LoadImportPlan,
   closeRoute,
+  capacitySummary,
   loadSummaries,
+  type CapacitySummary,
   connectionProblem,
   drawCable,
   fedFrom,
@@ -48,7 +50,12 @@ import {
 import { CableProperty } from './CableProperty';
 import { SizingResult } from './SizingResult';
 import { tooltipLines } from './tooltip';
-import { defaultPf, lengthRule, powerFactors } from '../../workspace/projectDefaults';
+import {
+  defaultPf,
+  lengthRule,
+  loadingLimitPct,
+  powerFactors,
+} from '../../workspace/projectDefaults';
 import { ConstructionDialog } from './ConstructionDialog';
 import { EngineeringProperty } from './EngineeringProperty';
 import { LoadTable } from './LoadTable';
@@ -712,6 +719,35 @@ export function FloorSetupPage() {
   );
 }
 
+/**
+ * Each transformer's maximum demand against its rating x the loading limit (E2801) and the whole
+ * project's against the plot allocation (E2802) - briefing page 9, design doc 10.15.
+ */
+function CapacityChecks({ capacity }: { capacity: CapacitySummary }) {
+  const { transformers, plot, limitPct } = capacity;
+  if (transformers.length === 0 && !plot?.over) return null;
+  return (
+    <ul className="capacity-checks" aria-label="Transformer loading">
+      {transformers.map((t) => (
+        <li key={t.id} className={t.over ? 'over' : undefined}>
+          {t.over && <strong>E2801 </strong>}
+          {t.tag}:{' '}
+          {t.ratingKva === null
+            ? 'enter its kVA rating'
+            : `${Math.round(t.demandKva ?? 0)} of ${t.ratingKva} kVA (${Math.round(t.loadedPct ?? 0)} %)`}
+          {t.over && ` - above the ${limitPct} % limit (${Math.round(t.limitKva!)} kVA)`}
+        </li>
+      ))}
+      {plot?.over && (
+        <li className="over">
+          <strong>E2802 </strong>Project demand {Math.round(plot.demand)} {plot.unit} is above the
+          plot allocation of {plot.allocation} {plot.unit}
+        </li>
+      )}
+    </ul>
+  );
+}
+
 /** Right panel (Figma 3.1 - 3.3): transformer capacity and connected load; Cable Size (A-07). */
 function RightPanel(props: {
   floor: Floor | null;
@@ -720,33 +756,17 @@ function RightPanel(props: {
 }) {
   const { project, editor } = useWorkspace();
   const cableSize = useCableSize();
-  const pf = defaultPf(project);
-  const transformers = project.model.elements.filter((e) => e.kind === 'transformer');
-  const txKva = transformers.reduce((s, t) => s + (t.kind === 'transformer' ? (t.kva ?? 0) : 0), 0);
-  const plot = project.details.plotLoad;
-  // Allowable: installed transformer kVA, or the plot load allocation until a transformer is placed.
-  const allowable =
-    txKva > 0
-      ? txKva
-      : plot.value === null
-        ? null
-        : plot.unit === 'kVA'
-          ? plot.value
-          : pf
-            ? plot.value / pf
-            : null;
-  // Live loads (FR-18, 10.2 step 2 only; demand factors per A-15).
+  // Live loads (FR-18, 10.2 step 2 only) and transformer loading / plot allocation (10.15).
   const summaries = loadSummaries(project, powerFactors(project));
-  const fed = new Set(project.model.cables.map((c) => c.to.elementId));
-  const roots = project.model.elements.filter((e) => !fed.has(e.id));
-  // Connected kVA of the whole project: the top-level components, connected kW / pf.
-  const connected = Math.round(
-    roots.reduce((sum, e) => {
-      const s = summaries.get(e.id);
-      return s && s.pf ? sum + s.connectedKw / s.pf : sum;
-    }, 0),
-  );
-  const loaded = allowable ? Math.round((connected / allowable) * 100) : 0;
+  const capacity = capacitySummary(project, summaries, {
+    limitPct: loadingLimitPct(project),
+    defaultPf: defaultPf(project),
+  });
+  const loaded = Math.round(capacity.loadedPct ?? 0);
+  const warn =
+    capacity.transformers.some((t) => t.over) ||
+    !!capacity.plot?.over ||
+    loaded > capacity.limitPct;
 
   // The table: below the selected board, else the components of this floor.
   const selected = project.model.elements.find((e) => e.id === props.selectedId);
@@ -806,18 +826,34 @@ function RightPanel(props: {
       <div className="capacity">
         <div className="capacity-head">
           <strong>TRANSFORMER CAPACITY &amp; CONNECTED LOAD SCHEDULE</strong>
-          <span className="loaded-badge">
+          <span
+            className={`loaded-badge${warn ? ' over' : ''}`}
+            title="Maximum demand / installed transformer kVA (10.15)"
+          >
             {loaded}%<small>Loaded</small>
           </span>
         </div>
         <div className="capacity-values">
           <span>
-            Connected: <strong>{connected} kVA</strong>
+            Connected: <strong>{Math.round(capacity.connectedKva)} kVA</strong>
           </span>
           <span>
-            Allowable: <strong>{allowable === null ? '-' : `${Math.round(allowable)} kVA`}</strong>
+            Demand: <strong>{Math.round(capacity.demandKva)} kVA</strong>
+          </span>
+          <span
+            title={
+              capacity.limitPct === 100
+                ? undefined
+                : `Transformer loading limit ${capacity.limitPct} %`
+            }
+          >
+            Allowable:{' '}
+            <strong>
+              {capacity.allowableKva === null ? '-' : `${Math.round(capacity.allowableKva)} kVA`}
+            </strong>
           </span>
         </div>
+        <CapacityChecks capacity={capacity} />
       </div>
       <div className="right-body">
         {props.floor && props.floor.plan && planStatus(props.floor) !== 'Calibrated' && (

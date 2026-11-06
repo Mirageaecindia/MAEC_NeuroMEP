@@ -330,6 +330,21 @@ export const ERROR_CATALOGUE = [
     'Press Cable Size again; if it repeats, report the run ID to support.',
     true,
   ),
+  // #TASK-28 Transformer loading (10.15; briefing page 9, 6 Nov 2026)
+  e(
+    'E2801',
+    'Transformer loaded above its limit',
+    'warning',
+    'The maximum demand on a transformer is above its kVA rating x the loading limit (100 %, or 80 % when ticked on Import File).',
+    'Move loads to another transformer, add a transformer or choose a larger rating.',
+  ),
+  e(
+    'E2802',
+    'Project load above the plot allocation',
+    'warning',
+    'The maximum demand of the whole project (all transformers) is above the plot load allocation entered on Import File.',
+    'Check the loads and demand factors, or confirm a higher allocation with the authority.',
+  ),
   // #TASK-31 Exports
   e(
     'E3101',

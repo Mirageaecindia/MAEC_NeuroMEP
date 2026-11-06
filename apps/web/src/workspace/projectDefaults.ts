@@ -36,3 +36,14 @@ export function lengthRule(project: {
   const add = pick('cableLengthAdditionM');
   return { allowancePct: pct?.v ?? 0, additionM: add?.v ?? null, interim: !!pct?.interim };
 }
+
+/** Transformer loading limit (%): 80 when ticked on Import File, else the rule pack (100 %). */
+export function loadingLimitPct(project: Project): number {
+  const o = project.calculation.defaultOverrides.transformerLoadingLimitPct;
+  if (typeof o === 'number') return o;
+  if (!project.rulePackId || !project.rulePackVersion) return 100;
+  const v = getRulePack(project.rulePackId, project.rulePackVersion).calculationDefaults.find(
+    (d) => d.key === 'transformerLoadingLimitPct',
+  )?.value;
+  return typeof v === 'number' ? v : 100;
+}

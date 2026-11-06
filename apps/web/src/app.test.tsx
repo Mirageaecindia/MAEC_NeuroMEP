@@ -469,6 +469,38 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(tool('Open')).toBeDisabled();
   });
 
+  it('#TASK-28 checks each transformer against its kVA x the loading limit (E2801, 80 % ticked)', async () => {
+    const project = buildingProject();
+    const tx = project.model.elements.find((e) => e.id === 'tx')!;
+    const db = project.model.elements.find((e) => e.id === 'db-1')!;
+    Object.assign(tx, { kva: 80 });
+    // 60 kW at pf 0.85 = 71 kVA: 88 % of 80 kVA, above an 80 % limit (64 kVA).
+    Object.assign(db, { loads: [{ method: 'kw', loadType: '2', kwL1: 20, kwL2: 20, kwL3: 20 }] });
+    project.model.cables.push(testCable(tx, db));
+    renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(structuredClone(project)));
+    const list = await screen.findByRole('list', { name: 'Transformer loading' });
+    expect(list).toHaveTextContent('TX-1: 71 of 80 kVA (88 %)');
+    expect(list).not.toHaveTextContent('E2801');
+    cleanup();
+    project.calculation.defaultOverrides = { transformerLoadingLimitPct: 80 };
+    renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(project));
+    expect(await screen.findByRole('list', { name: 'Transformer loading' })).toHaveTextContent(
+      'E2801 TX-1: 71 of 80 kVA (88 %) - above the 80 % limit (64 kVA)',
+    );
+  });
+
+  it('Import File ticks the 80 % transformer loading limit as a Lead override (6 Nov 2026)', async () => {
+    const api = fakeApi(completeProject());
+    renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Limit to 80 %/ }));
+    await userEvent.click(tool('Save'));
+    await waitFor(async () =>
+      expect((await api.getProject('p-1')).project.calculation.defaultOverrides).toEqual({
+        transformerLoadingLimitPct: 80,
+      }),
+    );
+  });
+
   it('shows the component library, the capacity panel and a Cable Size button disabled until the source is connected (A-07)', async () => {
     renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(completeProject()));
     expect(
