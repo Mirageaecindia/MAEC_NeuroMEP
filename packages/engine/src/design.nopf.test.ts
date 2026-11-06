@@ -2,7 +2,8 @@ import type { Element } from '@neuromep/shared';
 import { completeProject, sampleDb, testCable, testElement } from '@neuromep/shared/testing';
 import { describe, expect, it, vi } from 'vitest';
 
-// A rule pack without a default load power factor: a DB with none entered cannot get an Ib.
+// A rule pack without a default load power factor: a DB with none entered, whose load type
+// (Kitchen) has no power factor of its own either, cannot get an Ib.
 vi.mock('@neuromep/rulepacks', async (importOriginal) => {
   const real = await importOriginal<typeof import('@neuromep/rulepacks')>();
   return {
@@ -28,7 +29,7 @@ describe('#TASK-20 missing power factor (V-14)', () => {
     const db = {
       ...sampleDb(f, 'db'),
       powerFactor: null,
-      loads: [{ method: 'kw' as const, loadType: '2' as const, kwL1: 1, kwL2: 1, kwL3: 1 }],
+      loads: [{ method: 'kw' as const, loadType: '6' as const, kwL1: 1, kwL2: 1, kwL3: 1 }],
     } as Element;
     p.model.elements = [mdb, db];
     p.model.cables = [testCable(mdb, db)];
@@ -49,7 +50,7 @@ describe('#TASK-22 riser with a load but no power factor (V-14)', () => {
       ...sampleDb(f, 'db'),
       tag: 'DB-1',
       powerFactor: null,
-      loads: [{ method: 'kw' as const, loadType: '2' as const, kwL1: 1, kwL2: 1, kwL3: 1 }],
+      loads: [{ method: 'kw' as const, loadType: '6' as const, kwL1: 1, kwL2: 1, kwL3: 1 }],
     } as Element;
     p.model.elements = [tx, db];
     p.model.risers = [{ id: 'r1', lengthM: 10, widthM: 1, fedFromId: 'tx', feeds: ['db'] }];

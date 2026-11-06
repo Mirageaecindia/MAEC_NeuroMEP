@@ -230,4 +230,51 @@ describe('#TASK-19 Dubai demand method (manager 3 Nov 2026)', () => {
     expect(s.get('mdb')!.maxDemandKw).toBe(3);
     expect(s.get('mdb')!.tbcCategories).toEqual(['residential']);
   });
+
+  describe('power factor per load type (manager 3 Nov 2026)', () => {
+    const pfs = { defaultPf: 0.85, byType: { '1': 0.85, '2': 0.8, '4': 1 } };
+    const lines = [
+      { method: 'kw' as const, loadType: '2' as const, kwL1: 10, kwL2: 10, kwL3: 10 }, // Power 0.8
+      { method: 'kw' as const, loadType: '4' as const, kwL1: 10, kwL2: 10, kwL3: 10 }, // Heater 1.0
+    ];
+    const run = (
+      dbPatch: Record<string, unknown>,
+      powerFactors: Parameters<typeof loadSummaries>[1],
+    ) => {
+      const project = completeProject();
+      const db = el('db', 'DB', { powerFactor: null, loads: lines, ...dbPatch });
+      const smdb = el('smdb', 'SMDB');
+      const tx = el('transformer', 'TX');
+      project.model.elements = [tx, smdb, db];
+      project.model.cables = wire([
+        [tx, smdb],
+        [smdb, db],
+      ]);
+      return loadSummaries(project, powerFactors);
+    };
+
+    it('adds P and Q per load type when the DB has no power factor of its own', () => {
+      // P = 60 kW; Q = 30 x tan(acos 0.8) = 22.5 kVAr (heaters none): pf = 60 / hypot(60, 22.5).
+      const s = run({}, pfs);
+      expect(s.get('DB')!.pf).toBeCloseTo(60 / Math.hypot(60, 22.5), 12);
+      expect(s.get('SMDB')!.pf).toBeCloseTo(60 / Math.hypot(60, 22.5), 12);
+    });
+
+    it("uses the DB's own power factor for all its loads when entered", () => {
+      expect(run({ powerFactor: 0.9 }, pfs).get('DB')!.pf).toBe(0.9);
+    });
+
+    it('takes one load type exactly, and the default for a type without a value', () => {
+      expect(run({ loads: [lines[0]] }, pfs).get('DB')!.pf).toBe(0.8);
+      const kitchen = [{ ...lines[0]!, loadType: '6' as const }];
+      expect(run({ loads: kitchen }, pfs).get('DB')!.pf).toBe(0.85);
+    });
+
+    it('leaves no power factor when a loaded type has none, up the tree too (V-14)', () => {
+      const s = run({}, { defaultPf: null, byType: { '2': 0.8 } });
+      expect(s.get('DB')!.pf).toBeNull();
+      expect(s.get('DB')!.currentA).toBeNull();
+      expect(s.get('SMDB')!.pf).toBeNull();
+    });
+  });
 });

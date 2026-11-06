@@ -48,7 +48,7 @@ import {
 import { CableProperty } from './CableProperty';
 import { SizingResult } from './SizingResult';
 import { tooltipLines } from './tooltip';
-import { defaultPf, lengthRule } from '../../workspace/projectDefaults';
+import { defaultPf, lengthRule, powerFactors } from '../../workspace/projectDefaults';
 import { ConstructionDialog } from './ConstructionDialog';
 import { EngineeringProperty } from './EngineeringProperty';
 import { LoadTable } from './LoadTable';
@@ -491,7 +491,7 @@ export function FloorSetupPage() {
                 tooltip={(id) =>
                   tooltipLines(
                     project,
-                    loadSummaries(project, defaultPf(project)),
+                    loadSummaries(project, powerFactors(project)),
                     length ?? { allowancePct: 0, additionM: null },
                     id,
                   )
@@ -736,7 +736,7 @@ function RightPanel(props: {
             ? plot.value / pf
             : null;
   // Live loads (FR-18, 10.2 step 2 only; demand factors per A-15).
-  const summaries = loadSummaries(project, pf);
+  const summaries = loadSummaries(project, powerFactors(project));
   const fed = new Set(project.model.cables.map((c) => c.to.elementId));
   const roots = project.model.elements.filter((e) => !fed.has(e.id));
   // Connected kVA of the whole project: the top-level components, connected kW / pf.

@@ -61,14 +61,22 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
     expect(d).toMatchObject({ status: 'awaiting-load', ibA: 0, device: null });
   });
 
-  it('uses the rule-pack default power factor when the DB has none (12.2)', () => {
+  it("uses the load type's power factor when the DB has none (Power 0.8, 12.2)", () => {
     const d = feederTo(network([5, 5, 5], { powerFactor: null } as Partial<Element>), 'db');
-    expect(d.pf).toBe(0.85);
+    expect(d.pf).toBe(0.8);
     expect(d.status).toBe('provisional');
   });
 
-  it("uses the Technical Lead's override of the default power factor first", () => {
+  it("uses the Technical Lead's override of a load type's power factor first", () => {
     const p = network([5, 5, 5], { powerFactor: null } as Partial<Element>);
+    p.calculation.defaultOverrides = { 'loadPowerFactor.2': 0.9 };
+    expect(feederTo(p, 'db').pf).toBe(0.9);
+  });
+
+  it('uses the default power factor (and its override) for a load type without one', () => {
+    const kitchen = [{ method: 'kw' as const, loadType: '6' as const, kwL1: 5, kwL2: 5, kwL3: 5 }];
+    const p = network([5, 5, 5], { powerFactor: null, loads: kitchen } as Partial<Element>);
+    expect(feederTo(p, 'db').pf).toBe(0.85);
     p.calculation.defaultOverrides = { defaultLoadPowerFactor: 0.9 };
     expect(feederTo(p, 'db').pf).toBe(0.9);
   });

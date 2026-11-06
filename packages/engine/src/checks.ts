@@ -1,5 +1,5 @@
 import { cableLength, loadSummaries, type ElementKind, type Project } from '@neuromep/shared';
-import { dewaMinimum, getRulePack, standardRating } from '@neuromep/rulepacks';
+import { dewaMinimum, getRulePack, loadPowerFactors, standardRating } from '@neuromep/rulepacks';
 import { busbarChoices, busbarDropPct, distributionFactor, type BusbarChoice } from './busbar.js';
 import { cableRating, voltageDrop, type Blocked, type Drop, type Rating } from './capacity.js';
 import { designFeeders, type FeederDesign } from './design.js';
@@ -120,7 +120,8 @@ export function checkNetworkFeeders(
   const maker = project.calculation.busbarMaker;
   const pfDefault = num('defaultLoadPowerFactor');
   let summaries: ReturnType<typeof loadSummaries> | null = null;
-  const summaryOf = (id: string) => (summaries ??= loadSummaries(project, pfDefault)).get(id);
+  const summaryOf = (id: string) =>
+    (summaries ??= loadSummaries(project, loadPowerFactors(project, pack))).get(id);
 
   /** Drop up to a board: 0 at a source, the worst feeder into it, else through its riser. */
   const upstreamOf = (boardId: string | undefined): number | null => {

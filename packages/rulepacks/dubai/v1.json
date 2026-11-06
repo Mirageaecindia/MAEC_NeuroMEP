@@ -81,6 +81,102 @@
       "value": 0.85
     },
     {
+      "key": "loadPowerFactor.1",
+      "group": "Load power factor by type",
+      "label": "Lighting",
+      "type": "number",
+      "value": 0.85,
+      "note": "Lighting 0.85 (manager 3 Nov 2026, CableSizer)"
+    },
+    {
+      "key": "loadPowerFactor.2",
+      "group": "Load power factor by type",
+      "label": "Power",
+      "type": "number",
+      "value": 0.8,
+      "note": "Sockets 0.8 (manager 3 Nov 2026, CableSizer)"
+    },
+    {
+      "key": "loadPowerFactor.3",
+      "group": "Load power factor by type",
+      "label": "AC",
+      "type": "number",
+      "value": 0.8,
+      "note": "HVAC 0.8 (manager 3 Nov 2026, CableSizer)"
+    },
+    {
+      "key": "loadPowerFactor.4",
+      "group": "Load power factor by type",
+      "label": "Heater",
+      "type": "number",
+      "value": 1.0,
+      "note": "Heater 1.0 (manager 3 Nov 2026, CableSizer)"
+    },
+    {
+      "key": "loadPowerFactor.5",
+      "group": "Load power factor by type",
+      "label": "Laundry",
+      "type": "number",
+      "value": null,
+      "note": "Not given by the engineer: the default load power factor applies (user decision 6 Nov 2026)"
+    },
+    {
+      "key": "loadPowerFactor.6",
+      "group": "Load power factor by type",
+      "label": "Kitchen",
+      "type": "number",
+      "value": null,
+      "note": "Not given by the engineer: the default load power factor applies (user decision 6 Nov 2026)"
+    },
+    {
+      "key": "loadPowerFactor.7",
+      "group": "Load power factor by type",
+      "label": "Hand Dryer",
+      "type": "number",
+      "value": null,
+      "note": "Not given by the engineer: the default load power factor applies (user decision 6 Nov 2026)"
+    },
+    {
+      "key": "loadPowerFactor.8",
+      "group": "Load power factor by type",
+      "label": "Pumps",
+      "type": "number",
+      "value": null,
+      "note": "Not given by the engineer: the default load power factor applies (user decision 6 Nov 2026)"
+    },
+    {
+      "key": "loadPowerFactor.9",
+      "group": "Load power factor by type",
+      "label": "Fire Pumps",
+      "type": "number",
+      "value": null,
+      "note": "Not given by the engineer: the default load power factor applies (user decision 6 Nov 2026)"
+    },
+    {
+      "key": "loadPowerFactor.10",
+      "group": "Load power factor by type",
+      "label": "Special Equipment",
+      "type": "number",
+      "value": null,
+      "note": "Not given by the engineer: the default load power factor applies (user decision 6 Nov 2026)"
+    },
+    {
+      "key": "loadPowerFactor.11",
+      "group": "Load power factor by type",
+      "label": "Lifts & Equipment",
+      "type": "number",
+      "value": null,
+      "note": "Not given by the engineer: the default load power factor applies (user decision 6 Nov 2026)"
+    },
+    {
+      "key": "loadPowerFactor.12",
+      "group": "Load power factor by type",
+      "label": "Spare",
+      "type": "number",
+      "value": null,
+      "note": "Not given by the engineer: the default load power factor applies (user decision 6 Nov 2026)"
+    },
+    {
       "key": "targetPowerFactor",
       "group": "Loads",
       "label": "Target power factor (PFC)",

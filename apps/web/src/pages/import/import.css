@@ -160,3 +160,8 @@
 .df-unused {
   opacity: 0.45;
 }
+
+/* Load power factor per type (12.2, manager 3 Nov 2026): same grid as the load-type factors. */
+.pf-types {
+  margin-top: 12px;
+}

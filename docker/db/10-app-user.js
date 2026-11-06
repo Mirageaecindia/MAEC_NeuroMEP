@@ -1,3 +1,4 @@
+/* global db, print -- mongosh globals in docker-entrypoint-initdb.d scripts */
 // First start only (empty data volume): the account the API uses - read / write on the NeuroMEP
 // database and nothing else. The root account (MONGO_INITDB_ROOT_*) is kept for administration.
 const user = process.env.MONGO_APP_USERNAME;

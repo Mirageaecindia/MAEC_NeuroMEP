@@ -6,7 +6,13 @@ import {
   type Project,
   type ProvisionalReason,
 } from '@neuromep/shared';
-import { breakerTypeFor, getRulePack, standardRating, type BreakerType } from '@neuromep/rulepacks';
+import {
+  breakerTypeFor,
+  getRulePack,
+  loadPowerFactors,
+  standardRating,
+  type BreakerType,
+} from '@neuromep/rulepacks';
 
 /**
  * Pass 1 and step 3 of the calculation order (10.2): loads per phase with demand factors
@@ -73,11 +79,8 @@ export function designFeeders(project: Project): FeederDesign[] {
     throw new Error('The project has no rule pack; Cable Size needs one (Page 1 region).');
   }
   const pack = getRulePack(project.rulePackId, project.rulePackVersion);
-  // The Technical Lead's override of the default (12.2), else the rule-pack value.
-  const pfDefault =
-    project.calculation.defaultOverrides.defaultLoadPowerFactor ??
-    pack.calculationDefaults.find((d) => d.key === 'defaultLoadPowerFactor')?.value;
-  const summaries = loadSummaries(project, typeof pfDefault === 'number' ? pfDefault : null);
+  // Per load type and the default (12.2): the Technical Lead's override, else the rule-pack value.
+  const summaries = loadSummaries(project, loadPowerFactors(project, pack));
   const supplied = new Set([
     ...suppliedIn(project.model, 'normal'),
     ...suppliedIn(project.model, 'standby'),

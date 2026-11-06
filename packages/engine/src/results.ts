@@ -1,5 +1,5 @@
 import { loadSummaries, type CheckCode, type ElementResult, type Project } from '@neuromep/shared';
-import { breakerTypeFor, getRulePack } from '@neuromep/rulepacks';
+import { breakerTypeFor, getRulePack, loadPowerFactors } from '@neuromep/rulepacks';
 import type { CableSizeOutcome, SizedFeeder } from './cableSize.js';
 import type { RiserCheck } from './checks.js';
 
@@ -119,10 +119,7 @@ function feederResult(
 
 export function elementResults(project: Project, outcome: CableSizeOutcome): ElementResult[] {
   const pack = getRulePack(project.rulePackId!, project.rulePackVersion!);
-  const pf =
-    project.calculation.defaultOverrides.defaultLoadPowerFactor ??
-    pack.calculationDefaults.find((d) => d.key === 'defaultLoadPowerFactor')?.value;
-  const summaries = loadSummaries(project, typeof pf === 'number' ? pf : null);
+  const summaries = loadSummaries(project, loadPowerFactors(project, pack));
   const cables = new Map(project.model.cables.map((c) => [c.id, c]));
   const feeders = outcome.feeders.map((f) => feederResult(project, f, summaries));
   // A component: its incoming feeder; for an ATS the normal input.

@@ -53,6 +53,16 @@ export interface LoadSummary {
   tbcCategories: DemandCategory[];
 }
 
+/**
+ * Power factor of each load type (manager 3 Nov 2026: lighting 0.85, sockets / HVAC 0.8, heater
+ * 1.0, editable) and the default load power factor for types without one. A number = one power
+ * factor for every load type.
+ */
+export interface LoadPowerFactors {
+  defaultPf: number | null;
+  byType: Partial<Record<LoadTypeCode, number | null>>;
+}
+
 /** Main boards: the Dubai category factors apply here (LV panel / MDB level). */
 const MAIN = new Set<ElementKind>(['lv-panel', 'mdb', 'emdb', 'acb-panel']);
 const SECOND = new Set<ElementKind>(['smdb', 'esmdb']);
@@ -91,17 +101,24 @@ export function ownLines(e: Element): LoadLine[] {
 
 const ownPf = (e: Element): number | null => (e.kind === 'db' ? e.powerFactor : null);
 const ownStandby = (e: Element): number | null => ('standbyKw' in e ? e.standbyKw : null);
-const reactive = (p: number, pf: number | null) =>
+const reactive = (p: number, pf: number | null | undefined) =>
   pf && pf > 0 && pf < 1 ? p * Math.tan(Math.acos(pf)) : 0;
 
 /**
  * Load summary of every element (connected, maximum demand, standby, pf, current), following the
- * cables downstream. `defaultPf` is the rule-pack default load power factor (12.2).
+ * cables downstream. `powerFactors`: the power factor per load type and the rule-pack default
+ * (12.2); a DB's own power factor, when entered, applies to all its loads.
  */
 export function loadSummaries(
   project: Pick<Project, 'model' | 'calculation'>,
-  defaultPf: number | null,
+  powerFactors: number | null | LoadPowerFactors,
 ): Map<string, LoadSummary> {
+  const pfs: LoadPowerFactors =
+    typeof powerFactors === 'object' && powerFactors !== null
+      ? powerFactors
+      : { defaultPf: powerFactors, byType: {} };
+  const defaultPf = pfs.defaultPf;
+  const typePf = (code: LoadTypeCode) => pfs.byType[code] ?? defaultPf;
   const { elements, cables, risers } = project.model;
   const byId = new Map(elements.map((e) => [e.id, e]));
   const children = new Map<string, Element[]>();
@@ -186,12 +203,27 @@ export function loadSummaries(
         );
     }
 
-    // Power factor: entered on a DB; for a sum, the equivalent pf from P and Q.
-    const ownKw = ownLines(e).reduce((s, l) => s + total(lineKw(l)), 0);
-    const pfOwn = ownPf(e) ?? defaultPf;
+    // Power factor: the DB's own for all its loads, else each line's load type; for a sum, the
+    // equivalent pf from P and Q. A load without any power factor leaves none (never assumed, V-14).
+    const entered = ownPf(e);
+    const lines = ownLines(e).map((l) => ({
+      kw: total(lineKw(l)),
+      pf: entered ?? typePf(l.loadType),
+    }));
+    const missing =
+      lines.some((l) => l.kw > 0 && !l.pf) || sub.some((x) => x.connectedKw > 0 && !x.pf);
     const p = total(connected);
-    const q = reactive(ownKw, pfOwn) + sub.reduce((s, x) => s + x.q, 0);
-    const pf = sub.length === 0 ? pfOwn : p > 0 ? p / Math.hypot(p, q) : pfOwn;
+    const q =
+      lines.reduce((s, l) => s + reactive(l.kw, l.pf), 0) + sub.reduce((s, x) => s + x.q, 0);
+    // One power factor for all own lines (no boards below): that value exactly, no rounding noise.
+    const single = new Set(lines.filter((l) => l.kw > 0).map((l) => l.pf));
+    const pf = missing
+      ? null
+      : sub.length === 0 && (entered !== null || single.size === 1)
+        ? (entered ?? [...single][0]!)
+        : p > 0
+          ? p / Math.hypot(p, q)
+          : (entered ?? defaultPf);
     const maxPhase = Math.max(demand.L1, demand.L2, demand.L3);
     const currentA = pf && maxPhase > 0 ? (maxPhase * 1000) / (230 * pf) : pf ? 0 : null;
 

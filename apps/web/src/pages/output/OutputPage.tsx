@@ -16,7 +16,7 @@ import { useApi } from '../../auth/AuthContext';
 import { DisciplineTabs, Shell, useNotice } from '../../layout/Shell';
 import { Toolbar } from '../../layout/Toolbar';
 import { safeFileName, saveBlob } from '../../workspace/fileNames';
-import { defaultPf, lengthRule } from '../../workspace/projectDefaults';
+import { lengthRule, powerFactors } from '../../workspace/projectDefaults';
 import { useCableSize } from '../../workspace/useCableSize';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { CalcSheetPreview } from './CalcSheetPreview';
@@ -117,7 +117,7 @@ export function OutputPage() {
           (floorOrder.get(a.floorId) ?? 0) - (floorOrder.get(b.floorId) ?? 0) ||
           a.tag.localeCompare(b.tag, undefined, { numeric: true }),
       );
-    const summaries = loadSummaries(p, defaultPf(p));
+    const summaries = loadSummaries(p, powerFactors(p));
     const length = lengthRule(p) ?? { allowancePct: 0, additionM: null };
     const risers =
       type.busbar && (reports.has('completed') || reports.has('first')) ? p.model.risers : [];
@@ -128,7 +128,9 @@ export function OutputPage() {
   }
   const schedules = schedulesOf(project);
   const calcOf = (p: Project) =>
-    electrical && reports.has('calc') ? calculationSheet(p, loadSummaries(p, defaultPf(p))) : null;
+    electrical && reports.has('calc')
+      ? calculationSheet(p, loadSummaries(p, powerFactors(p)))
+      : null;
   const calc = calcOf(project);
   const missing = [
     ...(schedules.length && !logo ? ['logo'] : []),

@@ -287,7 +287,10 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
 
   it('shows demand factors as TBC and Next is enabled for a complete project', async () => {
     renderAt('/projects/p-1/import', new FakeAuth(LEAD), fakeApi(completeProject()));
-    expect(await screen.findByLabelText(/^Lighting/)).toHaveAttribute('placeholder', 'TBC');
+    expect(await screen.findByRole('textbox', { name: /^Lighting\*?$/ })).toHaveAttribute(
+      'placeholder',
+      'TBC',
+    );
     expect(tool('Next')).toBeEnabled();
   });
 
@@ -309,6 +312,27 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
         demandMethod: 'manual',
         busbarMaker: 'schneider',
       }),
+    );
+  });
+
+  it('Load Power Factor per load type: rule-pack values, Lead edits kept as overrides (6 Nov 2026)', async () => {
+    const api = fakeApi(completeProject());
+    renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
+    const lighting = await screen.findByLabelText('Lighting power factor');
+    expect(lighting).toHaveValue('0.85');
+    expect(screen.getByLabelText('Power power factor')).toHaveValue('0.8');
+    expect(screen.getByLabelText('Heater power factor')).toHaveValue('1');
+    expect(screen.getByLabelText('Kitchen power factor')).toHaveValue('0.85'); // the default
+    await userEvent.clear(lighting);
+    await userEvent.type(lighting, '1.5{Enter}');
+    expect(lighting).toHaveAttribute('aria-invalid', 'true');
+    await userEvent.clear(lighting);
+    await userEvent.type(lighting, '0.9{Enter}');
+    await userEvent.click(tool('Save'));
+    await waitFor(async () =>
+      expect(
+        (await api.getProject('p-1')).project.calculation.defaultOverrides['loadPowerFactor.1'],
+      ).toBe(0.9),
     );
   });
 

@@ -1,4 +1,10 @@
-import type { DefaultableNumber, Project } from '@neuromep/shared';
+import {
+  LoadTypeCodeSchema,
+  type DefaultableNumber,
+  type LoadPowerFactors,
+  type LoadTypeCode,
+  type Project,
+} from '@neuromep/shared';
 import type { CalculationDefault, RulePack } from './schema.js';
 
 const fill = (current: DefaultableNumber, value: number | null): DefaultableNumber =>
@@ -79,4 +85,26 @@ export function effectiveCalculationDefaults(project: Project, pack: RulePack): 
     const effective = overridden ? override : d.value;
     return { ...d, effective, overridden, tbc: effective === null };
   });
+}
+
+/** Rule-pack key of a load type's power factor. */
+export const loadPowerFactorKey = (code: LoadTypeCode) => `loadPowerFactor.${code}`;
+
+/**
+ * Power factors the project uses (12.2; per load type, manager 3 Nov 2026): the Technical Lead's
+ * override, else the rule-pack value; a load type without one takes the default load power factor.
+ */
+export function loadPowerFactors(
+  project: Pick<Project, 'calculation'>,
+  pack: RulePack,
+): LoadPowerFactors {
+  const num = (key: string) => {
+    const o = project.calculation.defaultOverrides[key];
+    if (typeof o === 'number') return o;
+    const v = pack.calculationDefaults.find((d) => d.key === key)?.value;
+    return typeof v === 'number' ? v : null;
+  };
+  const byType: LoadPowerFactors['byType'] = {};
+  for (const code of LoadTypeCodeSchema.options) byType[code] = num(loadPowerFactorKey(code));
+  return { defaultPf: num('defaultLoadPowerFactor'), byType };
 }

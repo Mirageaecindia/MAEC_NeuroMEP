@@ -1,13 +1,15 @@
-import type { LengthRule, Project } from '@neuromep/shared';
-import { getRulePack } from '@neuromep/rulepacks';
+import type { LengthRule, LoadPowerFactors, Project } from '@neuromep/shared';
+import { getRulePack, loadPowerFactors } from '@neuromep/rulepacks';
 
-/** Default load power factor of the project's rule pack, or null without one. */
-export function defaultPf(project: Project): number | null {
+/** Power factors per load type and the default (Lead override, else rule pack); null without one. */
+export function powerFactors(project: Project): LoadPowerFactors | null {
   if (!project.rulePackId || !project.rulePackVersion) return null;
-  const v = getRulePack(project.rulePackId, project.rulePackVersion).calculationDefaults.find(
-    (d) => d.key === 'defaultLoadPowerFactor',
-  )?.value;
-  return typeof v === 'number' ? v : null;
+  return loadPowerFactors(project, getRulePack(project.rulePackId, project.rulePackVersion));
+}
+
+/** Default load power factor of the project (Lead override, else rule pack), or null without one. */
+export function defaultPf(project: Project): number | null {
+  return powerFactors(project)?.defaultPf ?? null;
 }
 
 /**

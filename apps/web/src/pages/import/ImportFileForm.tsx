@@ -20,7 +20,14 @@ import {
   DEMAND_METHOD_LABELS,
   DemandMethodSchema,
 } from '@neuromep/shared';
-import { demandFactorsFor, getRulePack, REGION_RULE_PACKS } from '@neuromep/rulepacks';
+import {
+  demandFactorsFor,
+  getRulePack,
+  loadPowerFactorKey,
+  loadPowerFactors,
+  REGION_RULE_PACKS,
+  type RulePack,
+} from '@neuromep/rulepacks';
 import { useEffect, useState, type ReactNode } from 'react';
 import { useApi } from '../../auth/AuthContext';
 import { fieldDomId, Modal, NumberInput } from '../../components/fields';
@@ -78,6 +85,10 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
   const { project, dispatch, readOnly, errorFor, touch, user } = props;
   const d = project.details;
   const c = project.calculation;
+  const pack =
+    project.rulePackId && project.rulePackVersion
+      ? getRulePack(project.rulePackId, project.rulePackVersion)
+      : null;
   const api = useApi();
   const [users, setUsers] = useState<UserSummary[]>([]);
   const [pending, setPending] = useState<{ counts: FloorCounts; change: RegistryChange } | null>(
@@ -402,10 +413,6 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
             disabled={readOnly}
             onChange={(e) => {
               const method = e.target.value as typeof c.demandMethod;
-              const pack =
-                project.rulePackId && project.rulePackVersion
-                  ? getRulePack(project.rulePackId, project.rulePackVersion)
-                  : null;
               dispatch({
                 type: 'demandMethod',
                 method,
@@ -483,6 +490,8 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
           </div>
         </div>
 
+        {pack && <LoadPowerFactorGrid {...props} pack={pack} />}
+
         <div
           className="disciplines"
           aria-label="Discipline Engineer Assignments and Access Control"
@@ -559,6 +568,77 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
         </Modal>
       )}
     </div>
+  );
+}
+
+/**
+ * Power factor per load type (manager 3 Nov 2026, editable): the rule-pack value unless the
+ * Technical Lead types another; emptying the field returns to the rule-pack value. Types the
+ * engineer gave no value for show the default load power factor.
+ */
+function LoadPowerFactorGrid(props: CardProps & { pack: RulePack }) {
+  const { project, dispatch, user, pack } = props;
+  const pfs = loadPowerFactors(project, pack);
+  return (
+    <div className="df-col df-types pf-types" aria-label="Load Power Factor">
+      <h3>Load Power Factor</h3>
+      <div className="df-type-grid">
+        {LOAD_TYPE_GRID.map((code) => {
+          const key = loadPowerFactorKey(code);
+          const rule = pack.calculationDefaults.find((d) => d.key === key);
+          const value = pfs.byType[code] ?? pfs.defaultPf;
+          const id = fieldDomId(`calculation.powerFactor.${code}`);
+          return (
+            <div className="df-row" key={code} title={rule?.note}>
+              <label htmlFor={id}>{LOAD_TYPE_LABELS[code]}</label>
+              <PfField
+                id={id}
+                label={`${LOAD_TYPE_LABELS[code]} power factor`}
+                value={value}
+                disabled={props.readOnly}
+                onCommit={(v) =>
+                  dispatch({
+                    type: 'defaultOverride',
+                    key,
+                    value: v ?? undefined,
+                    ruleValue: rule?.value ?? null,
+                    audit: newAudit(user),
+                  })
+                }
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** A power factor between 0.5 and 1 (as on a DB); a value outside is shown red and not kept. */
+function PfField(props: {
+  id: string;
+  label: string;
+  value: number | null;
+  disabled: boolean;
+  onCommit: (v: number | null) => void;
+}) {
+  const [bad, setBad] = useState(false);
+  return (
+    <NumberInput
+      id={props.id}
+      ariaLabel={props.label}
+      className="pill-input df-input"
+      value={props.value}
+      placeholder="-"
+      commit="blur"
+      disabled={props.disabled}
+      invalid={bad}
+      onChange={(v) => {
+        const ok = v === null || (v >= 0.5 && v <= 1);
+        setBad(!ok);
+        if (ok) props.onCommit(v);
+      }}
+    />
   );
 }
 
