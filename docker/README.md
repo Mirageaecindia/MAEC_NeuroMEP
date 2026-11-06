@@ -3,11 +3,11 @@
 The server needs **Docker Engine with the Compose plugin** and nothing else. Node, npm, MongoDB
 and Nginx all run inside the images, and the app is built inside them too.
 
-| Image          | Built from (`Dockerfile` target) | What it runs                                                                    | Published            |
-| -------------- | -------------------------------- | ------------------------------------------------------------------------------- | -------------------- |
-| `neuromep-web` | `web` (nginx 1.28-alpine)        | The React build; proxies `/api` to the API; HTTPS when certificates are mounted | 80, 443              |
-| `neuromep-api` | `api` (node 24-alpine)           | Express API, production dependencies only, as the unprivileged `node` user      | no (private network) |
-| `neuromep-db`  | `db` (mongo 8.0)                 | MongoDB single-node replica set (transactions need one), with authentication    | no (private network) |
+| Service    | Image          | Built from (`Dockerfile` target) | What it runs                                                                    | Published                                       |
+| ---------- | -------------- | -------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `frontend` | `neuromep-web` | `web` (nginx 1.28-alpine)        | The React build; proxies `/api` to the API; HTTPS when certificates are mounted | 80, 443 (company server: `127.0.0.1:8085` only) |
+| `api`      | `neuromep-api` | `api` (node 24-alpine)           | Express API, production dependencies only, as the unprivileged `node` user      | no (project network)                            |
+| `db`       | `neuromep-db`  | `db` (mongo 8.0)                 | MongoDB single-node replica set (transactions need one), with authentication    | no (project network)                            |
 
 `compose.yaml` builds the three images and runs them together. Data is kept in three named volumes:
 
@@ -18,8 +18,8 @@ and Nginx all run inside the images, and the app is built inside them too.
 ## First deployment
 
 ```sh
-# 1. Get the code on the server (Docker branch)
-git clone -b docker <repository-url> neuromep && cd neuromep
+# 1. Get the code on the server
+git clone https://github.com/Mirageaecindia/MAEC_NeuroMEP.git neuromep && cd neuromep
 
 # 2. Settings: passwords for the MongoDB administrator and for the API's own account
 cp .env.docker.example .env.docker
@@ -43,6 +43,38 @@ Passwords go into the API's connection string, so use only letters, digits, `-` 
 `openssl rand -hex` output qualifies). The MongoDB accounts are created on the **first start
 only**. To change them later, change them in MongoDB as well, or start over with empty volumes.
 
+## Company server (maec-newapp)
+
+On the company server a reverse proxy on the host ends TLS and forwards the site to
+`127.0.0.1:8085`. `compose.server.yaml` sets that up on top of `compose.yaml`:
+
+- the project is called `maec-newapp` (containers, volumes and network take that prefix);
+- `frontend` publishes only `127.0.0.1:8085` -> 80, plain HTTP, instead of 80 / 443;
+- the project network has the fixed subnet `10.231.4.0/24`.
+
+Add both files to every command, or set them once for the shell:
+
+```sh
+export COMPOSE_FILE=compose.yaml:compose.server.yaml   # then plain "docker compose ..." uses both
+docker compose --env-file .env.docker up -d --build
+docker compose --env-file .env.docker ps                # frontend shows 127.0.0.1:8085->80/tcp
+curl -s http://127.0.0.1:8085/healthz                   # ok
+```
+
+Leave `docker/certs/` empty there: the certificate belongs to the host's proxy. Keep
+`COOKIE_SECURE=true` when the proxy serves the site over HTTPS (browsers then keep the session
+cookie). The proxy should pass the client address on, for the sign-in limits (E0103):
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:8085;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    client_max_body_size 25m;   # floor plans up to 20 MB
+}
+```
+
 ## HTTPS
 
 Session cookies are `Secure` in production, so browsers sign in only over HTTPS. Put the
@@ -53,12 +85,12 @@ docker/certs/fullchain.pem
 docker/certs/privkey.pem
 ```
 
-On start, the web container uses HTTPS on 443 and redirects port 80 to it. With no files there it
+On start, the frontend container uses HTTPS on 443 and redirects port 80 to it. With no files there it
 serves plain HTTP on 80. With Let's Encrypt (certbot on the host, or any other ACME client),
 copy or link the two files there, then reload:
 
 ```sh
-docker compose --env-file .env.docker restart web        # after every certificate renewal
+docker compose --env-file .env.docker restart frontend   # after every certificate renewal
 ```
 
 A test server reached over `http://<ip>` without a certificate needs `COOKIE_SECURE=false` in
@@ -103,7 +135,7 @@ ARM laptop, add `--platform linux/amd64` (`DOCKER_DEFAULT_PLATFORM=linux/amd64`)
 ## Checking a deployment
 
 ```sh
-docker compose --env-file .env.docker logs -f api        # or db / web
+docker compose --env-file .env.docker logs -f api        # or db / frontend
 curl -fsS https://<SERVER_NAME>/api/health               # {"status":"ok",...}
 E2E_BASE_URL=https://<SERVER_NAME> npm run test:e2e      # from a development machine; needs the dev users
 ```
@@ -129,4 +161,4 @@ The API inside the stack also gets the following settings from `compose.yaml`; y
 - `NODE_ENV=production`
 - `MONGODB_URI`, built from the settings above
 - `USERS_FILE=/run/neuromep/users.json`
-- `TRUST_PROXY=loopback,uniquelocal`, so the API takes the client address passed on by the web container, for the sign-in limits (E0103)
+- `TRUST_PROXY=loopback,uniquelocal`, so the API takes the client address passed on by the frontend container, for the sign-in limits (E0103)

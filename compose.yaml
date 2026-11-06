@@ -1,8 +1,9 @@
-# NeuroMEP on one server with Docker only (WBS 1.8.3): web (Nginx) -> api (Node) -> db (MongoDB).
-# Only the web container is published; api and db are reachable on the private network only.
+# NeuroMEP on one server with Docker only (WBS 1.8.3): frontend (Nginx) -> api (Node) -> db (MongoDB).
+# Only the frontend container is published; api and db are reachable on the project network only.
 #   cp .env.docker.example .env.docker                 # then fill in the passwords
 #   cp docker/users.example.json docker/users.json     # then add the real users (docker/README.md)
 #   docker compose --env-file .env.docker up -d --build
+# Company server (behind its reverse proxy): add -f compose.yaml -f compose.server.yaml.
 name: neuromep
 
 services:
@@ -21,7 +22,6 @@ services:
     volumes:
       - mongo-data:/data/db
       - mongo-config:/data/configdb
-    networks: [backend]
 
   api:
     build:
@@ -39,15 +39,14 @@ services:
       MONGODB_URI: mongodb://${MONGO_APP_USERNAME:-neuromep}:${MONGO_APP_PASSWORD}@db:27017/?replicaSet=rs0&authSource=admin
       MONGODB_DB: ${MONGODB_DB:-neuromep}
       USERS_FILE: /run/neuromep/users.json
-      # Client address for the login limits comes through the web container (private network).
+      # Client address for the login limits comes through the frontend container (project network).
       TRUST_PROXY: loopback,uniquelocal
       COOKIE_SECURE: ${COOKIE_SECURE:-true}
     volumes:
       - plans:/data/plans
       - ./docker/users.json:/run/neuromep/users.json:ro
-    networks: [backend]
 
-  web:
+  frontend:
     build:
       context: .
       target: web
@@ -68,12 +67,8 @@ services:
     volumes:
       # fullchain.pem + privkey.pem here switch the site to HTTPS (docker/README.md).
       - ./docker/certs:/etc/nginx/certs:ro
-    networks: [backend]
 
 volumes:
   mongo-data:
   mongo-config:
   plans:
-
-networks:
-  backend:
