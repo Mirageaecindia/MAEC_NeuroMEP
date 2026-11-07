@@ -1,4 +1,5 @@
 import {
+  canCreateProject,
   canEditFloorPlans,
   canEditProjectSetup,
   editableDisciplines,
@@ -14,15 +15,14 @@ import { projectReducer, type ProjectAction } from './projectReducer';
 
 export type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
 
-/** WBS 1.2.5: unsaved changes are saved at most 10 s after the first of them. */
-export const AUTOSAVE_INTERVAL_MS = 10_000;
-
 /** Actions that change the floor plans and their calibration (any engineer of the project). */
 const PLAN_ACTIONS = new Set<ProjectAction['type']>(['planUploaded', 'calibration']);
 /** Undo keeps the last 50 changes. */
 const HISTORY_LIMIT = 50;
 /** Bookkeeping every editor may record. */
 const ALWAYS = new Set<ProjectAction['type']>(['saved', 'lastPage']);
+/** Bookkeeping that is kept with the next save but is not an unsaved change by itself. */
+const NOT_A_CHANGE = new Set<ProjectAction['type']>(['saved', 'lastPage']);
 
 /**
  * May this user apply this action (Section 2)? Project Set-up: the Technical Lead; plans: the
@@ -74,9 +74,10 @@ function restore(snapshot: Project, now: Project): Project {
 }
 
 /**
- * Loads a project and keeps it saved: autosave every 10 s while there are unsaved changes, save
- * on leaving the page,
- * optimistic-lock conflicts reported, and a warning before leaving with unsaved changes.
+ * Loads a project and saves it when the user clicks Save (no autosave: user decision 7 Nov 2026,
+ * after autosaves of two open copies kept refusing each other with E0802). On a conflict the
+ * user's work is never lost: overwrite the server copy with it, save it as a new project, or
+ * download it. Leaving the project (or the browser) with unsaved changes asks first.
  * Each action is checked against the user's rights (mayApply); `readOnly` = Project Set-up is
  * read-only for this user, `canEdit` = they may change anything at all in this project.
  */
@@ -145,9 +146,10 @@ export function useProjectEditor(projectId: string) {
     [user],
   );
 
-  const commit = (next: Project) => {
+  const commit = (next: Project, change = true) => {
     projectRef.current = next;
     setProject(next);
+    if (!change) return;
     changeSeq.current += 1;
     setChangeCount(changeSeq.current);
   };
@@ -165,7 +167,7 @@ export function useProjectEditor(projectId: string) {
         future.current = [];
       }
       syncHistory();
-      commit(projectReducer(before, action));
+      commit(projectReducer(before, action), !NOT_A_CHANGE.has(action.type));
     },
     [user],
   );
@@ -185,50 +187,70 @@ export function useProjectEditor(projectId: string) {
 
   const isDirty = () => changeSeq.current !== savedSeq.current;
 
-  const save = useCallback(async (): Promise<boolean> => {
-    if (!mayEdit() || !projectRef.current) return true;
-    if (inFlight.current) await inFlight.current;
-    if (!isDirty()) return true;
-    const seq = changeSeq.current;
-    const snapshot = projectRef.current;
-    setSaveState('saving');
-    const run = (async () => {
-      try {
-        const saved = (await api.saveProject(snapshot)).project;
-        savedSeq.current = seq;
-        setSavedCount(seq);
-        // Keep edits made while saving; take the new version from the server.
-        projectRef.current = projectReducer(projectRef.current!, {
-          type: 'saved',
-          version: saved.version,
-          updatedAt: saved.meta.updatedAt,
-        });
-        setProject(projectRef.current);
-        setSaveState(isDirty() ? 'idle' : 'saved');
-        setSaveError(null);
-        return true;
-      } catch (e) {
-        const conflict = e instanceof ApiError && e.status === 409;
-        setSaveState(conflict ? 'conflict' : 'error');
-        setSaveError((e as Error).message);
-        return false;
-      }
-    })();
-    inFlight.current = run;
-    const ok = await run;
-    inFlight.current = null;
-    return ok;
-  }, [api, mayEdit]);
+  /**
+   * Saves this tab's copy. `overwrite` (after a conflict, E0802): the copy becomes the next
+   * version, replacing what others saved since it was opened; the API still checks the user's
+   * rights (an engineer cannot replace another layer, E1002).
+   */
+  const save = useCallback(
+    async (opts: { overwrite?: boolean } = {}): Promise<boolean> => {
+      if (!mayEdit() || !projectRef.current) return true;
+      if (inFlight.current) await inFlight.current;
+      if (!isDirty() && !opts.overwrite) return true;
+      const seq = changeSeq.current;
+      setSaveState('saving');
+      const run = (async () => {
+        try {
+          let snapshot = projectRef.current!;
+          if (opts.overwrite) {
+            const latest = (await api.getProject(snapshot.id)).project;
+            snapshot = { ...snapshot, version: latest.version };
+          }
+          const saved = (await api.saveProject(snapshot)).project;
+          savedSeq.current = seq;
+          setSavedCount(seq);
+          // Keep edits made while saving; take the new version from the server.
+          projectRef.current = projectReducer(projectRef.current!, {
+            type: 'saved',
+            version: saved.version,
+            updatedAt: saved.meta.updatedAt,
+          });
+          setProject(projectRef.current);
+          setSaveState(isDirty() ? 'idle' : 'saved');
+          setSaveError(null);
+          return true;
+        } catch (e) {
+          const conflict = e instanceof ApiError && e.status === 409;
+          setSaveState(conflict ? 'conflict' : 'error');
+          setSaveError((e as Error).message);
+          return false;
+        }
+      })();
+      inFlight.current = run;
+      const ok = await run;
+      inFlight.current = null;
+      return ok;
+    },
+    [api, mayEdit],
+  );
 
-  // Autosave every 10 s (WBS 1.2.5): the timer starts with the first unsaved change and is not
-  // pushed back by later ones, so at most 10 s of work is ever unsaved. After a save (or a
-  // failed one, which is retried) the next change or the remaining changes start it again.
-  const unsaved = changeCount !== savedCount;
-  useEffect(() => {
-    if (!canEdit || !unsaved || saveState === 'conflict' || saveState === 'saving') return;
-    const t = setTimeout(() => void save(), AUTOSAVE_INTERVAL_MS);
-    return () => clearTimeout(t);
-  }, [unsaved, savedCount, canEdit, save, saveState]);
+  /**
+   * "Save as new project" (Technical Lead, A-01): this tab's copy, with everything not saved yet,
+   * becomes a new project named `name`; its floor plans are copied on the server. Returns the
+   * new project's id. The open project is left as it is on the server.
+   */
+  const saveAsNew = useCallback(
+    async (name: string): Promise<string> => {
+      const current = projectRef.current!;
+      const copy = { ...current, details: { ...current.details, name } };
+      const created = (await api.createProject(copy, current.id)).project;
+      // The work is kept in the new project: leaving this one must not ask again.
+      savedSeq.current = changeSeq.current;
+      setSavedCount(changeSeq.current);
+      return created.id;
+    },
+    [api],
+  );
 
   // Browser close / reload with unsaved changes.
   useEffect(() => {
@@ -239,19 +261,15 @@ export function useProjectEditor(projectId: string) {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, []);
 
-  // Leaving the page inside the app: save first; if that fails, the page asks the user.
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      mayEdit() && isDirty() && currentLocation.pathname !== nextLocation.pathname,
-  );
-  const [leaveFailed, setLeaveFailed] = useState(false);
-  useEffect(() => {
-    if (blocker.state !== 'blocked') return;
-    // Respond to the router's block from a callback, not synchronously in the effect.
-    void Promise.resolve()
-      .then(save)
-      .then((ok) => (ok ? blocker.proceed() : setLeaveFailed(true)));
-  }, [blocker, save]);
+  // Leaving the project inside the app with unsaved changes asks first (Save / Leave / Stay).
+  // Moving between the project's own tabs keeps the copy in memory, so it is not asked.
+  const blocker = useBlocker(({ nextLocation }) => {
+    const inside = `/projects/${projectId}`;
+    const staying =
+      nextLocation.pathname === inside || nextLocation.pathname.startsWith(`${inside}/`);
+    return !staying && mayEdit() && isDirty();
+  });
+  const blocked = blocker.state === 'blocked';
 
   return {
     project,
@@ -265,19 +283,19 @@ export function useProjectEditor(projectId: string) {
     canUndo: historyLength.past > 0,
     canRedo: historyLength.future > 0,
     save,
+    saveAsNew,
+    canSaveAsNew: canCreateProject(user),
     reload: load,
     saveState,
     saveError,
     dirty: changeCount !== savedCount || saveState === 'saving',
-    leavePrompt: leaveFailed
+    leavePrompt: blocked
       ? {
-          leave: () => {
-            setLeaveFailed(false);
-            blocker.proceed?.();
-          },
-          stay: () => {
-            setLeaveFailed(false);
-            blocker.reset?.();
+          leave: () => blocker.proceed?.(),
+          stay: () => blocker.reset?.(),
+          saveAndLeave: async () => {
+            if (await save()) blocker.proceed?.();
+            else blocker.reset?.();
           },
         }
       : null,

@@ -358,3 +358,23 @@ a {
 .row-link:hover td {
   background: var(--surface-muted);
 }
+
+/* Save banner (user request 7 Nov 2026): the ways to keep this tab's work after a conflict. */
+.save-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: 4px;
+}
+.save-as-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+.save-as-name input {
+  padding: 6px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font: inherit;
+}

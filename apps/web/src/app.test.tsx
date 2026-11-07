@@ -180,51 +180,142 @@ describe('WBS 1.2.1 shell (A-03)', () => {
   });
 });
 
-describe('#TASK-08 persistence (WBS 1.2.5)', () => {
-  it('autosaves 10 s after the first change; further typing does not push it back', async () => {
+/** A fake API with the server version check: a save based on an older version is refused. */
+function versionedApi(start: Project) {
+  const api = fakeApi(start);
+  const server = { project: start };
+  api.getProject = async () => ({ project: server.project });
+  api.saveProject = vi.fn(async (p: Project) => {
+    if (p.version !== server.project.version) {
+      throw new ApiError(
+        409,
+        'Someone else saved this project since you opened it (E0802)',
+        {},
+        'E0802',
+      );
+    }
+    server.project = { ...p, version: p.version + 1 };
+    return { project: server.project };
+  });
+  /** Someone else saves: the server moves on one version. */
+  const otherSaves = (change: (p: Project) => Project = (p) => p) => {
+    server.project = { ...change(server.project), version: server.project.version + 1 };
+  };
+  return { api, server, otherSaves };
+}
+
+describe('#TASK-08 persistence (WBS 1.2.5; save on click, user decision 7 Nov 2026)', () => {
+  it('never saves by itself; Save saves; changing tab keeps the edits without saving', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-      const api = fakeApi(completeProject());
-      const save = vi.spyOn(api, 'saveProject');
-      renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
+      const { api } = versionedApi(completeProject());
+      const router = renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
       const name = await screen.findByLabelText(/Project Name/);
       await user.type(name, 'X');
-      await act(() => vi.advanceTimersByTimeAsync(6000));
-      await user.type(name, 'Y');
-      await act(() => vi.advanceTimersByTimeAsync(3000));
-      expect(save).not.toHaveBeenCalled();
-      await act(() => vi.advanceTimersByTimeAsync(1500));
-      expect(save).toHaveBeenCalledTimes(1);
-      expect(save.mock.calls[0]![0].details.name).toBe('NeoTowerXY');
+      expect(await screen.findByRole('status')).toHaveTextContent('Unsaved changes');
+      await act(() => vi.advanceTimersByTimeAsync(60_000));
+      expect(api.saveProject).not.toHaveBeenCalled();
+      // Another tab of the same project: no question, nothing saved, the edit is still there.
+      await act(() => router.navigate('/projects/p-1/floor'));
+      await waitFor(() => expect(router.state.location.pathname).toBe('/projects/p-1/floor'));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      await act(() => router.navigate('/projects/p-1/import'));
+      expect(await screen.findByDisplayValue('NeoTowerX')).toBeInTheDocument();
+      expect(api.saveProject).not.toHaveBeenCalled();
+      await user.click(tool('Save'));
+      await waitFor(() => expect(api.saveProject).toHaveBeenCalledTimes(1));
+      expect(vi.mocked(api.saveProject).mock.calls[0]![0].details.name).toBe('NeoTowerX');
     } finally {
       vi.useRealTimers();
     }
   });
+
+  it('asks before leaving the project with unsaved changes: Stay, Save and leave', async () => {
+    const { api, server } = versionedApi(completeProject());
+    const router = renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
+    await userEvent.type(await screen.findByLabelText(/Project Name/), 'X');
+    void router.navigate('/projects');
+    let dialog = await screen.findByRole('dialog', { name: 'Leave without saving?' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Stay on this page' }));
+    expect(router.state.location.pathname).toBe('/projects/p-1/import');
+    void router.navigate('/projects');
+    dialog = await screen.findByRole('dialog', { name: 'Leave without saving?' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save and leave' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/projects'));
+    expect(server.project.details.name).toBe('NeoTowerX');
+  });
 });
 
-describe('#TASK-08 version conflicts (WBS 1.2.5)', () => {
-  it('reports a conflict and reloads the newer version on request (E0802)', async () => {
-    const api = fakeApi(completeProject());
-    const newer = { ...completeProject(), version: 5 };
-    newer.details = { ...newer.details, name: 'Saved by someone else' };
-    api.saveProject = async () => {
-      throw new ApiError(
-        409,
-        'Someone else saved this project after you opened it (E0802)',
-        {},
-        'E0802',
-      );
-    };
-    renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
-    const name = await screen.findByLabelText(/Project Name/);
-    await userEvent.type(name, 'X');
+describe('#TASK-08 version conflicts (E0802): the work in the tab is never lost', () => {
+  const conflict = async (start = completeProject()) => {
+    const v = versionedApi(start);
+    const router = renderAt('/projects/p-1/import', new FakeAuth(LEAD), v.api);
+    await userEvent.type(await screen.findByLabelText(/Project Name/), 'X');
+    v.otherSaves((p) => ({ ...p, details: { ...p.details, clientName: 'Changed elsewhere' } }));
     await userEvent.click(tool('Save'));
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('E0802');
-    api.getProject = async () => ({ project: newer });
+    expect(alert).toHaveTextContent('Your changes are kept in this tab');
+    return { ...v, router, alert };
+  };
+
+  it('saves my version over the server copy after a confirmation', async () => {
+    const { server, alert } = await conflict();
+    await userEvent.click(within(alert).getByRole('button', { name: /Save my version/ }));
+    const dialog = screen.getByRole('dialog', { name: /Save my version over the server copy/ });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save my version' }));
+    await waitFor(() => expect(server.project.details.name).toBe('NeoTowerX'));
+    expect(server.project.version).toBe(completeProject().version + 2);
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+  });
+
+  it('saves the tab as a new project, with its plans copied from the open one', async () => {
+    const { api, router, alert, server } = await conflict();
+    await userEvent.click(within(alert).getByRole('button', { name: 'Save as new project' }));
+    const dialog = screen.getByRole('dialog', { name: 'Save as new project' });
+    expect(within(dialog).getByLabelText('New project name')).toHaveValue('NeoTowerX (copy)');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save as new project' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/projects/p-new/import'));
+    const [copy, from] = vi.mocked(api.createProject).mock.calls[0]!;
+    expect(copy!.details.name).toBe('NeoTowerX (copy)');
+    expect(from).toBe('p-1');
+    expect(server.project.details.name).toBe('NeoTower'); // the open project is left as it is
+  });
+
+  it('downloads my copy with the unsaved changes; Reload asks before discarding them', async () => {
+    const { alert, server } = await conflict();
+    let blob: Blob | null = null;
+    const create = vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => {
+      blob = b as Blob;
+      return 'blob:x';
+    });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    try {
+      await userEvent.click(within(alert).getByRole('button', { name: /Download my copy/ }));
+      expect(JSON.parse(await blob!.text()).details.name).toBe('NeoTowerX');
+    } finally {
+      create.mockRestore();
+      click.mockRestore();
+    }
     await userEvent.click(within(alert).getByRole('button', { name: /Reload/ }));
-    expect(await screen.findByDisplayValue('Saved by someone else')).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog', { name: 'Discard my changes?' });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Reload and discard' }));
+    expect(await screen.findByDisplayValue('NeoTower')).toBeInTheDocument();
+    expect(server.project.details.clientName).toBe('Changed elsewhere');
+  });
+
+  it('Sync never discards unsaved changes', async () => {
+    const { api } = versionedApi(modelledProject());
+    const getProject = vi.spyOn(api, 'getProject');
+    renderAt('/projects/p-1/floor', new FakeAuth(LEAD), api);
+    await userEvent.click(await screen.findByRole('button', { name: 'Clear' }));
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.click(within(dialog).getByRole('button', { name: /^Clear \d+ component/ }));
+    const loads = getProject.mock.calls.length;
+    await userEvent.click(tool('Sync'));
+    expect(await screen.findByText(/Save your changes first/)).toBeInTheDocument();
+    expect(getProject.mock.calls.length).toBe(loads);
   });
 });
 
@@ -614,11 +705,10 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
   it('Help opens the user guide in its own tab at the section of the page (Floor Setup / Building)', async () => {
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
     try {
-      const router = renderAt(
-        '/projects/p-1/floor',
-        new FakeAuth(LEAD),
-        fakeApi(completeProject()),
-      );
+      // Output must be reached already (A-12), else the tab sends the user back to Floor Setup.
+      const reached = completeProject();
+      reached.meta = { ...reached.meta, reachedPage: 'simulation-report' };
+      const router = renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(reached));
       await screen.findByText('TRANSFORMER CAPACITY & CONNECTED LOAD SCHEDULE');
       await userEvent.click(tool('Help'));
       expect(open).toHaveBeenLastCalledWith('/guide#floor-setup', 'neuromep-guide');
@@ -627,6 +717,7 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
       expect(open).toHaveBeenLastCalledWith('/guide#building-tab', 'neuromep-guide');
       await router.navigate('/projects/p-1/output');
       await screen.findByLabelText('Report Library');
+      expect(router.state.location.pathname).toBe('/projects/p-1/output');
       await userEvent.click(tool('Help'));
       expect(open).toHaveBeenLastCalledWith('/guide#output', 'neuromep-guide');
     } finally {

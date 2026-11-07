@@ -198,9 +198,12 @@ export const SECTIONS: GuideSection[] = [
             <tr>
               <th scope="row">Save / Sync</th>
               <td>
-                Save stores your changes now (NeuroMEP also saves automatically every 10 seconds and
-                when you leave). Sync saves, then reloads the project with everyone&apos;s latest
-                changes.
+                Save stores your changes. NeuroMEP saves only when you click Save: a blue
+                &quot;Unsaved changes&quot; line shows there is something to save, and leaving the
+                project asks first (Save and leave / Leave without saving / Stay). Moving between
+                the tabs of a project keeps your changes without saving them. Sync loads the latest
+                saved project with everyone&apos;s changes; with unsaved changes it asks you to save
+                first, so it never throws your work away.
               </td>
             </tr>
             <tr>
@@ -1153,8 +1156,14 @@ export const SECTIONS: GuideSection[] = [
           </tr>
           <tr>
             <td>Someone else saved (E0802)</td>
-            <td>Two people changed the project at the same time.</td>
-            <td>Reload to see their changes, then re-apply yours.</td>
+            <td>
+              Someone saved the project after you opened it. Your changes are still in your tab.
+            </td>
+            <td>
+              Choose in the red banner: Save my version (overwrite) makes your tab the latest
+              version; Save as new project (Technical Lead) keeps both; Download my copy saves your
+              tab to a .json file; Reload discards your changes and loads theirs.
+            </td>
           </tr>
           <tr>
             <td>Cannot edit a floor (E1003)</td>

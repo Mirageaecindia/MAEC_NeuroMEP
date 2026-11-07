@@ -113,6 +113,41 @@ export function createApp(deps?: AppDeps): Express {
   });
 
   // ----- projects -----
+  type Plan = NonNullable<Project['building']['floors'][number]['plan']>;
+  const readAll = async (stream: NodeJS.ReadableStream) => {
+    const chunks: Buffer[] = [];
+    for await (const c of stream) chunks.push(Buffer.from(c as Buffer));
+    return Buffer.concat(chunks);
+  };
+  /** Copies one stored plan file (same id, name and upload details) into another project. */
+  const copyFile = async (
+    fromId: string,
+    toId: string,
+    f: { fileId: string; fileName: string },
+    by: string,
+    at: string,
+  ) => {
+    const stream = await plans.open(fromId, f.fileId);
+    if (!stream) return false;
+    await plans.put({
+      projectId: toId,
+      fileName: f.fileName,
+      data: await readAll(stream),
+      userId: by,
+      now: at,
+      fileId: f.fileId,
+    });
+    return true;
+  };
+  /** A floor's plan in the new project, or null when its file is not stored in the source. */
+  const copyPlan = async (fromId: string, toId: string, plan: Plan): Promise<Plan | null> => {
+    if (!(await copyFile(fromId, toId, plan, plan.uploadedBy, plan.uploadedAt))) return null;
+    const { replaced: previous, ...rest } = plan;
+    const keepPrevious =
+      previous && (await copyFile(fromId, toId, previous, plan.uploadedBy, previous.replacedAt));
+    return keepPrevious ? plan : rest;
+  };
+
   const loadVisible = async (req: Request, res: Response): Promise<Project | null> => {
     const project = await projects.get(String(req.params.id));
     if (!project || !canViewProject(currentUser(req), project)) {
@@ -146,15 +181,33 @@ export function createApp(deps?: AppDeps): Express {
         return;
       }
       // Plan PDFs are not inside a project file and stored plans belong to the source project:
-      // the import keeps every floor but asks for its plan again (#TASK-02, A-02).
+      // the import keeps every floor but asks for its plan again (#TASK-02, A-02). "Save as new
+      // project" names the project it was opened from: its plan files are copied when this user
+      // may open that project (user request 7 Nov 2026).
       const floors = imported.data.building.floors;
-      plansToUpload = floors.filter((f) => f.plan).length;
+      const fromId = typeof req.body.copyPlansFrom === 'string' ? req.body.copyPlansFrom : null;
+      const from = fromId ? await projects.get(fromId) : null;
+      const source = from && canViewProject(user, from) ? from : null;
+      const copied = await Promise.all(
+        floors.map((f) => (source && f.plan ? copyPlan(source.id, base.id, f.plan) : null)),
+      );
+      plansToUpload = floors.filter((f, i) => f.plan && !copied[i]).length;
       project = {
         ...imported.data,
         id: base.id,
         version: 0,
-        meta: base.meta,
-        building: { ...imported.data.building, floors: floors.map((f) => ({ ...f, plan: null })) },
+        // Saved as a new project: it opens on the pages already reached.
+        meta: source
+          ? {
+              ...base.meta,
+              lastPage: imported.data.meta.lastPage,
+              reachedPage: imported.data.meta.reachedPage,
+            }
+          : base.meta,
+        building: {
+          ...imported.data.building,
+          floors: floors.map((f, i) => ({ ...f, plan: copied[i] ?? null })),
+        },
       };
     }
     res.status(201).json({ project: await projects.create(project), plansToUpload });

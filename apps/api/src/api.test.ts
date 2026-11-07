@@ -477,6 +477,58 @@ describe('#TASK-06 floor-plan PDFs (WBS 1.2.7, A-02)', () => {
     expect(elsewhere.body.code).toBe('E0605');
   });
 
+  it('"Save as new project" copies the plan files of the project it came from (user request 7 Nov 2026)', async () => {
+    const auth = await tokenFor(LEAD);
+    const source = (await request(app).post('/api/projects').set('cookie', auth).send({})).body
+      .project;
+    const up = await upload(source.id, auth, pdf);
+    const plan = {
+      kind: 'pdf',
+      fileId: up.body.fileId,
+      fileName: 'Ground Floor.pdf',
+      uploadedAt: up.body.uploadedAt,
+      uploadedBy: 'u-lead',
+      page: { widthPt: 1191, heightPt: 842 },
+      calibration: null,
+    };
+    // The open project's copy (any content) whose Ground Floor uses the stored plan.
+    const base = completeProject();
+    const copy = {
+      ...base,
+      id: source.id,
+      details: { ...base.details, name: 'Copy' },
+      building: {
+        ...base.building,
+        floors: base.building.floors.map((f) => ({ ...f, plan: f.plan ? plan : null })),
+      },
+    };
+    const saved = await request(app)
+      .post('/api/projects')
+      .set('cookie', auth)
+      .send({ project: copy, copyPlansFrom: source.id });
+    expect(saved.status).toBe(201);
+    expect(saved.body.plansToUpload).toBe(0);
+    const created = saved.body.project;
+    expect(created.id).not.toBe(source.id);
+    expect(created.building.floors.find((f: { plan: unknown }) => f.plan).plan).toMatchObject({
+      fileId: up.body.fileId,
+    });
+    const down = await request(app)
+      .get(`/api/projects/${created.id}/plans/${up.body.fileId}`)
+      .set('cookie', auth);
+    expect(down.status).toBe(200);
+
+    // A source that does not exist (or that this user may not open): the plans are asked again.
+    const unknown = await request(app)
+      .post('/api/projects')
+      .set('cookie', auth)
+      .send({ project: copy, copyPlansFrom: 'no-such-project' });
+    expect(unknown.body.plansToUpload).toBe(1);
+    expect(
+      unknown.body.project.building.floors.every((f: { plan: unknown }) => f.plan === null),
+    ).toBe(true);
+  });
+
   it('refuses a non-PDF (E0602), a damaged PDF (E0601), several pages (E0604) and over 20 MB (E0603)', async () => {
     const auth = await tokenFor(LEAD);
     const project = (await request(app).post('/api/projects').set('cookie', auth).send({})).body

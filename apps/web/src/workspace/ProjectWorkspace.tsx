@@ -1,9 +1,16 @@
-import { canOpenPage, reachedPage, type PageKey, type Project } from '@neuromep/shared';
+import {
+  canOpenPage,
+  reachedPage,
+  serializeProject,
+  type PageKey,
+  type Project,
+} from '@neuromep/shared';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { Outlet, useNavigate, useParams } from 'react-router';
+import { Outlet, useLocation, useNavigate, useParams } from 'react-router';
 import { Modal } from '../components/fields';
 import { ReachedTabContext, tabPath, useNotice, type TabKey } from '../layout/Shell';
 import type { ToolKey, ToolbarProps } from '../layout/Toolbar';
+import { safeFileName, saveBlob } from './fileNames';
 import { useProjectEditor } from './useProjectEditor';
 import { openGuide, SECTION_OF_PAGE } from '../guide/openGuide';
 
@@ -40,7 +47,7 @@ export const PAGE_OF_TAB: Partial<Record<TabKey, PageKey>> = {
 
 /**
  * Loads the open project once for the project tabs (Import File, Floor Setup, Schematic, Output)
- * and keeps it saved (useProjectEditor: autosave, save on leaving, conflicts).
+ * and saves it on Save (useProjectEditor: no autosave, asks before leaving, conflicts).
  */
 export function ProjectWorkspace() {
   const { projectId = '' } = useParams();
@@ -87,39 +94,201 @@ export function ProjectWorkspace() {
                 Stay on this page
               </button>
               <button className="btn btn-danger-outline" onClick={editor.leavePrompt.leave}>
-                Leave and lose changes
+                Leave without saving
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => void editor.leavePrompt?.saveAndLeave()}
+              >
+                Save and leave
               </button>
             </>
           }
         >
-          <p>Your latest changes could not be saved: {editor.saveError}</p>
+          <p>
+            This project has changes that are not saved. NeuroMEP saves only when you click Save.
+          </p>
         </Modal>
       )}
     </WorkspaceContext.Provider>
   );
 }
 
-/** Save / conflict messages shown at the top of a project page. */
+/** Downloads this tab's copy of the project, with everything not saved yet (.json). */
+function downloadCopy(project: Project) {
+  const name = `${safeFileName(project.details.name) || 'NeuroMEP_project'}_my_copy.json`;
+  saveBlob(new Blob([serializeProject(project)], { type: 'application/json' }), name);
+}
+
+/**
+ * Save / conflict messages shown at the top of a project page. On a conflict (E0802) the work in
+ * this tab is kept and can be saved: over the server copy, as a new project, or to a file
+ * (user request 7 Nov 2026); Reload is the only choice that discards it, after a confirmation.
+ */
 export function SaveBanner() {
-  const { editor } = useWorkspace();
+  const { editor, project } = useWorkspace();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const notice = useNotice();
+  const [dialog, setDialog] = useState<'overwrite' | 'saveAs' | 'reload' | null>(null);
+  const [name, setName] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  const close = () => {
+    setDialog(null);
+    setProblem(null);
+  };
+
+  const overwrite = async () => {
+    setBusy(true);
+    const ok = await editor.save({ overwrite: true });
+    setBusy(false);
+    close();
+    if (ok) notice('Your version is saved as the latest version of the project.');
+  };
+  const saveAs = async () => {
+    setBusy(true);
+    setProblem(null);
+    try {
+      const id = await editor.saveAsNew(name.trim());
+      const tab = location.pathname.split('/').pop() ?? 'import';
+      void navigate(`/projects/${id}/${tab}`, {
+        state: { notice: `Saved as the new project "${name.trim()}" with all your changes.` },
+      });
+    } catch (e) {
+      setProblem((e as Error).message);
+      setBusy(false);
+    }
+  };
+
+  let banner = null;
   if (editor.saveState === 'conflict') {
-    return (
+    banner = (
       <div className="banner banner-error save-banner" role="alert">
-        {editor.saveError}{' '}
-        <button className="btn btn-sm" onClick={() => void editor.reload()}>
-          Reload (discards my changes)
-        </button>
+        {editor.saveError} Your changes are kept in this tab.{' '}
+        <span className="save-actions">
+          <button className="btn btn-sm" onClick={() => setDialog('overwrite')}>
+            Save my version (overwrite)
+          </button>
+          {editor.canSaveAsNew && (
+            <button
+              className="btn btn-sm"
+              onClick={() => {
+                setName(`${project.details.name} (copy)`);
+                setDialog('saveAs');
+              }}
+            >
+              Save as new project
+            </button>
+          )}
+          <button className="btn btn-sm" onClick={() => downloadCopy(project)}>
+            Download my copy (.json)
+          </button>
+          <button className="btn btn-sm" onClick={() => setDialog('reload')}>
+            Reload (discards my changes)
+          </button>
+        </span>
       </div>
     );
-  }
-  if (editor.saveState === 'error') {
-    return (
+  } else if (editor.saveState === 'error') {
+    banner = (
       <div className="banner banner-warning save-banner" role="alert">
-        Changes not saved yet (E0801): {editor.saveError} They are kept and saving is retried.
+        Changes not saved (E0801): {editor.saveError} They are kept in this tab: click Save to try
+        again.
+      </div>
+    );
+  } else if (editor.dirty && editor.canEdit) {
+    banner = (
+      <div className="banner banner-info save-banner" role="status">
+        Unsaved changes - click Save to keep them.
       </div>
     );
   }
-  return null;
+
+  return (
+    <>
+      {banner}
+      {dialog === 'overwrite' && (
+        <Modal
+          title="Save my version over the server copy?"
+          onClose={close}
+          actions={
+            <>
+              <button className="btn" onClick={close} disabled={busy}>
+                Cancel
+              </button>
+              <button className="btn btn-primary" onClick={() => void overwrite()} disabled={busy}>
+                Save my version
+              </button>
+            </>
+          }
+        >
+          <p>
+            Everything in this tab, including the changes not saved yet, becomes the latest version
+            of the project. Changes that others saved since you opened it are replaced.
+          </p>
+          <p className="muted">To keep both, use Save as new project or Download my copy.</p>
+        </Modal>
+      )}
+      {dialog === 'saveAs' && (
+        <Modal
+          title="Save as new project"
+          onClose={close}
+          actions={
+            <>
+              <button className="btn" onClick={close} disabled={busy}>
+                Cancel
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => void saveAs()}
+                disabled={busy || !name.trim()}
+              >
+                Save as new project
+              </button>
+            </>
+          }
+        >
+          <p>
+            A new project is made from everything in this tab, including the changes not saved yet,
+            with its floor plans. &quot;{project.details.name}&quot; stays as it is on the server.
+          </p>
+          <label className="save-as-name">
+            New project name
+            <input value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+          </label>
+          {problem && <p className="banner banner-error">{problem}</p>}
+        </Modal>
+      )}
+      {dialog === 'reload' && (
+        <Modal
+          title="Discard my changes?"
+          onClose={close}
+          actions={
+            <>
+              <button className="btn" onClick={close}>
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger-outline"
+                onClick={() => {
+                  close();
+                  void editor.reload();
+                }}
+              >
+                Reload and discard
+              </button>
+            </>
+          }
+        >
+          <p>
+            The project is loaded again from the server and the changes not saved in this tab are
+            lost. Use Download my copy first if you may need them.
+          </p>
+        </Modal>
+      )}
+    </>
+  );
 }
 
 const ORDER: TabKey[] = ['projects', 'import', 'floor', 'schematic', 'output'];
@@ -187,11 +356,12 @@ export function useProjectToolbar(
             );
           return;
         case 'sync':
-          void editor
-            .save()
-            .then(() =>
-              editor.reload().then(() => notice('Project synchronised with the server.')),
-            );
+          // Sync loads the latest saved project; it never discards changes not saved yet.
+          if (editor.dirty || editor.saveState === 'conflict') {
+            notice('Save your changes first: Sync loads the latest saved project.');
+            return;
+          }
+          void editor.reload().then(() => notice('Project synchronised with the server.'));
           return;
         case 'undo':
           return editor.undo();
