@@ -54,11 +54,12 @@ export const riserSources = (m: Pick<Network, 'elements'>) => {
   ];
 };
 
-/** Components of a floor shown in the Building tab: every electrical component but equipment. */
+/**
+ * Components of a floor shown in the Building tab: every component placed on its plan (user
+ * request 8 Nov 2026), mechanical / PHE equipment included (shown, not connected there).
+ */
 export function riserBoards(m: Pick<Network, 'elements'>, floorId: string): Element[] {
-  return m.elements.filter(
-    (e) => e.floorId === floorId && e.discipline === 'electrical' && !OFF_RISER.has(e.kind),
-  );
+  return m.elements.filter((e) => e.floorId === floorId);
 }
 
 /** The riser feeding a board, if any. */

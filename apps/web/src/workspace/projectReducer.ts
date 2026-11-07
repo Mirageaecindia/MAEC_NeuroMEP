@@ -130,6 +130,8 @@ export type ProjectAction =
         construction?: CableConstruction;
         feederType?: FeederType;
         busbar?: BusbarSpec;
+        /** Typed length of a feeder drawn in the Building tab (8 Nov 2026). */
+        manualLengthM?: number;
       };
     }
   | { type: 'removeCables'; ids: string[] }

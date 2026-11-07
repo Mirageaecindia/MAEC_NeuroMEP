@@ -31,6 +31,8 @@ import {
   type CableConstruction,
   type ModelPoint,
   copyComponents,
+  drawBuildingFeeder,
+  onPlanOf,
   sheetMapping,
   resultOf,
   DisciplineSchema,
@@ -188,7 +190,10 @@ export function FloorSetupPage() {
   const calibration = floor?.plan?.calibration ?? null;
   const onFloor = floor ? project.model.elements.filter((e) => e.floorId === floor.id) : [];
   const selected = onFloor.find((e) => e.id === selectedId) ?? null;
-  const floorCables = floor ? project.model.cables.filter((c) => c.floorId === floor.id) : [];
+  // Feeders drawn on this plan; feeders between floors are drawn in the Building tab.
+  const floorCables = floor
+    ? project.model.cables.filter((c) => onPlanOf(c, project.model.elements, floor.id))
+    : [];
   const selectedCable = floorCables.find((c) => c.id === selectedId) ?? null;
 
   // ----- cables (#TASK-13) -----
@@ -549,7 +554,7 @@ export function FloorSetupPage() {
       tab="floor"
       projectId={project.id}
       sidebar={
-        <div className={building ? 'library greyed' : 'library'} aria-label="Component Library">
+        <div className={building ? 'library building' : 'library'} aria-label="Component Library">
           <p className="sidebar-title">Component Library</p>
           <DisciplineTabs value={tab} onChange={setTab} disabled={building} />
           <div className="library-chips">
@@ -558,7 +563,8 @@ export function FloorSetupPage() {
                 <button
                   key={item.key}
                   className={`lib-chip${armed === item.key ? ' armed' : ''}`}
-                  disabled={building || !canPlace}
+                  // The Building tab keeps only the Feeder: between floors (8 Nov 2026).
+                  disabled={(building && item.key !== 'cable') || !canPlace}
                   aria-pressed={armed === item.key}
                   draggable={!building && canPlace && isPlaceable(item)}
                   title={
@@ -574,8 +580,14 @@ export function FloorSetupPage() {
                     setDraft(null);
                     if (isPlaceable(item)) setArmed((k) => (k === item.key ? null : item.key));
                     else if (armed === 'cable') setArmed(null);
-                    else if (construction) setArmed('cable');
-                    else setConstructionFor('tool');
+                    else if (construction) {
+                      setArmed('cable');
+                      if (building) {
+                        notice(
+                          'Click the component the feeder starts from, then the one it feeds - on any floor.',
+                        );
+                      }
+                    } else setConstructionFor('tool');
                   }}
                 >
                   <span className="lib-icon" aria-hidden>
@@ -630,6 +642,34 @@ export function FloorSetupPage() {
               : (floorId, name) => editor.dispatch({ type: 'renameFloor', floorId, name })
           }
           onSave={() => void editor.save()}
+          feederArmed={armed === 'cable'}
+          onFeeder={(from, to, lengthM) => {
+            if (!construction)
+              return 'Choose the cable construction first (Feeder in the library).';
+            const topology = topologyCheck(project.model, from, to);
+            if (!topology.ok) return `${topology.message} (${topology.code})`;
+            const sourceFloor = project.building.floors.find((f) => f.id === from.floorId);
+            const cable = drawBuildingFeeder({
+              id: crypto.randomUUID(),
+              cables: project.model.cables,
+              from,
+              to,
+              lengthM,
+              floorCode: sourceFloor?.code ?? '',
+              construction,
+            });
+            editor.dispatch({ type: 'addCable', cable });
+            setArmed(null);
+            notice(`Feeder ${cable.tag} from ${from.tag} to ${to.tag}, ${lengthM} m.`);
+            return null;
+          }}
+          onFeederLength={(id, lengthM) =>
+            editor.dispatch(
+              lengthM === null
+                ? { type: 'removeCables', ids: [id] }
+                : { type: 'updateCable', id, patch: { manualLengthM: lengthM } },
+            )
+          }
           onCableSize={() =>
             cableSize.run({ kind: 'project' }, 'the whole project').then((r) => r?.reply ?? null)
           }

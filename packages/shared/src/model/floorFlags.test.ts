@@ -45,6 +45,15 @@ describe('#TASK-10 floor status and flags (A-08)', () => {
     const tx = testElement('transformer', 'tx', gf);
     cabled.model.cables = [{ ...testCable(tx, before.model.elements[0]!), floorId: gf }];
     expect(lockedChange(before, cabled)).toMatch(/\(Ground Floor\)$/);
+    // A feeder between floors, drawn from another floor, is locked by the flagged floor too.
+    const other = before.building.floors.find((f) => f.id !== gf)!.id;
+    const fromAbove = structuredClone(before);
+    const up = testElement('mdb', 'up', other);
+    fromAbove.model.elements.push(up);
+    fromAbove.model.cables = [
+      { ...testCable(up, before.model.elements[0]!), floorId: other, manualLengthM: 30 },
+    ];
+    expect(lockedChange(before, fromAbove)).toMatch(/\(Ground Floor\)$/);
     const noPlan = structuredClone(before);
     noPlan.building.floors.find((f) => f.id === gf)!.plan = null;
     expect(lockedChange(before, noPlan)).toBe('Ground Floor plan');

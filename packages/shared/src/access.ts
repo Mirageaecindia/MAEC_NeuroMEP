@@ -178,6 +178,21 @@ export function lockedChange(before: Project, after: Project): string | null {
     (c) => c.tag,
   );
   if (cable) return cable;
+  // A feeder between floors (8 Nov 2026) is locked by the floor at either end too.
+  const floorOf = (id: string) =>
+    (
+      after.model.elements.find((e) => e.id === id) ??
+      before.model.elements.find((e) => e.id === id)
+    )?.floorId;
+  const oldCables = new Map(before.model.cables.map((c) => [c.id, c]));
+  const newCables = new Map(after.model.cables.map((c) => [c.id, c]));
+  for (const id of changed(before.model.cables, after.model.cables)) {
+    for (const c of [oldCables.get(id), newCables.get(id)]) {
+      for (const f of c ? [floorOf(c.from.elementId), floorOf(c.to.elementId)] : []) {
+        if (f && locked(f, 'electrical')) return `${c!.tag} (${name(f)})`;
+      }
+    }
+  }
   for (const f of after.building.floors) {
     const old = before.building.floors.find((x) => x.id === f.id);
     const anyFlag = DisciplineSchema.options.some((d) => locked(f.id, d));

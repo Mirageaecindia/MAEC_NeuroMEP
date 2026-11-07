@@ -12,6 +12,7 @@ import {
   setBoardRiser,
   setRiser,
   sourceConnected,
+  onPlanOf,
   usuallyFeeds,
   KIND_LABELS,
   floorStatus,
@@ -23,7 +24,7 @@ import {
 } from '@neuromep/shared';
 import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import type { EngineReply } from '../../workspace/engineRun';
-import { NumberInput } from '../../components/fields';
+import { Modal, NumberInput } from '../../components/fields';
 import { StatusMark } from '../../layout/icons';
 import { useNotice } from '../../layout/Shell';
 import { DemandFactorsDialog } from './DemandFactorsDialog';
@@ -63,6 +64,15 @@ export function BuildingTab(props: {
   onSave: () => void;
   /** Cable Size Calculator: Cable Size for the whole project (FR-21, A-07); null if it failed. */
   onCableSize: () => Promise<EngineReply | null>;
+  /**
+   * Feeder tool armed in the Building tab (user request 8 Nov 2026): click a component on one
+   * floor, then one on another, and type the feeder's length.
+   */
+  feederArmed?: boolean;
+  /** A new feeder between two components with the length typed; returns why it cannot be. */
+  onFeeder?: (from: Element, to: Element, lengthM: number) => string | null;
+  /** A feeder's typed length changed, or the feeder removed (null). */
+  onFeederLength?: (cableId: string, lengthM: number | null) => void;
 }) {
   const notice = useNotice();
   const { model } = props;
@@ -106,6 +116,12 @@ export function BuildingTab(props: {
   const bottomY = floorY(rows.length - 1);
   const boards = rows.map((f) => riserBoards(model, f.id));
   const width = BOARD_X + Math.max(1, ...boards.map((b) => b.length)) * BOARD_GAP + 20;
+  /** Where each component is drawn (left of its box, floor line), for the feeders between them. */
+  const boxAt = new Map(
+    boards.flatMap((list, i) =>
+      list.map((b, k) => [b.id, { x: BOARD_X + k * BOARD_GAP, y: floorY(i) }] as const),
+    ),
+  );
   const maxLen = Math.max(0, ...risers.map((r) => r.lengthM ?? 0));
   const tag = (id: string | null) => model.elements.find((e) => e.id === id)?.tag ?? null;
 
@@ -151,6 +167,7 @@ export function BuildingTab(props: {
   function chooseRiser(board: Element) {
     if (props.readOnly) return;
     if (picking) return pickSource(board);
+    if (props.feederArmed) return feederClick(board);
     const usable = risers.filter((r) => r.lengthM).map((r) => r.id);
     if (usable.length === 0) {
       notice('Enter a riser length in Riser Design first.');
@@ -160,6 +177,41 @@ export function BuildingTab(props: {
       setBoardRiser(model.risers, board.id, cycle(usable, riserOf(risers, board.id)?.id ?? null)),
     );
   }
+
+  // ----- feeders between floors (user request 8 Nov 2026) -----
+  const [feederFrom, setFeederFrom] = useState<Element | null>(null);
+  const [askLength, setAskLength] = useState<{ from: Element; to: Element } | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [lengthText, setLengthText] = useState('');
+  // The start of a feeder counts only while the Feeder tool is armed.
+  const start = props.feederArmed ? feederFrom : null;
+  const floorName = (e: Element) => props.floors.find((f) => f.id === e.floorId)?.name ?? '';
+  function feederClick(board: Element) {
+    if (board.kind === 'equipment') {
+      notice(`${board.tag} is linked to its isolator through Fed from, not by a feeder.`);
+      return;
+    }
+    if (!start) {
+      setFeederFrom(board);
+      notice(
+        `Feeder from ${board.tag} (${floorName(board)}): click the component it feeds, on any floor.`,
+      );
+      return;
+    }
+    if (start.id === board.id) {
+      setFeederFrom(null);
+      return;
+    }
+    setLengthText('');
+    setAskLength({ from: start, to: board });
+  }
+  const typedLength = Number(lengthText);
+  const lengthOk = lengthText.trim() !== '' && Number.isFinite(typedLength) && typedLength > 0;
+  /** Feeders not drawn on a floor plan: between floors, or drawn here with a typed length. */
+  const buildingFeeders = model.cables.filter((c) => {
+    const from = model.elements.find((e) => e.id === c.from.elementId);
+    return from && !onPlanOf(c, model.elements, from.floorId);
+  });
 
   const status = (f: Floor, d: Discipline) => STATUS_ICON[floorStatus(model, f.id, d)];
   const connected = sourceConnected({ ...model, risers });
@@ -260,6 +312,9 @@ export function BuildingTab(props: {
                       byCable && riser < 0 ? 'cable-fed' : '',
                       source ? 'riser-source' : '',
                       picking ? 'picking' : '',
+                      start?.id === b.id ? 'feeder-from' : '',
+                      props.feederArmed ? 'feeding' : '',
+                      b.kind === 'equipment' ? 'equipment' : '',
                     ]
                       .filter(Boolean)
                       .join(' ');
@@ -379,6 +434,33 @@ export function BuildingTab(props: {
                     no supply
                   </text>
                 )}
+              </g>
+            );
+          })}
+          {buildingFeeders.map((c, i) => {
+            const a = boxAt.get(c.from.elementId);
+            const b = boxAt.get(c.to.elementId);
+            if (!a || !b) return null;
+            const lane = BOARD_X - 12 - (i % 8) * 6;
+            const d = `M ${a.x + 16} ${a.y - 9} V ${a.y - 15} H ${lane} V ${b.y - 15} H ${b.x + 16} V ${b.y - 9}`;
+            const mid = (a.y + b.y) / 2;
+            return (
+              <g
+                key={c.id}
+                className="building-feeder"
+                role="button"
+                aria-label={`Feeder ${c.tag}, ${c.manualLengthM ?? '?'} m`}
+                onClick={() => {
+                  if (props.readOnly) return;
+                  setLengthText(String(c.manualLengthM ?? ''));
+                  setEditing(c.id);
+                }}
+              >
+                <path d={d} className="building-feeder-hit" />
+                <path d={d} />
+                <text x={lane - 3} y={mid} className="building-feeder-tag">
+                  {c.tag} · {c.manualLengthM ?? '?'} m
+                </text>
               </g>
             );
           })}
@@ -517,6 +599,113 @@ export function BuildingTab(props: {
           <button className="summary-btn demand-btn" onClick={() => setDfOpen(true)}>
             Demand Factors
           </button>
+        )}
+        {askLength && (
+          <Modal
+            title="Feeder length"
+            onClose={() => {
+              setAskLength(null);
+              setFeederFrom(null);
+            }}
+            actions={
+              <>
+                <button
+                  className="btn"
+                  onClick={() => {
+                    setAskLength(null);
+                    setFeederFrom(null);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary"
+                  disabled={!lengthOk}
+                  onClick={() => {
+                    const problem = props.onFeeder?.(askLength.from, askLength.to, typedLength);
+                    if (problem) notice(problem);
+                    setAskLength(null);
+                    setFeederFrom(null);
+                  }}
+                >
+                  Connect
+                </button>
+              </>
+            }
+          >
+            <p>
+              {askLength.from.tag} ({floorName(askLength.from)}) to {askLength.to.tag} (
+              {floorName(askLength.to)}).
+            </p>
+            <label className="feeder-length">
+              Total length (m) - horizontal runs and the rise between floors
+              <input
+                type="number"
+                min={0}
+                step="any"
+                value={lengthText}
+                autoFocus
+                aria-label="Feeder length (m)"
+                onChange={(e) => setLengthText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && lengthOk) {
+                    const problem = props.onFeeder?.(askLength.from, askLength.to, typedLength);
+                    if (problem) notice(problem);
+                    setAskLength(null);
+                    setFeederFrom(null);
+                  }
+                }}
+              />
+            </label>
+            <p className="muted">
+              Nothing can be measured between floors, so Cable Size uses this length as it is.
+            </p>
+          </Modal>
+        )}
+        {editing && (
+          <Modal
+            title={`Feeder ${model.cables.find((c) => c.id === editing)?.tag ?? ''}`}
+            onClose={() => setEditing(null)}
+            actions={
+              <>
+                <button
+                  className="btn btn-danger-outline"
+                  onClick={() => {
+                    props.onFeederLength?.(editing, null);
+                    setEditing(null);
+                  }}
+                >
+                  Delete feeder
+                </button>
+                <button className="btn" onClick={() => setEditing(null)}>
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary"
+                  disabled={!lengthOk}
+                  onClick={() => {
+                    props.onFeederLength?.(editing, typedLength);
+                    setEditing(null);
+                  }}
+                >
+                  Save length
+                </button>
+              </>
+            }
+          >
+            <label className="feeder-length">
+              Total length (m)
+              <input
+                type="number"
+                min={0}
+                step="any"
+                value={lengthText}
+                autoFocus
+                aria-label="Feeder length (m)"
+                onChange={(e) => setLengthText(e.target.value)}
+              />
+            </label>
+          </Modal>
         )}
         {dfOpen && (
           <DemandFactorsDialog onClose={() => setDfOpen(false)} onChanged={() => setSized(false)} />

@@ -84,6 +84,11 @@ export const CableSchema = z.object({
   route: z.array(ModelPointSchema).min(2),
   /** Vertical runs added to the routed length (m). */
   verticalM: z.number().nonnegative(),
+  /**
+   * Length typed by the engineer (m) for a feeder drawn in the Building tab - between floors, where
+   * nothing can be measured on a plan (user request 8 Nov 2026). Used as the whole length.
+   */
+  manualLengthM: z.number().positive().optional(),
   feederType: FeederTypeSchema.default('cable'),
   /** Kept while the feeder is a cable, so switching back and forth loses nothing. */
   busbar: BusbarSpecSchema.optional(),

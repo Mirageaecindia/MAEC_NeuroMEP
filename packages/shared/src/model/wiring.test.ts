@@ -5,6 +5,8 @@ import { isPlaceable, libraryItem, placeElement } from './library.js';
 import {
   cableLength,
   closeRoute,
+  drawBuildingFeeder,
+  onPlanOf,
   connectionProblem,
   drawCable,
   fedFrom,
@@ -142,5 +144,68 @@ describe('#TASK-13 outgoing ways and tags (FR-15, 12.4)', () => {
     expect(nextWay([c1, c3], 'smdb')).toBe(1); // way 1 freed when its cable was removed
     expect(fedFrom(db, { elements: [mdb, smdb, db], cables: [c1, c2] })).toBe(smdb.tag);
     expect(fedFrom(mdb, { elements: [mdb], cables: [c1] })).toBeNull();
+  });
+});
+
+describe('feeders drawn in the Building tab (user request 8 Nov 2026)', () => {
+  const construction = {
+    cores: '4C' as const,
+    conductor: 'Cu' as const,
+    insulation: 'XLPE' as const,
+    armour: 'SWA' as const,
+    sheath: 'PVC' as const,
+    voltageGrade: '600/1000 V' as const,
+    method: 'B' as const,
+    trays: null,
+    depthM: null,
+    separation: null,
+    groupedCircuits: null,
+  };
+
+  it('joins components on two floors with the typed length, tagged on the source floor', () => {
+    const mdb = el('mdb', 'm');
+    const smdb = el('smdb', 's', 'f-1');
+    const c = drawBuildingFeeder({
+      id: 'c1',
+      cables: [],
+      from: mdb,
+      to: smdb,
+      lengthM: 35,
+      floorCode: 'GF',
+      construction,
+    });
+    expect(c).toMatchObject({ manualLengthM: 35, tag: 'FGF-1', circuitRef: '1RYB' });
+    expect(cableLength(c, { allowancePct: 10, additionM: 5 })).toEqual({
+      routedM: 0,
+      additionM: 0,
+      allowanceM: 0,
+      totalM: 35,
+    });
+    // Not drawn on either floor plan: it belongs to the Building tab.
+    expect(onPlanOf(c, [mdb, smdb], mdb.floorId)).toBe(false);
+    expect(onPlanOf(c, [mdb, smdb], 'f-1')).toBe(false);
+  });
+
+  it('feeds an ATS normal input first, then standby', () => {
+    const ats = el('ats', 'a', 'f-1');
+    const first = drawBuildingFeeder({
+      id: 'c1',
+      cables: [],
+      from: el('transformer', 't'),
+      to: ats,
+      lengthM: 20,
+      floorCode: 'GF',
+      construction,
+    });
+    const second = drawBuildingFeeder({
+      id: 'c2',
+      cables: [first],
+      from: el('generator', 'g'),
+      to: ats,
+      lengthM: 30,
+      floorCode: 'GF',
+      construction,
+    });
+    expect([first.to.port, second.to.port]).toEqual(['normal', 'standby']);
   });
 });

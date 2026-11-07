@@ -702,6 +702,66 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(await screen.findByText('Riser 1 is not fed.')).toBeVisible();
   });
 
+  it('connects components on two floors with a Feeder and a typed length (8 Nov 2026)', async () => {
+    const project = buildingProject();
+    const first = project.building.floors.find((f) => f.code === '1')!;
+    const smdb = placeElement(libraryItem('smdb') as Parameters<typeof placeElement>[0], {
+      id: 'smdb-1f',
+      floorId: first.id,
+      floorCode: '1',
+      position: { x: 3, y: 3 },
+      taken: [],
+    });
+    project.model.elements.push(smdb);
+    const api = fakeApi(project);
+    renderAt('/projects/p-1/floor', new FakeAuth(LEAD), api);
+    await userEvent.click(await screenTool('Building'));
+    // Every component of every floor is drawn; the library keeps only the Feeder.
+    expect(screen.getByRole('button', { name: 'SMDB-1-01 board' })).toBeInTheDocument();
+    const library = screen.getByLabelText('Component Library');
+    expect(within(library).getByRole('button', { name: /^Transformer/ })).toBeDisabled();
+    await userEvent.click(within(library).getByRole('button', { name: /Feeder/ }));
+    const c = await screen.findByRole('dialog', { name: 'Cable construction' });
+    for (const [label, value] of [
+      ['Cores', '4C'],
+      ['Conductor', 'Cu'],
+      ['Insulation', 'XLPE'],
+      ['Armour', 'SWA'],
+      ['Sheath', 'PVC'],
+      ['Voltage grade', '600/1000 V'],
+      ['Installation method', 'B'],
+    ]) {
+      await userEvent.selectOptions(within(c).getByLabelText(label!), value!);
+    }
+    await userEvent.click(within(c).getByRole('button', { name: 'Use this construction' }));
+    await userEvent.click(screen.getByRole('button', { name: 'TX-1 board' }));
+    await userEvent.click(screen.getByRole('button', { name: 'SMDB-1-01 board' }));
+    const ask = screen.getByRole('dialog', { name: 'Feeder length' });
+    const connect = within(ask).getByRole('button', { name: 'Connect' });
+    expect(connect).toBeDisabled(); // the length must be typed
+    await userEvent.type(within(ask).getByLabelText('Feeder length (m)'), '35');
+    await userEvent.click(connect);
+    const feeder = await screen.findByRole('button', { name: /^Feeder FGF-\S+, 35 m$/ });
+    // Change its length.
+    await userEvent.click(feeder);
+    const edit = screen.getByRole('dialog', { name: /^Feeder FGF-/ });
+    const length = within(edit).getByLabelText('Feeder length (m)');
+    await userEvent.clear(length);
+    await userEvent.type(length, '42.5');
+    await userEvent.click(within(edit).getByRole('button', { name: 'Save length' }));
+    expect(
+      await screen.findByRole('button', { name: /^Feeder FGF-\S+, 42.5 m$/ }),
+    ).toBeInTheDocument();
+    await userEvent.click(tool('Save'));
+    await waitFor(async () =>
+      expect((await api.getProject('p-1')).project.model.cables.at(-1)).toMatchObject({
+        from: { elementId: 'tx' },
+        to: { elementId: 'smdb-1f', port: 'in' },
+        manualLengthM: 42.5,
+      }),
+    );
+  });
+
   it('#TASK-18 a riser fed from the transformer feeds the floor boards; then Cable Size (A-07)', async () => {
     const project = buildingProject();
     project.calculation.busbarMaker = 'schneider';

@@ -204,3 +204,23 @@ describe('#TASK-21 / #TASK-22 C1 and C2 across the network (10.2 steps 4-6)', ()
     });
   });
 });
+
+describe('feeders between floors (user request 8 Nov 2026)', () => {
+  it('uses the typed length as the whole length, the same as a routed cable of that length', () => {
+    const p = network();
+    const routed = toDb(p);
+    const typed = network();
+    typed.model.cables[1] = {
+      ...typed.model.cables[1]!,
+      manualLengthM: 40,
+      route: [
+        { x: 0, y: 0 },
+        { x: 0, y: 0 },
+      ],
+    };
+    const db = toDb(typed);
+    expect(db.lengthM).toBe(40);
+    expect(db.drop?.vcPct).toBeCloseTo(routed.drop!.vcPct, 9);
+    expect(db.size).toEqual(routed.size);
+  });
+});

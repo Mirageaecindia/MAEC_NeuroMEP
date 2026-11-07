@@ -464,8 +464,8 @@ export const SECTIONS: GuideSection[] = [
         <Rule>
           Any component may feed any other - you decide; the Engineering Property shows the usual
           connections and notes an unusual one (see <a href="#hierarchy">Usual connections</a>).
-          Only a loop is refused (E1401). Feeders are drawn on one floor; power goes between floors
-          through risers (Building tab).
+          Only a loop is refused (E1401). On a floor plan a feeder joins two components of that
+          floor; between floors, draw it in the Building tab (below) or use a riser.
         </Rule>
         <p>
           Select a feeder to change it in the right panel: Cable or Busbar feeder, construction, and{' '}
@@ -543,6 +543,28 @@ export const SECTIONS: GuideSection[] = [
           The Technical Lead can rename a floor: click its name, type the new one, press Enter
           (Escape cancels). Only the name changes; the floor&apos;s tags keep its code (GF, 1, 2
           ...).
+        </p>
+        <h3>Feeders between floors</h3>
+        <p>
+          Every component placed on the floor plans is drawn on its floor here. The component
+          library is greyed except the <Term>Feeder</Term>:
+        </p>
+        <ol>
+          <li>Click Feeder in the library (choose the cable construction the first time).</li>
+          <li>Click the component the feeder starts from, on any floor.</li>
+          <li>
+            Click the component it feeds, on any floor (Escape or the same component cancels).
+          </li>
+          <li>
+            Type the feeder&apos;s total length in metres - the horizontal runs and the rise between
+            floors. Nothing can be measured between floors, so Cable Size uses it as it is (no 5 m
+            addition).
+          </li>
+        </ol>
+        <p>
+          The feeder is drawn in blue with its tag and length; click it to change the length or
+          delete it. It is not drawn on the floor plans, but Fed From, the schematic, schedules and
+          Cable Size all include it.
         </p>
         <h3>Placing a riser</h3>
         <ol>
@@ -732,9 +754,10 @@ export const SECTIONS: GuideSection[] = [
             unit through Fed from.
           </li>
           <li>
-            Between floors, power goes through a <Term>riser</Term> (Building tab): any component
-            can feed a riser (usually a transformer, LV panel or MDB) and any component can take a
-            tap-off (usually an SMDB, MCC or DB).
+            Between floors, power goes through a <Term>feeder</Term> drawn in the Building tab, with
+            the length you type, or through a <Term>riser</Term>: any component can feed a riser
+            (usually a transformer, LV panel or MDB) and any component can take a tap-off (usually
+            an SMDB, MCC or DB).
           </li>
         </ul>
         <p>

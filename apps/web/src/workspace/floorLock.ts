@@ -15,7 +15,13 @@ import type { ProjectAction } from './projectReducer';
 export function touchesLockedFloor(project: Project, action: ProjectAction): boolean {
   const { elements, cables, floorFlags } = project.model;
   const element = (e: Element | undefined) => !!e && isFlagged(floorFlags, e.floorId, e.discipline);
-  const cable = (c: Cable | undefined) => !!c && isFlagged(floorFlags, c.floorId, 'electrical');
+  const floorOf = (id: string) => elements.find((e) => e.id === id)?.floorId;
+  // A feeder between floors is locked by the floor at either end too (8 Nov 2026).
+  const cable = (c: Cable | undefined) =>
+    !!c &&
+    [c.floorId, floorOf(c.from.elementId), floorOf(c.to.elementId)].some(
+      (f) => !!f && isFlagged(floorFlags, f, 'electrical'),
+    );
   const byId = (id: string) => elements.find((e) => e.id === id);
   const cableById = (id: string) => cables.find((c) => c.id === id);
   // Moving or removing a component also moves or removes its cables.

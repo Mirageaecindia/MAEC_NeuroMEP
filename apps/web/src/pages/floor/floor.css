@@ -608,3 +608,55 @@
   fill: transparent;
   stroke: none;
 }
+
+/* Building tab (8 Nov 2026): the library is greyed except the Feeder, which joins components on
+   any two floors; those feeders are drawn here with their tag and typed length. */
+.library.building .lib-chip:disabled {
+  opacity: 0.35;
+}
+.building-feeder {
+  cursor: pointer;
+}
+.building-feeder path {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 2;
+}
+.building-feeder path.building-feeder-hit {
+  stroke: transparent;
+  stroke-width: 10;
+}
+.building-feeder:hover path:not(.building-feeder-hit) {
+  stroke-width: 3;
+}
+.building-feeder-tag {
+  font-size: 8px;
+  text-anchor: end;
+  fill: #1d4ed8;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 3px;
+}
+.floor-board.feeding rect {
+  stroke: #2563eb;
+}
+.floor-board.feeder-from rect {
+  fill: #bfdbfe;
+  stroke-width: 2;
+}
+.floor-board.equipment rect,
+.floor-board.equipment line {
+  opacity: 0.45;
+}
+.feeder-length {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+.feeder-length input {
+  padding: 6px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font: inherit;
+}

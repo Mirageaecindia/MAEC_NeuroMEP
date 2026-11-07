@@ -87,9 +87,13 @@ export interface LengthRule {
  * addition per cable (5 m in the Dubai pack, replacing 1 m + 10 %), plus any percentage allowance.
  */
 export function cableLength(
-  cable: Pick<Cable, 'route' | 'verticalM'>,
+  cable: Pick<Cable, 'route' | 'verticalM' | 'manualLengthM'>,
   rule: LengthRule,
 ): { routedM: number; additionM: number; allowanceM: number; totalM: number } {
+  // A feeder between floors: the length the engineer typed, as it is (8 Nov 2026).
+  if (cable.manualLengthM !== undefined) {
+    return { routedM: 0, additionM: 0, allowanceM: 0, totalM: cable.manualLengthM };
+  }
   const routedM = segmentsLength(cable.route);
   const additionM = rule.additionM ?? cable.verticalM;
   const allowanceM = ((routedM + additionM) * rule.allowancePct) / 100;
@@ -134,6 +138,53 @@ export function cableTag(
   let tag = base;
   for (let n = 2; taken.has(tag); n++) tag = `${base}/${n}`;
   return tag;
+}
+
+/** Is the feeder drawn on one floor's plan (both ends on that floor, measured on the plan)? */
+export function onPlanOf(
+  cable: Pick<Cable, 'from' | 'to' | 'manualLengthM'>,
+  elements: readonly Pick<Element, 'id' | 'floorId'>[],
+  floorId: string,
+): boolean {
+  const floorOf = (id: string) => elements.find((e) => e.id === id)?.floorId;
+  return (
+    cable.manualLengthM === undefined &&
+    floorOf(cable.from.elementId) === floorId &&
+    floorOf(cable.to.elementId) === floorId
+  );
+}
+
+/**
+ * A feeder drawn in the Building tab (user request 8 Nov 2026): any two components, on any two
+ * floors, with the length the engineer types - nothing is measured. Tagged on the source floor.
+ */
+export function drawBuildingFeeder(args: {
+  id: string;
+  cables: readonly Cable[];
+  from: Element;
+  to: Element;
+  lengthM: number;
+  floorCode: string;
+  construction: CableConstruction;
+}): Cable {
+  const port: Port =
+    args.to.kind === 'ats'
+      ? args.cables.some((c) => c.to.elementId === args.to.id && c.to.port === 'normal')
+        ? 'standby'
+        : 'normal'
+      : 'in';
+  return {
+    ...drawCable({
+      id: args.id,
+      cables: args.cables,
+      from: { element: args.from, port: 'out' },
+      to: { element: args.to, port },
+      route: [args.from.position, args.to.position],
+      floorCode: args.floorCode,
+      construction: args.construction,
+    }),
+    manualLengthM: args.lengthM,
+  };
 }
 
 /** A new cable between two ports along a route (metres), as drawn (FR-15). */
