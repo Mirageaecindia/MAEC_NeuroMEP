@@ -226,6 +226,22 @@ export const LIBRARY_ITEMS: readonly LibraryItem[] = [
   },
   // Not in the Figma library: load points standing for equipment (user decision 6 Nov 2026).
   {
+    // Manager feedback (7 Nov 2026): the UPS was missing. kVA in its Engineering Property; its
+    // fault current is not in the rule pack yet, so short-circuit below a UPS is not calculated.
+    key: 'ups',
+    label: 'UPS',
+    discipline: 'electrical',
+    cmpCode: null,
+    tag: { pattern: 'UPS_{floor}_{n}', source: 'proposal' },
+    create: () => ({
+      ...common,
+      kind: 'ups',
+      kvaOverride: null,
+      xdSubtransientPct: null,
+      sustainedScKa: null,
+    }),
+  },
+  {
     key: 'isolator-sp',
     label: 'Isolator 1P',
     discipline: 'electrical',

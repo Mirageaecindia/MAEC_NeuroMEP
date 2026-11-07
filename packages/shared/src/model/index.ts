@@ -7,6 +7,7 @@ export * from './loads.js';
 export * from './topology.js';
 export * from './wiring.js';
 export * from './copy.js';
+export * from './changeKind.js';
 export * from './results.js';
 export * from './riser.js';
 export * from './network.js';

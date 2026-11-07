@@ -47,6 +47,8 @@ export interface PlanMarker {
   scale?: number;
   /** Symbol rotation, degrees clockwise (7 Nov 2026). */
   rotation?: number;
+  /** Lines under the tag, e.g. an isolator's rating, poles, equipment and source (7 Nov 2026). */
+  detail?: string[];
 }
 
 /** A cable drawn on the plan (#TASK-13): its tag and route in PDF points. */
@@ -800,6 +802,17 @@ export function PlanViewer(props: {
                   <text x={s.x} y={s.y + size / 2 + 11} textAnchor="middle" className="marker-tag">
                     {m.tag}
                   </text>
+                  {m.detail?.map((line, i) => (
+                    <text
+                      key={i}
+                      x={s.x}
+                      y={s.y + size / 2 + 21 + i * 9}
+                      textAnchor="middle"
+                      className="marker-detail"
+                    >
+                      {line}
+                    </text>
+                  ))}
                 </g>
               );
             })}

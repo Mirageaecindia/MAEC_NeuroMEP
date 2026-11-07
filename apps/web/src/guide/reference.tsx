@@ -32,6 +32,10 @@ const PURPOSE: Record<string, { what: string; where: string }> = {
     what: 'Steps the 11 kV supply down to 400 / 230 V; the main source of the LV network. Enter kVA and primary voltage (uk / ur optional - catalogue values are used).',
     where: 'Floor Setup, substation floor.',
   },
+  ups: {
+    what: 'Uninterruptible power supply for critical loads (C8: a critical load needs a UPS). Usually fed from a main panel; usually feeds a DB, isolator or the standby input of an ATS. Enter its kVA and, from its datasheet, its fault current - short-circuit below a UPS is not calculated yet.',
+    where: 'Floor Setup, UPS / electrical room.',
+  },
   generator: {
     what: 'Standby source for essential and fire & life-safety loads. Feeds the standby input of an ATS (or a main panel directly). Enter its kVA.',
     where: 'Floor Setup, plant room / roof.',

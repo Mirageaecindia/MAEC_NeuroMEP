@@ -132,8 +132,14 @@ function fieldsFor(e: Element, feeders: readonly { id: string; tag: string }[]):
         num('urPct', 'ur', '%'),
         { key: 'vectorGroup', label: 'Vector group', type: 'text' },
       ];
-    case 'generator':
+    // UPS (7 Nov 2026): its rating and the fault current from its datasheet (not used by the
+    // engine yet - short-circuit below a UPS is not calculated until the UPS data is agreed).
     case 'ups':
+      return [
+        num('kvaOverride', 'Rating', 'kVA'),
+        num('sustainedScKa', 'Fault current (datasheet)', 'kA'),
+      ];
+    case 'generator':
       return [
         num('kvaOverride', 'kVA (override)', 'kVA'),
         num('xdSubtransientPct', "X''d", '%'),

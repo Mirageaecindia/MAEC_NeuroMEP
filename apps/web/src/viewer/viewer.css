@@ -231,3 +231,11 @@
   stroke: var(--primary);
   stroke-dasharray: 4 3;
 }
+/* Isolator / connection unit details under the tag (7 Nov 2026). */
+.marker-detail {
+  font-size: 8px;
+  fill: #374151;
+  paint-order: stroke;
+  stroke: #fff;
+  stroke-width: 3px;
+}

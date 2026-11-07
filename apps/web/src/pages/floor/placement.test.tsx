@@ -126,7 +126,7 @@ describe('#TASK-12 placing components on Floor Setup (WBS 1.3.1)', () => {
     expect(await screen.findByRole('img', { name: 'DB-GF-01 (selected)' })).toBeInTheDocument();
     expect(chip('DB')).toHaveAttribute('aria-pressed', 'false');
     const card = screen.getByRole('region', { name: 'Engineering Property' });
-    expect(card).toHaveTextContent('Name :DB');
+    expect(within(card).getByLabelText('Name :')).toHaveDisplayValue('DB');
     expect(within(card).getByLabelText('Tag :')).toHaveValue('DB-GF-01');
 
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -653,5 +653,48 @@ describe('rotate, copy / paste, Replicate floor, floor names (user request 7 Nov
     expect(
       await screen.findByRole('button', { name: 'Rename Office Level 1' }),
     ).toBeInTheDocument();
+  });
+});
+
+describe('Change type and isolator label (manager feedback, 7 Nov 2026)', () => {
+  it('changes an MDB to an SMDB keeping its feeders; an isolator shows poles, equipment and source', async () => {
+    const api = open(LEAD);
+    await planReady();
+    await userEvent.click(chip('MDB'));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
+    await userEvent.click(chip('Isolator 3P'));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 300 });
+    await userEvent.click(chip('Feeder'));
+    const c = await screen.findByRole('dialog', { name: 'Cable construction' });
+    for (const [label, value] of [
+      ['Cores', '4C'],
+      ['Conductor', 'Cu'],
+      ['Insulation', 'XLPE'],
+      ['Armour', 'SWA'],
+      ['Sheath', 'PVC'],
+      ['Voltage grade', '600/1000 V'],
+      ['Installation method', 'B'],
+    ]) {
+      await userEvent.selectOptions(within(c).getByLabelText(label!), value!);
+    }
+    await userEvent.click(within(c).getByRole('button', { name: 'Use this construction' }));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 300 });
+    await screen.findByRole('img', { name: /^Cable F/ });
+    // The isolator: "- A TP" until Cable Size, and its source.
+    expect(screen.getByText('- A TP')).toBeInTheDocument();
+    expect(screen.getByText('from MDB-GF-01')).toBeInTheDocument();
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
+    const card = screen.getByRole('region', { name: 'Engineering Property' });
+    await userEvent.selectOptions(within(card).getByLabelText('Name :'), 'SMDB');
+    expect(await screen.findByRole('img', { name: /^SMDB-GF-01/ })).toBeInTheDocument();
+    expect(screen.getByText('from SMDB-GF-01')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.saveProject).toHaveBeenCalled());
+    const saved = api.saveProject.mock.calls.at(-1)![0];
+    expect(saved.model.elements[0]).toMatchObject({ kind: 'smdb', tag: 'SMDB-GF-01' });
+    expect(saved.model.cables).toHaveLength(1);
   });
 });

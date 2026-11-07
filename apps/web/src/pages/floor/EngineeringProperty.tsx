@@ -1,4 +1,5 @@
 import {
+  CHANGEABLE_KINDS,
   itemOfElement,
   KIND_LABELS,
   lineKw,
@@ -18,6 +19,8 @@ import { LoadsDialog } from './LoadsDialog';
  * 1.3.4. Text is saved when the field is left.
  */
 export function EngineeringProperty(props: {
+  /** Change the type (manager feedback, 7 Nov 2026); absent = the type is shown only. */
+  onChangeKind?: (kind: ElementKind) => void;
   /** Connections that differ from the usual ones (A-20): information only. */
   connectionNotes?: readonly string[];
   element: Element;
@@ -61,8 +64,29 @@ export function EngineeringProperty(props: {
     <section className="property-card" aria-label="Engineering Property">
       <h3>Engineering Property</h3>
       <dl>
-        <dt>Name :</dt>
-        <dd>{item?.label ?? element.kind}</dd>
+        <dt>
+          <label htmlFor="prop-kind">Name :</label>
+        </dt>
+        <dd>
+          {props.onChangeKind && CHANGEABLE_KINDS.includes(element.kind) ? (
+            <select
+              id="prop-kind"
+              className="pill-input"
+              value={element.kind}
+              disabled={!props.editable}
+              title="Change the type; feeders, loads and matching properties are kept"
+              onChange={(e) => props.onChangeKind?.(e.target.value as ElementKind)}
+            >
+              {CHANGEABLE_KINDS.map((k) => (
+                <option key={k} value={k}>
+                  {KIND_LABELS[k]}
+                </option>
+              ))}
+            </select>
+          ) : (
+            (item?.label ?? KIND_LABELS[element.kind])
+          )}
+        </dd>
         <dt>
           <label htmlFor="prop-tag">Tag :</label>
         </dt>

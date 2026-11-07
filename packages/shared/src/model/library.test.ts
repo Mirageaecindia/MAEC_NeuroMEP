@@ -29,6 +29,8 @@ describe('#TASK-11 component library (A-11, Section 13)', () => {
       'DB',
       'Feeder',
       'Lighting',
+      // Added 7 Nov 2026 (manager feedback, not in Figma).
+      'UPS',
       // Added 6 Nov 2026 (not in Figma): load points standing for mechanical / PHE equipment.
       'Isolator 1P',
       'Isolator 3P',

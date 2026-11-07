@@ -45,6 +45,7 @@ export function mayApply(user: UserSummary, project: Project, action: ProjectAct
       return layers.includes(action.element.discipline);
     case 'moveElement':
     case 'updateElement':
+    case 'changeKind':
       return own(action.id);
     case 'removeElements':
     case 'moveElements':

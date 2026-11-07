@@ -24,12 +24,14 @@ import {
   portsOf,
   topologyCheck,
   unusualConnections,
+  KIND_LABELS,
   sourceConnected,
   isFlagged,
   floorStatus,
   type CableConstruction,
   type ModelPoint,
   copyComponents,
+  resultOf,
   DisciplineSchema,
   typicalSet,
   LIBRARY_ITEMS,
@@ -386,6 +388,27 @@ export function FloorSetupPage() {
     setArmed(null);
   }
 
+  /**
+   * Isolator / connection unit label (manager feedback, 7 Nov 2026): rating and poles, the
+   * equipment it feeds and its source. The rating is the breaker of the last Cable Size run
+   * ("- A" until sized or when out of date).
+   */
+  function loadPointLabel(e: (typeof onFloor)[number]): string[] | undefined {
+    if (e.kind !== 'isolator' && e.kind !== 'connection-unit') return undefined;
+    const found = resultOf(project, e.id);
+    const rating = found && !found.outOfDate ? found.result.device?.ratingA : undefined;
+    const poles = e.poles === 'SP' || e.poles === 'SPN' ? 'SP' : 'TP';
+    const fed = project.model.elements
+      .filter((x) => x.kind === 'equipment' && x.fedFromId === e.id)
+      .map((x) => x.tag);
+    const what = fed.length ? fed.join(', ') : e.description;
+    const source = fedFrom(e, project.model);
+    return [
+      `${rating ? `${rating} A` : '- A'} ${poles}${what ? ` · ${what}` : ''}`,
+      ...(source ? [`from ${source}`] : []),
+    ];
+  }
+
   // Positions are stored in metres; the plan shows them through its calibration.
   const markers: PlanMarker[] = calibration
     ? onFloor.map((e) => ({
@@ -394,6 +417,7 @@ export function FloorSetupPage() {
         image: symbols.get(itemOfElement(e)?.key ?? '') ?? null,
         scale: e.symbolScale,
         rotation: e.rotationDeg,
+        detail: loadPointLabel(e),
         at: {
           x: e.position.x / calibration.metresPerUnit,
           y: e.position.y / calibration.metresPerUnit,
@@ -738,6 +762,12 @@ export function FloorSetupPage() {
                     }
                     fedFrom={fedFrom(selected, project.model)}
                     connectionNotes={unusualConnections(project.model, selected)}
+                    onChangeKind={(kind) => {
+                      editor.dispatch({ type: 'changeKind', id: selected.id, kind });
+                      notice(
+                        `${selected.tag} is now ${/^[AEIOU]/.test(KIND_LABELS[kind]) ? 'an' : 'a'} ${KIND_LABELS[kind]}; its feeders and loads are kept.`,
+                      );
+                    }}
                     flsEquipment={
                       'loadCategory' in selected &&
                       selected.loadCategory !== 'fls' &&

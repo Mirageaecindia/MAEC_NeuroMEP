@@ -406,6 +406,18 @@ export const SECTIONS: GuideSection[] = [
         <h3>Select, rotate, copy and replicate</h3>
         <ul>
           <li>
+            <Term>Change type</Term>: the Name dropdown of the Engineering Property turns a
+            component into another type (e.g. EMDB to ESMDB, MDB to SMDB) without deleting its
+            feeders. Loads and the properties the new type also has are kept, and the tag prefix
+            follows (EMDB-... becomes ESMDB-...). There is no EMDB / ESMDB / EMCC item in the
+            library: place an MDB / SMDB / MCC and change its type.
+          </li>
+          <li>
+            <Term>Isolator labels</Term>: under its tag an isolator or connection unit shows its
+            rating and poles (&quot;63 A TP&quot;, &quot;- A&quot; until Cable Size), the equipment
+            it feeds and the board feeding it.
+          </li>
+          <li>
             <Term>Select several</Term>: Shift or Ctrl + click adds a component; Shift + drag on the
             empty plan draws a box; Ctrl + A selects all components of your layer on the floor.
             Dragging one of them moves the whole selection, feeders included.

@@ -27,6 +27,8 @@ export function touchesLockedFloor(project: Project, action: ProjectAction): boo
       return element(action.element);
     case 'updateElement':
       return element(byId(action.id));
+    case 'changeKind':
+      return withCables(action.id);
     case 'moveElement':
       return withCables(action.id);
     case 'removeElements':

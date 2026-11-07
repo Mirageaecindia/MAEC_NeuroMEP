@@ -28,6 +28,9 @@ import {
   type Riser,
   setGeneratorFactor,
   withSafetyDefaults,
+  changeKind,
+  portsAfterKindChange,
+  type ElementKind,
   type GeneratorFactor,
   type RegistryChange,
 } from '@neuromep/shared';
@@ -105,6 +108,8 @@ export type ProjectAction =
   | { type: 'moveElement'; id: string; position: ModelPoint }
   /** Several components moved together by `delta` metres; feeders between them move along. */
   | { type: 'moveElements'; ids: string[]; delta: ModelPoint }
+  /** Change type (manager feedback, 7 Nov 2026): the component becomes `kind`, feeders kept. */
+  | { type: 'changeKind'; id: string; kind: ElementKind }
   /** Components turned by `by` degrees (clockwise), or set to `to` degrees. */
   | { type: 'rotateElements'; ids: string[]; by?: number; to?: number }
   /**
@@ -300,6 +305,20 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
             if (to) next = moveCableEnd(next, 'to', shift(byId.get(c.to.elementId)!.position));
             return next === c ? c : { ...next, version: c.version + 1 };
           }),
+        },
+      };
+    }
+    case 'changeKind': {
+      const e = p.model.elements.find((x) => x.id === a.id);
+      const taken = p.model.elements.filter((x) => x.id !== a.id).map((x) => x.tag);
+      const next = e && changeKind(e, a.kind, taken);
+      if (!next || next === e) return p;
+      return {
+        ...p,
+        model: {
+          ...p.model,
+          elements: p.model.elements.map((x) => (x.id === a.id ? next : x)),
+          cables: portsAfterKindChange(p.model.cables, a.id, a.kind),
         },
       };
     }
