@@ -560,3 +560,23 @@
   border-bottom: 1px solid var(--border);
   font-size: 13px;
 }
+.capacity-note {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--warning);
+}
+
+/* Usual connections (A-20): guidance under the Engineering Property, never a restriction. */
+.usual-connections {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius);
+  background: var(--surface-muted);
+  font-size: 11px;
+}
+.usual-connections p {
+  margin: 0 0 4px;
+}
+.connection-note {
+  color: var(--warning);
+}

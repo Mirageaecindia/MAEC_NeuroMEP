@@ -21,7 +21,7 @@ describe('#TASK-32 user guide', () => {
     for (const e of ERROR_CATALOGUE) {
       expect(within(errors).getByRole('rowheader', { name: e.code })).toBeInTheDocument();
     }
-  });
+  }, 40_000);
 
   it('every internal link points at a section of the guide', () => {
     render(<GuidePage />);

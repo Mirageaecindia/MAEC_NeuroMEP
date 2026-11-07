@@ -23,6 +23,7 @@ import {
   orthogonal,
   portsOf,
   topologyCheck,
+  unusualConnections,
   sourceConnected,
   isFlagged,
   floorStatus,
@@ -215,9 +216,6 @@ export function FloorSetupPage() {
     }
     if (!draft) {
       if (!target) return notice('Click the component the cable starts from.');
-      if (!portsOf(target).some(isOutput)) {
-        return notice(`${target.tag} has no outgoing way: start from the board that feeds.`);
-      }
       setDraft({ from: { elementId: target.id, port: 'out' }, points: [target.position] });
       return;
     }
@@ -226,7 +224,7 @@ export function FloorSetupPage() {
       return;
     }
     const source = onFloor.find((e) => e.id === draft.from.elementId)!;
-    // An ATS takes its normal input first, then standby.
+    // Any component may feed any other (A-20). An ATS takes its normal input first, then standby.
     const inputs = portsOf(target).filter((p) => !isOutput(p));
     const fed = new Set(
       project.model.cables.filter((c) => c.to.elementId === target.id).map((c) => c.to.port),
@@ -236,7 +234,7 @@ export function FloorSetupPage() {
       ? connectionProblem({ element: source, port: 'out' }, { element: target, port })
       : `${target.tag} has no incoming port.`;
     if (problem || !port) return notice(problem ?? '');
-    // Section 3 topology (#TASK-14): refused with E1401, or drawn with a warning.
+    // Only a loop is refused (E1401): Cable Size cannot calculate a circular network.
     const topology = topologyCheck(project.model, source, target, port);
     if (!topology.ok) return notice(`${topology.message} (${topology.code})`);
     const cable = drawCable({
@@ -249,7 +247,6 @@ export function FloorSetupPage() {
       construction,
     });
     editor.dispatch({ type: 'addCable', cable });
-    if (topology.warning) notice(topology.warning);
     setDraft(null);
     setArmed(null);
     setSelectedId(cable.id);
@@ -740,6 +737,7 @@ export function FloorSetupPage() {
                       editor.dispatch({ type: 'updateElement', id: selected.id, patch })
                     }
                     fedFrom={fedFrom(selected, project.model)}
+                    connectionNotes={unusualConnections(project.model, selected)}
                     flsEquipment={
                       'loadCategory' in selected &&
                       selected.loadCategory !== 'fls' &&
@@ -1144,11 +1142,7 @@ function RightPanel(props: {
             Demand: <strong>{Math.round(capacity.demandKva)} kVA</strong>
           </span>
           <span
-            title={
-              capacity.limitPct === 100
-                ? undefined
-                : `Transformer loading limit ${capacity.limitPct} %`
-            }
+            title={`Installed transformer kVA x loading limit ${capacity.limitPct} % - the transformers' capacity, not a load`}
           >
             Allowable:{' '}
             <strong>
@@ -1156,6 +1150,14 @@ function RightPanel(props: {
             </strong>
           </span>
         </div>
+        {capacity.notConnected.count > 0 && (
+          <p className="capacity-note">
+            Not connected yet: {Math.round(capacity.notConnected.kva)} kVA on{' '}
+            {capacity.notConnected.count} component
+            {capacity.notConnected.count === 1 ? '' : 's'} with no supply - not in Connected or
+            Loaded.
+          </p>
+        )}
         <CapacityChecks capacity={capacity} />
       </div>
       <div className="right-body">

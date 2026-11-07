@@ -9,21 +9,16 @@ import type { Riser } from './riser.js';
 
 export type Port = Cable['from']['port'];
 
-/** Ports of each kind (Section 3 hierarchy): supplies only feed, terminal boards only receive. */
+/**
+ * Ports of each kind. Any component may feed or be fed (A-20, 7 Nov 2026): a feeder runs from
+ * the component clicked first to the one clicked second. An ATS has a normal and a standby input
+ * (the first and the second feeder into it). Equipment is linked to its isolator through
+ * "Fed from", not by a feeder (A-17).
+ */
 export function portsOf(e: Pick<Element, 'kind'>): Port[] {
   switch (e.kind) {
-    case 'eb-utility':
-    case 'generator':
-      return ['out'];
     case 'ats':
       return ['normal', 'standby', 'out'];
-    case 'db':
-    case 'isolator':
-    case 'connection-unit':
-    case 'motor':
-    case 'pfc-bank':
-      return ['in'];
-    // Equipment is linked to its isolator through "Fed from", never by a cable (6 Nov 2026).
     case 'equipment':
       return [];
     default:
@@ -40,8 +35,6 @@ export function connectionProblem(
 ): string | null {
   if (from.element.id === to.element.id)
     return 'A cable cannot start and end on the same component.';
-  if (!isOutput(from.port)) return 'Start the cable on an outgoing port.';
-  if (isOutput(to.port)) return 'End the cable on an incoming port.';
   if (from.element.floorId !== to.element.floorId) {
     return 'Both ends must be on this floor; floors are connected through the risers.';
   }

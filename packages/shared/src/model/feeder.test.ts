@@ -2,21 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { migrateProjectData } from '../project/migrate.js';
 import { modelledProject, testCable, testElement } from '../testing.js';
 import { CableSchema } from './cable.js';
-import { busbarFeederIssue } from './topology.js';
 
 describe('#TASK-13 feeders: cable or busbar (decision 1 Nov 2026)', () => {
   it('a feeder is a cable unless chosen otherwise', () => {
     const f = (key: string, id: string) => testElement(key, id);
     const { feederType: _, ...stored } = testCable(f('mdb', 'm'), f('smdb', 's'));
     expect(CableSchema.parse(stored).feederType).toBe('cable');
-  });
-
-  it('a busbar feeder starts at a transformer or a main panel', () => {
-    expect(busbarFeederIssue(testElement('transformer', 'tx', 'f'))).toBeNull();
-    expect(busbarFeederIssue(testElement('mdb', 'mdb', 'f'))).toBeNull();
-    expect(busbarFeederIssue(testElement('smdb', 'sm', 'f'))).toMatch(
-      /transformer or a main panel/,
-    );
   });
 
   it('busbar components stored earlier are dropped with their cables on load', () => {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Cable, CableConstruction } from './cable.js';
 import type { Element } from './elements.js';
 import { isPlaceable, libraryItem, placeElement } from './library.js';
-import { topologyCheck } from './topology.js';
+import { topologyCheck, unusualConnections, usualConnections } from './topology.js';
 import { drawCable, type Port } from './wiring.js';
 
 const construction: CableConstruction = {
@@ -50,67 +50,59 @@ function link(cables: Cable[], from: Element, to: Element, port: Port = 'in'): C
 const check = (cables: Cable[], from: Element, to: Element, port: Port = 'in') =>
   topologyCheck({ cables }, from, to, port);
 
-describe('#TASK-14 topology rules on connect (Section 3, E1401)', () => {
+describe('#TASK-14 connections: anything goes but a loop (A-20, user decision 7 Nov 2026)', () => {
   const eb = el('eb-utility', 'eb');
   const tx = el('transformer', 'tx');
   const mdb = el('mdb', 'mdb');
+  const emdb = { ...el('mdb', 'emdb'), kind: 'emdb', tag: 'EMDB-GF-01' } as Element;
+  const lv = el('lv-panel', 'lv');
   const smdb = el('smdb', 'smdb');
   const db = el('db', 'db');
   const gen = el('generator', 'gen');
   const ats = el('ats', 'ats');
 
-  it('follows the supply order source > MDB > SMDB / MCC > DB', () => {
-    expect(check([], eb, tx)).toEqual({ ok: true });
-    expect(check([], tx, mdb)).toEqual({ ok: true });
-    expect(check([], mdb, smdb)).toEqual({ ok: true });
-    expect(check([], smdb, db)).toEqual({ ok: true });
-    expect(check([], mdb, db)).toEqual({ ok: true });
-    const wrong = check([], smdb, mdb);
-    expect(wrong).toMatchObject({ ok: false, code: 'E1401' });
-    expect(check([], tx, db)).toMatchObject({ ok: false, code: 'E1401' });
+  it('allows any component to feed any other, in either direction', () => {
+    for (const [from, to] of [
+      [eb, tx],
+      [tx, db],
+      [smdb, mdb],
+      [db, smdb],
+      [gen, emdb],
+      [lv, emdb],
+      [mdb, gen],
+    ] as const) {
+      expect(check([], from, to)).toEqual({ ok: true });
+    }
+    expect(check([], gen, ats, 'normal')).toEqual({ ok: true });
   });
 
-  it('feeds an ATS normal input from a transformer and standby from a generator', () => {
-    expect(check([], tx, ats, 'normal')).toEqual({ ok: true });
-    expect(check([], gen, ats, 'standby')).toEqual({ ok: true });
-    expect(check([], gen, ats, 'normal')).toMatchObject({ ok: false });
-    const fed = link([], tx, ats, 'normal');
-    expect(check(fed, el('transformer', 'tx2'), ats, 'normal')).toMatchObject({
-      message: 'The normal input of ATS-GF-01 is already connected.',
-    });
-  });
-
-  it('allows one supply per board, two incomers on an MDB', () => {
+  it('allows several supplies and any number of ways', () => {
     const one = link([], mdb, smdb);
-    expect(check(one, el('mdb', 'mdb2'), smdb)).toMatchObject({
-      message: 'SMDB-GF-01 is already fed from another board.',
-    });
-    const twice = link(link([], tx, mdb), el('transformer', 'tx2'), mdb);
-    expect(check(twice, el('transformer', 'tx3'), mdb)).toMatchObject({
-      message: 'MDB-GF-01 already has two incomers.',
-    });
-  });
-
-  it('keeps the network radial', () => {
-    // The order rules alone would allow MDB -> ATS (normal) -> back into the same MDB.
-    const viaAts = link([], mdb, ats, 'normal');
-    expect(check(viaAts, ats, mdb)).toMatchObject({
-      ok: false,
-      message: 'MDB-GF-01 already feeds ATS-GF-01: the network must stay radial (no loops).',
-    });
-  });
-
-  it('warns above 18 ways and refuses the 26th', () => {
+    expect(check(one, el('mdb', 'mdb2'), smdb)).toEqual({ ok: true });
     let cables: Cable[] = [];
-    for (let i = 0; i < 18; i++) cables = link(cables, smdb, el('db', `d${i}`));
-    expect(check(cables, smdb, el('db', 'd18'))).toEqual({
-      ok: true,
-      warning: 'SMDB-GF-01 now has 19 ways (more than 18).',
-    });
-    for (let i = 18; i < 25; i++) cables = link(cables, smdb, el('db', `d${i}`));
-    expect(check(cables, smdb, el('db', 'd25'))).toMatchObject({
-      ok: false,
-      message: 'SMDB-GF-01 has 25 ways already (maximum).',
-    });
+    for (let i = 0; i < 30; i++) cables = link(cables, smdb, el('db', `d${i}`));
+    expect(check(cables, smdb, el('db', 'd30'))).toEqual({ ok: true });
+  });
+
+  it('refuses only a loop (E1401), which Cable Size cannot calculate', () => {
+    const viaAts = link([], mdb, ats, 'normal');
+    expect(check(viaAts, ats, mdb)).toMatchObject({ ok: false, code: 'E1401' });
+    expect(check([], mdb, mdb)).toMatchObject({ ok: false, code: 'E1401' });
+  });
+
+  it('describes the usual connections and notes unusual ones without refusing them', () => {
+    expect(usualConnections('emdb').fedFrom).toEqual(
+      expect.arrayContaining(['transformer', 'generator', 'lv-panel']),
+    );
+    expect(usualConnections('smdb').feeds).toEqual(expect.arrayContaining(['db']));
+    const cables = link(link([], tx, db), smdb, db);
+    const notes = unusualConnections({ elements: [tx, smdb, db], cables }, db);
+    expect(notes).toEqual([
+      `Fed from ${tx.tag}: a Transformer does not usually feed a DB.`,
+      `2 supplies (feeders): each one is sized for the whole load of ${db.tag}.`,
+    ]);
+    expect(unusualConnections({ elements: [lv, emdb], cables: link([], lv, emdb) }, emdb)).toEqual(
+      [],
+    );
   });
 });

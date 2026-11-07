@@ -41,22 +41,19 @@ function el(key: string, id: string, floorId = 'f-gf'): Element {
 }
 
 describe('#TASK-13 ports and connections (FR-15)', () => {
-  it('gives supplies only an output, terminal boards only an input, the ATS two inputs', () => {
+  it('gives every component an input and an output (A-20), the ATS two inputs', () => {
     expect(portsOf(el('transformer', 't'))).toEqual(['in', 'out']);
-    expect(portsOf(el('generator', 'g'))).toEqual(['out']);
-    expect(portsOf(el('db', 'd'))).toEqual(['in']);
+    expect(portsOf(el('generator', 'g'))).toEqual(['in', 'out']);
+    expect(portsOf(el('db', 'd'))).toEqual(['in', 'out']);
     expect(portsOf(el('ats', 'a'))).toEqual(['normal', 'standby', 'out']);
   });
 
-  it('runs from an outgoing to an incoming port on the same floor only', () => {
+  it('runs between two components on the same floor', () => {
     const smdb = { element: el('smdb', 's'), port: 'out' as const };
     expect(connectionProblem(smdb, { element: el('db', 'd'), port: 'in' })).toBeNull();
     expect(connectionProblem(smdb, { element: el('smdb', 's'), port: 'in' })).toMatch(
       /same component/,
     );
-    expect(
-      connectionProblem({ ...smdb, port: 'in' }, { element: el('db', 'd'), port: 'in' }),
-    ).toMatch(/outgoing port/);
     expect(connectionProblem(smdb, { element: el('db', 'd', 'f-1'), port: 'in' })).toMatch(
       /risers/,
     );

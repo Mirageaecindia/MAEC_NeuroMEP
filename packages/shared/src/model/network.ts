@@ -2,6 +2,7 @@ import type { Floor } from '../project/schema.js';
 import type { Cable } from './cable.js';
 import type { Element, ElementKind } from './elements.js';
 import { riserBoards, type Riser } from './riser.js';
+import { usuallyFeeds } from './topology.js';
 
 /**
  * Network completeness (FR-20, #TASK-18, WBS 1.4.3) and the normal / standby scenarios (10.14):
@@ -92,7 +93,11 @@ export function completenessIssues(m: Network, floors: readonly Floor[]): Networ
   const standby = suppliedIn(m, 'standby');
   const issues: NetworkIssue[] = [];
   for (const f of floors) {
-    const boards = riserBoards(m, f.id);
+    // Boards a tap-off usually feeds that no feeder reaches (the riser's place on the floor).
+    const cableFed = new Set(m.cables.map((c) => c.to.elementId));
+    const boards = riserBoards(m, f.id).filter(
+      (b) => usuallyFeeds('tap-off-box', b.kind) && !cableFed.has(b.id),
+    );
     if (boards.length > 0 && !boards.some((b) => m.risers.some((r) => r.feeds.includes(b.id)))) {
       issues.push({
         code: 'E1802',

@@ -27,6 +27,11 @@ export const EarthLeakageSchema = z.enum([
   'ELCB 100 mA',
   'ELS 0-300 mA',
   'ELS 0-500 mA',
+  // Earth leakage sensing with an alarm (manager feedback, 7 Nov 2026): it alarms, it does not
+  // trip, so it does not make the earth-fault loop check "not required" as an ELCB does.
+  '100 mA ELS + Alarm',
+  '0-300 mA ELS + Alarm',
+  '0-500 mA ELS + Alarm',
 ]);
 export const MountingSchema = z.enum(['wall mounted', 'recessed', 'floor mounted']);
 export const StarterSchema = z.enum(['DOL', 'star-delta', 'soft starter', 'VFD']);

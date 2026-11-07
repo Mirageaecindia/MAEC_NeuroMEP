@@ -258,18 +258,14 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     expect(chip('Feeder')).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('refuses to start on a DB, which has no outgoing way, and Escape cancels a cable', async () => {
+  it('starts a feeder on any component, a DB too (A-20), and Escape cancels it', async () => {
     open(LEAD);
     await planReady();
     await placeAt('DB', 600, 450);
     await userEvent.click(chip('Feeder'));
     await chooseConstruction();
     fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 450 });
-    expect(
-      await screen.findByText('DB-GF-01 has no outgoing way: start from the board that feeds.', {
-        selector: '.notice',
-      }),
-    ).toBeInTheDocument();
+    expect(document.querySelector('.cable-preview')).not.toBeNull();
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(chip('Feeder')).toHaveAttribute('aria-pressed', 'false');
     expect(screen.queryByRole('img', { name: /^Cable / })).not.toBeInTheDocument();
@@ -315,7 +311,7 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     });
   });
 
-  it('refuses a connection that breaks the supply order (E1401)', async () => {
+  it('connects any components (A-20), notes the unusual ones and refuses only a loop (E1401)', async () => {
     open(LEAD);
     await planReady();
     await placeAt('Transformer', 300, 300);
@@ -324,13 +320,22 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     await chooseConstruction();
     fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
     fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 300 });
+    expect(await screen.findByRole('img', { name: /^Cable F/ })).toBeInTheDocument();
+    // Back from the DB to the transformer would be a loop.
+    await userEvent.click(chip('Feeder'));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 300 });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
     expect(
-      await screen.findByText(
-        'Tx_GF_1 cannot feed DB-GF-01: follow source > MDB > SMDB / MCC > DB. (E1401)',
-        { selector: '.notice' },
-      ),
+      await screen.findByText(/would make a loop, which Cable Size cannot calculate\. \(E1401\)/, {
+        selector: '.notice',
+      }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('img', { name: /^Cable / })).not.toBeInTheDocument();
+    // The DB's card tells what usually feeds it and that a transformer is unusual.
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 300 });
+    const card = screen.getByRole('region', { name: 'Engineering Property' });
+    expect(card).toHaveTextContent('Usually fed from');
+    expect(card).toHaveTextContent('Fed from Tx_GF_1: a Transformer does not usually feed a DB.');
   });
 
   it('deletes a selected cable with the Delete key, keeping both components', async () => {
@@ -410,8 +415,11 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     expect(table).toHaveTextContent('Connected 6.0 kW · Max demand 6.0 kW');
     // Dubai method (default): a DB on its own is at 100 %, nothing TBC.
     expect(table).not.toHaveTextContent('E1901');
-    // Not fed yet: the DB is itself a top-level component, 6 kW / 0.85 = 7 kVA.
-    expect(screen.getByText(/^Connected:/)).toHaveTextContent('Connected: 7 kVA');
+    // Not fed yet: no supply, so it is shown apart, not as connected (manager feedback).
+    expect(screen.getByText(/^Connected:/)).toHaveTextContent('Connected: 0 kVA');
+    expect(screen.getByText(/^Not connected yet:/)).toHaveTextContent(
+      'Not connected yet: 7 kVA on 1 component',
+    );
 
     await userEvent.click(chip('Feeder'));
     const c = await screen.findByRole('dialog', { name: 'Cable construction' });
@@ -433,7 +441,8 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     const below = screen.getByRole('region', { name: 'Load table' });
     expect(below).toHaveTextContent('LOAD TABLE - below SMDB-GF-01');
     expect(below).toHaveTextContent('Connected 6.0 kW · Max demand 6.0 kW');
-    expect(screen.getByText(/^Connected:/)).toHaveTextContent('Connected: 7 kVA');
+    // Still no transformer above the SMDB: not connected yet.
+    expect(screen.getByText(/^Not connected yet:/)).toHaveTextContent('7 kVA on 1 component');
   });
 
   it("uses a transformer's kVA as the allowable load of the capacity panel", async () => {

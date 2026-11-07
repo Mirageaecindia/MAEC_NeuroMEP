@@ -1,5 +1,4 @@
 import {
-  busbarFeederIssue,
   cableLength,
   DEFAULT_BUSBAR,
   IpRatingSchema,
@@ -43,8 +42,6 @@ export function CableProperty(props: {
   };
   const length = cableLength(cable, props.length ?? { allowancePct: 0, additionM: null });
   const c = cable.construction;
-  const from = props.elements.find((x) => x.id === cable.from.elementId);
-  const busbarIssue = busbarFeederIssue(from);
   const isBusbar = cable.feederType === 'busbar';
   const bb = cable.busbar ?? DEFAULT_BUSBAR;
   const setBusbar = (patch: Partial<BusbarSpec>) => props.onChange({ busbar: { ...bb, ...patch } });
@@ -70,11 +67,8 @@ export function CableProperty(props: {
             }}
           >
             <option value="cable">Cable</option>
-            <option value="busbar" disabled={busbarIssue !== null}>
-              Busbar
-            </option>
+            <option value="busbar">Busbar</option>
           </select>
-          {busbarIssue && !isBusbar && <span className="muted">{busbarIssue}</span>}
         </dd>
         <dt>
           <label htmlFor="cable-tag">Tag :</label>

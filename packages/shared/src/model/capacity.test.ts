@@ -71,7 +71,10 @@ describe('#TASK-28 transformer loading and plot allocation (10.15, briefing page
     });
     expect(c.allowableKva).toBeCloseTo(100, 9); // 85 kW / 0.85
     expect(c.transformers).toEqual([]);
-    expect(c.loadedPct).toBeCloseTo(37.5, 9); // 37.5 kVA of 100
+    // The DB has no supply yet: shown apart, not loaded (manager feedback, 7 Nov 2026).
+    expect(c.loadedPct).toBe(0);
+    expect(c.notConnected.count).toBe(1);
+    expect(c.notConnected.kva).toBeCloseTo(37.5, 9);
   });
 
   it('skips the check of a transformer without a rating', () => {

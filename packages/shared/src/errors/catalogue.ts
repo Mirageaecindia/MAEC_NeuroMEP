@@ -197,8 +197,8 @@ export const ERROR_CATALOGUE = [
     'E1401',
     'Connection not allowed',
     'blocks',
-    'The link breaks the topology rules (Section 3), e.g. a loop or a DB feeding an MDB.',
-    'Reconnect following the supply order source > MDB > SMDB/MCC > DB.',
+    'The feeder would make a loop (A-20: any other connection is allowed).',
+    'Feed the component from a board that is not below it.',
     true,
   ),
   // #TASK-15 Loads

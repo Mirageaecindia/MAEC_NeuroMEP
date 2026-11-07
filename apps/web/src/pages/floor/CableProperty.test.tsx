@@ -41,9 +41,8 @@ describe('#TASK-13 feeder type: cable or busbar (decision 1 Nov 2026)', () => {
     expect(screen.queryByText(/Cu\/XLPE/)).toBeNull();
   });
 
-  it('offers no busbar from an SMDB', () => {
+  it('offers a busbar feeder from any component (A-20)', () => {
     show('smdb');
-    expect(screen.getByRole('option', { name: 'Busbar' })).toBeDisabled();
-    expect(screen.getByText(/starts at a transformer or a main panel/)).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Busbar' })).toBeEnabled();
   });
 });

@@ -325,10 +325,26 @@ export function BuildingTab(props: {
       </div>
 
       <aside className="building-summary" aria-label="Building Summary">
-        <h2>Building Summery</h2>
+        <h2>Building Summary</h2>
         <p className="summary-count">
-          <strong>Number of Floor :</strong>{' '}
-          {props.floors.filter((f) => f.type === 'typical').length}
+          <strong>Number of Floors :</strong> {props.floors.length}
+          {props.floors.length > 0 && (
+            <span className="muted">
+              {' '}
+              (
+              {[
+                ['basement', 'basement'],
+                ['ground', 'ground'],
+                ['podium', 'podium'],
+                ['typical', 'upper'],
+              ]
+                .map(([type, label]) => [label, props.floors.filter((f) => f.type === type).length])
+                .filter(([, n]) => n)
+                .map(([label, n]) => `${n} ${label}`)
+                .join(', ')}
+              )
+            </span>
+          )}
         </p>
         <hr />
         <table className="summary-status">

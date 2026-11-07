@@ -7,7 +7,7 @@ import {
   isPlaceable,
   LIBRARY_ITEMS,
   LOAD_TYPE_LABELS,
-  mayFeed,
+  usuallyFeeds,
   type ElementKind,
 } from '@neuromep/shared';
 
@@ -136,14 +136,14 @@ const MATRIX: { kind: ElementKind; label: string }[] = [
   { kind: 'isolator', label: 'Isolator / Connection unit' },
 ];
 
-/** The topology rules as a table: a tick where the row may feed the column. */
+/** The usual connections (Section 3, guidance only - A-20): a tick where the row usually feeds the column. */
 export function FeedMatrix() {
   return (
     <div className="guide-scroll">
       <table className="guide-table matrix">
         <thead>
           <tr>
-            <th>Feeds →</th>
+            <th>Usually feeds →</th>
             {MATRIX.map((c) => (
               <th key={c.kind}>{c.label}</th>
             ))}
@@ -155,7 +155,7 @@ export function FeedMatrix() {
               <th scope="row">{r.label}</th>
               {MATRIX.map((c) => {
                 const ok =
-                  mayFeed(r.kind, c.kind) ||
+                  usuallyFeeds(r.kind, c.kind) ||
                   (c.kind === 'ats' && ['transformer', 'lv-panel', 'generator'].includes(r.kind));
                 return (
                   <td key={c.kind} className={ok ? 'yes' : 'no'}>

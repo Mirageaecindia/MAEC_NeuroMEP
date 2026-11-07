@@ -60,10 +60,9 @@ describe('#TASK-17 Riser Design (FR-20, A-05)', () => {
 });
 
 describe('#TASK-18 riser connections (FR-20, Section 3)', () => {
-  it('is fed from a transformer or main board and feeds boards not fed by a cable', () => {
-    expect(riserSources(network()).map((e) => e.id)).toEqual(['TX', 'MDB']);
-    // DB-1 is fed by a cable from SMDB-1, so only SMDB-1 and DB-1B take a tap-off.
-    expect(riserBoards(network(), 'f1').map((e) => e.id)).toEqual(['SMDB-1', 'DB-1B']);
+  it('may be fed from any electrical component and lists every one of a floor (A-20)', () => {
+    expect(riserSources(network()).map((e) => e.id)).toEqual(network().elements.map((e) => e.id));
+    expect(riserBoards(network(), 'f1').map((e) => e.id)).toEqual(['SMDB-1', 'DB-1', 'DB-1B']);
   });
 
   it('feeds a board from one riser at a time', () => {
@@ -74,11 +73,10 @@ describe('#TASK-18 riser connections (FR-20, Section 3)', () => {
     expect(riserOf(setBoardRiser(risers, 'SMDB-1', null), 'SMDB-1')).toBeUndefined();
   });
 
-  it('shows the riser as Fed From and refuses a second supply by cable (E1401)', () => {
+  it('shows the riser as Fed From; a feeder as well is allowed (A-20)', () => {
     const m = network(setBoardRiser([], 'SMDB-1', 'riser-2'));
     expect(fedFrom(smdb1, m)).toBe('Riser 2');
-    const check = topologyCheck(m, mdb, smdb1, 'in');
-    expect(check).toMatchObject({ ok: false, code: 'E1401' });
+    expect(topologyCheck(m, mdb, smdb1, 'in')).toEqual({ ok: true });
   });
 
   it('counts as connected to the source once a riser leads back to a transformer (A-07)', () => {

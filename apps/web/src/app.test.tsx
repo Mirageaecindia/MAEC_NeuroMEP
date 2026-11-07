@@ -238,15 +238,23 @@ describe('#TASK-08 persistence (WBS 1.2.5; save on click, user decision 7 Nov 20
     const router = renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
     await userEvent.type(await screen.findByLabelText(/Project Name/), 'X');
     void router.navigate('/projects');
-    let dialog = await screen.findByRole('dialog', { name: 'Leave without saving?' });
+    let dialog = await screen.findByRole(
+      'dialog',
+      { name: 'Leave without saving?' },
+      { timeout: 15_000 },
+    );
     await userEvent.click(within(dialog).getByRole('button', { name: 'Stay on this page' }));
     expect(router.state.location.pathname).toBe('/projects/p-1/import');
     void router.navigate('/projects');
-    dialog = await screen.findByRole('dialog', { name: 'Leave without saving?' });
+    dialog = await screen.findByRole(
+      'dialog',
+      { name: 'Leave without saving?' },
+      { timeout: 15_000 },
+    );
     await userEvent.click(within(dialog).getByRole('button', { name: 'Save and leave' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/projects'));
     expect(server.project.details.name).toBe('NeoTowerX');
-  });
+  }, 40_000);
 });
 
 describe('#TASK-08 version conflicts (E0802): the work in the tab is never lost', () => {

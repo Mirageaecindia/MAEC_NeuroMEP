@@ -121,9 +121,9 @@ export const SECTIONS: GuideSection[] = [
                               Generator / UPS ─► ATS standby input ─┴─► ATS ─► essential / FLS board ─► ...`}
         </pre>
         <p>
-          Each component has exactly one supply (a main panel may have two incomers). Loads add up
-          going <Term>upstream</Term>: each feeder carries the demand of everything below it, and
-          that demand decides its breaker and cable.
+          Normally each component has one supply (a main panel two incomers). Loads add up going{' '}
+          <Term>upstream</Term>: each feeder carries the demand of everything below it, and that
+          demand decides its breaker and cable.
         </p>
       </>
     ),
@@ -445,9 +445,10 @@ export const SECTIONS: GuideSection[] = [
           <li>Click the component it feeds. The feeder gets a tag, a way number and a length.</li>
         </ol>
         <Rule>
-          NeuroMEP refuses a connection that breaks the hierarchy (E1401) - see{' '}
-          <a href="#hierarchy">Connection rules</a>. Feeders are drawn on one floor; power goes
-          between floors through risers (Building tab).
+          Any component may feed any other - you decide; the Engineering Property shows the usual
+          connections and notes an unusual one (see <a href="#hierarchy">Usual connections</a>).
+          Only a loop is refused (E1401). Feeders are drawn on one floor; power goes between floors
+          through risers (Building tab).
         </Rule>
         <p>
           Select a feeder to change it in the right panel: Cable or Busbar feeder, construction, and{' '}
@@ -487,6 +488,12 @@ export const SECTIONS: GuideSection[] = [
           unlinked equipment), and after Cable Size the result of the selected item: size, ECC,
           breaker, Ib / In / Iz, voltage drops, fault currents, checks and the full calculation
           trace. Hover over a component or feeder for a summary.
+        </p>
+        <p>
+          In the capacity box, Connected, Demand and Loaded count only loads that reach a
+          transformer or generator; load entered on components with no supply yet is listed apart
+          (&quot;Not connected yet&quot;). Allowable is the installed transformer kVA x the loading
+          limit - the transformers&apos; capacity, shown even before any load is connected.
         </p>
         <h3>6. Cable Size and floor status</h3>
         <p>
@@ -533,8 +540,8 @@ export const SECTIONS: GuideSection[] = [
           </li>
           <li>
             Click a board (SMDB, MCC or DB) on a floor to connect it to a riser tap-off; each click
-            moves it to the next riser, then off. A board has one supply: one fed by a riser cannot
-            also have a feeder.
+            moves it to the next riser, then off. A board may have a riser and a feeder as well; its
+            Engineering Property then notes the two supplies.
           </li>
         </ol>
         <Rule>
@@ -665,43 +672,46 @@ export const SECTIONS: GuideSection[] = [
   {
     id: 'hierarchy',
     group: 'Components and connections',
-    title: 'Connection rules - what may feed what',
+    title: 'Usual connections - what normally feeds what',
     body: (
       <>
         <p>
-          The network is <Term>radial</Term>: power flows one way, from the sources down. When you
-          draw a feeder NeuroMEP checks it against these rules and refuses it with E1401 when it
-          breaks one.
+          NeuroMEP does not restrict connections: the electrical engineer decides what feeds what
+          (A-20). The table shows the usual connections of the LV hierarchy as guidance; the
+          Engineering Property of a component lists what usually feeds it and what it usually feeds,
+          and notes a connection that differs - it never blocks one.
         </p>
         <FeedMatrix />
         <ul>
           <li>
-            <Term>One supply per component</Term>: a component already fed (by a feeder or a riser)
-            cannot get a second feeder. LV Panels / MDBs / ACB panels may have{' '}
-            <Term>two incomers</Term>.
+            <Term>Feeder direction</Term>: a feeder runs from the component you click first (the
+            supply) to the one you click second.
           </li>
           <li>
-            <Term>ATS</Term>: the normal input takes a transformer or main panel, the standby input
-            a generator or UPS; one feeder per input. The first feeder drawn to an ATS goes to the
-            normal input, the second to standby.
+            <Term>Supplies</Term>: usually one per component, two incomers on an LV panel / MDB.
+            More are allowed; each feeder into a component is sized for that component&apos;s whole
+            load, and the card notes it.
           </li>
           <li>
-            <Term>No loops</Term>: a component cannot feed something that already feeds it.
+            <Term>ATS</Term>: the first feeder into an ATS is its normal input, the second its
+            standby input.
           </li>
           <li>
-            <Term>Ways</Term>: a board has at most 25 outgoing ways; above 18 you get a warning.
+            <Term>Ways</Term>: above 18 outgoing ways the card notes it; there is no maximum.
           </li>
           <li>
-            A feeder starts at a component with an outgoing way: a DB, isolator or connection unit
-            feeds nothing.
+            <Term>No loops</Term> - the one connection refused (E1401): a component cannot feed
+            something that already feeds it, because Cable Size works the load out from the sources
+            down and cannot calculate a circle.
           </li>
           <li>
-            Mechanical / PHE equipment is never cabled: it is linked to its isolator or connection
+            Mechanical / PHE equipment is not cabled: it is linked to its isolator or connection
             unit through Fed from.
           </li>
           <li>
-            Between floors, power goes through a <Term>riser</Term> (Building tab): source
-            (transformer / LV panel / MDB) &gt; riser &gt; tap-off box &gt; SMDB / MCC / DB.
+            Between floors, power goes through a <Term>riser</Term> (Building tab): any component
+            can feed a riser (usually a transformer, LV panel or MDB) and any component can take a
+            tap-off (usually an SMDB, MCC or DB).
           </li>
         </ul>
         <p>
@@ -896,6 +906,8 @@ export const SECTIONS: GuideSection[] = [
           </li>
           <li>
             <Term>Motor-driven equipment</Term>: input kW = rated kW / efficiency, then as above.
+            The same applies to a motor typed on an isolator or connection unit: choose its Starter
+            and enter its Efficiency (required with a starter, E2003).
           </li>
         </ul>
         <p>
@@ -1027,7 +1039,8 @@ export const SECTIONS: GuideSection[] = [
           <Term>C5</Term>: during an earth fault the loop impedance Zs (source + phase conductor +
           earth conductor / armour, at fault temperature) must be low enough for the breaker to trip
           in time: Zs &lt;= 0.95 x 230 / Ia. Behind an earth-leakage device (ELCB) it is not
-          required.
+          required. An ELS (earth leakage sensing) with an alarm only signals, it does not trip, so
+          C5 is still checked behind it.
         </p>
         <Note>
           Both need the breaker&apos;s let-through and trip data, which come with the breaker
@@ -1166,9 +1179,10 @@ export const SECTIONS: GuideSection[] = [
           </tr>
           <tr>
             <td>A feeder is refused (E1401)</td>
-            <td>It breaks a connection rule: wrong direction, second supply, a loop.</td>
+            <td>It would make a loop: the component already feeds the one you started from.</td>
             <td>
-              Start from the board that supplies; see <a href="#hierarchy">Connection rules</a>.
+              Feed it from a board that is not below it; see{' '}
+              <a href="#hierarchy">Usual connections</a>.
             </td>
           </tr>
           <tr>

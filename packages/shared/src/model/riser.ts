@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { Cable } from './cable.js';
 import type { Element } from './elements.js';
-import { mayFeed, upstreamOf } from './topology.js';
+import { upstreamOf, usuallyFeeds } from './topology.js';
 
 /**
  * A riser of the Building tab (FR-20, A-05): drawn on the left of the Building view; length and
@@ -38,15 +38,26 @@ interface Network {
   risers: readonly Riser[];
 }
 
-/** Components that may feed a riser: transformers and LV panels / MDBs (Section 3). */
-export const riserSources = (m: Pick<Network, 'elements'>) =>
-  m.elements.filter((e) => mayFeed(e.kind, 'busbar'));
+/** Not on a riser: equipment (linked through "Fed from") and the supplies above the panels. */
+const OFF_RISER = new Set(['equipment', 'eb-utility', 'rmu']);
 
-/** Boards of a floor that a riser tap-off may feed: those not fed by a cable. */
-export function riserBoards(m: Network, floorId: string): Element[] {
-  const cableFed = new Set(m.cables.map((c) => c.to.elementId));
+/**
+ * Components that may feed a riser: any electrical component (A-20); transformers and main
+ * panels are the usual ones.
+ */
+export const riserSources = (m: Pick<Network, 'elements'>) => {
+  const all = m.elements.filter((e) => e.discipline === 'electrical' && !OFF_RISER.has(e.kind));
+  // The usual sources (transformers, main panels) first.
+  return [
+    ...all.filter((e) => usuallyFeeds(e.kind, 'busbar')),
+    ...all.filter((e) => !usuallyFeeds(e.kind, 'busbar')),
+  ];
+};
+
+/** Components of a floor shown in the Building tab: every electrical component but equipment. */
+export function riserBoards(m: Pick<Network, 'elements'>, floorId: string): Element[] {
   return m.elements.filter(
-    (e) => e.floorId === floorId && mayFeed('tap-off-box', e.kind) && !cableFed.has(e.id),
+    (e) => e.floorId === floorId && e.discipline === 'electrical' && !OFF_RISER.has(e.kind),
   );
 }
 

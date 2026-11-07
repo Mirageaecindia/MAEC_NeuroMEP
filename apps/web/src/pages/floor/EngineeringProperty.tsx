@@ -1,4 +1,13 @@
-import { itemOfElement, lineKw, ownLines, type Element, type LoadLine } from '@neuromep/shared';
+import {
+  itemOfElement,
+  KIND_LABELS,
+  lineKw,
+  ownLines,
+  usualConnections,
+  type Element,
+  type ElementKind,
+  type LoadLine,
+} from '@neuromep/shared';
 import { useState } from 'react';
 import { ElementFields } from './ElementFields';
 import { LoadsDialog } from './LoadsDialog';
@@ -9,6 +18,8 @@ import { LoadsDialog } from './LoadsDialog';
  * 1.3.4. Text is saved when the field is left.
  */
 export function EngineeringProperty(props: {
+  /** Connections that differ from the usual ones (A-20): information only. */
+  connectionNotes?: readonly string[];
   element: Element;
   editable: boolean;
   takenTags: string[];
@@ -22,6 +33,10 @@ export function EngineeringProperty(props: {
   flsEquipment?: readonly string[];
 }) {
   const { element } = props;
+  // Section 3 guidance (A-20): never a restriction.
+  const usual = usualConnections(element.kind);
+  const labels = (kinds: readonly ElementKind[]) =>
+    kinds.length ? [...new Set(kinds.map((k) => KIND_LABELS[k]))].join(', ') : '-';
   const item = itemOfElement(element);
   const [tag, setTag] = useState(element.tag);
   const [description, setDescription] = useState(element.description);
@@ -147,6 +162,21 @@ export function EngineeringProperty(props: {
         <dt>Symbol :</dt>
         <dd>{item ? `${item.cmpCode ?? 'no CMP code yet'} (draft)` : '-'}</dd>
       </dl>
+      {element.kind !== 'equipment' && (
+        <div className="usual-connections" role="note" aria-label="Usual connections">
+          <p>
+            <strong>Usually fed from:</strong> {labels(usual.fedFrom)}
+            <br />
+            <strong>Usually feeds:</strong> {labels(usual.feeds)}
+          </p>
+          <p className="muted">Guidance only - any connection can be drawn.</p>
+          {(props.connectionNotes ?? []).map((n) => (
+            <p key={n} className="connection-note">
+              {n}
+            </p>
+          ))}
+        </div>
+      )}
       {editingLoads && loadsKey && (
         <LoadsDialog
           title={`${loadsKey === 'loads' ? 'Loads' : 'Manual loads (unconnected ways)'} - ${element.tag}`}

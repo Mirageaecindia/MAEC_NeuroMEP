@@ -119,5 +119,14 @@ export function withSafetyDefaults(
   if (out.loadCategory === 'fls' && e.loadCategory !== 'fls' && !('fireRated' in patch)) {
     out.fireRated = true;
   }
+  // Leaving FLS unticks Fire rated as well (manager feedback, 7 Nov 2026); it can be ticked again.
+  if (
+    'loadCategory' in out &&
+    out.loadCategory !== 'fls' &&
+    e.loadCategory === 'fls' &&
+    !('fireRated' in patch)
+  ) {
+    out.fireRated = false;
+  }
   return out;
 }

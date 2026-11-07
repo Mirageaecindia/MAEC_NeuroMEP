@@ -150,6 +150,17 @@ function fieldsFor(e: Element, feeders: readonly { id: string; tag: string }[]):
         select('demandCategory', 'Demand category', DemandCategorySchema.options, '-'),
         num('standbyKw', 'Standby load', 'kW'),
         select('earthLeakage', 'Earth leakage', EarthLeakageSchema.options),
+        // A motor typed on the isolator (manager feedback, 7 Nov 2026): its starter, and the
+        // efficiency that turns the rated kW into the input load (required with a starter).
+        ...(e.kind === 'tap-off-box'
+          ? []
+          : [
+              select('starter', 'Starter', StarterSchema.options, '-'),
+              {
+                ...num('efficiency', 'Efficiency'),
+                placeholder: e.starter ? 'TBC' : '1.0',
+              } as FieldDef,
+            ]),
       ];
     case 'busbar':
       return [

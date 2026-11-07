@@ -105,10 +105,28 @@ export function equipmentInputKw(e: Equipment): number | null {
   return eff ? e.kw / eff : null;
 }
 
+/**
+ * A motor typed straight onto an isolator / connection unit (a starter chosen, manager feedback
+ * 7 Nov 2026): its load lines are the motor's rated output, so the input is kW / efficiency.
+ * 1 without a starter; null when the starter is set but the efficiency is not (E2003).
+ */
+export function starterInputFactor(e: Element): number | null {
+  if ((e.kind !== 'isolator' && e.kind !== 'connection-unit') || !e.starter) return 1;
+  return e.efficiency ? 1 / e.efficiency : null;
+}
+
+const scaleLine = (l: LoadLine, f: number): LoadLine =>
+  l.method === 'kw'
+    ? { ...l, kwL1: l.kwL1 * f, kwL2: l.kwL2 * f, kwL3: l.kwL3 * f }
+    : { ...l, wPerM2: l.wPerM2 * f };
+
 /** Load lines entered on the element itself: DB loads, or manual loads of unconnected ways. */
 export function ownLines(e: Element): LoadLine[] {
   if (e.kind === 'db') return e.loads;
-  if ('manualLoads' in e) return e.manualLoads;
+  if ('manualLoads' in e) {
+    const f = starterInputFactor(e);
+    return f === null || f === 1 ? e.manualLoads : e.manualLoads.map((l) => scaleLine(l, f));
+  }
   if (e.kind === 'equipment') {
     const kw = equipmentInputKw(e);
     if (!kw) return [];
@@ -272,6 +290,7 @@ export function loadSummaries(
       tbcCategories: DemandCategorySchema.options.filter((c) => tbcCat.has(c)),
       incomplete: [
         ...(e.kind === 'equipment' && equipmentInputKw(e) === null ? [e.tag] : []),
+        ...(starterInputFactor(e) === null && ownLines(e).length > 0 ? [e.tag] : []),
         ...sub.flatMap((x) => x.incomplete),
       ],
       q,

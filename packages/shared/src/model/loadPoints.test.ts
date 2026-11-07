@@ -3,7 +3,7 @@ import { completeProject, sampleDb, testCable, testElement } from '../testing.js
 import type { Element, LoadLine } from './elements.js';
 import { fireRatedFlags, withSafetyDefaults } from './fireRated.js';
 import { generatorAnalyses, setGeneratorFactor } from './generator.js';
-import { loadSummaries } from './loads.js';
+import { loadSummaries, ownLines, starterInputFactor } from './loads.js';
 
 /** Mechanical equipment is shown by the isolator that feeds it (user decision 6 Nov 2026). */
 const fan: LoadLine[] = [{ method: 'kw', loadType: '3', kwL1: 2.5, kwL2: 2.5, kwL3: 2.5 }];
@@ -38,6 +38,19 @@ describe('#TASK-15 #TASK-27 isolators and connection units as equipment', () => 
     // Already FLS: unticking Fire rated stays unticked.
     expect(withSafetyDefaults(iso('iso', { loadCategory: 'fls' }), { fireRated: false })).toEqual({
       fireRated: false,
+    });
+  });
+
+  it('unticks fire rated when the category leaves FLS (manager feedback, 7 Nov 2026)', () => {
+    const fls = iso('iso', { loadCategory: 'fls', fireRated: true });
+    expect(withSafetyDefaults(fls, { loadCategory: 'essential' })).toEqual({
+      loadCategory: 'essential',
+      fireRated: false,
+    });
+    // The same edit may keep it ticked on purpose.
+    expect(withSafetyDefaults(fls, { loadCategory: 'essential', fireRated: true })).toEqual({
+      loadCategory: 'essential',
+      fireRated: true,
     });
   });
 
@@ -94,5 +107,17 @@ describe('#TASK-15 #TASK-27 isolators and connection units as equipment', () => 
     expect(list).toEqual([
       { elementId: 'ahu', normal: 0.8, powerFailure: 1, fire: 0, remarks: '' },
     ]);
+  });
+});
+
+describe('a motor typed on an isolator (starter, manager feedback 7 Nov 2026)', () => {
+  it('takes the rated kW / efficiency as input load; a starter without efficiency is incomplete', () => {
+    const line = { method: 'kw' as const, loadType: '9' as const, kwL1: 3, kwL2: 3, kwL3: 3 };
+    const plain = iso('iso', { manualLoads: [line] });
+    expect(ownLines(plain)).toEqual([line]);
+    const motor = iso('iso', { manualLoads: [line], starter: 'DOL', efficiency: 0.9 });
+    const input = ownLines(motor)[0] as Extract<LoadLine, { method: 'kw' }>;
+    for (const kw of [input.kwL1, input.kwL2, input.kwL3]) expect(kw).toBeCloseTo(3 / 0.9, 12);
+    expect(starterInputFactor(iso('iso', { starter: 'VFD' }))).toBeNull();
   });
 });

@@ -1,5 +1,6 @@
 import type { Project } from '../project/schema.js';
 import type { LoadSummary } from './loads.js';
+import { suppliedIn } from './network.js';
 
 /**
  * Transformer loading and plot allocation (design doc 10.15; briefing page 9, 6 Nov 2026), live
@@ -22,7 +23,10 @@ export interface TransformerLoading {
 
 export interface CapacitySummary {
   limitPct: number;
+  /** Connected load that reaches a transformer or generator (manager feedback, 7 Nov 2026). */
   connectedKva: number;
+  /** Load entered on components with no supply path yet: shown apart, not in Loaded. */
+  notConnected: { kva: number; count: number };
   demandKw: number;
   demandKva: number;
   /** Installed transformer kVA x the limit, else the plot allocation (kVA) until one is placed. */
@@ -60,14 +64,22 @@ export function capacitySummary(
   options: { limitPct: number; defaultPf: number | null },
 ): CapacitySummary {
   const { limitPct, defaultPf } = options;
-  const tops = topLevel(project).flatMap((e) => {
+  // Only loads with a supply path count as connected (normal or standby).
+  const network = project.model;
+  const supplied = new Set([...suppliedIn(network, 'normal'), ...suppliedIn(network, 'standby')]);
+  const all = topLevel(project).flatMap((e) => {
     const s = summaries.get(e.id);
-    return s ? [s] : [];
+    return s ? [{ s, on: supplied.has(e.id) }] : [];
   });
-  const sum = (f: (s: LoadSummary) => number | null) => tops.reduce((t, s) => t + (f(s) ?? 0), 0);
+  const tops = all.filter((t) => t.on).map((t) => t.s);
+  const off = all.filter((t) => !t.on && t.s.connectedKw > 0).map((t) => t.s);
+  const total = (list: LoadSummary[], f: (s: LoadSummary) => number | null) =>
+    list.reduce((t, s) => t + (f(s) ?? 0), 0);
+  const sum = (f: (s: LoadSummary) => number | null) => total(tops, f);
   const connectedKva = sum((s) => kva(s.connectedKw, s.pf));
   const demandKw = sum((s) => s.maxDemandKw);
   const demandKva = sum((s) => kva(s.maxDemandKw, s.pf));
+  const notConnected = { kva: total(off, (s) => kva(s.connectedKw, s.pf)), count: off.length };
 
   const transformers = project.model.elements.flatMap((e): TransformerLoading[] => {
     if (e.kind !== 'transformer') return [];
@@ -96,6 +108,7 @@ export function capacitySummary(
   return {
     limitPct,
     connectedKva,
+    notConnected,
     demandKw,
     demandKva,
     allowableKva,
