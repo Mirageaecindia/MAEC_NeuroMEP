@@ -112,6 +112,22 @@ export class ProjectRepository {
     return doc ? this.assemble(doc) : null;
   }
 
+  /**
+   * Deletes a project with its floors, components and feeders (user request 7 Nov 2026). The
+   * audit log is append-only and stays; export numbers stay so a file name never repeats.
+   */
+  async remove(id: string): Promise<boolean> {
+    let found = false;
+    await this.client.withSession((session) =>
+      session.withTransaction(async () => {
+        found = (await this.projects.deleteOne({ _id: id }, { session })).deletedCount === 1;
+        await this.floors.deleteMany({ projectId: id }, { session });
+        await this.elements.deleteMany({ projectId: id }, { session });
+      }),
+    );
+    return found;
+  }
+
   /** Stores a new project as version 1. */
   async create(project: Project): Promise<Project> {
     const toStore = ProjectSchema.parse({ ...project, version: 1 });

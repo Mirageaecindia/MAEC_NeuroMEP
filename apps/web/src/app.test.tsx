@@ -175,7 +175,9 @@ describe('WBS 1.2.1 shell (A-03)', () => {
 
   it('opens a project card on its last page', async () => {
     const router = renderAt('/projects', new FakeAuth(LEAD), fakeApi(completeProject(), [SUMMARY]));
-    await userEvent.click(await screen.findByRole('button', { name: /AMR - EW09/ }));
+    await userEvent.click(
+      await screen.findByRole('button', { name: /^Project Name : AMR - EW09/ }),
+    );
     await waitFor(() => expect(router.state.location.pathname).toBe('/projects/p-1/floor'));
   });
 });
@@ -274,11 +276,11 @@ describe('#TASK-08 version conflicts (E0802): the work in the tab is never lost'
     const { api, router, alert, server } = await conflict();
     await userEvent.click(within(alert).getByRole('button', { name: 'Save as new project' }));
     const dialog = screen.getByRole('dialog', { name: 'Save as new project' });
-    expect(within(dialog).getByLabelText('New project name')).toHaveValue('NeoTowerX (copy)');
+    expect(within(dialog).getByLabelText('New project name')).toHaveValue('NeoTowerX_duplicated');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Save as new project' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/projects/p-new/import'));
     const [copy, from] = vi.mocked(api.createProject).mock.calls[0]!;
-    expect(copy!.details.name).toBe('NeoTowerX (copy)');
+    expect(copy!.details.name).toBe('NeoTowerX_duplicated');
     expect(from).toBe('p-1');
     expect(server.project.details.name).toBe('NeoTower'); // the open project is left as it is
   });
@@ -322,8 +324,30 @@ describe('#TASK-08 version conflicts (E0802): the work in the tab is never lost'
 describe('#TASK-02 All Projects (WBS 1.2.3)', () => {
   it('shows stage, revision and last modified on hover (FR-02)', async () => {
     renderAt('/projects', new FakeAuth(LEAD), fakeApi(undefined, [SUMMARY]));
-    const card = await screen.findByRole('button', { name: /AMR - EW09/ });
+    const card = await screen.findByRole('button', { name: /^Project Name : AMR - EW09/ });
     expect(card.title).toMatch(/^Stage: .+ · Revision: A · Last modified: /);
+  });
+
+  it('the Technical Lead deletes a project after typing its name; engineers see no delete icon', async () => {
+    const api = fakeApi(undefined, [SUMMARY]);
+    api.deleteProject = vi.fn(async () => undefined);
+    renderAt('/projects', new FakeAuth(LEAD), api);
+    await userEvent.click(await screen.findByRole('button', { name: 'Delete project AMR - EW09' }));
+    const dialog = screen.getByRole('dialog', { name: 'Delete project "AMR - EW09"?' });
+    const confirm = within(dialog).getByRole('button', { name: 'Delete project' });
+    expect(confirm).toBeDisabled();
+    await userEvent.type(within(dialog).getByLabelText('Project name to confirm'), 'AMR - EW09');
+    await userEvent.click(confirm);
+    expect(api.deleteProject).toHaveBeenCalledWith('p-1');
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('button', { name: /^Project Name : AMR - EW09/ }),
+      ).not.toBeInTheDocument(),
+    );
+    cleanup();
+    renderAt('/projects', new FakeAuth(ELEC), fakeApi(undefined, [SUMMARY]));
+    await screen.findByRole('button', { name: /^Project Name : AMR - EW09/ });
+    expect(screen.queryByRole('button', { name: /^Delete project/ })).not.toBeInTheDocument();
   });
 
   it('tells an engineer with no projects how they get one', async () => {

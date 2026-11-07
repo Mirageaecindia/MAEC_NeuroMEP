@@ -272,6 +272,13 @@ export const SECTIONS: GuideSection[] = [
           the project on the page you last worked on. Only the Technical Lead can create a new
           project or import one from a file.
         </p>
+        <p>
+          The Technical Lead deletes a project with the bin icon on its card and confirms by typing
+          the project&apos;s name. Deleting removes it for everyone - floors, plans, components,
+          feeders, risers and results - and cannot be undone, so download it first if it may be
+          needed again. A copy (a project file imported again, or Save as new project) never takes
+          an existing name: it becomes name_duplicated, then name_duplicated_2, with its own id.
+        </p>
       </>
     ),
   },

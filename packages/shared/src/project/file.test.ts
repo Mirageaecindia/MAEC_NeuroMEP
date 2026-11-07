@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { completeProject } from '../testing.js';
-import { parseProjectFile, serializeProject } from './file.js';
+import { parseProjectFile, serializeProject, uniqueProjectName } from './file.js';
 
 describe('project file (.json)', () => {
   it('round-trips the full model', () => {
@@ -76,5 +76,14 @@ describe('project file (.json)', () => {
       ok: false,
       error: expect.stringContaining('details.designStage'),
     });
+  });
+});
+
+describe('uniqueProjectName (copies get their own name, 7 Nov 2026)', () => {
+  it('keeps a free name and adds _duplicated, then a number', () => {
+    expect(uniqueProjectName('Tower', ['Mall'])).toBe('Tower');
+    expect(uniqueProjectName('Tower', ['tower '])).toBe('Tower_duplicated');
+    expect(uniqueProjectName('Tower', ['Tower', 'Tower_duplicated'])).toBe('Tower_duplicated_2');
+    expect(uniqueProjectName('', [''])).toBe('');
   });
 });

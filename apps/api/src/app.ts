@@ -6,6 +6,7 @@ import {
   canViewProject,
   createEmptyProject,
   migrateProjectData,
+  uniqueProjectName,
   outsideEditRights,
   lockedChange,
   ProjectSchema,
@@ -185,6 +186,9 @@ export function createApp(deps?: AppDeps): Express {
       // project" names the project it was opened from: its plan files are copied when this user
       // may open that project (user request 7 Nov 2026).
       const floors = imported.data.building.floors;
+      // A copy never takes the name of an existing project: name_duplicated, _duplicated_2 ...
+      const names = (await projects.listSummaries(() => true)).map((s) => s.name);
+      const name = uniqueProjectName(imported.data.details.name, names);
       const fromId = typeof req.body.copyPlansFrom === 'string' ? req.body.copyPlansFrom : null;
       const from = fromId ? await projects.get(fromId) : null;
       const source = from && canViewProject(user, from) ? from : null;
@@ -196,6 +200,7 @@ export function createApp(deps?: AppDeps): Express {
         ...imported.data,
         id: base.id,
         version: 0,
+        details: { ...imported.data.details, name },
         // Saved as a new project: it opens on the pages already reached.
         meta: source
           ? {
@@ -211,6 +216,19 @@ export function createApp(deps?: AppDeps): Express {
       };
     }
     res.status(201).json({ project: await projects.create(project), plansToUpload });
+  });
+
+  // Delete a project (Technical Lead, user request 7 Nov 2026): its data and plan files.
+  app.delete('/api/projects/:id', signedIn, async (req, res) => {
+    const project = await loadVisible(req, res);
+    if (!project) return;
+    if (!canCreateProject(currentUser(req))) {
+      sendError(res, 403, 'E0202');
+      return;
+    }
+    await projects.remove(project.id);
+    await plans.removeProject(project.id);
+    res.status(204).end();
   });
 
   app.get('/api/projects/:id', signedIn, async (req, res) => {

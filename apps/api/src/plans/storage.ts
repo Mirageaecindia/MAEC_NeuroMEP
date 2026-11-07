@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
-import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { Readable } from 'node:stream';
 import { GridFSBucket, type Db } from 'mongodb';
@@ -27,6 +27,8 @@ export interface PlanStorage {
   }): Promise<StoredPlan>;
   /** The file as a stream, or null if it does not exist in this project. */
   open(projectId: string, fileId: string): Promise<Readable | null>;
+  /** Removes every plan file of a deleted project. */
+  removeProject(projectId: string): Promise<void>;
 }
 
 /** Ids become folder and file names, so only plain ids are accepted. */
@@ -67,6 +69,12 @@ export class DiskPlanStorage implements PlanStorage {
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- checked ids (SAFE_ID)
     const found = await stat(p.pdf).catch(() => null);
     return found !== null;
+  }
+
+  async removeProject(projectId: string): Promise<void> {
+    if (!SAFE_ID.test(projectId)) throw new Error(`Unsafe project id ${projectId}`);
+
+    await rm(join(this.root, projectId), { recursive: true, force: true });
   }
 
   async open(projectId: string, fileId: string) {

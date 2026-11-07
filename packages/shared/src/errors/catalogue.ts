@@ -64,9 +64,9 @@ export const ERROR_CATALOGUE = [
   ),
   e(
     'E0202',
-    'Only the Technical Lead can create or import projects.',
+    'Only the Technical Lead can create, import or delete projects.',
     'error',
-    'Amendment A-01.',
+    'Amendment A-01 (delete: user request 7 Nov 2026).',
     'Ask the Technical Lead.',
   ),
   e(

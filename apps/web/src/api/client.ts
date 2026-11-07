@@ -111,6 +111,10 @@ export class ApiClient {
       body: JSON.stringify(project ? { project, ...(copyPlansFrom && { copyPlansFrom }) } : {}),
     });
   }
+  /** Deletes a project with its floors, components and plans (Technical Lead). */
+  deleteProject(id: string) {
+    return this.request<void>(`/api/projects/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  }
   getProject(id: string) {
     return this.request<{ project: Project }>(`/api/projects/${encodeURIComponent(id)}`);
   }

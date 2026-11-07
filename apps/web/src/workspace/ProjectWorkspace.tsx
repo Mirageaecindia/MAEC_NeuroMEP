@@ -174,7 +174,7 @@ export function SaveBanner() {
             <button
               className="btn btn-sm"
               onClick={() => {
-                setName(`${project.details.name} (copy)`);
+                setName(`${project.details.name}_duplicated`);
                 setDialog('saveAs');
               }}
             >

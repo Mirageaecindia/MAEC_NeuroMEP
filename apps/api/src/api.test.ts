@@ -529,6 +529,47 @@ describe('#TASK-06 floor-plan PDFs (WBS 1.2.7, A-02)', () => {
     ).toBe(true);
   });
 
+  it('deletes a project with its plan files (Technical Lead only); copies get their own name', async () => {
+    const lead = await tokenFor(LEAD);
+    const project = (
+      await request(app)
+        .post('/api/projects')
+        .set('cookie', lead)
+        .send({ project: { ...completeProject(), details: { ...completeProject().details } } })
+    ).body.project;
+    expect(project.details.name).toBe('NeoTower');
+    const again = await request(app)
+      .post('/api/projects')
+      .set('cookie', lead)
+      .send({ project: completeProject() });
+    expect(again.body.project.details.name).toBe('NeoTower_duplicated');
+    const third = await request(app)
+      .post('/api/projects')
+      .set('cookie', lead)
+      .send({ project: completeProject() });
+    expect(third.body.project.details.name).toBe('NeoTower_duplicated_2');
+
+    const up = await upload(project.id, lead, pdf);
+    const disk = new DiskPlanStorage(plansDir);
+    expect(await disk.has(project.id, up.body.fileId)).toBe(true);
+    const refused = await request(app)
+      .delete(`/api/projects/${project.id}`)
+      .set('cookie', await tokenFor(ELEC));
+    expect(refused.status).toBe(403); // an assigned engineer sees it but may not delete it
+    expect(refused.body.code).toBe('E0202');
+    const gone = await request(app).delete(`/api/projects/${project.id}`).set('cookie', lead);
+    expect(gone.status).toBe(204);
+    expect(await disk.has(project.id, up.body.fileId)).toBe(false);
+    expect((await request(app).get(`/api/projects/${project.id}`).set('cookie', lead)).status).toBe(
+      404,
+    );
+    const list = (await request(app).get('/api/projects').set('cookie', lead)).body.projects;
+    expect(list.map((p: { name: string }) => p.name).sort()).toEqual([
+      'NeoTower_duplicated',
+      'NeoTower_duplicated_2',
+    ]);
+  });
+
   it('refuses a non-PDF (E0602), a damaged PDF (E0601), several pages (E0604) and over 20 MB (E0603)', async () => {
     const auth = await tokenFor(LEAD);
     const project = (await request(app).post('/api/projects').set('cookie', auth).send({})).body

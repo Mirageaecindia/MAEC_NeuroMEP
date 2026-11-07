@@ -35,3 +35,19 @@ export function parseProjectFile(text: string): ProjectFileResult {
   }
   return { ok: true, project: parsed.data };
 }
+
+/**
+ * The name of a copied project (import of a project file, Save as new project): unchanged when
+ * no other project has it, else name_duplicated, name_duplicated_2 ... (user request 7 Nov 2026).
+ * Names are compared ignoring case and spaces at the ends; an empty name stays empty.
+ */
+export function uniqueProjectName(name: string, existing: readonly string[]): string {
+  const base = name.trim();
+  if (!base) return name;
+  const taken = new Set(existing.map((n) => n.trim().toLowerCase()));
+  if (!taken.has(base.toLowerCase())) return base;
+  for (let n = 1; ; n++) {
+    const next = n === 1 ? `${base}_duplicated` : `${base}_duplicated_${n}`;
+    if (!taken.has(next.toLowerCase())) return next;
+  }
+}

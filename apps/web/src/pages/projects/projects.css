@@ -34,3 +34,41 @@
 .projects-empty {
   margin: 50px 30px;
 }
+
+/* Delete icon on a card (Technical Lead, 7 Nov 2026): right of the status mark. */
+.project-card-wrap {
+  position: relative;
+}
+.project-card-wrap .project-card {
+  padding-right: 52px;
+}
+.project-delete {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--danger);
+  cursor: pointer;
+}
+.project-delete:hover {
+  background: var(--danger-soft);
+}
+.delete-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+}
+.delete-confirm input {
+  padding: 6px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  font: inherit;
+}
