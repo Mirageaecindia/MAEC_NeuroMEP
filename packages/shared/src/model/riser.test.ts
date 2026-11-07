@@ -79,12 +79,17 @@ describe('#TASK-18 riser connections (FR-20, Section 3)', () => {
     expect(topologyCheck(m, mdb, smdb1, 'in')).toEqual({ ok: true });
   });
 
-  it('counts as connected to the source once a riser leads back to a transformer (A-07)', () => {
-    expect(sourceConnected(network())).toBe(false);
-    expect(sourceConnected(network(setRiser([], 'riser-1', { fedFromId: 'MDB' })))).toBe(true);
-    expect(sourceConnected(network(setRiser([], 'riser-1', { fedFromId: 'TX' })))).toBe(true);
-    const lone = { ...network(setRiser([], 'riser-1', { fedFromId: 'MDB' })), cables: [] };
-    expect(sourceConnected(lone)).toBe(false);
+  it('counts as connected once a transformer feeds something - a riser is optional (A-22)', () => {
+    expect(sourceConnected(network())).toBe(true); // TX feeds the MDB by a feeder
+    const noFeeder = { ...network(), cables: [] };
+    expect(sourceConnected(noFeeder)).toBe(false);
+    expect(
+      sourceConnected({ ...noFeeder, risers: setRiser([], 'riser-1', { fedFromId: 'TX' }) }),
+    ).toBe(true);
+    // A riser from a board that has no feeder from the transformer is not enough.
+    expect(
+      sourceConnected({ ...noFeeder, risers: setRiser([], 'riser-1', { fedFromId: 'MDB' }) }),
+    ).toBe(false);
   });
 
   it('forgets removed components', () => {

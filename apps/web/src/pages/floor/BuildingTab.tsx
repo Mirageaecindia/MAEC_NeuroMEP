@@ -50,7 +50,7 @@ function cycle<T>(list: readonly T[], current: T | null): T | null {
  * Building tab (Figma 3.5 - 3.8, FR-19 / FR-20): floors stacked top-down (A-13) with the risers on
  * the left. Click a riser to choose what feeds it (transformer or LV panel / MDB), click a floor
  * board to choose the riser feeding it; both are stored in the project. Building Summary with
- * floor status, Riser Design, Cable Size Calculator (enabled once a riser leads back to a
+ * floor status, Busbar Riser Design, Cable Size Calculator (enabled once a transformer feeds something; was: a riser leads back to a
  * transformer, A-07) with the riser Cost (busbar rating x 2.2 AED per riser, 3 Nov 2026),
  * Save / Cancel.
  */
@@ -171,7 +171,7 @@ export function BuildingTab(props: {
     if (props.feederArmed) return feederClick(board);
     const usable = risers.filter((r) => r.lengthM).map((r) => r.id);
     if (usable.length === 0) {
-      notice('Enter a riser length in Riser Design first.');
+      notice('Enter a riser length in Busbar Riser Design first.');
       return;
     }
     change(
@@ -225,9 +225,7 @@ export function BuildingTab(props: {
   ]);
   const whyNotReady = connected
     ? null
-    : risers.some((r) => r.lengthM && r.fedFromId)
-      ? 'No riser leads back to a transformer yet: feed a riser from the transformer, or from an LV panel / MDB that has a feeder from the transformer.'
-      : 'Enter a riser length in Riser Design, then click the riser in the diagram and click what feeds it (usually the transformer, an LV panel or an MDB).';
+    : 'Connect the transformer: draw a feeder from it on its floor plan, or here with Feeder to a component on another floor. A busbar riser is optional - if you use one, feed it from the transformer or from a board fed from it.';
 
   return (
     <div className="building-tab">
@@ -518,7 +516,7 @@ export function BuildingTab(props: {
           </tbody>
         </table>
         <hr />
-        <h3>Riser Design</h3>
+        <h3>Busbar Riser Design</h3>
         <table className="riser-design">
           <thead>
             <tr>
@@ -572,15 +570,16 @@ export function BuildingTab(props: {
           <strong>Cost :</strong>{' '}
           {sized && cost ? (cost.totalAed === null ? '-' : formatAed(cost.totalAed)) : ''} AED
         </p>
+        {sized && cost && cost.risers.length === 0 && (
+          <p className="summary-hint">
+            No busbar riser in this building: the cost counts busbar risers only (rating x AED per
+            A), so it is 0 AED.
+          </p>
+        )}
         {sized && cost && cost.totalAed === null && (
           <div className="summary-hint" aria-label="Why there is no cost">
             <p>No cost yet - every riser needs a busbar rating:</p>
-            <ul>
-              {cost.risers.length === 0 && (
-                <li>No riser in use: enter a length in Riser Design and choose what feeds it.</li>
-              )}
-              {cost.risers.flatMap((r) => r.reasons.map((why) => <li key={why}>{why}</li>))}
-            </ul>
+            <ul>{cost.risers.flatMap((r) => r.reasons.map((why) => <li key={why}>{why}</li>))}</ul>
           </div>
         )}
         <hr />

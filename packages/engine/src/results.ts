@@ -295,9 +295,7 @@ export function riserCosts(
   const known = rows.filter((r) => r.costAed !== null);
   return {
     risers: rows,
-    totalAed:
-      rows.length && known.length === rows.length
-        ? known.reduce((t, r) => t + r.costAed!, 0)
-        : null,
+    // No busbar riser in use: nothing to cost, 0 AED (busbar risers are optional, 8 Nov 2026).
+    totalAed: known.length === rows.length ? known.reduce((t, r) => t + r.costAed!, 0) : null,
   };
 }

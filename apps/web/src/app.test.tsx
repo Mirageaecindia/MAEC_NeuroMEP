@@ -774,7 +774,9 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     const calc = within(summary).getByRole('button', { name: 'Cable Size Calculator' });
     expect(calc).toBeDisabled();
     await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
-    expect(await screen.findByText('Enter a riser length in Riser Design first.')).toBeVisible();
+    expect(
+      await screen.findByText('Enter a riser length in Busbar Riser Design first.'),
+    ).toBeVisible();
     await userEvent.type(within(summary).getByLabelText('Riser 1 length'), '26');
     // Click the riser, then its source - the transformer is drawn on its floor (7 Nov 2026).
     await userEvent.click(screen.getByRole('button', { name: 'Riser 1' }));
@@ -951,13 +953,30 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     ).toBeVisible();
   });
 
+  it('needs no busbar riser: a feeder from the transformer enables Cable Size; the cost is 0 AED (A-22)', async () => {
+    const project = buildingProject();
+    const tx = project.model.elements.find((e) => e.id === 'tx')!;
+    const db = project.model.elements.find((e) => e.id === 'db-1')!;
+    Object.assign(db, { loads: [{ method: 'kw', loadType: '2', kwL1: 5, kwL2: 5, kwL3: 5 }] });
+    project.model.cables = [{ ...testCable(tx, db), floorId: tx.floorId }];
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(project));
+    const summary = await screen.findByRole('complementary', { name: 'Building Summary' });
+    expect(
+      within(summary).getByRole('heading', { name: 'Busbar Riser Design' }),
+    ).toBeInTheDocument();
+    const calc = within(summary).getByRole('button', { name: 'Cable Size Calculator' });
+    expect(calc).toBeEnabled();
+    expect(screen.queryByText(/no tap-off from a riser/)).not.toBeInTheDocument();
+    await userEvent.click(calc);
+    await waitFor(() => expect(summary).toHaveTextContent('Cost : 0 AED'));
+    expect(summary).toHaveTextContent('No busbar riser in this building');
+  });
+
   it('#TASK-27 says why the Cable Size Calculator is not available yet', async () => {
     renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(buildingProject()));
     const button = await screen.findByRole('button', { name: 'Cable Size Calculator' });
     expect(button).toBeDisabled();
-    expect(
-      screen.getByText(/^Enter a riser length in Riser Design, then click the riser/),
-    ).toBeVisible();
+    expect(screen.getByText(/^Connect the transformer: draw a feeder from it/)).toBeVisible();
   });
 
   it('#TASK-10 an engineer flags a connected floor done; it locks until the Lead reopens it (A-08)', async () => {

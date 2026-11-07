@@ -614,7 +614,7 @@ function riser(): WorkedExample {
         how: 'busbar data (rule pack)',
         value: `R20 ${bus.r20MohmM}, X ${bus.xMohmM} mOhm/m`,
       },
-      { label: 'Length', how: 'Riser Design', value: L, unit: 'm' },
+      { label: 'Length', how: 'Busbar Riser Design', value: L, unit: 'm' },
     ],
     steps: [
       {

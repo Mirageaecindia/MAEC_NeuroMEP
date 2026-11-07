@@ -92,7 +92,9 @@ export function completenessIssues(m: Network, floors: readonly Floor[]): Networ
   const normal = suppliedIn(m, 'normal');
   const standby = suppliedIn(m, 'standby');
   const issues: NetworkIssue[] = [];
-  for (const f of floors) {
+  // E1802 only when the building uses a busbar riser at all (risers are optional, A-22).
+  const risersInUse = m.risers.some((r) => r.lengthM || r.fedFromId || r.feeds.length);
+  for (const f of risersInUse ? floors : []) {
     // Boards a tap-off usually feeds that no feeder reaches (the riser's place on the floor).
     const cableFed = new Set(m.cables.map((c) => c.to.elementId));
     const boards = riserBoards(m, f.id).filter(

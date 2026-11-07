@@ -515,9 +515,10 @@ export const SECTIONS: GuideSection[] = [
         <h3>6. Cable Size and floor status</h3>
         <p>
           <Term>Cable Size</Term> in the right panel sizes the selected component or feeder, or the
-          whole floor when nothing is selected. It is enabled once a riser leads back to a
-          transformer (see the Building tab). Any later change marks results{' '}
-          <Term>Out of date</Term> (grey) until you press Cable Size again.
+          whole floor when nothing is selected. It is enabled once the transformer feeds something -
+          by a feeder on a plan, a feeder between floors, or a busbar riser (risers are optional).
+          Any later change marks results <Term>Out of date</Term> (grey) until you press Cable Size
+          again.
         </p>
         <p>
           When your layer of a floor is finished, flag it done in the <Term>Status</Term> dialog:
@@ -569,8 +570,8 @@ export const SECTIONS: GuideSection[] = [
         <h3>Placing a riser</h3>
         <ol>
           <li>
-            In <Term>Riser Design</Term> type the riser&apos;s length (m) - and width - for Riser 1
-            (up to three risers). The riser appears in the diagram.
+            In <Term>Busbar Riser Design</Term> type the riser&apos;s length (m) - and width - for
+            Riser 1 (up to three risers). The riser appears in the diagram.
           </li>
           <li>
             Click the riser, then click the component that feeds it on any floor - usually the
@@ -601,9 +602,11 @@ export const SECTIONS: GuideSection[] = [
         <ul>
           <li>Floor status per discipline (pill / flag / X).</li>
           <li>
-            <Term>Cable Size Calculator</Term> sizes the whole project. It is enabled only when a
-            riser leads back to a transformer (the riser is fed from the transformer, or from a
-            panel that has a feeder from the transformer); otherwise the reason is shown.
+            <Term>Cable Size Calculator</Term> sizes the whole project. It is enabled once the
+            transformer feeds something - a feeder, or a busbar riser fed from it or from a panel
+            fed from it; otherwise the reason is shown. A building needs no busbar riser: feeders
+            from the transformer, on the plans and between floors, are enough, and the cost is then
+            0 AED (the cost counts busbar risers only).
           </li>
           <li>
             <Term>Cost</Term> - the riser cost in AED after the calculator runs; &quot;-&quot; with
@@ -902,7 +905,7 @@ export const SECTIONS: GuideSection[] = [
         <p>
           The length of a cable is its <Term>route on the plan</Term> converted to metres with the
           floor&apos;s calibration, <Term>plus 5 m</Term> (rule pack) for the ends and vertical
-          drops. A riser&apos;s length is the one typed in Riser Design.
+          drops. A riser&apos;s length is the one typed in Busbar Riser Design.
         </p>
         <CalcButton example="length" />
       </>
@@ -1212,10 +1215,10 @@ export const SECTIONS: GuideSection[] = [
         <tbody>
           <tr>
             <td>Cable Size / Cable Size Calculator is grey</td>
-            <td>No riser leads back to a transformer (A-07).</td>
+            <td>The transformer feeds nothing yet (A-07, A-22).</td>
             <td>
-              Building tab: type a riser length, click the riser, then click the transformer or a
-              panel fed from it.
+              Draw a feeder from the transformer (on its plan, or between floors in the Building
+              tab), or feed a busbar riser from it.
             </td>
           </tr>
           <tr>

@@ -97,11 +97,13 @@ export function withoutElements(risers: readonly Riser[], ids: ReadonlySet<strin
 }
 
 /**
- * A-07: the transformer is connected to the risers - a riser is fed from a transformer, or from a
- * board that cables connect back to a transformer.
+ * A-07 as amended by A-22 (8 Nov 2026): Cable Size is enabled once a transformer supplies
+ * something - by a feeder (on a plan, or between floors in the Building tab) or through a busbar
+ * riser fed from it or from a board fed from it. Busbar risers are optional.
  */
 export function sourceConnected(m: Network): boolean {
   const kind = new Map(m.elements.map((e) => [e.id, e.kind]));
+  if (m.cables.some((c) => kind.get(c.from.elementId) === 'transformer')) return true;
   return m.risers.some((r) => {
     if (!r.fedFromId) return false;
     const chain = [r.fedFromId, ...upstreamOf(r.fedFromId, m.cables)];

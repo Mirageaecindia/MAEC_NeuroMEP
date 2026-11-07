@@ -1281,7 +1281,7 @@ function RightPanel(props: {
         title={
           fedFromSource
             ? `Size ${scopeName ?? ''}`
-            : 'Connect the transformer to the risers in the Building tab first (A-07)'
+            : 'Connect the transformer first: draw a feeder from it (a busbar riser is optional)'
         }
         onClick={() => {
           if (sizingScope) void cableSize.run(sizingScope, scopeName ?? 'the floor');

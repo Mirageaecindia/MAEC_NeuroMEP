@@ -137,7 +137,7 @@ describe('#TASK-01 authentication (WBS 1.2.2)', () => {
     expect((await signIn(ELEC)).status).toBe(200); // other users are not affected
     clock += 15 * 60_000 + 1;
     expect((await signIn(LEAD)).status).toBe(200);
-  });
+  }, 30_000); // seven scrypt checks: slow while the whole suite runs
 });
 
 describe('projects', () => {
