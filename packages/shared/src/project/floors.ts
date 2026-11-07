@@ -1,11 +1,14 @@
 import type { Floor, FloorType, Project } from './schema.js';
 
 /**
- * Floor counts entered on Import File (FR-06, A-05): No of Basements and No of Floors (the upper
- * floors, stored as `typicals`). Ground floor is always exactly one; podiums are not asked (0).
+ * Floor counts entered on Import File (FR-06, 12.1; user request 7 Nov 2026): No of Basements,
+ * GF (ground levels, default 1), No of Podium levels and No of Typical floors. Mechanical floors
+ * 1-3 are chosen from the upper floors (`mechanicalFloorIds`), they are not extra floors.
  */
 export interface FloorCounts {
   basements: number;
+  /** Ground levels: 1 = "Ground Floor"; 2 or more = "Ground Floor 1", "Ground Floor 2" ... */
+  grounds?: number;
   podiums: number;
   typicals: number;
 }
@@ -50,13 +53,20 @@ interface FloorSlot {
   type: FloorType;
 }
 
-/** Ordered bottom to top: B{n} ... B1, GF, P1 ... P{n}, 1 ... {n}. */
+/** Ordered bottom to top: B{n} ... B1, GF, GF2 ..., P1 ... P{n}, 1 ... {n}. */
 export function floorSlots(counts: FloorCounts): FloorSlot[] {
   const slots: FloorSlot[] = [];
   for (let b = counts.basements; b >= 1; b--) {
     slots.push({ code: `B${b}`, name: `Basement ${b}`, type: 'basement' });
   }
-  slots.push({ code: 'GF', name: 'Ground Floor', type: 'ground' });
+  const grounds = Math.max(1, counts.grounds ?? 1);
+  for (let g = 1; g <= grounds; g++) {
+    slots.push({
+      code: g === 1 ? 'GF' : `GF${g}`,
+      name: grounds === 1 ? 'Ground Floor' : `Ground Floor ${g}`,
+      type: 'ground',
+    });
+  }
   for (let p = 1; p <= counts.podiums; p++) {
     slots.push({ code: `P${p}`, name: `Podium ${p}`, type: 'podium' });
   }
@@ -106,10 +116,21 @@ export function applyRegistryChange(
   const mech = building.mechanicalFloorIds.map((id) => (id !== null && ids.has(id) ? id : null));
   return {
     ...building,
-    counts: { ...counts },
+    counts: { ...counts, grounds: counts.grounds ?? 1 },
     floors: change.floors,
     mechanicalFloorIds: mech as Project['building']['mechanicalFloorIds'],
   };
+}
+
+/**
+ * The typical floors that share one plan (user request 7 Nov 2026): every floor of type
+ * 'typical' that is not chosen as a mechanical floor. Mechanical floors keep their own plan.
+ */
+export function typicalSet(
+  building: Pick<Project['building'], 'floors' | 'mechanicalFloorIds'>,
+): Floor[] {
+  const mech = new Set(building.mechanicalFloorIds.filter((id): id is string => id !== null));
+  return building.floors.filter((f) => f.type === 'typical' && !mech.has(f.id));
 }
 
 /** Tags shown on registry rows, e.g. "MF1" for mechanical floor 1. */

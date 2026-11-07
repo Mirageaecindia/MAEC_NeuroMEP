@@ -35,7 +35,7 @@ export function completeProject(): Project {
   p.site.soilResistivity = { value: 2, source: 'rulepack' };
   p.calculation.region = 'dubai';
   p.calculation.upstreamFaultMva = 350;
-  const counts = { basements: 1, podiums: 1, typicals: 2 };
+  const counts = { basements: 1, grounds: 1, podiums: 1, typicals: 2 };
   p.building.counts = counts;
   p.building.floors = generateRegistry(counts, [], sequentialIds('f')).floors.map((f) => ({
     ...f,

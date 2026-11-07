@@ -482,20 +482,50 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
     if (third) expect(picked(third)).toMatch(/No plan|Keep current plan/);
   });
 
-  it('No of Floors builds the floor list Ground + First ... (A-05)', async () => {
+  it('No of Floors: basements, ground levels, podiums and typical floors build the list; mechanical floors are chosen from it (12.1)', async () => {
     const empty = {
       ...createEmptyProject({ id: 'p-2', userId: 'u-lead', now: FIXED_NOW }),
       version: 1,
     };
     renderAt('/projects/p-2/import', new FakeAuth(LEAD), fakeApi(empty));
-    await userEvent.type(await screen.findByLabelText(/No of Floors/), '2');
+    await userEvent.type(await screen.findByLabelText(/No of Typical floors/), '2');
     await userEvent.tab();
     const picker = await screen.findByRole('combobox', { name: 'Floor' });
-    expect(
+    const names = () =>
       within(picker)
         .getAllByRole('option')
+        .map((o) => o.textContent);
+    expect(names()).toEqual([
+      'Second Floor (no plan)',
+      'First Floor (no plan)',
+      'Ground Floor (no plan)',
+    ]);
+    const gf = screen.getByLabelText(/GF \(ground levels\)/);
+    await userEvent.clear(gf);
+    await userEvent.type(gf, '2');
+    await userEvent.type(screen.getByLabelText(/No of Podium levels/), '1');
+    await userEvent.type(screen.getByLabelText(/No of Basements/), '1');
+    await userEvent.tab();
+    await waitFor(() =>
+      expect(names()).toEqual([
+        'Second Floor (no plan)',
+        'First Floor (no plan)',
+        'Podium 1 (no plan)',
+        'Ground Floor 2 (no plan)',
+        'Ground Floor (no plan)',
+        'Basement 1 (no plan)',
+      ]),
+    );
+    // Mechanical floors: chosen from the floors above ground; one floor once.
+    const mech1 = screen.getByLabelText('Mechanical floor-1 ref');
+    expect(
+      within(mech1)
+        .getAllByRole('option')
         .map((o) => o.textContent),
-    ).toEqual(['Second Floor (no plan)', 'First Floor (no plan)', 'Ground Floor (no plan)']);
+    ).toEqual(['None', 'Podium 1', 'First Floor', 'Second Floor']);
+    await userEvent.selectOptions(mech1, 'Second Floor');
+    const mech2 = screen.getByLabelText('Mechanical floor-2 ref');
+    expect(within(mech2).getByRole('option', { name: 'Second Floor' })).toBeDisabled();
   });
 
   it('asks before changing a calculation input once modelling has started (Section 9)', async () => {

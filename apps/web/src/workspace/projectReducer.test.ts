@@ -1,5 +1,11 @@
 import { createEmptyProject, setBoardRiser } from '@neuromep/shared';
-import { completeProject, FIXED_NOW, modelledProject } from '@neuromep/shared/testing';
+import {
+  completeProject,
+  FIXED_NOW,
+  modelledProject,
+  testCable,
+  testElement,
+} from '@neuromep/shared/testing';
 import { describe, expect, it } from 'vitest';
 import { projectReducer, withUploadedPlan, type AuditMeta } from './projectReducer';
 
@@ -122,5 +128,83 @@ describe('#TASK-17 / #TASK-18 risers', () => {
     expect(p.model.risers[0]!.feeds).toEqual(['db-1']);
     p = projectReducer(p, { type: 'removeElements', ids: ['db-1'] });
     expect(p.model.risers[0]!.feeds).toEqual([]);
+  });
+});
+
+describe('floors, plans and group edits (user request 7 Nov 2026)', () => {
+  const plan = {
+    kind: 'pdf' as const,
+    fileId: 'typ-1',
+    fileName: 'Typical.pdf',
+    uploadedAt: FIXED_NOW,
+    uploadedBy: 'u-lead',
+    page: { widthPt: 1191, heightPt: 842 },
+  };
+
+  it('gives one plan to the typical set and shares its calibration; a flagged floor keeps its own', () => {
+    const p = completeProject();
+    const [one, two] = p.building.floors.filter((f) => f.type === 'typical');
+    let next = projectReducer(p, {
+      type: 'planUploaded',
+      floorId: one!.id,
+      plan,
+      now: FIXED_NOW,
+      alsoFloorIds: [two!.id],
+    });
+    const plans = next.building.floors.filter((f) => f.plan?.fileId === 'typ-1');
+    expect(plans.map((f) => f.id)).toEqual([one!.id, two!.id]);
+    const cal = completeProject().building.floors.find((f) => f.plan)!.plan!.calibration;
+    next = projectReducer(next, { type: 'calibration', floorId: one!.id, calibration: cal });
+    expect(next.building.floors.find((f) => f.id === two!.id)!.plan!.calibration).toEqual(cal);
+
+    const flagged = {
+      ...next,
+      model: {
+        ...next.model,
+        floorFlags: [
+          { floorId: two!.id, discipline: 'electrical' as const, by: 'u', at: FIXED_NOW },
+        ],
+      },
+    };
+    const again = projectReducer(flagged, {
+      type: 'calibration',
+      floorId: one!.id,
+      calibration: null,
+    });
+    expect(again.building.floors.find((f) => f.id === two!.id)!.plan!.calibration).toEqual(cal);
+  });
+
+  it('renames a floor (never empty) and sets a mechanical floor', () => {
+    const p = completeProject();
+    const first = p.building.floors.find((f) => f.code === '1')!;
+    let next = projectReducer(p, { type: 'renameFloor', floorId: first.id, name: ' Office 1 ' });
+    expect(next.building.floors.find((f) => f.id === first.id)!.name).toBe('Office 1');
+    expect(projectReducer(next, { type: 'renameFloor', floorId: first.id, name: ' ' })).toBe(next);
+    next = projectReducer(next, { type: 'mechanicalFloor', index: 1, floorId: first.id });
+    expect(next.building.mechanicalFloorIds).toEqual([null, first.id, null]);
+  });
+
+  it('moves a group with the feeders between them, and rotates in steps that wrap at 360', () => {
+    const p = completeProject();
+    const smdb = { ...testElement('smdb', 'smdb'), position: { x: 0, y: 0 } };
+    const db = { ...testElement('db', 'db'), position: { x: 1, y: 0 } };
+    p.model.elements = [smdb, db];
+    p.model.cables = [testCable(smdb, db)];
+    const moved = projectReducer(p, {
+      type: 'moveElements',
+      ids: ['smdb', 'db'],
+      delta: { x: 2, y: 3 },
+    });
+    expect(moved.model.elements.map((e) => e.position)).toEqual([
+      { x: 2, y: 3 },
+      { x: 3, y: 3 },
+    ]);
+    expect(moved.model.cables[0]!.route).toEqual([
+      { x: 2, y: 3 },
+      { x: 3, y: 3 },
+    ]);
+    let turned = projectReducer(p, { type: 'rotateElements', ids: ['db'], to: 270 });
+    turned = projectReducer(turned, { type: 'rotateElements', ids: ['db'], by: 90 });
+    expect(turned.model.elements.find((e) => e.id === 'db')!.rotationDeg).toBe(0);
   });
 });

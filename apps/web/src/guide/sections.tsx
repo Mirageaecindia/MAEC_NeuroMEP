@@ -335,9 +335,24 @@ export const SECTIONS: GuideSection[] = [
         </ul>
         <h3>Floors and plans</h3>
         <p>
-          No of Floors (Ground + N) and No of Basements create the floor list. Upload the plan PDF
-          of each floor here or later on Floor Setup: one page, up to 20 MB (E0601 - E0604).
+          Under <Term>No of Floors</Term> enter the No of Basements, GF (ground levels: 1 gives
+          &quot;Ground Floor&quot;, 2 gives &quot;Ground Floor 1&quot; and &quot;Ground Floor
+          2&quot;), the No of Podium levels and the No of Typical floors (required). They create the
+          floor list from the lowest basement up. Upload the plan PDF of each floor here or later on
+          Floor Setup: one page, up to 20 MB (E0601 - E0604).
         </p>
+        <ul>
+          <li>
+            <Term>Typical floors</Term> are identical floors: upload one plan on Floor Setup and
+            choose &quot;All typical floors&quot; to use it on every one of them; calibrating it
+            once calibrates them all. Then use Replicate floor to copy the components.
+          </li>
+          <li>
+            <Term>Mechanical floor-1 / 2 / 3 ref</Term> choose which floors above ground are
+            mechanical floors (e.g. the 10th and 20th). They stay in the floor list but leave the
+            typical set, so they keep their own plan.
+          </li>
+        </ul>
         <h3>Discipline assignment</h3>
         <p>
           Assign at least one Electrical engineer; Mechanical and PHE engineers are optional. Only
@@ -380,6 +395,33 @@ export const SECTIONS: GuideSection[] = [
           tags are unique. Drag a component to move it, drag a corner of the selected symbol to
           resize it, press Delete to remove it. Press Escape to leave a tool.
         </p>
+        <h3>Select, rotate, copy and replicate</h3>
+        <ul>
+          <li>
+            <Term>Select several</Term>: Shift or Ctrl + click adds a component; Shift + drag on the
+            empty plan draws a box; Ctrl + A selects all components of your layer on the floor.
+            Dragging one of them moves the whole selection, feeders included.
+          </li>
+          <li>
+            <Term>Rotate</Term>: R or Rotate 90° in the bar above the plan turns the selection 90°;
+            Rotation (°) in the Engineering Property sets any angle. Rotation only changes the
+            drawing, never a calculation.
+          </li>
+          <li>
+            <Term>Copy / Paste</Term>: Ctrl + C, then Ctrl + V on this floor (2 m away) or on
+            another floor chosen in the floor picker (same position). Copies keep every property and
+            load and get the next free tags of that floor (DB-GF-01 on floor 5 becomes DB-5-01).
+            Feeders between copied components are copied; a feeder to a board outside the copy is
+            not, so connect the copy&apos;s supply again.
+          </li>
+          <li>
+            <Term>Replicate floor…</Term> copies all components of your layer on this floor to the
+            floors you tick (only floors with a calibrated plan; &quot;Tick all typical floors&quot;
+            ticks the typical set). A floor that already has components asks: add alongside, replace
+            them, or skip that floor. Risers and Cable Size results are not copied: connect the
+            copies to their riser in the Building tab and press Cable Size.
+          </li>
+        </ul>
         <h3>3. Draw feeders</h3>
         <ol>
           <li>
@@ -464,6 +506,11 @@ export const SECTIONS: GuideSection[] = [
           Press <Term>Building</Term> on Floor Setup. The left side draws the building: floors from
           the top down to the ground floor, basements at the bottom, the risers on the left and the
           boards of each floor on the right.
+        </p>
+        <p>
+          The Technical Lead can rename a floor: click its name, type the new one, press Enter
+          (Escape cancels). Only the name changes; the floor&apos;s tags keep its code (GF, 1, 2
+          ...).
         </p>
         <h3>Placing a riser</h3>
         <ol>

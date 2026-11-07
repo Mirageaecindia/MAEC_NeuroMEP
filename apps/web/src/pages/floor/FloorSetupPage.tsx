@@ -28,6 +28,9 @@ import {
   floorStatus,
   type CableConstruction,
   type ModelPoint,
+  copyComponents,
+  DisciplineSchema,
+  typicalSet,
   LIBRARY_ITEMS,
   libraryItem,
   placeElement,
@@ -68,6 +71,7 @@ import { LoadTable } from './LoadTable';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { BuildingTab } from './BuildingTab';
 import { FloorStatusDialog, STATUS_ICON } from './FloorStatusDialog';
+import { ReplicateDialog, SelectionBar, replicate } from './SelectionTools';
 import './floor.css';
 import { openGuide, SECTION_OF_PAGE } from '../../guide/openGuide';
 
@@ -155,7 +159,20 @@ export function FloorSetupPage() {
   // ----- components (#TASK-11 / #TASK-12) -----
   const [symbols, setSymbols] = useState<Map<string, string>>(new Map());
   const [armed, setArmed] = useState<string | null>(null);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  /** Selected components (several with Shift / Ctrl + click or a box), or one feeder. */
+  const [selection, setSelection] = useState<string[]>([]);
+  const selectedId = selection.length === 1 ? selection[0]! : null;
+  const setSelectedId = (id: string | null) => setSelection(id ? [id] : []);
+  /** Copied components (Ctrl + C) and how many times they were pasted on their own floor. */
+  const clipboard = useRef<{ ids: string[]; floorId: string; pasted: number } | null>(null);
+  const [clipCount, setClipCount] = useState(0);
+  const [replicating, setReplicating] = useState(false);
+  /** A plan just uploaded on a typical floor: offer it to the whole typical set. */
+  const [sharePlan, setSharePlan] = useState<{
+    floor: Floor;
+    plan: Awaited<ReturnType<typeof uploadPlanFile>>;
+    others: Floor[];
+  } | null>(null);
   const [clearing, setClearing] = useState(false);
   const [statusOpen, setStatusOpen] = useState(false);
   // A-08: a layer flagged done on this floor is locked until the Lead reopens it.
@@ -253,32 +270,104 @@ export function FloorSetupPage() {
     );
   }, [api]);
 
-  // Delete removes the selected component; Escape drops the armed item and the selection.
+  // Delete removes the selection; Escape drops the armed item and the selection; Ctrl + C / V
+  // copy and paste, Ctrl + A selects your components on the floor, R rotates 90 degrees.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const typing = (e.target as HTMLElement | null)?.closest?.('input, textarea, select');
+      if (typing || building) {
+        if (e.key === 'Escape') setDraft(null);
+        return;
+      }
+      const ctrl = e.ctrlKey || e.metaKey;
       if (e.key === 'Escape') {
         setArmed(null);
         setSelectedId(null);
         setDraft(null);
-      } else if (e.key === 'Backspace' && draft && !typing) {
+      } else if (e.key === 'Backspace' && draft) {
         // While drawing, Backspace takes back the last bend.
         e.preventDefault();
         setDraft(draft.points.length > 1 ? { ...draft, points: draft.points.slice(0, -1) } : null);
-      } else if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId && !typing) {
+      } else if ((e.key === 'Delete' || e.key === 'Backspace') && selection.length > 0) {
         e.preventDefault();
-        const isCable = project.model.cables.some((c) => c.id === selectedId);
-        editor.dispatch(
-          isCable
-            ? { type: 'removeCables', ids: [selectedId] }
-            : { type: 'removeElements', ids: [selectedId] },
-        );
-        setSelectedId(null);
+        removeSelection();
+      } else if (ctrl && e.key.toLowerCase() === 'c' && selection.length > 0) {
+        e.preventDefault();
+        copySelection();
+      } else if (ctrl && e.key.toLowerCase() === 'v') {
+        e.preventDefault();
+        paste();
+      } else if (ctrl && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        setSelection(mine.map((x) => x.id));
+      } else if (!ctrl && e.key.toLowerCase() === 'r' && selection.length > 0) {
+        e.preventDefault();
+        rotateSelection();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [editor, selectedId, draft, project.model.cables]);
+  });
+
+  /** The selected components of your layers (others are read-only). */
+  const ownSelected = () =>
+    selection.filter((id) =>
+      project.model.elements.some((e) => e.id === id && editor.layers.includes(e.discipline)),
+    );
+  function removeSelection() {
+    const isCable =
+      selection.length === 1 && project.model.cables.some((c) => c.id === selection[0]);
+    if (isCable) editor.dispatch({ type: 'removeCables', ids: selection });
+    else editor.dispatch({ type: 'removeElements', ids: ownSelected() });
+    setSelectedId(null);
+  }
+  function rotateSelection(to?: number) {
+    const ids = ownSelected();
+    if (ids.length)
+      editor.dispatch({ type: 'rotateElements', ids, ...(to === undefined ? { by: 90 } : { to }) });
+  }
+  function copySelection() {
+    const ids = ownSelected();
+    if (!floor || ids.length === 0) {
+      notice('Select components of your layer to copy.');
+      return;
+    }
+    clipboard.current = { ids, floorId: floor.id, pasted: 0 };
+    setClipCount(ids.length);
+    notice(
+      `${ids.length} component${ids.length === 1 ? '' : 's'} copied. Choose a floor and Paste (Ctrl + V).`,
+    );
+  }
+  function paste() {
+    const clip = clipboard.current;
+    if (!clip || !floor) return;
+    if (!calibration) {
+      notice('Calibrate the plan before placing components (E0701).');
+      return;
+    }
+    const ids = clip.ids.filter((id) => project.model.elements.some((e) => e.id === id));
+    if (ids.length === 0) {
+      notice('The copied components no longer exist.');
+      return;
+    }
+    // On its own floor a paste lands 2 m further down and right each time; elsewhere in place.
+    const step = clip.floorId === floor.id ? 2 * (clip.pasted + 1) : 0;
+    const copy = copyComponents(project, {
+      ids,
+      targetFloorId: floor.id,
+      offset: { x: step, y: step },
+      newId: () => crypto.randomUUID(),
+    });
+    const cables = editor.layers.includes('electrical') ? copy.cables : [];
+    editor.dispatch({ type: 'pasteComponents', elements: copy.elements, cables });
+    if (clip.floorId === floor.id) clip.pasted += 1;
+    setSelection(copy.elements.map((e) => e.id));
+    notice(
+      `Pasted ${copy.elements.length} component${copy.elements.length === 1 ? '' : 's'}` +
+        (cables.length ? ` and ${cables.length} feeder${cables.length === 1 ? '' : 's'}` : '') +
+        ` on ${floor.name}.`,
+    );
+  }
 
   function place(at: PdfPoint, key: string | null) {
     if (!key || !floor) return;
@@ -307,6 +396,7 @@ export function FloorSetupPage() {
         tag: e.tag,
         image: symbols.get(itemOfElement(e)?.key ?? '') ?? null,
         scale: e.symbolScale,
+        rotation: e.rotationDeg,
         at: {
           x: e.position.x / calibration.metresPerUnit,
           y: e.position.y / calibration.metresPerUnit,
@@ -344,12 +434,24 @@ export function FloorSetupPage() {
   async function upload(target: Floor, file: File) {
     setUploading(true);
     try {
-      editor.dispatch({
-        type: 'planUploaded',
-        floorId: target.id,
-        plan: await uploadPlanFile(api, project.id, file, user.id),
-        now: new Date().toISOString(),
-      });
+      const plan = await uploadPlanFile(api, project.id, file, user.id);
+      // A typical floor: the other typical floors (not flagged done) may take the same plan.
+      const set = typicalSet(project.building);
+      const others = set.filter(
+        (f) =>
+          f.id !== target.id &&
+          !DisciplineSchema.options.some((d) => isFlagged(project.model.floorFlags, f.id, d)),
+      );
+      if (set.some((f) => f.id === target.id) && others.length > 0) {
+        setSharePlan({ floor: target, plan, others });
+      } else {
+        editor.dispatch({
+          type: 'planUploaded',
+          floorId: target.id,
+          plan,
+          now: new Date().toISOString(),
+        });
+      }
     } catch (e) {
       notice((e as Error).message);
     } finally {
@@ -491,6 +593,11 @@ export function FloorSetupPage() {
           zoom={zoom}
           readOnly={!editor.layers.includes('electrical')}
           onRisers={(risers) => editor.dispatch({ type: 'risers', risers })}
+          onRename={
+            editor.readOnly
+              ? undefined
+              : (floorId, name) => editor.dispatch({ type: 'renameFloor', floorId, name })
+          }
           onSave={() => void editor.save()}
           onCableSize={() =>
             cableSize.run({ kind: 'project' }, 'the whole project').then((r) => r?.reply ?? null)
@@ -504,47 +611,92 @@ export function FloorSetupPage() {
                 Set the number of floors on Import File to start.
               </p>
             ) : floor.plan ? (
-              <PlanViewer
-                key={`${floor.id}:${floor.plan.fileId}`}
-                controls={viewer}
-                projectId={project.id}
-                plan={floor.plan}
-                floorLabel={floor.name}
-                readOnly={!editor.canEdit || lockedLayers.includes('electrical')}
-                userId={user.id}
-                onCalibration={(calibration) =>
-                  editor.dispatch({ type: 'calibration', floorId: floor.id, calibration })
-                }
-                markers={markers}
-                selectedId={selectedId}
-                placing={armed !== null && armed !== 'cable'}
-                cables={planCables}
-                cableMode={armed === 'cable'}
-                drawingPoints={draft ? draft.points.map(toPdf) : null}
-                onCableClick={cableClick}
-                onPlace={(at, key) => (canPlace ? place(at, key ?? armed) : undefined)}
-                onSelect={setSelectedId}
-                tooltip={(id) =>
-                  tooltipLines(
-                    project,
-                    loadSummaries(project, powerFactors(project)),
-                    length ?? { allowancePct: 0, additionM: null },
-                    id,
-                  )
-                }
-                onResize={(id, symbolScale) =>
-                  editor.dispatch({ type: 'updateElement', id, patch: { symbolScale } })
-                }
-                onMove={(id, at) => {
-                  if (!calibration) return;
-                  const m = calibration.metresPerUnit;
-                  editor.dispatch({
-                    type: 'moveElement',
-                    id,
-                    position: { x: at.x * m, y: at.y * m },
-                  });
-                }}
-              />
+              <>
+                <SelectionBar
+                  count={selection.filter((id) => onFloor.some((e) => e.id === id)).length}
+                  clipboard={clipCount}
+                  canEdit={editor.layers.length > 0}
+                  onRotate={() => rotateSelection()}
+                  onCopy={copySelection}
+                  onPaste={paste}
+                  onDelete={removeSelection}
+                  onReplicate={() =>
+                    mine.length > 0
+                      ? setReplicating(true)
+                      : notice(
+                          `There are no components of your layer on ${floor.name} to replicate.`,
+                        )
+                  }
+                />
+                <PlanViewer
+                  key={`${floor.id}:${floor.plan.fileId}`}
+                  controls={viewer}
+                  projectId={project.id}
+                  plan={floor.plan}
+                  floorLabel={floor.name}
+                  readOnly={!editor.canEdit || lockedLayers.includes('electrical')}
+                  userId={user.id}
+                  onCalibration={(calibration) =>
+                    editor.dispatch({ type: 'calibration', floorId: floor.id, calibration })
+                  }
+                  markers={markers}
+                  selectedId={selectedId}
+                  selectedIds={selection}
+                  onSelectBox={(ids) => setSelection([...new Set([...selection, ...ids])])}
+                  onMoveGroup={(ids, delta) => {
+                    if (!calibration) return;
+                    const m = calibration.metresPerUnit;
+                    const own = ids.filter((id) =>
+                      project.model.elements.some(
+                        (e) => e.id === id && editor.layers.includes(e.discipline),
+                      ),
+                    );
+                    editor.dispatch({
+                      type: 'moveElements',
+                      ids: own,
+                      delta: { x: delta.x * m, y: delta.y * m },
+                    });
+                  }}
+                  placing={armed !== null && armed !== 'cable'}
+                  cables={planCables}
+                  cableMode={armed === 'cable'}
+                  drawingPoints={draft ? draft.points.map(toPdf) : null}
+                  onCableClick={cableClick}
+                  onPlace={(at, key) => (canPlace ? place(at, key ?? armed) : undefined)}
+                  onSelect={(id, add) => {
+                    const isCable = !!id && project.model.cables.some((c) => c.id === id);
+                    if (!add || !id || isCable) return setSelectedId(id);
+                    const onlyComponents = selection.filter(
+                      (x) => !project.model.cables.some((c) => c.id === x),
+                    );
+                    setSelection(
+                      onlyComponents.includes(id)
+                        ? onlyComponents.filter((x) => x !== id)
+                        : [...onlyComponents, id],
+                    );
+                  }}
+                  tooltip={(id) =>
+                    tooltipLines(
+                      project,
+                      loadSummaries(project, powerFactors(project)),
+                      length ?? { allowancePct: 0, additionM: null },
+                      id,
+                    )
+                  }
+                  onResize={(id, symbolScale) =>
+                    editor.dispatch({ type: 'updateElement', id, patch: { symbolScale } })
+                  }
+                  onMove={(id, at) => {
+                    if (!calibration) return;
+                    const m = calibration.metresPerUnit;
+                    editor.dispatch({
+                      type: 'moveElement',
+                      id,
+                      position: { x: at.x * m, y: at.y * m },
+                    });
+                  }}
+                />
+              </>
             ) : (
               <p className="canvas-empty muted">
                 No plan for {floor.name} yet. Use <strong>Open</strong> to upload its PDF (one page,
@@ -703,6 +855,79 @@ export function FloorSetupPage() {
           }}
           onClose={() => setStatusOpen(false)}
         />
+      )}
+      {replicating && floor && (
+        <ReplicateDialog
+          project={project}
+          source={floor}
+          layers={editor.layers}
+          onCancel={() => setReplicating(false)}
+          onConfirm={(targets) => {
+            const plan = replicate(project, floor, editor.layers, targets, () =>
+              crypto.randomUUID(),
+            );
+            const cables = editor.layers.includes('electrical') ? plan.cables : [];
+            editor.dispatch({
+              type: 'pasteComponents',
+              elements: plan.elements,
+              cables,
+              replaceIds: plan.replaceIds,
+            });
+            setReplicating(false);
+            notice(
+              `${floor.name} replicated to ${plan.floors} floor${plan.floors === 1 ? '' : 's'}: ` +
+                `${plan.elements.length} components, ${cables.length} feeders.`,
+            );
+          }}
+        />
+      )}
+      {sharePlan && (
+        <Modal
+          title="Use this plan for all typical floors?"
+          onClose={() => setSharePlan(null)}
+          actions={
+            <>
+              <button
+                className="btn"
+                onClick={() => {
+                  editor.dispatch({
+                    type: 'planUploaded',
+                    floorId: sharePlan.floor.id,
+                    plan: sharePlan.plan,
+                    now: new Date().toISOString(),
+                  });
+                  setSharePlan(null);
+                }}
+              >
+                {sharePlan.floor.name} only
+              </button>
+              <button
+                className="btn btn-primary"
+                onClick={() => {
+                  editor.dispatch({
+                    type: 'planUploaded',
+                    floorId: sharePlan.floor.id,
+                    plan: sharePlan.plan,
+                    now: new Date().toISOString(),
+                    alsoFloorIds: sharePlan.others.map((f) => f.id),
+                  });
+                  notice(
+                    `The plan is used on ${sharePlan.others.length + 1} typical floors. Calibrate it once; the calibration applies to all of them.`,
+                  );
+                  setSharePlan(null);
+                }}
+              >
+                All {sharePlan.others.length + 1} typical floors
+              </button>
+            </>
+          }
+        >
+          <p>
+            {sharePlan.floor.name} is a typical floor. Typical floors are identical, so the same
+            plan can be used for {sharePlan.others.map((f) => f.name).join(', ')} as well. Plans
+            already on those floors are replaced. Mechanical floors keep their own plan.
+          </p>
+        </Modal>
       )}
       {clearing && floor && (
         <Modal

@@ -45,6 +45,8 @@ export interface PlanMarker {
   at: PdfPoint;
   /** Symbol size, 1 = standard; changed by dragging a corner of the selected symbol. */
   scale?: number;
+  /** Symbol rotation, degrees clockwise (7 Nov 2026). */
+  rotation?: number;
 }
 
 /** A cable drawn on the plan (#TASK-13): its tag and route in PDF points. */
@@ -95,12 +97,19 @@ export function PlanViewer(props: {
   /** Components on this floor (#TASK-12). */
   markers?: PlanMarker[];
   selectedId?: string | null;
+  /** Every selected component (several with Shift / Ctrl + click or a Shift + drag box). */
+  selectedIds?: readonly string[];
   /** A library item is armed: the next click on the plan places it. */
   placing?: boolean;
   /** A click while placing, or a library item dropped (itemKey). */
   onPlace?: (at: PdfPoint, itemKey?: string) => void;
-  onSelect?: (id: string | null) => void;
+  /** A click on a component or feeder (`add`: Shift / Ctrl held - add it or take it out). */
+  onSelect?: (id: string | null, add?: boolean) => void;
+  /** Shift + drag on the empty plan: the components inside the box. */
+  onSelectBox?: (ids: string[]) => void;
   onMove?: (id: string, at: PdfPoint) => void;
+  /** Several selected components dragged together by `delta` (PDF units). */
+  onMoveGroup?: (ids: string[], delta: PdfPoint) => void;
   /** Hover tooltip lines of a component or feeder (FR-36). */
   tooltip?: (id: string) => string[] | null;
   /** A selected component resized by a corner handle. */
@@ -136,8 +145,24 @@ export function PlanViewer(props: {
   const pan = useRef<{ x: number; y: number; view: ViewState } | null>(null);
   const [panning, setPanning] = useState(false);
   /** A component being dragged: where it is now (PDF point), until the mouse is released. */
-  const drag = useRef<{ id: string; moved: boolean } | null>(null);
-  const [dragAt, setDragAt] = useState<{ id: string; at: PdfPoint } | null>(null);
+  const drag = useRef<{
+    id: string;
+    moved: boolean;
+    /** Dragging a selection of several: their ids and where the drag started. */
+    group?: string[];
+    start?: PdfPoint;
+  } | null>(null);
+  const [dragAt, setDragAt] = useState<{
+    id: string;
+    at: PdfPoint;
+    group?: string[];
+    start?: PdfPoint;
+  } | null>(null);
+  /** Shift + drag selection box, in screen pixels. */
+  const [box, setBox] = useState<{
+    a: { x: number; y: number };
+    b: { x: number; y: number };
+  } | null>(null);
   /** Corner resize of the selected component in progress, and its scale so far. */
   const [resizing, setResizing] = useState<{ id: string; scale: number } | null>(null);
   const [overHandle, setOverHandle] = useState(false);
@@ -302,7 +327,7 @@ export function PlanViewer(props: {
   /** The selected component, when a screen point is on one of its corner handles. */
   const onHandle = (s: { x: number; y: number }) => {
     const m = markers.find((x) => x.id === props.selectedId);
-    if (!m || !page || !props.onResize) return undefined;
+    if (!m || !page || !props.onResize || (props.selectedIds?.length ?? 0) > 1) return undefined;
     const c = pdfToScreen(m.at, view, page.transform);
     const h = half(m) + 4;
     const near = (a: number, b: number) => Math.abs(a - b) <= HANDLE_PX;
@@ -332,8 +357,27 @@ export function PlanViewer(props: {
       }
       const m = hit(s);
       const c = m ? undefined : hitCable(s);
-      props.onSelect?.(m?.id ?? c?.id ?? null);
+      const add = e.shiftKey || e.ctrlKey || e.metaKey;
+      if (m && add) {
+        e.preventDefault();
+        props.onSelect?.(m.id, true);
+        return;
+      }
+      if (!m && !c && e.shiftKey && props.onSelectBox) {
+        e.preventDefault();
+        setBox({ a: s, b: s });
+        return;
+      }
+      const group = props.selectedIds ?? [];
+      const inGroup = !!m && group.length > 1 && group.includes(m.id);
+      if (!inGroup) props.onSelect?.(m?.id ?? c?.id ?? null);
       if (c) return;
+      if (m && inGroup && props.onMoveGroup) {
+        e.preventDefault();
+        const start = screenToPdf(s, view, page.transform);
+        drag.current = { id: m.id, moved: false, group: [...group], start };
+        return;
+      }
       if (m && props.onMove) {
         e.preventDefault();
         drag.current = { id: m.id, moved: false };
@@ -355,6 +399,10 @@ export function PlanViewer(props: {
     setPointer(null);
   }
   function onMouseMove(e: ReactMouseEvent) {
+    if (box) {
+      setBox({ ...box, b: local(e) });
+      return;
+    }
     if ((props.drawingPoints || picking) && page) {
       setPointer(screenToPdf(local(e), view, page.transform));
     }
@@ -376,7 +424,12 @@ export function PlanViewer(props: {
     } else setHovered(null);
     if (drag.current && page) {
       drag.current.moved = true;
-      setDragAt({ id: drag.current.id, at: screenToPdf(local(e), view, page.transform) });
+      setDragAt({
+        id: drag.current.id,
+        at: screenToPdf(local(e), view, page.transform),
+        group: drag.current.group,
+        start: drag.current.start,
+      });
       return;
     }
     if (!pan.current) {
@@ -395,9 +448,22 @@ export function PlanViewer(props: {
   }
 
   function endPan() {
+    if (box && page) {
+      const [x1, x2] = [Math.min(box.a.x, box.b.x), Math.max(box.a.x, box.b.x)];
+      const [y1, y2] = [Math.min(box.a.y, box.b.y), Math.max(box.a.y, box.b.y)];
+      const inside = markers.filter((m) => {
+        const p = pdfToScreen(m.at, view, page.transform);
+        return p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2;
+      });
+      props.onSelectBox?.(inside.map((m) => m.id));
+      setBox(null);
+    }
     if (resizing) props.onResize?.(resizing.id, resizing.scale);
     setResizing(null);
-    if (drag.current?.moved && dragAt) props.onMove?.(dragAt.id, dragAt.at);
+    const d = drag.current;
+    if (d?.moved && dragAt && d.group && d.start) {
+      props.onMoveGroup?.(d.group, { x: dragAt.at.x - d.start.x, y: dragAt.at.y - d.start.y });
+    } else if (d?.moved && dragAt) props.onMove?.(dragAt.id, dragAt.at);
     drag.current = null;
     setDragAt(null);
     pan.current = null;
@@ -667,8 +733,18 @@ export function PlanViewer(props: {
               />
             )}
             {markers.map((m) => {
-              const s = toScreen(dragAt?.id === m.id ? dragAt.at : m.at);
-              const selected = m.id === props.selectedId;
+              const start = dragAt?.start;
+              const moving = !!start && !!dragAt.group?.includes(m.id);
+              const s = toScreen(
+                moving
+                  ? { x: m.at.x + dragAt.at.x - start.x, y: m.at.y + dragAt.at.y - start.y }
+                  : dragAt?.id === m.id
+                    ? dragAt.at
+                    : m.at,
+              );
+              const selected =
+                m.id === props.selectedId || (props.selectedIds ?? []).includes(m.id);
+              const turn = m.rotation ? `rotate(${m.rotation} ${s.x} ${s.y})` : undefined;
               const size = MARKER_PX * (resizing?.id === m.id ? resizing.scale : (m.scale ?? 1));
               return (
                 <g
@@ -687,7 +763,8 @@ export function PlanViewer(props: {
                       className="marker-selection"
                     />
                   )}
-                  {selected &&
+                  {m.id === props.selectedId &&
+                    (props.selectedIds?.length ?? 0) <= 1 &&
                     props.onResize &&
                     [-1, 1].flatMap((dx) =>
                       [-1, 1].map((dy) => (
@@ -708,6 +785,7 @@ export function PlanViewer(props: {
                       y={s.y - size / 2}
                       width={size}
                       height={size}
+                      transform={turn}
                     />
                   ) : (
                     <rect
@@ -716,6 +794,7 @@ export function PlanViewer(props: {
                       width={size}
                       height={size / 2}
                       className="marker-fallback"
+                      transform={turn}
                     />
                   )}
                   <text x={s.x} y={s.y + size / 2 + 11} textAnchor="middle" className="marker-tag">
@@ -724,6 +803,15 @@ export function PlanViewer(props: {
                 </g>
               );
             })}
+            {box && (
+              <rect
+                className="selection-box"
+                x={Math.min(box.a.x, box.b.x)}
+                y={Math.min(box.a.y, box.b.y)}
+                width={Math.abs(box.b.x - box.a.x)}
+                height={Math.abs(box.b.y - box.a.y)}
+              />
+            )}
             {shownLine.length === 2 && (
               <line
                 x1={toScreen(shownLine[0]!).x}

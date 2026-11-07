@@ -515,3 +515,48 @@
 .capacity-checks li.over {
   color: #b91c1c;
 }
+
+/* Floor names: the Technical Lead renames a floor by clicking its name (7 Nov 2026). */
+.floor-label.editable {
+  cursor: text;
+  text-decoration: underline dotted;
+}
+.floor-name-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 1px 4px;
+  font: inherit;
+  font-size: 11px;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+}
+
+/* Selection bar and Replicate floor (7 Nov 2026). */
+.selection-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.selection-bar > .muted {
+  margin-right: auto;
+}
+.replicate-floors {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.replicate-floors li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}

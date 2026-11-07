@@ -131,7 +131,12 @@ function builder(args: {
   project.calculation.upstreamFaultMva = 350;
   project.calculation.demandMethod = args.demandMethod;
   project.calculation.busbarMaker = args.busbarMaker;
-  const counts = { basements: args.floors.basements, podiums: 0, typicals: args.floors.typicals };
+  const counts = {
+    basements: args.floors.basements,
+    grounds: 1,
+    podiums: 0,
+    typicals: args.floors.typicals,
+  };
   project.building.counts = counts;
   let n = 0;
   project.building.floors = generateRegistry(counts, [], () => `f${++n}`).floors;

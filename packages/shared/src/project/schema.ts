@@ -206,6 +206,8 @@ export const ProjectSchema = z.object({
   building: z.object({
     counts: z.object({
       basements: z.number().int().nullable(),
+      /** Ground levels (12.1 "GF"); 1 for projects stored before 7 Nov 2026. */
+      grounds: z.number().int().nullable().default(1),
       podiums: z.number().int().nullable(),
       typicals: z.number().int().nullable(),
     }),

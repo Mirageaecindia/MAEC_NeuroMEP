@@ -30,7 +30,16 @@ export function touchesLockedFloor(project: Project, action: ProjectAction): boo
     case 'moveElement':
       return withCables(action.id);
     case 'removeElements':
+    case 'moveElements':
       return action.ids.some(withCables);
+    case 'rotateElements':
+      return action.ids.some((id) => element(byId(id)));
+    case 'pasteComponents':
+      return (
+        action.elements.some(element) ||
+        action.cables.some(cable) ||
+        (action.replaceIds ?? []).some(withCables)
+      );
     case 'addCable':
       return cable(action.cable);
     case 'updateCable':
@@ -40,6 +49,9 @@ export function touchesLockedFloor(project: Project, action: ProjectAction): boo
     case 'loadImport':
       return action.changes.some((c) => element(byId(c.id)));
     case 'planUploaded':
+      return [action.floorId, ...(action.alsoFloorIds ?? [])].some((f) =>
+        DisciplineSchema.options.some((d) => isFlagged(floorFlags, f, d)),
+      );
     case 'calibration':
       return DisciplineSchema.options.some((d) => isFlagged(floorFlags, action.floorId, d));
     default:

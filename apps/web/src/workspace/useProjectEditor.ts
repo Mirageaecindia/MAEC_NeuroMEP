@@ -47,7 +47,15 @@ export function mayApply(user: UserSummary, project: Project, action: ProjectAct
     case 'updateElement':
       return own(action.id);
     case 'removeElements':
+    case 'moveElements':
+    case 'rotateElements':
       return action.ids.every(own);
+    case 'pasteComponents':
+      return (
+        action.elements.every((e) => layers.includes(e.discipline)) &&
+        (action.replaceIds ?? []).every(own) &&
+        (action.cables.length === 0 || layers.includes('electrical'))
+      );
     case 'addCable':
     case 'updateCable':
     case 'removeCables':

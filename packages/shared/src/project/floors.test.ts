@@ -7,6 +7,7 @@ import {
   floorTags,
   generateRegistry,
   planStatus,
+  typicalSet,
 } from './floors.js';
 import type { Floor, PdfPlan } from './schema.js';
 
@@ -121,7 +122,7 @@ describe('mechanical floor tagging', () => {
     const change = generateRegistry(smaller, building.floors, sequentialIds('n'));
     building = applyRegistryChange(building, smaller, change);
     expect(building.mechanicalFloorIds).toEqual([null, null, gf.id]);
-    expect(building.counts).toEqual(smaller);
+    expect(building.counts).toEqual({ ...smaller, grounds: 1 });
   });
 });
 
@@ -139,5 +140,31 @@ describe('plan status', () => {
       calibratedBy: 'u',
     };
     expect(planStatus({ plan: { ...plan, calibration } })).toBe('Calibrated');
+  });
+});
+
+describe('ground levels, podiums and the typical set (12.1, user request 7 Nov 2026)', () => {
+  it('builds Ground Floor 1 / 2 for two ground levels, then podiums and typical floors', () => {
+    const slots = floorSlots({ basements: 1, grounds: 2, podiums: 1, typicals: 2 });
+    expect(slots.map((s) => `${s.code}:${s.name}`)).toEqual([
+      'B1:Basement 1',
+      'GF:Ground Floor 1',
+      'GF2:Ground Floor 2',
+      'P1:Podium 1',
+      '1:First Floor',
+      '2:Second Floor',
+    ]);
+    expect(floorSlots({ basements: 0, podiums: 0, typicals: 0 })[0]!.name).toBe('Ground Floor');
+  });
+
+  it('the typical set leaves out the floors chosen as mechanical floors', () => {
+    const floors = generateRegistry(
+      { basements: 0, grounds: 1, podiums: 1, typicals: 4 },
+      [],
+      sequentialIds(),
+    ).floors;
+    const tenth = floors.find((f) => f.code === '2')!;
+    const set = typicalSet({ floors, mechanicalFloorIds: [tenth.id, null, null] });
+    expect(set.map((f) => f.code)).toEqual(['1', '3', '4']);
   });
 });

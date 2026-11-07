@@ -91,15 +91,25 @@ export function page1Issues(
     }
   }
 
-  // Floors (A-05): No of Floors required, No of Basements optional (0); no floor heights.
+  // Floors (12.1, user request 7 Nov 2026): No of Typical floors required; basements, ground
+  // levels (default 1) and podium levels optional; no floor heights (A-05).
   const b = project.building;
-  const { typicals, basements } = b.counts;
-  if (typicals === null) add(4, 'building.counts.typicals', 'Enter the number of floors.');
-  else if (!Number.isInteger(typicals) || typicals < 0 || typicals > 200) {
-    add(4, 'building.counts.typicals', 'Number of floors must be a whole number from 0 to 200.');
+  const { typicals, basements, grounds, podiums } = b.counts;
+  const whole = (n: number, min: number, max: number) =>
+    Number.isInteger(n) && n >= min && n <= max;
+  if (typicals === null) {
+    add(4, 'building.counts.typicals', 'Enter the number of typical floors.');
+  } else if (!whole(typicals, 0, 200)) {
+    add(4, 'building.counts.typicals', 'Typical floors must be a whole number from 0 to 200.');
   }
-  if (basements !== null && (!Number.isInteger(basements) || basements < 0 || basements > 20)) {
+  if (basements !== null && !whole(basements, 0, 20)) {
     add(4, 'building.counts.basements', 'Number of basements must be a whole number from 0 to 20.');
+  }
+  if (grounds != null && !whole(grounds, 1, 5)) {
+    add(4, 'building.counts.grounds', 'Ground levels must be a whole number from 1 to 5.');
+  }
+  if (podiums !== null && !whole(podiums, 0, 20)) {
+    add(4, 'building.counts.podiums', 'Podium levels must be a whole number from 0 to 20.');
   }
   const ids = new Set(b.floors.map((f) => f.id));
   b.mechanicalFloorIds.forEach((id, i) => {

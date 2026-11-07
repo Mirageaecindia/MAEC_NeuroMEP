@@ -76,11 +76,19 @@ export function inputsKey(p: Project): string {
       ...rest
     } = e as Element & {
       position?: unknown;
+      rotationDeg?: unknown;
       symbolScale?: unknown;
       description?: unknown;
       location?: unknown;
     };
-    const { position: _p, symbolScale: _s, description: _d, location: _l, ...inputs } = rest;
+    const {
+      position: _p,
+      symbolScale: _s,
+      rotationDeg: _r,
+      description: _d,
+      location: _l,
+      ...inputs
+    } = rest;
     return inputs;
   });
   const cables = p.model.cables.map(({ version: _v, tag: _t, ...inputs }) => inputs);

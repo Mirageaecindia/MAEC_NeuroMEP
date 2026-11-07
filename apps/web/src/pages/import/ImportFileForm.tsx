@@ -4,6 +4,7 @@ import {
   DESIGN_STAGE_LABELS,
   DesignStageSchema,
   generateRegistry,
+  typicalSet,
   LOAD_TYPE_LABELS,
   PROJECT_CATEGORY_LABELS,
   ProjectCategorySchema,
@@ -129,24 +130,60 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
     </Row>
   );
 
-  /** Floors (A-05): the registry follows No of Floors / No of Basements immediately. */
-  function setCount(key: 'typicals' | 'basements', value: number | null) {
+  /** Floors (12.1, user request 7 Nov 2026): the registry follows the counts immediately. */
+  function setCount(key: 'typicals' | 'basements' | 'grounds' | 'podiums', value: number | null) {
     const next = { ...project.building.counts, [key]: value };
-    const valid = (n: number | null, max: number) =>
-      n === null || (Number.isInteger(n) && n >= 0 && n <= max);
-    if (next.typicals === null || !valid(next.typicals, 200) || !valid(next.basements, 20)) {
+    const valid = (n: number | null, max: number, min = 0) =>
+      n === null || (Number.isInteger(n) && n >= min && n <= max);
+    if (
+      next.typicals === null ||
+      !valid(next.typicals, 200) ||
+      !valid(next.basements, 20) ||
+      !valid(next.grounds, 5, 1) ||
+      !valid(next.podiums, 20)
+    ) {
       dispatch({ type: 'counts', counts: { [key]: value } });
       return;
     }
     const counts: FloorCounts = {
       basements: next.basements ?? 0,
-      podiums: 0,
+      grounds: next.grounds ?? 1,
+      podiums: next.podiums ?? 0,
       typicals: next.typicals,
     };
     const change = generateRegistry(counts, project.building.floors, () => crypto.randomUUID());
     if (change.removedWithPlans.length > 0) setPending({ counts, change });
     else dispatch({ type: 'applyRegistry', counts, change });
   }
+
+  const count = (
+    key: 'typicals' | 'basements' | 'grounds' | 'podiums',
+    label: string,
+    placeholder?: string,
+    required?: boolean,
+  ) => (
+    <Row
+      label={label}
+      required={required}
+      field={`building.counts.${key}`}
+      error={errorFor(`building.counts.${key}`)}
+    >
+      <NumberInput
+        key={`${key}${countsKey}`}
+        id={fieldDomId(`building.counts.${key}`)}
+        className="pill-input center"
+        value={project.building.counts[key]}
+        placeholder={placeholder}
+        disabled={readOnly}
+        commit="blur"
+        onBlur={() => touch(`building.counts.${key}`)}
+        onChange={(v) => setCount(key, v)}
+      />
+    </Row>
+  );
+  // Mechanical floors are chosen from the floors above ground (podium and typical floors).
+  const upper = project.building.floors.filter((f) => f.type === 'podium' || f.type === 'typical');
+  const typical = typicalSet(project.building);
 
   return (
     <div className="import-form">
@@ -272,40 +309,53 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
             onChange={(value) => dispatch({ type: 'altitude', value })}
           />
         </Row>
-        <Row
-          label="No of Floors"
-          required
-          field="building.counts.typicals"
-          error={errorFor('building.counts.typicals')}
-        >
-          <NumberInput
-            key={`f${countsKey}`}
-            id={fieldDomId('building.counts.typicals')}
-            className="pill-input center"
-            value={project.building.counts.typicals}
-            disabled={readOnly}
-            commit="blur"
-            onBlur={() => touch('building.counts.typicals')}
-            onChange={(v) => setCount('typicals', v)}
-          />
-        </Row>
-        <Row
-          label="No of Basements"
-          field="building.counts.basements"
-          error={errorFor('building.counts.basements')}
-        >
-          <NumberInput
-            key={`b${countsKey}`}
-            id={fieldDomId('building.counts.basements')}
-            className="pill-input center"
-            value={project.building.counts.basements}
-            placeholder="0"
-            disabled={readOnly}
-            commit="blur"
-            onBlur={() => touch('building.counts.basements')}
-            onChange={(v) => setCount('basements', v)}
-          />
-        </Row>
+        <p className="form-group-label">
+          No of Floors
+          {project.building.floors.length > 0 && (
+            <span className="muted"> - {project.building.floors.length} floors in total</span>
+          )}
+        </p>
+        {count('basements', 'No of Basements', '0')}
+        {count('grounds', 'GF (ground levels)', '1')}
+        {count('podiums', 'No of Podium levels', '0')}
+        {count('typicals', 'No of Typical floors', undefined, true)}
+        {[0, 1, 2].map((i) => (
+          <Row
+            key={i}
+            label={`Mechanical floor-${i + 1} ref`}
+            field={`building.mechanicalFloor${i + 1}`}
+            error={errorFor(`building.mechanicalFloor${i + 1}`)}
+          >
+            <select
+              id={fieldDomId(`building.mechanicalFloor${i + 1}`)}
+              className="pill-input pill-select"
+              value={project.building.mechanicalFloorIds[i] ?? ''}
+              disabled={readOnly || upper.length === 0}
+              onChange={(e) =>
+                dispatch({ type: 'mechanicalFloor', index: i, floorId: e.target.value || null })
+              }
+            >
+              <option value="">None</option>
+              {upper.map((f) => (
+                <option
+                  key={f.id}
+                  value={f.id}
+                  disabled={project.building.mechanicalFloorIds.some(
+                    (id, j) => j !== i && id === f.id,
+                  )}
+                >
+                  {f.name}
+                </option>
+              ))}
+            </select>
+          </Row>
+        ))}
+        {typical.length > 1 && (
+          <p className="form-hint muted">
+            {typical.length} typical floors are identical: one plan uploaded on Floor Setup can be
+            used for all of them. Mechanical floors keep their own plan.
+          </p>
+        )}
       </section>
 
       <section className="import-right" aria-label="Calculation Setup">

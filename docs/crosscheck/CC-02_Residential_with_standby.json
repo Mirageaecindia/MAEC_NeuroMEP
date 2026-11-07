@@ -137,6 +137,7 @@
   "building": {
     "counts": {
       "basements": 0,
+      "grounds": 1,
       "podiums": 0,
       "typicals": 2
     },

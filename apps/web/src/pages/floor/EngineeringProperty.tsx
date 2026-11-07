@@ -25,6 +25,7 @@ export function EngineeringProperty(props: {
   const item = itemOfElement(element);
   const [tag, setTag] = useState(element.tag);
   const [description, setDescription] = useState(element.description);
+  const [rotation, setRotation] = useState(String(element.rotationDeg ?? 0));
   const [editingLoads, setEditingLoads] = useState(false);
   // DBs carry their loads; panels and load points manual loads of unconnected ways; MCCs neither (10.3).
   const loadsKey =
@@ -77,6 +78,32 @@ export function EngineeringProperty(props: {
             onChange={(e) => setDescription(e.target.value)}
             onBlur={() => {
               if (description !== element.description) props.onChange({ description });
+            }}
+          />
+        </dd>
+        <dt>
+          <label htmlFor="prop-rotation">Rotation (°) :</label>
+        </dt>
+        <dd>
+          <input
+            id="prop-rotation"
+            className="pill-input"
+            type="number"
+            min={0}
+            max={359}
+            step={1}
+            value={rotation}
+            disabled={!props.editable}
+            onChange={(e) => setRotation(e.target.value)}
+            onBlur={() => {
+              const deg = Number(rotation);
+              if (rotation.trim() === '' || !Number.isFinite(deg)) {
+                setRotation(String(element.rotationDeg ?? 0));
+                return;
+              }
+              const to = ((Math.round(deg) % 360) + 360) % 360;
+              setRotation(String(to));
+              if (to !== (element.rotationDeg ?? 0)) props.onChange({ rotationDeg: to });
             }}
           />
         </dd>

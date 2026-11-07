@@ -539,3 +539,110 @@ describe('#TASK-15 DB loads from Excel (FR-35)', () => {
     });
   }, 40_000); // ExcelJS reads and writes a workbook: slow when the whole suite runs in parallel
 });
+
+describe('rotate, copy / paste, Replicate floor, floor names (user request 7 Nov 2026)', () => {
+  /** completeProject with the Ground Floor plan (calibrated) also on the First Floor. */
+  function twoPlans(): Project {
+    const p = completeProject();
+    const gf = p.building.floors.find((f) => f.code === 'GF')!;
+    const first = p.building.floors.find((f) => f.code === '1')!;
+    first.plan = gf.plan;
+    return p;
+  }
+  const placeDb = async (x: number) => {
+    await userEvent.click(chip('DB'));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: x, clientY: 300 });
+  };
+
+  it('selects several, rotates them 90 degrees and pastes copies with the next tags', async () => {
+    const api = open(LEAD);
+    await planReady();
+    await placeDb(300);
+    await placeDb(400);
+    await screen.findByRole('img', { name: 'DB-GF-02 (selected)' });
+    await userEvent.keyboard('{Control>}a{/Control}');
+    expect(screen.getByRole('toolbar', { name: 'Selection' })).toHaveTextContent(
+      '2 components selected',
+    );
+    await userEvent.keyboard('r');
+    await userEvent.keyboard('{Control>}c{/Control}');
+    await userEvent.keyboard('{Control>}v{/Control}');
+    expect(await screen.findByRole('img', { name: 'DB-GF-04 (selected)' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'DB-GF-03 (selected)' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.saveProject).toHaveBeenCalled());
+    const saved = api.saveProject.mock.calls.at(-1)![0];
+    expect(saved.model.elements.map((e) => [e.tag, e.rotationDeg])).toEqual([
+      ['DB-GF-01', 90],
+      ['DB-GF-02', 90],
+      ['DB-GF-03', 90],
+      ['DB-GF-04', 90],
+    ]);
+  });
+
+  it('sets an exact angle in the Engineering Property', async () => {
+    open(LEAD);
+    await planReady();
+    await placeDb(300);
+    const angle = await screen.findByLabelText('Rotation (°) :');
+    await userEvent.clear(angle);
+    await userEvent.type(angle, '405');
+    await userEvent.tab();
+    await waitFor(() => expect(screen.getByLabelText('Rotation (°) :')).toHaveValue(45));
+  });
+
+  it('replicates the floor to another floor, asking what to do with the components already there', async () => {
+    const api = open(LEAD, twoPlans());
+    await planReady();
+    await placeDb(300);
+    await placeDb(400);
+    await userEvent.click(screen.getByRole('button', { name: 'Replicate floor…' }));
+    let dialog = screen.getByRole('dialog', { name: 'Replicate Ground Floor' });
+    expect(within(dialog).getByRole('checkbox', { name: /Second Floor/ })).toBeDisabled();
+    await userEvent.click(within(dialog).getByRole('checkbox', { name: /First Floor/ }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Replicate to 1 floor' }));
+    expect(await screen.findByText(/replicated to 1 floor: 2 components/)).toBeInTheDocument();
+
+    // Again: First Floor now has components, so the dialog asks.
+    await userEvent.click(screen.getByRole('button', { name: 'Replicate floor…' }));
+    dialog = screen.getByRole('dialog', { name: 'Replicate Ground Floor' });
+    await userEvent.click(within(dialog).getByRole('checkbox', { name: /First Floor/ }));
+    const confirm = within(dialog).getByRole('button', { name: 'Replicate to 1 floor' });
+    expect(confirm).toBeDisabled();
+    await userEvent.selectOptions(
+      within(dialog).getByLabelText(/First Floor: it has 2 components/),
+      'Replace them',
+    );
+    await userEvent.click(confirm);
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.saveProject).toHaveBeenCalled());
+    const saved = api.saveProject.mock.calls.at(-1)![0];
+    const first = saved.building.floors.find((f) => f.code === '1')!;
+    // Replaced, not added: still two, and the freed tags are used again.
+    expect(saved.model.elements.filter((e) => e.floorId === first.id).map((e) => e.tag)).toEqual([
+      'DB-1-01',
+      'DB-1-02',
+    ]);
+    expect(saved.model.elements).toHaveLength(4);
+  });
+
+  it('the Technical Lead renames a floor in the Building tab', async () => {
+    const api = fakeApi(completeProject());
+    render(
+      <App
+        auth={authFor(LEAD)}
+        api={api as unknown as ApiClient}
+        router={createMemoryRouter(routes, {
+          initialEntries: ['/projects/p-1/floor?tab=building'],
+        })}
+      />,
+    );
+    await userEvent.click(await screen.findByRole('button', { name: 'Rename First Floor' }));
+    const input = screen.getByLabelText('Name of First Floor');
+    await userEvent.clear(input);
+    await userEvent.type(input, 'Office Level 1{Enter}');
+    expect(
+      await screen.findByRole('button', { name: 'Rename Office Level 1' }),
+    ).toBeInTheDocument();
+  });
+});

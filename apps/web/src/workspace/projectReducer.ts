@@ -81,12 +81,18 @@ export type ProjectAction =
     }
   | { type: 'counts'; counts: Partial<Project['building']['counts']> }
   | { type: 'applyRegistry'; counts: FloorCounts; change: RegistryChange }
+  /** Mechanical floor 1-3 (12.1): a floor above ground, or none. */
+  | { type: 'mechanicalFloor'; index: 0 | 1 | 2 | number; floorId: string | null }
+  /** A floor's display name (Building tab, user request 7 Nov 2026); its code never changes. */
+  | { type: 'renameFloor'; floorId: string; name: string }
   | { type: 'disciplines'; discipline: Discipline; userIds: string[] }
   | {
       type: 'planUploaded';
       floorId: string;
       plan: Omit<PdfPlan, 'calibration' | 'replaced'>;
       now: string;
+      /** Typical floors given the same plan (one plan for the typical set, 7 Nov 2026). */
+      alsoFloorIds?: string[];
     }
   | { type: 'calibration'; floorId: string; calibration: Calibration | null }
   | { type: 'replaceContent'; source: Project }
@@ -95,6 +101,15 @@ export type ProjectAction =
   /** Floor Setup components (#TASK-12); positions in metres. */
   | { type: 'placeElement'; element: Element }
   | { type: 'moveElement'; id: string; position: ModelPoint }
+  /** Several components moved together by `delta` metres; feeders between them move along. */
+  | { type: 'moveElements'; ids: string[]; delta: ModelPoint }
+  /** Components turned by `by` degrees (clockwise), or set to `to` degrees. */
+  | { type: 'rotateElements'; ids: string[]; by?: number; to?: number }
+  /**
+   * Pasted or replicated components with the feeders between them (copyComponents); `replaceIds`
+   * are removed first (Replicate floor - Replace).
+   */
+  | { type: 'pasteComponents'; elements: Element[]; cables: Cable[]; replaceIds?: string[] }
   /** Properties of a component (12.3); refused unless the result is a valid element. */
   | { type: 'updateElement'; id: string; patch: Record<string, unknown> }
   | { type: 'removeElements'; ids: string[] }
@@ -262,6 +277,63 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
           }),
         },
       };
+    case 'moveElements': {
+      const moved = new Set(a.ids);
+      const shift = (q: ModelPoint) => ({ x: q.x + a.delta.x, y: q.y + a.delta.y });
+      const byId = new Map(p.model.elements.map((e) => [e.id, e]));
+      return {
+        ...p,
+        model: {
+          ...p.model,
+          elements: p.model.elements.map((e) =>
+            moved.has(e.id) ? { ...e, position: shift(e.position), version: e.version + 1 } : e,
+          ),
+          cables: p.model.cables.map((c) => {
+            const from = moved.has(c.from.elementId);
+            const to = moved.has(c.to.elementId);
+            if (from && to) return { ...c, route: c.route.map(shift), version: c.version + 1 };
+            let next = c;
+            if (from)
+              next = moveCableEnd(next, 'from', shift(byId.get(c.from.elementId)!.position));
+            if (to) next = moveCableEnd(next, 'to', shift(byId.get(c.to.elementId)!.position));
+            return next === c ? c : { ...next, version: c.version + 1 };
+          }),
+        },
+      };
+    }
+    case 'rotateElements': {
+      const turned = new Set(a.ids);
+      const angle = (e: Element) => {
+        const deg = a.to ?? (e.rotationDeg ?? 0) + (a.by ?? 90);
+        return ((Math.round(deg) % 360) + 360) % 360;
+      };
+      return {
+        ...p,
+        model: {
+          ...p.model,
+          elements: p.model.elements.map((e) =>
+            turned.has(e.id) ? { ...e, rotationDeg: angle(e), version: e.version + 1 } : e,
+          ),
+        },
+      };
+    }
+    case 'pasteComponents': {
+      const gone = new Set(a.replaceIds ?? []);
+      return {
+        ...p,
+        model: {
+          ...p.model,
+          elements: [...p.model.elements.filter((e) => !gone.has(e.id)), ...a.elements],
+          risers: withoutElements(p.model.risers, gone),
+          cables: [
+            ...p.model.cables.filter(
+              (c) => !gone.has(c.from.elementId) && !gone.has(c.to.elementId),
+            ),
+            ...a.cables,
+          ],
+        },
+      };
+    }
     case 'updateElement': {
       // Identity, kind, floor and discipline layer never change through a property edit.
       const { id: _id, kind: _k, floorId: _f, discipline: _d, ...change } = a.patch;
@@ -383,17 +455,47 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
       return { ...p, building: { ...p.building, counts: { ...p.building.counts, ...a.counts } } };
     case 'applyRegistry':
       return { ...p, building: applyRegistryChange(p.building, a.counts, a.change) };
+    case 'mechanicalFloor': {
+      const ids = [...p.building.mechanicalFloorIds] as Project['building']['mechanicalFloorIds'];
+      ids[a.index as 0 | 1 | 2] = a.floorId;
+      return { ...p, building: { ...p.building, mechanicalFloorIds: ids } };
+    }
+    case 'renameFloor': {
+      const name = a.name.trim();
+      return name ? mapFloors(p, a.floorId, (f) => ({ ...f, name })) : p;
+    }
     case 'disciplines':
       return { ...p, disciplines: { ...p.disciplines, [a.discipline]: a.userIds } };
-    case 'planUploaded':
-      return mapFloors(p, a.floorId, (f) => ({
-        ...f,
-        plan: withUploadedPlan(f.plan, a.plan, a.now),
-      }));
-    case 'calibration':
-      return mapFloors(p, a.floorId, (f) =>
-        f.plan ? { ...f, plan: { ...f.plan, calibration: a.calibration } } : f,
-      );
+    case 'planUploaded': {
+      const to = new Set([a.floorId, ...(a.alsoFloorIds ?? [])]);
+      return {
+        ...p,
+        building: {
+          ...p.building,
+          floors: p.building.floors.map((f) =>
+            to.has(f.id) ? { ...f, plan: withUploadedPlan(f.plan, a.plan, a.now) } : f,
+          ),
+        },
+      };
+    }
+    case 'calibration': {
+      // Floors sharing the plan file (the typical set) share its calibration, except a floor
+      // flagged done (A-08), which stays as it is.
+      const fileId = p.building.floors.find((f) => f.id === a.floorId)?.plan?.fileId;
+      const locked = (id: string) =>
+        p.model.floorFlags.some((flag) => flag.floorId === id) && id !== a.floorId;
+      return {
+        ...p,
+        building: {
+          ...p.building,
+          floors: p.building.floors.map((f) =>
+            f.plan && (f.id === a.floorId || (f.plan.fileId === fileId && !locked(f.id)))
+              ? { ...f, plan: { ...f.plan, calibration: a.calibration } }
+              : f,
+          ),
+        },
+      };
+    }
     case 'replaceContent':
       // Import Saved Project into the open project: content from the file, identity from here.
       return { ...a.source, id: p.id, version: p.version, meta: { ...p.meta } };

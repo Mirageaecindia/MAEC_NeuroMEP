@@ -225,3 +225,9 @@
 .plan-cable.link .cable-tag {
   display: none;
 }
+/* Shift + drag selection box (7 Nov 2026). */
+.selection-box {
+  fill: rgba(37, 99, 235, 0.08);
+  stroke: var(--primary);
+  stroke-dasharray: 4 3;
+}

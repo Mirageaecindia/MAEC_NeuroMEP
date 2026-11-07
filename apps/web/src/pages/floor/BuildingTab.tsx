@@ -19,7 +19,7 @@ import {
   type Riser,
   type Discipline,
 } from '@neuromep/shared';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type KeyboardEvent } from 'react';
 import type { EngineReply } from '../../workspace/engineRun';
 import { NumberInput } from '../../components/fields';
 import { StatusMark } from '../../layout/icons';
@@ -56,6 +56,8 @@ export function BuildingTab(props: {
   zoom: number;
   readOnly: boolean;
   onRisers: (risers: Riser[]) => void;
+  /** Rename a floor (Technical Lead; user request 7 Nov 2026); absent = names read-only. */
+  onRename?: (floorId: string, name: string) => void;
   onSave: () => void;
   /** Cable Size Calculator: Cable Size for the whole project (FR-21, A-07); null if it failed. */
   onCableSize: () => Promise<EngineReply | null>;
@@ -70,6 +72,12 @@ export function BuildingTab(props: {
   const [cost, setCost] = useState<Pick<EngineReply, 'risers' | 'totalAed'> | null>(null);
   const [dfOpen, setDfOpen] = useState(false);
   const [scenario, setScenario] = useState<Scenario>('normal');
+  /** The floor whose name is being edited, and the name typed so far. */
+  const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
+  const finishRename = () => {
+    if (renaming && renaming.name.trim()) props.onRename?.(renaming.id, renaming.name);
+    setRenaming(null);
+  };
   const change = (next: Riser[]) => {
     props.onRisers(next);
     setSized(false);
@@ -152,9 +160,44 @@ export function BuildingTab(props: {
             return (
               <g key={f.id}>
                 <line x1={RISER_X[2]! + 24} y1={y} x2={BOARD_X} y2={y} className="floor-line" />
-                <text x={(RISER_X[2]! + BOARD_X) / 2} y={y - 5} className="floor-label">
-                  {f.name}
-                </text>
+                {renaming?.id === f.id ? (
+                  <foreignObject
+                    x={RISER_X[2]! + 30}
+                    y={y - 24}
+                    width={BOARD_X - RISER_X[2]! - 36}
+                    height={22}
+                  >
+                    <input
+                      className="floor-name-input"
+                      aria-label={`Name of ${f.name}`}
+                      value={renaming.name}
+                      autoFocus
+                      onChange={(e) => setRenaming({ id: f.id, name: e.target.value })}
+                      onBlur={finishRename}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') finishRename();
+                        if (e.key === 'Escape') setRenaming(null);
+                      }}
+                    />
+                  </foreignObject>
+                ) : (
+                  <text
+                    x={(RISER_X[2]! + BOARD_X) / 2}
+                    y={y - 5}
+                    className={`floor-label${props.onRename ? ' editable' : ''}`}
+                    {...(props.onRename && {
+                      role: 'button',
+                      tabIndex: 0,
+                      'aria-label': `Rename ${f.name}`,
+                      onClick: () => setRenaming({ id: f.id, name: f.name }),
+                      onKeyDown: (e: KeyboardEvent) =>
+                        e.key === 'Enter' && setRenaming({ id: f.id, name: f.name }),
+                    })}
+                  >
+                    {f.name}
+                    {props.onRename && <title>Click to rename this floor</title>}
+                  </text>
+                )}
                 {onFloor.length === 0 ? (
                   <g
                     className="floor-board empty"

@@ -165,3 +165,14 @@
 .pf-types {
   margin-top: 12px;
 }
+
+/* No of Floors group (12.1, user request 7 Nov 2026): the counts below it. */
+.form-group-label {
+  margin: 12px 0 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.form-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+}

@@ -52,7 +52,7 @@ export function createEmptyProject(args: { id: string; userId: string; now: stri
       defaultOverrides: {},
     },
     building: {
-      counts: { basements: null, podiums: null, typicals: null },
+      counts: { basements: null, grounds: 1, podiums: null, typicals: null },
       gfLevelM: 0,
       mechanicalFloorIds: [null, null, null],
       floors: [],
