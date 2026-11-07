@@ -12,6 +12,8 @@ import {
   setBoardRiser,
   setRiser,
   sourceConnected,
+  usuallyFeeds,
+  KIND_LABELS,
   floorStatus,
   type Element,
   type Project,
@@ -19,7 +21,7 @@ import {
   type Riser,
   type Discipline,
 } from '@neuromep/shared';
-import { useMemo, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useState, type KeyboardEvent } from 'react';
 import type { EngineReply } from '../../workspace/engineRun';
 import { NumberInput } from '../../components/fields';
 import { StatusMark } from '../../layout/icons';
@@ -31,7 +33,7 @@ const ROW = 70;
 const TOP = 40;
 const RISER_X = [330, 352, 374];
 const BOARD_X = 760;
-const BOARD_GAP = 56;
+const BOARD_GAP = 74;
 const SOURCE_X = 16;
 const SOURCE_W = 78;
 const SOURCE_GAP = 92;
@@ -72,6 +74,21 @@ export function BuildingTab(props: {
   const [cost, setCost] = useState<Pick<EngineReply, 'risers' | 'totalAed'> | null>(null);
   const [dfOpen, setDfOpen] = useState(false);
   const [scenario, setScenario] = useState<Scenario>('normal');
+  /** The riser whose source is being chosen (click a component on any floor). */
+  const [picking, setPicking] = useState<string | null>(null);
+  useEffect(() => {
+    if (!picking) return;
+    const onKey = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && setPicking(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [picking]);
+  /** What feeds each component by a feeder (cable-fed boards are drawn greyed). */
+  const cableFrom = new Map(
+    model.cables.map((c) => [
+      c.to.elementId,
+      model.elements.find((e) => e.id === c.from.elementId)?.tag,
+    ]),
+  );
   /** The floor whose name is being edited, and the name typed so far. */
   const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
   const finishRename = () => {
@@ -99,20 +116,41 @@ export function BuildingTab(props: {
     return r.lengthM && maxLen ? bottomY - ((bottomY - TOP + 20) * r.lengthM) / maxLen : bottomY;
   }
 
+  /**
+   * Click a riser, then the component that feeds it, on any floor (manager feedback, 7 Nov
+   * 2026: the transformer, LV panels and MDBs are drawn on their floors). Clicking the riser
+   * again removes its source; Escape cancels.
+   */
   function chooseSource(r: Riser, n: number) {
     if (props.readOnly) return;
-    const sources = riserSources(model).map((e) => e.id);
-    if (sources.length === 0) {
+    if (picking === r.id) {
+      setPicking(null);
+      if (r.fedFromId) {
+        change(setRiser(model.risers, r.id, { fedFromId: null }));
+        notice(`Riser ${n} is not fed.`);
+      }
+      return;
+    }
+    if (riserSources(model).length === 0) {
       notice('Place a transformer or an LV panel / MDB in Floor Setup to feed the risers.');
       return;
     }
-    const next = cycle(sources, r.fedFromId);
-    change(setRiser(model.risers, r.id, { fedFromId: next }));
-    notice(next ? `Riser ${n} is fed from ${tag(next)}.` : `Riser ${n} is not fed.`);
+    setPicking(r.id);
+    notice(
+      `Click the component that feeds Riser ${n} - usually the transformer, an LV panel or an MDB - on any floor. Click the riser again to remove its source.`,
+    );
+  }
+
+  function pickSource(board: Element) {
+    const n = risers.findIndex((r) => r.id === picking) + 1;
+    change(setRiser(model.risers, picking!, { fedFromId: board.id }));
+    setPicking(null);
+    notice(`Riser ${n} is fed from ${board.tag}.`);
   }
 
   function chooseRiser(board: Element) {
     if (props.readOnly) return;
+    if (picking) return pickSource(board);
     const usable = risers.filter((r) => r.lengthM).map((r) => r.id);
     if (usable.length === 0) {
       notice('Enter a riser length in Riser Design first.');
@@ -136,7 +174,7 @@ export function BuildingTab(props: {
     ? null
     : risers.some((r) => r.lengthM && r.fedFromId)
       ? 'No riser leads back to a transformer yet: feed a riser from the transformer, or from an LV panel / MDB that has a feeder from the transformer.'
-      : 'Enter a riser length in Riser Design, then click the riser in the diagram to choose what feeds it (the transformer, an LV panel or an MDB).';
+      : 'Enter a riser length in Riser Design, then click the riser in the diagram and click what feeds it (usually the transformer, an LV panel or an MDB).';
 
   return (
     <div className="building-tab">
@@ -204,7 +242,7 @@ export function BuildingTab(props: {
                     role="button"
                     aria-label={`${f.name} board`}
                     onClick={() =>
-                      notice(`Place an SMDB, MCC or DB on ${f.name} in Floor Setup to connect it.`)
+                      notice(`Place a board on ${f.name} in Floor Setup to connect it.`)
                     }
                   >
                     <rect x={BOARD_X} y={y - 9} width="32" height="16" />
@@ -214,6 +252,17 @@ export function BuildingTab(props: {
                   onFloor.map((b, k) => {
                     const x = BOARD_X + k * BOARD_GAP;
                     const riser = risers.findIndex((r) => r.feeds.includes(b.id));
+                    const main = usuallyFeeds(b.kind, 'busbar');
+                    const byCable = cableFrom.get(b.id);
+                    const source = risers.some((r) => r.fedFromId === b.id);
+                    const kind = [
+                      main ? 'main' : '',
+                      byCable && riser < 0 ? 'cable-fed' : '',
+                      source ? 'riser-source' : '',
+                      picking ? 'picking' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ');
                     return (
                       <g key={b.id}>
                         {riser >= 0 && (
@@ -223,14 +272,26 @@ export function BuildingTab(props: {
                           />
                         )}
                         <g
-                          className="floor-board"
+                          className={`floor-board ${kind}`}
                           role="button"
                           aria-label={`${b.tag} board`}
                           onClick={() => chooseRiser(b)}
                         >
+                          <title>
+                            {`${b.tag} - ${KIND_LABELS[b.kind]}${byCable ? `, fed from ${byCable} by a feeder` : ''}${riser >= 0 ? `, on Riser ${riser + 1}` : ''}${source ? ', feeds a riser' : ''}`}
+                          </title>
+                          {/* The whole board and its tag take the click (no gaps). */}
+                          <rect
+                            className="board-hit"
+                            x={x - 18}
+                            y={y - 12}
+                            width={68}
+                            height={k % 2 ? 46 : 36}
+                          />
                           <rect x={x} y={y - 9} width="32" height="16" />
                           <line x1={x} y1={y + 7} x2={x + 32} y2={y - 9} />
-                          <text x={x + 16} y={y + 20} className="floor-label">
+                          {/* Alternate heights so neighbouring tags never overlap. */}
+                          <text x={x + 16} y={y + (k % 2 ? 30 : 20)} className="floor-label">
                             {b.tag}
                           </text>
                         </g>
@@ -245,7 +306,7 @@ export function BuildingTab(props: {
             r.lengthM ? (
               <rect
                 key={r.id}
-                className="riser"
+                className={`riser${picking === r.id ? ' picking' : ''}`}
                 role="button"
                 x={RISER_X[idx]}
                 y={riserTop(r)}
@@ -256,8 +317,8 @@ export function BuildingTab(props: {
               >
                 <title>
                   {r.fedFromId
-                    ? `Riser ${idx + 1}: fed from ${tag(r.fedFromId)} (click to change)`
-                    : `Riser ${idx + 1}: no source - click to choose what feeds it`}
+                    ? `Riser ${idx + 1}: fed from ${tag(r.fedFromId)} (click, then click its new source)`
+                    : `Riser ${idx + 1}: no source - click it, then click what feeds it`}
                 </title>
               </rect>
             ) : null,

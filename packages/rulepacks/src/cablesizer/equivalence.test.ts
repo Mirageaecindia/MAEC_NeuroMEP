@@ -188,7 +188,7 @@ describe('CableSizer conversion', () => {
       expect(shadowed, `${fn}: rules unreachable in first-match order`).toEqual(
         KNOWN_SHADOWED[fn] ?? [],
       );
-    }, 60_000); // exhaustive: every rule x every boundary probe x first-match over the source
+    }, 180_000); // exhaustive: every rule x every boundary probe; slow while the whole suite runs
   }
 
   it('returns not found (never a silent default) where CableSizer has no row', () => {

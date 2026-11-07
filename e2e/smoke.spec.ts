@@ -55,6 +55,7 @@ test('#TASK-16 login, Import File, Floor Setup, Building tab and Cable Size', as
   await expect(calculator).toBeDisabled();
   await summary.getByLabel('Riser 1 length').fill('26');
   await page.getByRole('button', { name: 'Riser 1', exact: true }).click();
+  await page.getByRole('button', { name: 'TX-1 board' }).click();
   await expect(page.getByText('Riser 1 is fed from TX-1.')).toBeVisible();
   await page.getByRole('button', { name: 'DB-db-1 board' }).click();
   await expect(calculator).toBeEnabled();

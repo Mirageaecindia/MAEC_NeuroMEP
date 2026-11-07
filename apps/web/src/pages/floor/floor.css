@@ -580,3 +580,31 @@
 .connection-note {
   color: var(--warning);
 }
+
+/* Building view (manager feedback, 7 Nov 2026): every component on its floor. Main panels and
+   transformers stand out, cable-fed boards are greyed, a riser source is outlined in red, and
+   while a riser's source is being chosen the components are highlighted to click. */
+.floor-board.main rect {
+  fill: #dbeafe;
+  stroke: #1d4ed8;
+  stroke-width: 1.5;
+}
+.floor-board.cable-fed rect,
+.floor-board.cable-fed line {
+  opacity: 0.55;
+}
+.floor-board.riser-source rect {
+  stroke: #e11d1d;
+  stroke-width: 2;
+}
+.floor-board.picking rect {
+  stroke: #e11d1d;
+  stroke-dasharray: 3 2;
+}
+.riser.picking {
+  fill: #e11d1d;
+}
+.floor-board rect.board-hit {
+  fill: transparent;
+  stroke: none;
+}

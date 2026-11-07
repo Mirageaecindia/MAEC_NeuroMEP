@@ -32,32 +32,55 @@ export interface SldNode {
   /** The feeder or riser number that feeds it; null for the root. */
   via: { kind: 'feeder'; cable: Cable } | { kind: 'riser'; riser: number } | null;
   children: SldNode[];
+  /**
+   * Other supplies into this component (manager feedback, 7 Nov 2026): e.g. a generator feeding
+   * an EMDB that the transformer also feeds. Drawn as extra incomers, not followed further.
+   */
+  incomers: {
+    from: Element;
+    via: { kind: 'feeder'; cable: Cable } | { kind: 'riser'; riser: number };
+  }[];
 }
 
 /** Tree from a source down to the DBs (Section 14): feeders, then riser tap-offs. */
 export function sldTree(model: Project['model'], rootId: string): SldNode | null {
   const byId = new Map(model.elements.map((e) => [e.id, e]));
   const seen = new Set<string>();
-  const build = (element: Element, via: SldNode['via']): SldNode => {
+  const build = (element: Element, via: SldNode['via'], parentId: string | null): SldNode => {
     seen.add(element.id);
     const children: SldNode[] = [];
+    const incomers: SldNode['incomers'] = [];
+    for (const cable of model.cables) {
+      const from = byId.get(cable.from.elementId);
+      if (cable.to.elementId === element.id && from && from.id !== parentId) {
+        incomers.push({ from, via: { kind: 'feeder', cable } });
+      }
+    }
+    model.risers.forEach((r, i) => {
+      const from = r.fedFromId ? byId.get(r.fedFromId) : undefined;
+      if (r.feeds.includes(element.id) && from && from.id !== parentId) {
+        incomers.push({ from, via: { kind: 'riser', riser: i + 1 } });
+      }
+    });
     for (const cable of model.cables) {
       const child = byId.get(cable.to.elementId);
       if (cable.from.elementId === element.id && child && !seen.has(child.id)) {
-        children.push(build(child, { kind: 'feeder', cable }));
+        children.push(build(child, { kind: 'feeder', cable }, element.id));
       }
     }
     model.risers.forEach((r, i) => {
       if (r.fedFromId !== element.id) return;
       for (const id of r.feeds) {
         const child = byId.get(id);
-        if (child && !seen.has(id)) children.push(build(child, { kind: 'riser', riser: i + 1 }));
+        if (child && !seen.has(id)) {
+          children.push(build(child, { kind: 'riser', riser: i + 1 }, element.id));
+        }
       }
     });
-    return { element, via, children };
+    return { element, via, children, incomers };
   };
   const root = byId.get(rootId);
-  return root ? build(root, null) : null;
+  return root ? build(root, null, null) : null;
 }
 
 // ----- Panel schedule ------------------------------------------------------------------------

@@ -682,6 +682,26 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(screen.getByRole('button', { name: /^Cable Size( |$)/ })).toBeDisabled();
   });
 
+  it('shows every component on its floor; click a riser then its source, the riser again to remove it (7 Nov 2026)', async () => {
+    renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(buildingProject()));
+    await userEvent.click(await screenTool('Building'));
+    const summary = screen.getByRole('complementary', { name: 'Building Summary' });
+    await userEvent.type(within(summary).getByLabelText('Riser 1 length'), '26');
+    // The transformer is drawn on its floor, highlighted as a usual riser source.
+    const txBoard = screen.getByRole('button', { name: 'TX-1 board' });
+    expect(txBoard).toHaveClass('main');
+    await userEvent.click(screen.getByRole('button', { name: 'Riser 1' }));
+    expect(
+      await screen.findByText(/^Click the component that feeds Riser 1/, { selector: '.notice' }),
+    ).toBeInTheDocument();
+    await userEvent.click(txBoard);
+    expect(await screen.findByText('Riser 1 is fed from TX-1.')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'TX-1 board' })).toHaveClass('riser-source');
+    await userEvent.click(screen.getByRole('button', { name: 'Riser 1' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Riser 1' }));
+    expect(await screen.findByText('Riser 1 is not fed.')).toBeVisible();
+  });
+
   it('#TASK-18 a riser fed from the transformer feeds the floor boards; then Cable Size (A-07)', async () => {
     const project = buildingProject();
     project.calculation.busbarMaker = 'schneider';
@@ -696,7 +716,9 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
     expect(await screen.findByText('Enter a riser length in Riser Design first.')).toBeVisible();
     await userEvent.type(within(summary).getByLabelText('Riser 1 length'), '26');
+    // Click the riser, then its source - the transformer is drawn on its floor (7 Nov 2026).
     await userEvent.click(screen.getByRole('button', { name: 'Riser 1' }));
+    await userEvent.click(screen.getByRole('button', { name: 'TX-1 board' }));
     expect(await screen.findByText('Riser 1 is fed from TX-1.')).toBeVisible();
     expect(calc).toBeEnabled();
     await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));

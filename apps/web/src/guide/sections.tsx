@@ -546,14 +546,17 @@ export const SECTIONS: GuideSection[] = [
             (up to three risers). The riser appears in the diagram.
           </li>
           <li>
-            Click the riser to choose what feeds it: a transformer, LV panel or MDB (each click
-            moves to the next one). The source box is drawn under the riser; &quot;no supply&quot;
-            when that source has no feeder itself.
+            Click the riser, then click the component that feeds it on any floor - usually the
+            transformer, an LV panel or an MDB. Every component is drawn on its floor: main panels
+            and transformers in blue, boards fed by a feeder greyed (hover for what feeds them), a
+            riser source outlined in red. Click the riser twice to remove its source; Escape
+            cancels. The source box is drawn under the riser; &quot;no supply&quot; when that source
+            has no feeder itself.
           </li>
           <li>
-            Click a board (SMDB, MCC or DB) on a floor to connect it to a riser tap-off; each click
-            moves it to the next riser, then off. A board may have a riser and a feeder as well; its
-            Engineering Property then notes the two supplies.
+            Click a board (usually an SMDB, MCC or DB) on a floor to connect it to a riser tap-off;
+            each click moves it to the next riser, then off. A board may have a riser and a feeder
+            as well; its Engineering Property then notes the two supplies.
           </li>
         </ol>
         <Rule>
@@ -594,9 +597,12 @@ export const SECTIONS: GuideSection[] = [
     title: 'Schematic - single-line diagram',
     body: (
       <p>
-        Draws a single-line diagram per transformer from your model: feeders, risers and tap-offs,
-        with the sizes of the last Cable Size run. Tick the transformers to show (or All
-        Transformer) and press <Term>Download</Term> for a PDF, a page per transformer, named{' '}
+        Draws a single-line diagram per transformer from your model as a tree: the transformer at
+        the top, every board under the board or riser that feeds it (e.g. Tx &gt; EMDB &gt; ESMDB
+        &gt; EDB), the way, breaker and size of the feeder into each board from the last Cable Size
+        run, and any other supply of a board - a generator, a second incomer, a riser - drawn as
+        &quot;also fed from&quot; beside it. Tick the transformers to show (or All Transformer) and
+        press <Term>Download</Term> for a PDF, a page per transformer, named{' '}
         <code>&lt;project&gt;_SLD_v&lt;n&gt;.pdf</code>. Downloads never overwrite: each gets the
         next version number.
       </p>
@@ -1180,7 +1186,7 @@ export const SECTIONS: GuideSection[] = [
             <td>Cable Size / Cable Size Calculator is grey</td>
             <td>No riser leads back to a transformer (A-07).</td>
             <td>
-              Building tab: type a riser length, click the riser and choose the transformer or a
+              Building tab: type a riser length, click the riser, then click the transformer or a
               panel fed from it.
             </td>
           </tr>
