@@ -423,9 +423,11 @@ export const SECTIONS: GuideSection[] = [
             Dragging one of them moves the whole selection, feeders included.
           </li>
           <li>
-            <Term>Rotate</Term>: R or Rotate 90° in the bar above the plan turns the selection 90°;
-            Rotation (°) in the Engineering Property sets any angle. Rotation only changes the
-            drawing, never a calculation.
+            <Term>Rotate</Term>: select a component and drag the round rotate handle off its
+            top-right corner to any angle (the angle shows while you drag; hold Shift for 15°
+            steps). R or Rotate 90° in the bar above the plan turns a selection 90°; Rotation (°) in
+            the Engineering Property takes an exact angle. Rotation only changes the drawing, never
+            a calculation.
           </li>
           <li>
             <Term>Copy / Paste</Term>: Ctrl + C, then Ctrl + V on this floor (2 m away) or on

@@ -71,6 +71,9 @@ const HIT_PX = 20;
 const HANDLE_PX = 7;
 const SCALE_MIN = 0.5;
 const SCALE_MAX = 4;
+/** Rotate handle (7 Nov 2026): a circle this far off the top-right corner, this radius (px). */
+const ROTATE_OFFSET = 12;
+const ROTATE_R = 7;
 const half = (m: PlanMarker) => (MARKER_PX * (m.scale ?? 1)) / 2;
 
 /** Driven from the shared toolbar (Zoom In / Zoom Out / Reset). */
@@ -116,6 +119,8 @@ export function PlanViewer(props: {
   tooltip?: (id: string) => string[] | null;
   /** A selected component resized by a corner handle. */
   onResize?: (id: string, scale: number) => void;
+  /** A selected component turned to `deg` degrees with its rotate handle (7 Nov 2026). */
+  onRotate?: (id: string, deg: number) => void;
   /** Cables on this floor (#TASK-13); selectable like components. */
   cables?: PlanCable[];
   /** Cable tool armed: clicks go to onCableClick instead of selecting or panning. */
@@ -167,7 +172,15 @@ export function PlanViewer(props: {
   } | null>(null);
   /** Corner resize of the selected component in progress, and its scale so far. */
   const [resizing, setResizing] = useState<{ id: string; scale: number } | null>(null);
+  /** Rotation with the handle: the angle so far, and the pointer / symbol angles at the start. */
+  const [rotating, setRotating] = useState<{
+    id: string;
+    deg: number;
+    from: number;
+    start: number;
+  } | null>(null);
   const [overHandle, setOverHandle] = useState(false);
+  const [overRotate, setOverRotate] = useState(false);
   /** Component or feeder under the pointer and where (FR-36 tooltip). */
   const [hovered, setHovered] = useState<{ id: string; x: number; y: number } | null>(null);
   const [snapIndex, setSnapIndex] = useState<SnapIndex | null>(null);
@@ -338,6 +351,22 @@ export function PlanViewer(props: {
       : undefined;
   };
 
+  /** Where the rotate handle of a marker sits on screen: off its top-right corner. */
+  const rotateHandleAt = (m: PlanMarker) => {
+    const c = pdfToScreen(m.at, view, page!.transform);
+    const h = half(m) + 4;
+    return { x: c.x + h + ROTATE_OFFSET, y: c.y - h - ROTATE_OFFSET, c };
+  };
+  /** The selected component, when a screen point is on its rotate handle. */
+  const onRotateHandle = (s: { x: number; y: number }) => {
+    const m = markers.find((x) => x.id === props.selectedId);
+    if (!m || !page || !props.onRotate || (props.selectedIds?.length ?? 0) > 1) return undefined;
+    const r = rotateHandleAt(m);
+    return Math.hypot(s.x - r.x, s.y - r.y) <= ROTATE_R + 3 ? m : undefined;
+  };
+  const pointerAngle = (s: { x: number; y: number }, c: { x: number; y: number }) =>
+    (Math.atan2(s.y - c.y, s.x - c.x) * 180) / Math.PI;
+
   function onMouseDown(e: ReactMouseEvent) {
     // Outside calibration the left button places (armed item), selects / moves a component, or
     // pans the empty plan. Middle or Shift + right button always pan.
@@ -349,6 +378,18 @@ export function PlanViewer(props: {
       }
       if (props.placing) {
         props.onPlace?.(screenToPdf(s, view, page.transform));
+        return;
+      }
+      const turn = onRotateHandle(s);
+      if (turn) {
+        e.preventDefault();
+        const from = turn.rotation ?? 0;
+        setRotating({
+          id: turn.id,
+          deg: from,
+          from,
+          start: pointerAngle(s, rotateHandleAt(turn).c),
+        });
         return;
       }
       const corner = onHandle(s);
@@ -408,6 +449,16 @@ export function PlanViewer(props: {
     if ((props.drawingPoints || picking) && page) {
       setPointer(screenToPdf(local(e), view, page.transform));
     }
+    if (rotating && page) {
+      const m = markers.find((x) => x.id === rotating.id);
+      if (!m) return;
+      // Any angle; Shift snaps to 15 degree steps.
+      const raw = rotating.from + pointerAngle(local(e), rotateHandleAt(m).c) - rotating.start;
+      const step = e.shiftKey ? 15 : 1;
+      const deg = (((Math.round(raw / step) * step) % 360) + 360) % 360;
+      setRotating({ ...rotating, deg });
+      return;
+    }
     if (resizing && page) {
       const m = markers.find((x) => x.id === resizing.id);
       if (!m) return;
@@ -421,6 +472,7 @@ export function PlanViewer(props: {
     if (!pan.current && !drag.current && page) {
       const s = local(e);
       setOverHandle(!!onHandle(s));
+      setOverRotate(!!onRotateHandle(s));
       const id = picking ? undefined : (hit(s)?.id ?? hitCable(s)?.id);
       setHovered(id ? { id, ...s } : null);
     } else setHovered(null);
@@ -460,6 +512,8 @@ export function PlanViewer(props: {
       props.onSelectBox?.(inside.map((m) => m.id));
       setBox(null);
     }
+    if (rotating && rotating.deg !== rotating.from) props.onRotate?.(rotating.id, rotating.deg);
+    setRotating(null);
     if (resizing) props.onResize?.(resizing.id, resizing.scale);
     setResizing(null);
     const d = drag.current;
@@ -670,7 +724,7 @@ export function PlanViewer(props: {
 
       <div
         ref={container}
-        className={`viewer-canvas${picking || props.placing || props.cableMode ? ' picking' : ''}${panning ? ' panning' : ''}${overHandle || resizing ? ' resizing' : ''}`}
+        className={`viewer-canvas${picking || props.placing || props.cableMode ? ' picking' : ''}${panning ? ' panning' : ''}${overHandle || resizing ? ' resizing' : ''}${overRotate || rotating ? ' rotating' : ''}`}
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseUp={endPan}
@@ -746,7 +800,8 @@ export function PlanViewer(props: {
               );
               const selected =
                 m.id === props.selectedId || (props.selectedIds ?? []).includes(m.id);
-              const turn = m.rotation ? `rotate(${m.rotation} ${s.x} ${s.y})` : undefined;
+              const angle = rotating?.id === m.id ? rotating.deg : m.rotation;
+              const turn = angle ? `rotate(${angle} ${s.x} ${s.y})` : undefined;
               const size = MARKER_PX * (resizing?.id === m.id ? resizing.scale : (m.scale ?? 1));
               return (
                 <g
@@ -780,6 +835,41 @@ export function PlanViewer(props: {
                         />
                       )),
                     )}
+                  {m.id === props.selectedId &&
+                    (props.selectedIds?.length ?? 0) <= 1 &&
+                    props.onRotate &&
+                    (() => {
+                      const hx = s.x + size / 2 + 4 + ROTATE_OFFSET;
+                      const hy = s.y - size / 2 - 4 - ROTATE_OFFSET;
+                      const deg = rotating?.id === m.id ? rotating.deg : (m.rotation ?? 0);
+                      return (
+                        <g className="marker-rotate" aria-label={`Rotate ${m.tag}`}>
+                          <line
+                            x1={s.x + size / 2 + 4}
+                            y1={s.y - size / 2 - 4}
+                            x2={hx}
+                            y2={hy}
+                            className="marker-rotate-stem"
+                          />
+                          <circle cx={hx} cy={hy} r={ROTATE_R} />
+                          {/* a circular arrow */}
+                          <path
+                            d={`M ${hx + 3.5} ${hy - 1.5} A 3.6 3.6 0 1 0 ${hx + 1.2} ${hy + 3.4}`}
+                            className="marker-rotate-arrow"
+                          />
+                          <path
+                            d={`M ${hx + 4.6} ${hy - 4.2} L ${hx + 3.6} ${hy - 1.2} L ${hx + 0.8} ${hy - 2.2}`}
+                            className="marker-rotate-arrow"
+                          />
+                          {rotating?.id === m.id && (
+                            <text x={hx + ROTATE_R + 3} y={hy + 3} className="marker-rotate-deg">
+                              {deg}°
+                            </text>
+                          )}
+                          <title>Drag to rotate (Shift: 15° steps)</title>
+                        </g>
+                      );
+                    })()}
                   {m.image ? (
                     <image
                       href={m.image}

@@ -589,6 +589,29 @@ describe('rotate, copy / paste, Replicate floor, floor names (user request 7 Nov
     ]);
   });
 
+  it('turns the selected component to any angle with the rotate handle (Shift: 15 degree steps)', async () => {
+    open(LEAD);
+    await planReady();
+    await placeDb(300);
+    await screen.findByRole('img', { name: 'DB-GF-01 (selected)' });
+    // The handle sits off the top-right corner: centre + (16 + 4 + 12) px each way.
+    expect(document.querySelector('.marker-rotate')).not.toBeNull();
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 332, clientY: 268 }); // -45 degrees
+    fireEvent.mouseMove(canvasArea(), { clientX: 340, clientY: 300 }); // 0 degrees: +45
+    fireEvent.mouseUp(canvasArea(), { clientX: 340, clientY: 300 });
+    await waitFor(() => expect(screen.getByLabelText('Rotation (°) :')).toHaveValue(45));
+    // Shift snaps: from 45, a further 50 degrees becomes 90.
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 332, clientY: 268 });
+    const a = (-45 + 50) * (Math.PI / 180);
+    fireEvent.mouseMove(canvasArea(), {
+      clientX: 300 + 40 * Math.cos(a),
+      clientY: 300 + 40 * Math.sin(a),
+      shiftKey: true,
+    });
+    fireEvent.mouseUp(canvasArea());
+    await waitFor(() => expect(screen.getByLabelText('Rotation (°) :')).toHaveValue(90));
+  });
+
   it('sets an exact angle in the Engineering Property', async () => {
     open(LEAD);
     await planReady();

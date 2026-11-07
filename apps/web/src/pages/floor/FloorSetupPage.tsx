@@ -704,6 +704,9 @@ export function FloorSetupPage() {
                       id,
                     )
                   }
+                  onRotate={(id, deg) =>
+                    editor.dispatch({ type: 'rotateElements', ids: [id], to: deg })
+                  }
                   onResize={(id, symbolScale) =>
                     editor.dispatch({ type: 'updateElement', id, patch: { symbolScale } })
                   }
