@@ -2,7 +2,9 @@ import {
   cableSize,
   elementResults,
   ENGINE_VERSION,
+  feederCosts,
   riserCosts,
+  type FeederCost,
   type RiserCost,
 } from '@neuromep/engine';
 import type { ElementResult, Project } from '@neuromep/shared';
@@ -12,7 +14,11 @@ export interface EngineReply {
   engineVersion: string;
   results: ElementResult[];
   risers: RiserCost[];
-  /** Building tab Cost (AED); null while a riser has no busbar rating. */
+  /** Every feeder at its breaker rating x 2.2 AED (8 Nov 2026). */
+  feeders: FeederCost[];
+  risersAed: number | null;
+  feedersAed: number | null;
+  /** Building tab Cost (AED) = risers + feeders; null while an item has no rating. */
   totalAed: number | null;
   converged: boolean;
 }
@@ -21,11 +27,16 @@ export interface EngineReply {
 export function engineRun(project: Project): EngineReply {
   const outcome = cableSize(project);
   const cost = riserCosts(project, outcome.risers);
+  const feeders = feederCosts(project, outcome.feeders);
   return {
     engineVersion: ENGINE_VERSION,
     results: elementResults(project, outcome),
     risers: cost.risers,
-    totalAed: cost.totalAed,
+    feeders: feeders.feeders,
+    risersAed: cost.totalAed,
+    feedersAed: feeders.totalAed,
+    totalAed:
+      cost.totalAed === null || feeders.totalAed === null ? null : cost.totalAed + feeders.totalAed,
     converged: outcome.converged,
   };
 }

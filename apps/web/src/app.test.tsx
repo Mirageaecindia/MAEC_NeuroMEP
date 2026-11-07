@@ -797,7 +797,11 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
       expect(within(summary).getByRole('button', { name: 'Save' })).toBeEnabled(),
     );
     // Cost: the riser's busbar (smallest Schneider rating, 800 A) x 2.2 AED (3 Nov 2026).
+    // The riser: smallest Schneider rating 800 A x 2.2 = 1760 AED; no feeders in this project.
     expect(summary).toHaveTextContent('Cost : 1760 AED');
+    expect(within(summary).getByLabelText('Cost breakdown')).toHaveTextContent(
+      'Busbar risers: 1760 AED (1) · Feeders: 0 AED (0)',
+    );
     // The riser is sized; the two feeders of the sample plan have no load yet.
     expect(
       screen.getByText(
@@ -953,7 +957,7 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     ).toBeVisible();
   });
 
-  it('needs no busbar riser: a feeder from the transformer enables Cable Size; the cost is 0 AED (A-22)', async () => {
+  it('needs no busbar riser: a feeder from the transformer enables Cable Size; the cost is its breaker rating x 2.2 AED (A-22)', async () => {
     const project = buildingProject();
     const tx = project.model.elements.find((e) => e.id === 'tx')!;
     const db = project.model.elements.find((e) => e.id === 'db-1')!;
@@ -968,8 +972,12 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(calc).toBeEnabled();
     expect(screen.queryByText(/no tap-off from a riser/)).not.toBeInTheDocument();
     await userEvent.click(calc);
-    await waitFor(() => expect(summary).toHaveTextContent('Cost : 0 AED'));
-    expect(summary).toHaveTextContent('No busbar riser in this building');
+    // No riser: the cost is the feeder's breaker rating x 2.2 AED (8 Nov 2026).
+    const breakdown = await within(summary).findByLabelText('Cost breakdown');
+    expect(breakdown).toHaveTextContent('Busbar risers: 0 AED (0)');
+    const feeders = Number(breakdown.textContent!.match(/Feeders: ([\d.]+) AED \(1\)/)![1]);
+    expect(feeders).toBeGreaterThan(0);
+    expect(summary).toHaveTextContent(`Cost : ${feeders} AED`);
   });
 
   it('#TASK-27 says why the Cable Size Calculator is not available yet', async () => {

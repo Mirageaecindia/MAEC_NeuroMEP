@@ -256,6 +256,66 @@ export interface RiserCost {
   reasons: string[];
 }
 
+/** The cost rate in AED per ampere (rule pack `riserCostAedPerA`, 2.2; the Lead may override). */
+function costRate(project: Project): number | undefined {
+  const pack = getRulePack(project.rulePackId!, project.rulePackVersion!);
+  const override = project.calculation.defaultOverrides.riserCostAedPerA;
+  const value =
+    typeof override === 'number'
+      ? override
+      : pack.calculationDefaults.find((d) => d.key === 'riserCostAedPerA')?.value;
+  return typeof value === 'number' ? value : undefined;
+}
+
+export interface FeederCost {
+  cableId: string;
+  tag: string;
+  /** The breaker rating In Cable Size chose (A); null while there is none. */
+  ratingA: number | null;
+  costAed: number | null;
+  detail: string;
+  /** Why there is no price yet (empty once priced). */
+  reasons: string[];
+}
+
+/**
+ * Feeder cost (user decision 8 Nov 2026, "cost = ampere x 2.2 AED"): every feeder - cable or
+ * busbar feeder, on a plan or between floors - costs its breaker rating In (A) x the same rate as
+ * the risers, one price per feeder whatever its length.
+ */
+export function feederCosts(
+  project: Project,
+  feeders: readonly { cableId: string; device: { ratingA: number } | null; status: string }[],
+): { feeders: FeederCost[]; totalAed: number | null } {
+  const rate = costRate(project);
+  // Every feeder of the project; one Cable Size did not size (no load yet) has no rating.
+  const sized = new Map(feeders.map((f) => [f.cableId, f]));
+  const rows = project.model.cables.map((c): FeederCost => {
+    const f = sized.get(c.id) ?? { cableId: c.id, device: null, status: 'awaiting-load' };
+    const tag = c.tag;
+    const ratingA = f.device?.ratingA ?? null;
+    const costAed =
+      ratingA !== null && rate !== undefined ? Math.round(ratingA * rate * 100) / 100 : null;
+    const why =
+      f.status === 'awaiting-load'
+        ? `${tag}: no load below it yet, so no breaker rating.`
+        : `${tag}: no breaker rating - see its Cable Size result.`;
+    return {
+      cableId: f.cableId,
+      tag,
+      ratingA,
+      costAed,
+      detail: costAed !== null ? `${tag}: ${ratingA} A x ${rate} AED = ${costAed} AED` : why,
+      reasons: costAed !== null ? [] : [why],
+    };
+  });
+  const known = rows.filter((r) => r.costAed !== null);
+  return {
+    feeders: rows,
+    totalAed: known.length === rows.length ? known.reduce((t, r) => t + r.costAed!, 0) : null,
+  };
+}
+
 /**
  * Building tab Cost (manager, 3 Nov 2026): each riser costs its busbar rating (A) x the rule-pack
  * rate (2.2 AED per ampere), one price per riser whatever its length.
@@ -264,12 +324,7 @@ export function riserCosts(
   project: Project,
   risers: RiserCheck[],
 ): { risers: RiserCost[]; totalAed: number | null } {
-  const pack = getRulePack(project.rulePackId!, project.rulePackVersion!);
-  const override = project.calculation.defaultOverrides.riserCostAedPerA;
-  const rate =
-    typeof override === 'number'
-      ? override
-      : pack.calculationDefaults.find((d) => d.key === 'riserCostAedPerA')?.value;
+  const rate = costRate(project);
   // A riser in use: any of length, source or tap-offs entered (empty Riser Design rows are not).
   const used = (r: RiserCheck) => {
     const stored = project.model.risers[r.index - 1];

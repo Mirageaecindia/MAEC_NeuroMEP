@@ -5,10 +5,11 @@ import {
   loadSummaries,
   mergeRun,
 } from '@neuromep/shared';
+import { completeProject, testCable, testElement } from '@neuromep/shared/testing';
 import { describe, expect, it } from 'vitest';
 import { cableSize } from './cableSize.js';
 import { building } from './fixtures/network.js';
-import { elementResults, riserCosts } from './results.js';
+import { elementResults, feederCosts, riserCosts } from './results.js';
 
 const SINGLE = { cores: '1C' as const, armour: 'AWA' as const, groupedCircuits: 1 };
 
@@ -262,5 +263,34 @@ describe('#TASK-31 calculation sheet from a real run (WBS 1.7.3)', () => {
       (riser.vdUpstreamPct as number) + (riser.vdOwnPct as number),
       9,
     );
+  });
+});
+
+describe('feeder cost (user decision 8 Nov 2026: cost = ampere x 2.2 AED)', () => {
+  it('prices every feeder at its breaker rating In x 2.2 AED; a feeder without one leaves no total', () => {
+    const p = completeProject();
+    const f = p.building.floors[0]!.id;
+    const tx = testElement('transformer', 'tx', f);
+    const mdb = testElement('mdb', 'mdb', f);
+    const db = testElement('db', 'db', f);
+    p.model.elements = [tx, mdb, db];
+    p.model.cables = [
+      { ...testCable(tx, mdb), id: 'c1', tag: 'FGF-1' },
+      { ...testCable(mdb, db), id: 'c2', tag: 'FGF-1-1' },
+    ];
+    const priced = feederCosts(p, [
+      { cableId: 'c1', device: { ratingA: 400 }, status: 'provisional' },
+      { cableId: 'c2', device: { ratingA: 40 }, status: 'provisional' },
+    ]);
+    expect(priced.feeders.map((x) => x.costAed)).toEqual([880, 88]);
+    expect(priced.totalAed).toBe(968);
+    // c2 not sized (no load below it): no rating, so no total, and the reason says why.
+    const partly = feederCosts(p, [
+      { cableId: 'c1', device: { ratingA: 400 }, status: 'provisional' },
+    ]);
+    expect(partly.totalAed).toBeNull();
+    expect(partly.feeders[1]!.reasons).toEqual([
+      'FGF-1-1: no load below it yet, so no breaker rating.',
+    ]);
   });
 });

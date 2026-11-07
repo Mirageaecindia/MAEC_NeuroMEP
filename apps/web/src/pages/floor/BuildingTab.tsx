@@ -82,7 +82,10 @@ export function BuildingTab(props: {
   const [opened] = useState(model.risers);
   const [sized, setSized] = useState(false);
   const [running, setRunning] = useState(false);
-  const [cost, setCost] = useState<Pick<EngineReply, 'risers' | 'totalAed'> | null>(null);
+  const [cost, setCost] = useState<Pick<
+    EngineReply,
+    'risers' | 'feeders' | 'risersAed' | 'feedersAed' | 'totalAed'
+  > | null>(null);
   const [dfOpen, setDfOpen] = useState(false);
   const [scenario, setScenario] = useState<Scenario>('normal');
   /** The riser whose source is being chosen (click a component on any floor). */
@@ -566,20 +569,36 @@ export function BuildingTab(props: {
           {running ? 'Sizing…' : 'Cable Size Calculator'}
         </button>
         {whyNotReady && !props.readOnly && <p className="summary-hint">{whyNotReady}</p>}
-        <p className="summary-cost" title={cost?.risers.map((r) => r.detail).join('\n')}>
+        {/* Cost (8 Nov 2026): busbar risers at their rating and every feeder at its breaker
+            rating In, x 2.2 AED per ampere. */}
+        <p
+          className="summary-cost"
+          title={
+            cost ? [...cost.risers, ...cost.feeders].map((r) => r.detail).join('\n') : undefined
+          }
+        >
           <strong>Cost :</strong>{' '}
           {sized && cost ? (cost.totalAed === null ? '-' : formatAed(cost.totalAed)) : ''} AED
         </p>
-        {sized && cost && cost.risers.length === 0 && (
-          <p className="summary-hint">
-            No busbar riser in this building: the cost counts busbar risers only (rating x AED per
-            A), so it is 0 AED.
+        {sized && cost && (
+          <p className="summary-hint" aria-label="Cost breakdown">
+            Busbar risers: {cost.risersAed === null ? '-' : formatAed(cost.risersAed)} AED (
+            {cost.risers.length}) · Feeders:{' '}
+            {cost.feedersAed === null ? '-' : formatAed(cost.feedersAed)} AED ({cost.feeders.length}
+            ) - rating (A) x 2.2 AED each
           </p>
         )}
         {sized && cost && cost.totalAed === null && (
           <div className="summary-hint" aria-label="Why there is no cost">
-            <p>No cost yet - every riser needs a busbar rating:</p>
-            <ul>{cost.risers.flatMap((r) => r.reasons.map((why) => <li key={why}>{why}</li>))}</ul>
+            <p>No total yet - every riser and feeder needs a rating:</p>
+            <ul>
+              {[...cost.risers, ...cost.feeders]
+                .flatMap((r) => r.reasons)
+                .slice(0, 12)
+                .map((why) => (
+                  <li key={why}>{why}</li>
+                ))}
+            </ul>
           </div>
         )}
         <hr />

@@ -605,12 +605,13 @@ export const SECTIONS: GuideSection[] = [
             <Term>Cable Size Calculator</Term> sizes the whole project. It is enabled once the
             transformer feeds something - a feeder, or a busbar riser fed from it or from a panel
             fed from it; otherwise the reason is shown. A building needs no busbar riser: feeders
-            from the transformer, on the plans and between floors, are enough, and the cost is then
-            0 AED (the cost counts busbar risers only).
+            from the transformer, on the plans and between floors, are enough.
           </li>
           <li>
-            <Term>Cost</Term> - the riser cost in AED after the calculator runs; &quot;-&quot; with
-            the reasons when a riser has no busbar rating yet.
+            <Term>Cost</Term> - in AED after the calculator runs: every busbar riser at its busbar
+            rating and every feeder at its breaker rating In, x 2.2 AED per ampere, with the split
+            (Busbar risers / Feeders) below it; &quot;-&quot; with the reasons while a riser or
+            feeder has no rating yet (e.g. no load below it).
           </li>
           <li>
             <Term>Save</Term> keeps the results; <Term>Cancel</Term> undoes the Building-tab
@@ -1114,8 +1115,10 @@ export const SECTIONS: GuideSection[] = [
         <CalcButton example="riser" />
         <h3>Cost</h3>
         <p>
-          Each riser costs its busbar rating (A) x 2.2 AED, one price per riser whatever its length.
-          Transformers and busbar feeders are not included.
+          Cost = ampere x 2.2 AED: each busbar riser costs its busbar rating (A) x 2.2 AED, and each
+          feeder - cable or busbar feeder, on a plan or between floors - its breaker rating In (A) x
+          2.2 AED; one price per item whatever its length. Transformers are not included. The rate
+          is the rule pack&apos;s (the Technical Lead may override it).
         </p>
         <CalcButton example="cost" />
       </>
