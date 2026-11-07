@@ -19,6 +19,28 @@ export interface CopyResult {
 
 const shift = (p: ModelPoint, d: ModelPoint): ModelPoint => ({ x: p.x + d.x, y: p.y + d.y });
 
+type PlanFloor = Pick<Project['building']['floors'][number], 'plan'>;
+
+/**
+ * Same place on the sheet (user request 8 Nov 2026): a point of one floor's plan moved to the
+ * same position on another floor's plan - the same fraction of the page across and down - in
+ * the target's metres (its own calibration). Floor plans of a building share the sheet layout,
+ * so components land where they were drawn even when the plans were calibrated differently.
+ * Null when either plan is missing or not calibrated (positions then stay in metres).
+ */
+export function sheetMapping(
+  from: PlanFloor | undefined,
+  to: PlanFloor | undefined,
+): ((p: ModelPoint) => ModelPoint) | null {
+  const a = from?.plan;
+  const b = to?.plan;
+  if (!a?.calibration || !b?.calibration) return null;
+  const sx = (b.page.widthPt / a.page.widthPt) * b.calibration.metresPerUnit;
+  const sy = (b.page.heightPt / a.page.heightPt) * b.calibration.metresPerUnit;
+  const ma = a.calibration.metresPerUnit;
+  return (p) => ({ x: (p.x / ma) * sx, y: (p.y / ma) * sy });
+}
+
 /** Copies of `ids` on `targetFloorId`, moved by `offset` metres. */
 export function copyComponents(
   project: Pick<Project, 'building' | 'model'>,
@@ -26,6 +48,8 @@ export function copyComponents(
     ids: readonly string[];
     targetFloorId: string;
     offset?: ModelPoint;
+    /** Source metres to target metres (`sheetMapping`); the offset is added after it. */
+    map?: (p: ModelPoint) => ModelPoint;
     newId: () => string;
   },
 ): CopyResult {
@@ -33,6 +57,7 @@ export function copyComponents(
   const floor = project.building.floors.find((f) => f.id === args.targetFloorId);
   if (!floor) throw new Error(`No floor ${args.targetFloorId}`);
   const offset = args.offset ?? { x: 0, y: 0 };
+  const place = (p: ModelPoint) => shift(args.map ? args.map(p) : p, offset);
   const wanted = new Set(args.ids);
   const originals = elements.filter((e) => wanted.has(e.id));
   const idOf = new Map(originals.map((e) => [e.id, args.newId()]));
@@ -52,7 +77,7 @@ export function copyComponents(
       version: 0,
       tag,
       floorId: floor.id,
-      position: shift(e.position, offset),
+      position: place(e.position),
     });
   });
 
@@ -80,7 +105,7 @@ export function copyComponents(
       to: { ...c.to, elementId: to },
       circuitRef: `${way}${phasesFor(byId.get(to)!)}`,
       floorId: floor.id,
-      route: c.route.map((p) => shift(p, offset)),
+      route: c.route.map(place),
     });
     all.push(copy);
     made.push(copy);

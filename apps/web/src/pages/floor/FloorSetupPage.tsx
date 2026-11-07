@@ -31,6 +31,7 @@ import {
   type CableConstruction,
   type ModelPoint,
   copyComponents,
+  sheetMapping,
   resultOf,
   DisciplineSchema,
   typicalSet,
@@ -349,13 +350,22 @@ export function FloorSetupPage() {
       notice('The copied components no longer exist.');
       return;
     }
-    // On its own floor a paste lands 2 m further down and right each time; elsewhere in place.
-    const step = clip.floorId === floor.id ? 2 * (clip.pasted + 1) : 0;
+    // On its own floor a paste lands 2 m further down and right each time; on another floor at
+    // the same place on the sheet (its own calibration, user request 8 Nov 2026).
+    const same = clip.floorId === floor.id;
+    const step = same ? 2 * (clip.pasted + 1) : 0;
+    const map = same
+      ? null
+      : sheetMapping(
+          project.building.floors.find((f) => f.id === clip.floorId),
+          floor,
+        );
     const copy = copyComponents(project, {
       ids,
       targetFloorId: floor.id,
       offset: { x: step, y: step },
       newId: () => crypto.randomUUID(),
+      ...(map && { map }),
     });
     const cables = editor.layers.includes('electrical') ? copy.cables : [];
     editor.dispatch({ type: 'pasteComponents', elements: copy.elements, cables });

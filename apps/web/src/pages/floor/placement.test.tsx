@@ -658,6 +658,26 @@ describe('rotate, copy / paste, Replicate floor, floor names (user request 7 Nov
     expect(saved.model.elements).toHaveLength(4);
   });
 
+  it('replicates to the same place on the sheet when the target plan is calibrated at another scale', async () => {
+    const p = twoPlans();
+    const first = p.building.floors.find((f) => f.code === '1')!;
+    const cal = first.plan!.calibration!;
+    first.plan = { ...first.plan!, calibration: { ...cal, metresPerUnit: cal.metresPerUnit * 2 } };
+    const api = open(LEAD, p);
+    await planReady();
+    await placeDb(300);
+    await userEvent.click(screen.getByRole('button', { name: 'Replicate floor…' }));
+    const dialog = screen.getByRole('dialog', { name: 'Replicate Ground Floor' });
+    await userEvent.click(within(dialog).getByRole('checkbox', { name: /First Floor/ }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Replicate to 1 floor' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.saveProject).toHaveBeenCalled());
+    const [gf, copy] = api.saveProject.mock.calls.at(-1)![0].model.elements;
+    // Twice the metres per unit: twice the metres, the same point on the sheet.
+    expect(copy!.position.x).toBeCloseTo(gf!.position.x * 2, 9);
+    expect(copy!.position.y).toBeCloseTo(gf!.position.y * 2, 9);
+  });
+
   it('the Technical Lead renames a floor in the Building tab', async () => {
     const api = fakeApi(completeProject());
     render(

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { completeProject, sequentialIds, testCable, testElement } from '../testing.js';
-import { copyComponents, floorComponents } from './copy.js';
+import { copyComponents, floorComponents, sheetMapping } from './copy.js';
 
 /** An SMDB feeding a DB and an isolator with its pump (equipment link) on the Ground Floor. */
 function building() {
@@ -98,5 +98,52 @@ describe('copy / paste and Replicate floor (user request 7 Nov 2026)', () => {
       'iso',
     ]);
     expect(floorComponents(p, gf.id, ['phe']).map((e) => e.id)).toEqual(['pump']);
+  });
+});
+
+describe('same place on the sheet (user request 8 Nov 2026)', () => {
+  const plan = (widthPt: number, heightPt: number, metresPerUnit: number) => ({
+    plan: {
+      kind: 'pdf' as const,
+      fileId: 'f',
+      fileName: 'p.pdf',
+      uploadedAt: '2026-11-08T00:00:00.000Z',
+      uploadedBy: 'u',
+      page: { widthPt, heightPt },
+      calibration: {
+        method: 'drawing-scale' as const,
+        scaleDenominator: 100,
+        sheetSize: 'A1' as const,
+        metresPerUnit,
+        calibratedAt: '2026-11-08T00:00:00.000Z',
+        calibratedBy: 'u',
+      },
+    },
+  });
+
+  it('keeps the position on the page when the target plan is calibrated differently', () => {
+    // (10 m, 5 m) on a plan at 0.05 m per unit = (200, 100) on the page.
+    const map = sheetMapping(plan(1000, 700, 0.05), plan(1000, 700, 0.1))!;
+    expect(map({ x: 10, y: 5 })).toEqual({ x: 20, y: 10 }); // (200, 100) at 0.1 m per unit
+    // A bigger sheet of the same drawing: the same fraction across and down.
+    const big = sheetMapping(plan(1000, 700, 0.05), plan(2000, 1400, 0.05))!;
+    expect(big({ x: 10, y: 5 })).toEqual({ x: 20, y: 10 }); // (400, 200)
+    expect(sheetMapping(plan(1000, 700, 0.05), { plan: null })).toBeNull();
+  });
+
+  it('replicated components and their feeders land on the same sheet position', () => {
+    const { p, first } = building();
+    const map = sheetMapping(plan(1000, 700, 0.05), plan(1000, 700, 0.1))!;
+    const r = copyComponents(p, {
+      ids: ['smdb', 'db'],
+      targetFloorId: first.id,
+      map,
+      newId: sequentialIds('n'),
+    });
+    expect(r.elements.map((e) => e.position)).toEqual([
+      { x: 2, y: 4 },
+      { x: 10, y: 4 },
+    ]);
+    expect(r.cables[0]!.route[0]).toEqual(map(p.model.cables[0]!.route[0]!));
   });
 });

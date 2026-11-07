@@ -431,17 +431,20 @@ export const SECTIONS: GuideSection[] = [
           </li>
           <li>
             <Term>Copy / Paste</Term>: Ctrl + C, then Ctrl + V on this floor (2 m away) or on
-            another floor chosen in the floor picker (same position). Copies keep every property and
-            load and get the next free tags of that floor (DB-GF-01 on floor 5 becomes DB-5-01).
-            Feeders between copied components are copied; a feeder to a board outside the copy is
-            not, so connect the copy&apos;s supply again.
+            another floor chosen in the floor picker - at the same place on the sheet, worked out
+            with that floor&apos;s own calibration, so the copies sit where they were drawn even
+            when the plans were calibrated differently. Copies keep every property and load and get
+            the next free tags of that floor (DB-GF-01 on floor 5 becomes DB-5-01). Feeders between
+            copied components are copied; a feeder to a board outside the copy is not, so connect
+            the copy&apos;s supply again.
           </li>
           <li>
             <Term>Replicate floor…</Term> copies all components of your layer on this floor to the
             floors you tick (only floors with a calibrated plan; &quot;Tick all typical floors&quot;
-            ticks the typical set). A floor that already has components asks: add alongside, replace
-            them, or skip that floor. Risers and Cable Size results are not copied: connect the
-            copies to their riser in the Building tab and press Cable Size.
+            ticks the typical set), at the same place on each sheet. A floor that already has
+            components asks: add alongside, replace them, or skip that floor. Risers and Cable Size
+            results are not copied: connect the copies to their riser in the Building tab and press
+            Cable Size.
           </li>
         </ul>
         <h3>3. Draw feeders</h3>

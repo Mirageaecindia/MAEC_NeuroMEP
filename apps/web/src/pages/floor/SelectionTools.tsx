@@ -1,6 +1,7 @@
 import {
   copyComponents,
   floorComponents,
+  sheetMapping,
   isFlagged,
   typicalSet,
   type Cable,
@@ -97,9 +98,14 @@ export function replicate(
       };
     }
     // Copied from the original floor; tags and feeder tags also avoid the copies made so far.
+    // Same place on the sheet as on the source floor, in the target floor's calibration.
+    const map = sheetMapping(
+      source,
+      project.building.floors.find((f) => f.id === t.floorId),
+    );
     const copy = copyComponents(
       { building: project.building, model: { ...model, elements: [...model.elements] } },
-      { ids, targetFloorId: t.floorId, newId },
+      { ids, targetFloorId: t.floorId, newId, ...(map && { map }) },
     );
     model = {
       ...model,
