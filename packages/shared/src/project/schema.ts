@@ -213,8 +213,17 @@ export const ProjectSchema = z.object({
     }),
     /** Not used since A-05 (no GF datum). Kept so stored projects load. */
     gfLevelM: z.number(),
-    /** Mechanical floor 1-3: ids of registry floors, or null. Not on the Figma screens. */
-    mechanicalFloorIds: z.tuple([Id.nullable(), Id.nullable(), Id.nullable()]),
+    /**
+     * Mechanical floors 1, 2, 3 ...: ids of registry floors, or null for a row not chosen yet
+     * (optional, as many as wanted; user request 7 Nov 2026). Empty rows at the end are dropped
+     * when a project is read (stored projects had three).
+     */
+    mechanicalFloorIds: z.preprocess((v) => {
+      if (!Array.isArray(v)) return v;
+      const ids = [...v];
+      while (ids.length && ids.at(-1) === null) ids.pop();
+      return ids;
+    }, z.array(Id.nullable())),
     /** Ordered bottom (lowest basement) to top. Empty until the registry is generated. */
     floors: z.array(FloorSchema),
   }),

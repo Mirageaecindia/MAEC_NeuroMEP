@@ -355,9 +355,10 @@ export const SECTIONS: GuideSection[] = [
             once calibrates them all. Then use Replicate floor to copy the components.
           </li>
           <li>
-            <Term>Mechanical floor-1 / 2 / 3 ref</Term> choose which floors above ground are
-            mechanical floors (e.g. the 10th and 20th). They stay in the floor list but leave the
-            typical set, so they keep their own plan.
+            <Term>Mechanical floor refs</Term> (optional) choose which floors above ground are
+            mechanical floors (e.g. the 10th and 20th): one row to start, + Add mechanical floor for
+            more, x to remove one. They stay in the floor list but leave the typical set, so they
+            keep their own plan.
           </li>
         </ul>
         <h3>Discipline assignment</h3>

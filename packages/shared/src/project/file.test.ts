@@ -15,7 +15,7 @@ describe('project file (.json)', () => {
       to: 0.8,
     });
     p.calculation.defaultOverrides = { targetPowerFactor: 0.95 };
-    p.building.mechanicalFloorIds = [p.building.floors.at(-1)!.id, null, null];
+    p.building.mechanicalFloorIds = [p.building.floors.at(-1)!.id];
     expect(parseProjectFile(serializeProject(p))).toEqual({ ok: true, project: p });
   });
 

@@ -54,7 +54,7 @@ export function createEmptyProject(args: { id: string; userId: string; now: stri
     building: {
       counts: { basements: null, grounds: 1, podiums: null, typicals: null },
       gfLevelM: 0,
-      mechanicalFloorIds: [null, null, null],
+      mechanicalFloorIds: [],
       floors: [],
     },
     workingDirectory: '',

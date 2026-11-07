@@ -3,7 +3,7 @@ import type { Floor, FloorType, Project } from './schema.js';
 /**
  * Floor counts entered on Import File (FR-06, 12.1; user request 7 Nov 2026): No of Basements,
  * GF (ground levels, default 1), No of Podium levels and No of Typical floors. Mechanical floors
- * 1-3 are chosen from the upper floors (`mechanicalFloorIds`), they are not extra floors.
+ * (as many as wanted) are chosen from the upper floors (`mechanicalFloorIds`), not extra floors.
  */
 export interface FloorCounts {
   basements: number;
@@ -118,7 +118,7 @@ export function applyRegistryChange(
     ...building,
     counts: { ...counts, grounds: counts.grounds ?? 1 },
     floors: change.floors,
-    mechanicalFloorIds: mech as Project['building']['mechanicalFloorIds'],
+    mechanicalFloorIds: mech,
   };
 }
 

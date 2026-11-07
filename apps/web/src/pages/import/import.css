@@ -176,3 +176,31 @@
   margin: 0 0 8px;
   font-size: 12px;
 }
+/* Mechanical floor rows: x removes one, + adds one (7 Nov 2026). */
+.mech-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mech-row .pill-select {
+  flex: 1;
+}
+.mech-remove {
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--danger);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+.mech-remove:hover {
+  background: var(--danger-soft);
+}
+.mech-add {
+  align-self: flex-end;
+  margin: 0 0 8px auto;
+  display: block;
+}

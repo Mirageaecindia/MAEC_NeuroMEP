@@ -142,11 +142,7 @@
       "typicals": 3
     },
     "gfLevelM": 0,
-    "mechanicalFloorIds": [
-      null,
-      null,
-      null
-    ],
+    "mechanicalFloorIds": [],
     "floors": [
       {
         "id": "f1",

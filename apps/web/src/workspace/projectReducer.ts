@@ -82,7 +82,9 @@ export type ProjectAction =
   | { type: 'counts'; counts: Partial<Project['building']['counts']> }
   | { type: 'applyRegistry'; counts: FloorCounts; change: RegistryChange }
   /** Mechanical floor 1-3 (12.1): a floor above ground, or none. */
-  | { type: 'mechanicalFloor'; index: 0 | 1 | 2 | number; floorId: string | null }
+  | { type: 'mechanicalFloor'; index: number; floorId: string | null }
+  /** Mechanical floor rows after + (a new empty row) or x (a row removed). */
+  | { type: 'mechanicalFloors'; ids: (string | null)[] }
   /** A floor's display name (Building tab, user request 7 Nov 2026); its code never changes. */
   | { type: 'renameFloor'; floorId: string; name: string }
   | { type: 'disciplines'; discipline: Discipline; userIds: string[] }
@@ -456,10 +458,13 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
     case 'applyRegistry':
       return { ...p, building: applyRegistryChange(p.building, a.counts, a.change) };
     case 'mechanicalFloor': {
-      const ids = [...p.building.mechanicalFloorIds] as Project['building']['mechanicalFloorIds'];
-      ids[a.index as 0 | 1 | 2] = a.floorId;
+      const ids = [...p.building.mechanicalFloorIds];
+      while (ids.length <= a.index) ids.push(null);
+      ids[a.index] = a.floorId;
       return { ...p, building: { ...p.building, mechanicalFloorIds: ids } };
     }
+    case 'mechanicalFloors':
+      return { ...p, building: { ...p.building, mechanicalFloorIds: a.ids } };
     case 'renameFloor': {
       const name = a.name.trim();
       return name ? mapFloors(p, a.floorId, (f) => ({ ...f, name })) : p;

@@ -181,7 +181,9 @@ describe('floors, plans and group edits (user request 7 Nov 2026)', () => {
     expect(next.building.floors.find((f) => f.id === first.id)!.name).toBe('Office 1');
     expect(projectReducer(next, { type: 'renameFloor', floorId: first.id, name: ' ' })).toBe(next);
     next = projectReducer(next, { type: 'mechanicalFloor', index: 1, floorId: first.id });
-    expect(next.building.mechanicalFloorIds).toEqual([null, first.id, null]);
+    expect(next.building.mechanicalFloorIds).toEqual([null, first.id]);
+    next = projectReducer(next, { type: 'mechanicalFloors', ids: [first.id] });
+    expect(next.building.mechanicalFloorIds).toEqual([first.id]);
   });
 
   it('moves a group with the feeders between them, and rotates in steps that wrap at 360', () => {

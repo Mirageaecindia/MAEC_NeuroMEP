@@ -184,6 +184,9 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
   // Mechanical floors are chosen from the floors above ground (podium and typical floors).
   const upper = project.building.floors.filter((f) => f.type === 'podium' || f.type === 'typical');
   const typical = typicalSet(project.building);
+  // Mechanical floors are optional: one empty row to start, + adds more (7 Nov 2026).
+  const mechRows: (string | null)[] =
+    project.building.mechanicalFloorIds.length > 0 ? project.building.mechanicalFloorIds : [null];
 
   return (
     <div className="import-form">
@@ -319,37 +322,59 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
         {count('grounds', 'GF (ground levels)', '1')}
         {count('podiums', 'No of Podium levels', '0')}
         {count('typicals', 'No of Typical floors', undefined, true)}
-        {[0, 1, 2].map((i) => (
+        {mechRows.map((current, i) => (
           <Row
             key={i}
             label={`Mechanical floor-${i + 1} ref`}
             field={`building.mechanicalFloor${i + 1}`}
             error={errorFor(`building.mechanicalFloor${i + 1}`)}
           >
-            <select
-              id={fieldDomId(`building.mechanicalFloor${i + 1}`)}
-              className="pill-input pill-select"
-              value={project.building.mechanicalFloorIds[i] ?? ''}
-              disabled={readOnly || upper.length === 0}
-              onChange={(e) =>
-                dispatch({ type: 'mechanicalFloor', index: i, floorId: e.target.value || null })
-              }
-            >
-              <option value="">None</option>
-              {upper.map((f) => (
-                <option
-                  key={f.id}
-                  value={f.id}
-                  disabled={project.building.mechanicalFloorIds.some(
-                    (id, j) => j !== i && id === f.id,
-                  )}
+            <div className="mech-row">
+              <select
+                id={fieldDomId(`building.mechanicalFloor${i + 1}`)}
+                className="pill-input pill-select"
+                value={current ?? ''}
+                disabled={readOnly || upper.length === 0}
+                onChange={(e) =>
+                  dispatch({ type: 'mechanicalFloor', index: i, floorId: e.target.value || null })
+                }
+              >
+                <option value="">None</option>
+                {upper.map((f) => (
+                  <option
+                    key={f.id}
+                    value={f.id}
+                    disabled={mechRows.some((id, j) => j !== i && id === f.id)}
+                  >
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+              {mechRows.length > 1 && !readOnly && (
+                <button
+                  type="button"
+                  className="mech-remove"
+                  aria-label={`Remove mechanical floor-${i + 1}`}
+                  title="Remove this row"
+                  onClick={() =>
+                    dispatch({ type: 'mechanicalFloors', ids: mechRows.filter((_, j) => j !== i) })
+                  }
                 >
-                  {f.name}
-                </option>
-              ))}
-            </select>
+                  ×
+                </button>
+              )}
+            </div>
           </Row>
         ))}
+        {!readOnly && mechRows.length < upper.length && (
+          <button
+            type="button"
+            className="btn btn-sm mech-add"
+            onClick={() => dispatch({ type: 'mechanicalFloors', ids: [...mechRows, null] })}
+          >
+            + Add mechanical floor
+          </button>
+        )}
         {typical.length > 1 && (
           <p className="form-hint muted">
             {typical.length} typical floors are identical: one plan uploaded on Floor Setup can be

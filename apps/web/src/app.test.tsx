@@ -547,9 +547,15 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
         .getAllByRole('option')
         .map((o) => o.textContent),
     ).toEqual(['None', 'Podium 1', 'First Floor', 'Second Floor']);
+    // Optional, one row to start; + adds a row, x removes it.
+    expect(screen.queryByLabelText('Mechanical floor-2 ref')).not.toBeInTheDocument();
     await userEvent.selectOptions(mech1, 'Second Floor');
+    await userEvent.click(screen.getByRole('button', { name: '+ Add mechanical floor' }));
     const mech2 = screen.getByLabelText('Mechanical floor-2 ref');
     expect(within(mech2).getByRole('option', { name: 'Second Floor' })).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: 'Remove mechanical floor-2' }));
+    expect(screen.queryByLabelText('Mechanical floor-2 ref')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Mechanical floor-1 ref')).toHaveDisplayValue('Second Floor');
   });
 
   it('asks before changing a calculation input once modelling has started (Section 9)', async () => {
