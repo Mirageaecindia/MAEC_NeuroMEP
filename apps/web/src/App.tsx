@@ -15,6 +15,12 @@ import { ProjectWorkspace } from './workspace/ProjectWorkspace';
 /** Login, then the five top tabs of the Figma design (A-03). */
 export const routes: RouteObject[] = [
   { path: '/login', element: <LoginPage /> },
+  // The user guide opens in its own tab (Help); loaded only when opened.
+  {
+    path: '/guide',
+    lazy: async () => ({ Component: (await import('./guide/GuidePage')).GuidePage }),
+    hydrateFallbackElement: <p className="muted">Loading the guide…</p>,
+  },
   {
     element: <ProtectedRoute />,
     children: [

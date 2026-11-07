@@ -69,6 +69,7 @@ import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/Pro
 import { BuildingTab } from './BuildingTab';
 import { FloorStatusDialog, STATUS_ICON } from './FloorStatusDialog';
 import './floor.css';
+import { openGuide, SECTION_OF_PAGE } from '../../guide/openGuide';
 
 /** The last cable construction used in a project, kept in this browser (D-05). */
 const constructionKey = (projectId: string) => `neuromep.construction.${projectId}`;
@@ -374,6 +375,7 @@ export function FloorSetupPage() {
     zoomOut: () => (building ? zoomBy(1 / 1.25) : viewer.current?.zoomOut()),
     reset: () => (building ? setZoom(1) : viewer.current?.fit()),
     building: () => setParams(building ? {} : { tab: 'building' }),
+    guide: () => openGuide(building ? SECTION_OF_PAGE.building : SECTION_OF_PAGE.floor),
     status: () =>
       floor ? setStatusOpen(true) : notice('Set the number of floors on Import File first.'),
     clear: () =>

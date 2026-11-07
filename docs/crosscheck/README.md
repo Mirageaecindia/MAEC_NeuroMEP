@@ -28,8 +28,8 @@ The worksheet applies both rules for you. Please write a remark against every **
 | Case | Building | Featured feeders (recalculate in full) | What it exercises |
 |---|---|---|---|
 | CC-01 | Office tower, 1000 kVA | TX-1 > LV-1, SMDB-1F > DB-1F-P, Riser 1 | Non-Emaar office demand 0.8 at the LV panel; transformer uk from the catalogue; Gersan riser with three tap-offs, k = (n + 1) / 2n; fault level through the riser |
-| CC-02 | Residential with standby, 1500 kVA + 500 kVA generator | G-1 > ATS-1, ESMDB-1 > ISO-FP | Generator through an ATS; fault level from the generator (X"d 14 %); fire pump 30 kW star-delta at efficiency 0.92; fire-rated cable (C8, C9) |
-| CC-03 | Retail with pumps, 1600 kVA | LV-1 > MCC-1, LV-1 > SMDB-R | Emaar demand; cable buried direct at 0.8 m (K1 at 40 °C ground, soil 2.0 K.m/W, depth); PVC cable in a duct, 0.45 m apart; pumps on isolators |
+| CC-02 | Residential with standby, 1500 kVA + 500 kVA generator | G-1 > ATS-1, ESMDB-1 > ISO-FP | Generator through an ATS; fault level from the generator (X"d 14 %); fire pump FP-1 (PHE equipment, 30 kW rated, star-delta, efficiency 0.92) fed from isolator ISO-FP, so Ib uses 30 / 0.92 kW; fire-rated cable (C8, C9) |
+| CC-03 | Retail with pumps, 1600 kVA | LV-1 > MCC-1, LV-1 > SMDB-R | Emaar demand; cable buried direct at 0.8 m (K1 at 40 °C ground, soil 2.0 K.m/W, depth); PVC cable in a duct, 0.45 m apart; pumps P-1 / P-2 (PHE equipment with efficiency) on isolators |
 | CC-04 | Car park and plant, 1000 kVA | SMDB-CP > DB-CP2, MDB-1 > SMDB-CH | Manual demand factors; long runs sized by voltage drop; single-phase DB at 230 V over 155 m; 300 kW plant on parallel runs |
 
 ## How NeuroMEP calculates (agreed rules you will need)

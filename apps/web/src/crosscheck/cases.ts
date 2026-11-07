@@ -280,12 +280,16 @@ function standby(): CrossCheckCase {
   b.place('generator', 'GF', 'G-1', { kvaOverride: 500, xdSubtransientPct: 14 });
   b.place('ats', 'GF', 'ATS-1');
   b.place('smdb', 'GF', 'ESMDB-1', { loadCategory: 'fls', demandCategories: ['landlord'] });
-  b.place('isolator-tp', 'GF', 'ISO-FP', {
-    loadCategory: 'fls',
-    fireRated: true,
+  // The pump itself is PHE equipment fed from its isolator (A-17): input kW = rated kW / efficiency.
+  b.place('isolator-tp', 'GF', 'ISO-FP', { loadCategory: 'fls', fireRated: true });
+  b.place('phe-equipment', 'GF', 'FP-1', {
+    fedFromId: 'iso-fp',
+    kw: 30,
+    phases: '3P',
+    loadType: '9',
     starter: 'star-delta',
     efficiency: 0.92,
-    manualLoads: [kw('9', 10, 10, 10)],
+    fls: true,
   });
   b.place(
     'db',
@@ -320,7 +324,7 @@ function standby(): CrossCheckCase {
     title: 'Standby generator, ATS and fire-life-safety loads',
     covers: [
       'Generator 500 kVA, X"d 14 % (test input), through ATS-1: normal and standby supply',
-      'Fire pump on a 3-pole isolator: 30 kW Fire Pumps, star-delta, efficiency 0.92 (Ib with efficiency)',
+      'Fire pump FP-1 (PHE equipment, 30 kW rated, star-delta, efficiency 0.92) fed from isolator ISO-FP: input 30 / 0.92 kW',
       'Fire-rated cable on the generator side (FR on a tray uses the XLPE values); C8 / C9',
       'Short circuit from the transformer (max) and from the generator alone (min on the standby side)',
       'Residential + landlord categories at MDB-1 (non-Emaar 0.65 / 0.8); AC power factor 0.8',
@@ -344,16 +348,19 @@ function retail(): CrossCheckCase {
   b.place('transformer', 'GF', 'TX-1', { kva: 1600, primaryV: 11000 });
   b.place('lv-panel', 'GF', 'LV-1', { demandCategories: ['retail', 'landlord'] });
   b.place('mcc', 'B1', 'MCC-1', { demandCategories: ['landlord'] });
-  b.place('isolator-tp', 'B1', 'ISO-P1', {
-    starter: 'DOL',
-    efficiency: 0.9,
-    manualLoads: [kw('8', 11 / 3, 11 / 3, 11 / 3)],
-  });
-  b.place('isolator-tp', 'B1', 'ISO-P2', {
-    starter: 'star-delta',
-    efficiency: 0.91,
-    manualLoads: [kw('8', 5, 5, 5)],
-  });
+  b.place('isolator-tp', 'B1', 'ISO-P1');
+  b.place('isolator-tp', 'B1', 'ISO-P2');
+  const pump = (tag: string, fedFromId: string, kwRated: number, starter: string, eff: number) =>
+    b.place('phe-equipment', 'B1', tag, {
+      fedFromId,
+      kw: kwRated,
+      phases: '3P',
+      loadType: '8',
+      starter,
+      efficiency: eff,
+    });
+  pump('P-1', 'iso-p1', 11, 'DOL', 0.9);
+  pump('P-2', 'iso-p2', 15, 'star-delta', 0.91);
   b.place('smdb', 'GF', 'SMDB-R', { demandCategories: ['retail'] });
   b.place(
     'db',
@@ -378,7 +385,7 @@ function retail(): CrossCheckCase {
       '1600 kVA transformer; Dubai Emaar demand: retail 0.8 / landlord 0.75 at LV-1, SMDB x 0.8',
       'Buried direct XLPE cable at 0.8 m (ground 40 deg C, soil 2.0 K.m/W): K1 / Kr / K3 factors',
       'PVC cable in a duct at 0.8 m, 0.45 m apart; PVC cable in conduit (method B)',
-      'Pumps on isolators: DOL 11 kW at 0.9, star-delta 15 kW at 0.91 (Pumps power factor)',
+      'Pumps P-1 (11 kW DOL, efficiency 0.9) and P-2 (15 kW star-delta, 0.91) as PHE equipment on isolators',
       'Unbalanced DB (10 / 8 / 7 kW): Ib from the largest phase',
       'Powerbar riser with one tap-off',
     ],

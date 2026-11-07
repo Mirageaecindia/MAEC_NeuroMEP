@@ -22,6 +22,7 @@ import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/Pro
 import { FloorPlansUpload } from './FloorPlansUpload';
 import { ImportFileForm } from './ImportFileForm';
 import { safeFileName } from '../../workspace/fileNames';
+import { openGuide, SECTION_OF_PAGE } from '../../guide/openGuide';
 
 /** File name from the project name and design stage (Section 14; revision is not on the Figma form, A-10). */
 export function exportFileName(p: Project): string {
@@ -275,7 +276,7 @@ export function NewProjectPage() {
             if (k === 'save') void create('import');
             else if (k === 'next') void create('floor');
             else if (k === 'back') navigate('/projects');
-            else if (k === 'guide') notice('The user guide will be added in a later release.');
+            else if (k === 'guide') openGuide(SECTION_OF_PAGE.import);
           }}
           floorPicker={{ options: [], value: null, enabled: false }}
         />

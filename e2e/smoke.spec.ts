@@ -93,3 +93,20 @@ test('#TASK-16 login, Import File, Floor Setup, Building tab and Cable Size', as
     expect(head).toBe('%PDF-');
   }
 });
+
+test('#TASK-32 user guide: opens at a section and verifies a calculation with the engine', async ({
+  page,
+}) => {
+  await page.goto('/guide#calc-riser');
+  await expect(page.getByRole('heading', { name: 'NeuroMEP User Guide' })).toBeVisible();
+  const section = page.locator('#calc-riser');
+  await expect(section).toBeInViewport();
+  await section
+    .getByRole('button', { name: /Calculation/ })
+    .first()
+    .click();
+  const region = section.getByRole('region', { name: 'Calculation riser' });
+  await expect(region.getByText('Busbar riser - rating and voltage drop')).toBeVisible();
+  await expect(region.getByText('✓ agree')).toHaveCount(4);
+  await expect(region.getByText('✗ differ')).toHaveCount(0);
+});

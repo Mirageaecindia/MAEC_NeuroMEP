@@ -5,6 +5,7 @@ import { Modal } from '../components/fields';
 import { ReachedTabContext, tabPath, useNotice, type TabKey } from '../layout/Shell';
 import type { ToolKey, ToolbarProps } from '../layout/Toolbar';
 import { useProjectEditor } from './useProjectEditor';
+import { openGuide, SECTION_OF_PAGE } from '../guide/openGuide';
 
 type Editor = ReturnType<typeof useProjectEditor>;
 
@@ -206,7 +207,7 @@ export function useProjectToolbar(
             `${key === 'bot' ? 'Bot' : 'Smart-AI'} will be available in a later release.`,
           );
         case 'guide':
-          return notice('The user guide will be added in a later release.');
+          return openGuide(SECTION_OF_PAGE[tab]);
         default:
           return notice('This tool is added in a later WBS step.');
       }

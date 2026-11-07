@@ -611,6 +611,29 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(tool('Help')).toBeInTheDocument();
   });
 
+  it('Help opens the user guide in its own tab at the section of the page (Floor Setup / Building)', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    try {
+      const router = renderAt(
+        '/projects/p-1/floor',
+        new FakeAuth(LEAD),
+        fakeApi(completeProject()),
+      );
+      await screen.findByText('TRANSFORMER CAPACITY & CONNECTED LOAD SCHEDULE');
+      await userEvent.click(tool('Help'));
+      expect(open).toHaveBeenLastCalledWith('/guide#floor-setup', 'neuromep-guide');
+      await userEvent.click(tool('Building'));
+      await userEvent.click(tool('Help'));
+      expect(open).toHaveBeenLastCalledWith('/guide#building-tab', 'neuromep-guide');
+      await router.navigate('/projects/p-1/output');
+      await screen.findByLabelText('Report Library');
+      await userEvent.click(tool('Help'));
+      expect(open).toHaveBeenLastCalledWith('/guide#output', 'neuromep-guide');
+    } finally {
+      open.mockRestore();
+    }
+  });
+
   it('Building Summary lists the floors top-down with basements at the bottom (A-13)', async () => {
     renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(completeProject()));
     const summary = await screen.findByRole('complementary', { name: 'Building Summary' });
