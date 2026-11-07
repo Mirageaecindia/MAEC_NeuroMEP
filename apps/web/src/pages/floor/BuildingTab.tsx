@@ -30,7 +30,8 @@ import { useNotice } from '../../layout/Shell';
 import { DemandFactorsDialog } from './DemandFactorsDialog';
 import { STATUS_ICON } from './FloorStatusDialog';
 
-const ROW = 70;
+/** Height between floors in the riser diagram (doubled 8 Nov 2026: 70 was congested). */
+const ROW = 140;
 const TOP = 40;
 const RISER_X = [330, 352, 374];
 const BOARD_X = 760;
