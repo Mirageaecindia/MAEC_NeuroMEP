@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { HideToolbarContext } from './Shell';
 import { Icons, type StatusIcon } from './icons';
 
 /** The toolbar buttons of the Figma design, in order (A-03), plus Undo / Redo. */
@@ -39,6 +40,18 @@ const LABELS: Record<ToolKey, string> = {
   guide: 'Help',
 };
 
+export type SaveStatus = 'unsaved' | 'saving' | 'saved';
+const SAVE_LABELS: Record<SaveStatus, string> = {
+  unsaved: 'Unsaved',
+  saving: 'Saving…',
+  saved: 'Saved',
+};
+const SAVE_TITLES: Record<SaveStatus, string> = {
+  unsaved: 'In progress - changes not saved yet. Press Save.',
+  saving: 'Saving…',
+  saved: 'Saved - every change is on the server.',
+};
+
 export interface OpenMenuItem {
   label: string;
   onSelect: () => void;
@@ -62,6 +75,12 @@ export interface ToolbarProps {
     enabled: boolean;
   };
   statusIcon?: StatusIcon;
+  /**
+   * Save state shown by Status (user request 9 Nov 2026): a moving bar while there are changes
+   * not saved yet, a Saved mark once saved. Replaces the floor-status icon in the toolbar; floor
+   * flags (A-08) stay in the Status dialog and the Building tab.
+   */
+  saveStatus?: SaveStatus;
   /** MECH / PHE lock chips (discipline layers). */
   locks?: { mech: boolean; phe: boolean };
 }
@@ -72,18 +91,23 @@ function Tool(props: {
   pressed: boolean;
   onClick: () => void;
   icon: ReactNode;
+  /** Text under the icon and its tooltip, when not the tool's name (Status shows the save state). */
+  text?: string;
+  title?: string;
+  className?: string;
 }) {
   return (
     <button
       type="button"
-      className={`tool${props.pressed ? ' pressed' : ''}`}
+      className={`tool${props.pressed ? ' pressed' : ''}${props.className ? ` ${props.className}` : ''}`}
       disabled={!props.enabled}
       aria-pressed={props.pressed || undefined}
+      aria-label={props.text ? LABELS[props.k] : undefined}
       onClick={props.onClick}
-      title={LABELS[props.k]}
+      title={props.title ?? LABELS[props.k]}
     >
       {props.icon}
-      <span>{LABELS[props.k]}</span>
+      <span>{props.text ?? LABELS[props.k]}</span>
     </button>
   );
 }
@@ -91,6 +115,7 @@ function Tool(props: {
 /** Shared toolbar (Figma): Open, Save, floor picker, Clear | Zoom | Bot ... Status | Back, Next, Guide. */
 export function Toolbar(props: ToolbarProps) {
   const [menu, setMenu] = useState(false);
+  const hideToolbar = useContext(HideToolbarContext);
   const menuRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!menu) return;
@@ -185,12 +210,38 @@ export function Toolbar(props: ToolbarProps) {
         {tool('smartAi', Icons.smartAi())}
         {tool('building', Icons.building())}
         {tool('sync', Icons.sync())}
-        {tool('status', Icons[props.statusIcon ?? 'pill']())}
+        {props.saveStatus && !props.hidden?.includes('status') ? (
+          <Tool
+            k="status"
+            icon={props.saveStatus === 'saved' ? Icons.saved() : Icons.saving()}
+            text={SAVE_LABELS[props.saveStatus]}
+            title={`Status: ${SAVE_TITLES[props.saveStatus]}`}
+            className={`save-status ${props.saveStatus}`}
+            enabled={props.enabled.includes('status')}
+            pressed={false}
+            onClick={() => props.onAction('status')}
+          />
+        ) : (
+          tool('status', Icons[props.statusIcon ?? 'pill']())
+        )}
       </div>
       <div className="tool-group nav-group">
         {tool('back', Icons.back())}
         {tool('next', Icons.next())}
         {tool('guide', Icons.guide())}
+        {/* Not on All Projects, where the whole toolbar is greyed (Figma). */}
+        {hideToolbar && props.enabled.length > 0 && (
+          // Hide (user request 9 Nov 2026): more room for the plan; Unhide brings it back.
+          <button
+            type="button"
+            className="tool"
+            title="Hide the toolbar for more drawing space"
+            onClick={hideToolbar}
+          >
+            {Icons.hide()}
+            <span>Hide</span>
+          </button>
+        )}
       </div>
     </div>
   );

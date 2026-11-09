@@ -82,7 +82,20 @@ export interface ViewerControls {
   zoomOut(): void;
   fit(): void;
 }
+/**
+ * The whole page is drawn at most this many pixels. Zoomed in beyond that, the visible part is
+ * drawn again at the full zoom on its own canvas, so the plan stays sharp (user report 9 Nov 2026:
+ * the plan looked pixelated when zoomed in).
+ */
 const MAX_CANVAS_PIXELS = 16_000_000;
+
+/** pdf.js draws into a canvas off screen; the visible one is replaced only when it is done (no blank flash). */
+function copyCanvas(target: HTMLCanvasElement | null, from: HTMLCanvasElement) {
+  if (!target) return;
+  target.width = from.width;
+  target.height = from.height;
+  target.getContext('2d')?.drawImage(from, 0, 0);
+}
 
 /**
  * Floor-plan viewer (FR-07) with two-point and drawing-scale calibration (FR-08).
@@ -133,6 +146,18 @@ export function PlanViewer(props: {
   const api = useApi();
   const container = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  /** The visible part of the plan at the full zoom, when the whole page would be too large. */
+  const detailCanvas = useRef<HTMLCanvasElement>(null);
+  /** Scale the whole page was last drawn at. */
+  const baseScale = useRef(0);
+  /** The view and canvas size the sharp part was drawn for. */
+  const [detail, setDetail] = useState<{
+    zoom: number;
+    panX: number;
+    panY: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const [page, setPage] = useState<{
     proxy: PDFPageProxy;
     transform: Affine;
@@ -247,27 +272,70 @@ export function PlanViewer(props: {
     [fit, size],
   );
 
-  // Render at the current zoom (debounced) - vector, so it stays sharp when zoomed.
+  // Render at the current zoom (debounced) - vector, so it stays sharp when zoomed. The whole page
+  // is capped at MAX_CANVAS_PIXELS; above that the sharp part below takes over.
   useEffect(() => {
-    if (!page || !canvas.current) return;
+    if (!page) return;
     let task: RenderTask | null = null;
     const t = setTimeout(() => {
       const dpr = window.devicePixelRatio || 1;
       let scale = view.zoom * dpr;
       const pixels = page.width * page.height * scale * scale;
       if (pixels > MAX_CANVAS_PIXELS) scale *= Math.sqrt(MAX_CANVAS_PIXELS / pixels);
+      if (Math.abs(scale - baseScale.current) < 1e-6) return;
       const viewport = page.proxy.getViewport({ scale });
-      const c = canvas.current!;
-      c.width = Math.floor(viewport.width);
-      c.height = Math.floor(viewport.height);
-      task = page.proxy.render({ canvas: c, viewport });
-      task.promise.catch(() => undefined);
+      const off = document.createElement('canvas');
+      off.width = Math.floor(viewport.width);
+      off.height = Math.floor(viewport.height);
+      task = page.proxy.render({ canvas: off, viewport });
+      task.promise.then(
+        () => {
+          copyCanvas(canvas.current, off);
+          baseScale.current = scale;
+        },
+        () => undefined,
+      );
     }, 120);
     return () => {
       clearTimeout(t);
       task?.cancel();
     };
   }, [page, view.zoom]);
+
+  // The visible part at the full zoom, when the whole page is capped (9 Nov 2026).
+  useEffect(() => {
+    if (!page) return;
+    let task: RenderTask | null = null;
+    const t = setTimeout(() => {
+      const dpr = window.devicePixelRatio || 1;
+      const scale = view.zoom * dpr;
+      if (page.width * page.height * scale * scale <= MAX_CANVAS_PIXELS) {
+        setDetail(null);
+        return;
+      }
+      const viewport = page.proxy.getViewport({
+        scale,
+        offsetX: view.panX * dpr,
+        offsetY: view.panY * dpr,
+      });
+      const off = document.createElement('canvas');
+      off.width = Math.ceil(size.width * dpr);
+      off.height = Math.ceil(size.height * dpr);
+      // Transparent outside the page, so the grey around the sheet stays grey.
+      task = page.proxy.render({ canvas: off, viewport, background: 'rgba(0,0,0,0)' });
+      task.promise.then(
+        () => {
+          copyCanvas(detailCanvas.current, off);
+          setDetail({ ...view, width: size.width, height: size.height });
+        },
+        () => undefined,
+      );
+    }, 180);
+    return () => {
+      clearTimeout(t);
+      task?.cancel();
+    };
+  }, [page, view, size]);
 
   // Wheel zoom (non-passive listener so the page does not scroll).
   useEffect(() => {
@@ -750,6 +818,22 @@ export function PlanViewer(props: {
                   top: view.panY,
                   width: page.width * view.zoom,
                   height: page.height * view.zoom,
+                }
+              : { display: 'none' }
+          }
+        />
+        {/* Drawn for an earlier view while a new one renders: moved and scaled to match. */}
+        <canvas
+          ref={detailCanvas}
+          className="viewer-page-detail"
+          aria-hidden
+          style={
+            page && detail
+              ? {
+                  left: view.panX - (detail.panX * view.zoom) / detail.zoom,
+                  top: view.panY - (detail.panY * view.zoom) / detail.zoom,
+                  width: (detail.width * view.zoom) / detail.zoom,
+                  height: (detail.height * view.zoom) / detail.zoom,
                 }
               : { display: 'none' }
           }

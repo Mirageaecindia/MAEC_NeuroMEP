@@ -78,6 +78,31 @@ function useTheme() {
   return [theme, setTheme] as const;
 }
 
+/** Hides the toolbar; the toolbar's own Hide button calls it (9 Nov 2026). */
+export const HideToolbarContext = createContext<(() => void) | null>(null);
+
+/**
+ * Toolbar shown or hidden (user request 9 Nov 2026): hiding it gives the plan more room. Kept per
+ * browser; a preference only, so storage may fail.
+ */
+function useToolbarHidden() {
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem('neuromep.toolbarHidden') === '1';
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem('neuromep.toolbarHidden', hidden ? '1' : '0');
+    } catch {
+      /* preference only */
+    }
+  }, [hidden]);
+  return [hidden, setHidden] as const;
+}
+
 /**
  * Application frame of the Figma design: logo and a page-specific panel on the left (with an
  * optional Download button and the Appearance toggle at the bottom), top tabs with the user and
@@ -95,6 +120,7 @@ export function Shell(props: {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const [theme, setTheme] = useTheme();
+  const [toolbarHidden, setToolbarHidden] = useToolbarHidden();
   const reached = useContext(ReachedTabContext);
   // Tabs open in order (A-12): earlier tabs any time, later ones only through Next.
   const canOpen = (t: TabKey) =>
@@ -193,7 +219,24 @@ export function Shell(props: {
               </button>
             </div>
           </header>
-          <div className="toolbar-row">{props.toolbar}</div>
+          <div className={`toolbar-row${toolbarHidden ? ' toolbar-hidden' : ''}`}>
+            {toolbarHidden ? (
+              <button
+                type="button"
+                className="toolbar-toggle"
+                aria-expanded={false}
+                title="Show the toolbar"
+                onClick={() => setToolbarHidden(false)}
+              >
+                <span aria-hidden>▾</span>
+                Unhide
+              </button>
+            ) : (
+              <HideToolbarContext.Provider value={() => setToolbarHidden(true)}>
+                {props.toolbar}
+              </HideToolbarContext.Provider>
+            )}
+          </div>
           <main className="content">{props.children}</main>
         </div>
         {notice && (

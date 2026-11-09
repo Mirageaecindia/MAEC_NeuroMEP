@@ -27,7 +27,6 @@ import {
   KIND_LABELS,
   sourceConnected,
   isFlagged,
-  floorStatus,
   type CableConstruction,
   type ModelPoint,
   copyComponents,
@@ -76,7 +75,7 @@ import { EngineeringProperty } from './EngineeringProperty';
 import { LoadTable } from './LoadTable';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { BuildingTab } from './BuildingTab';
-import { FloorStatusDialog, STATUS_ICON } from './FloorStatusDialog';
+import { FloorStatusDialog } from './FloorStatusDialog';
 import { ReplicateDialog, SelectionBar, replicate } from './SelectionTools';
 import './floor.css';
 import { openGuide, SECTION_OF_PAGE } from '../../guide/openGuide';
@@ -186,7 +185,6 @@ export function FloorSetupPage() {
     ? editor.layers.filter((d) => isFlagged(project.model.floorFlags, floor.id, d))
     : [];
   const canPlace = editor.layers.includes('electrical') && !lockedLayers.includes('electrical');
-  const statusLayer = editor.layers[0] ?? 'electrical';
   const calibration = floor?.plan?.calibration ?? null;
   const onFloor = floor ? project.model.elements.filter((e) => e.floorId === floor.id) : [];
   const selected = onFloor.find((e) => e.id === selectedId) ?? null;
@@ -566,11 +564,14 @@ export function FloorSetupPage() {
                   // The Building tab keeps only the Feeder: between floors (8 Nov 2026).
                   disabled={(building && item.key !== 'cable') || !canPlace}
                   aria-pressed={armed === item.key}
+                  // Icons only (user request 9 Nov 2026): the symbol carries its name; the label
+                  // stays for the tooltip and screen readers.
+                  aria-label={item.label}
                   draggable={!building && canPlace && isPlaceable(item)}
                   title={
                     isPlaceable(item)
                       ? `${item.label} (${item.cmpCode ?? 'no CMP code yet'}, draft symbol): drag onto the plan, or click it and then click the plan`
-                      : 'Draw a feeder (cable or busbar) between two components'
+                      : 'Feeder: draw a cable or busbar between two components'
                   }
                   onDragStart={(e) => {
                     e.dataTransfer.setData(LIBRARY_DRAG_TYPE, item.key);
@@ -594,12 +595,12 @@ export function FloorSetupPage() {
                     {symbols.get(item.key) ? (
                       <img src={symbols.get(item.key)} alt="" draggable={false} />
                     ) : item.key === 'cable' ? (
+                      // Blue like the other symbols (user request 9 Nov 2026).
                       <svg viewBox="0 0 24 24">
-                        <path d="M3 18h7V6h11" fill="none" stroke="currentColor" strokeWidth="2" />
+                        <path d="M3 18h7V6h11" fill="none" stroke="#1d4ed8" strokeWidth="2" />
                       </svg>
                     ) : null}
                   </span>
-                  <span className="lib-label">{item.label}</span>
                 </button>
               ),
             )}
@@ -615,10 +616,7 @@ export function FloorSetupPage() {
           enabled={enabled}
           openMenu={openMenu}
           pressed={building ? ['building'] : []}
-          hidden={building ? ['status'] : []}
-          statusIcon={
-            floor ? STATUS_ICON[floorStatus(project.model, floor.id, statusLayer)] : undefined
-          }
+          // Status shows the save state, also in the Building tab (9 Nov 2026).
         />
       }
     >

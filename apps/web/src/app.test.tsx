@@ -233,6 +233,33 @@ describe('#TASK-08 persistence (WBS 1.2.5; save on click, user decision 7 Nov 20
     }
   });
 
+  it('Status shows Unsaved until Save, then Saved; the toolbar hides and unhides (9 Nov 2026)', async () => {
+    try {
+      localStorage.removeItem('neuromep.toolbarHidden');
+    } catch {
+      /* jsdom storage */
+    }
+    const { api } = versionedApi(completeProject());
+    const router = renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
+    await userEvent.type(await screen.findByLabelText(/Project Name/), 'X');
+    await act(() => router.navigate('/projects/p-1/floor'));
+    const status = await screenTool('Status');
+    expect(status).toHaveTextContent('Unsaved');
+    expect(status).toHaveAttribute('title', expect.stringMatching(/not saved yet/));
+    await userEvent.click(tool('Save'));
+    await waitFor(() => expect(tool('Status')).toHaveTextContent('Saved'));
+
+    // Icons only in the library: the name stays for the tooltip and screen readers.
+    const library = screen.getByLabelText('Component Library');
+    const transformer = within(library).getByRole('button', { name: 'Transformer' });
+    expect(transformer).not.toHaveTextContent('Transformer');
+
+    await userEvent.click(screen.getByRole('button', { name: /^.?Hide$/ }));
+    expect(screen.queryByRole('toolbar', { name: 'Tools' })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /Unhide/ }));
+    expect(screen.getByRole('toolbar', { name: 'Tools' })).toBeVisible();
+  });
+
   it('asks before leaving the project with unsaved changes: Stay, Save and leave', async () => {
     const { api, server } = versionedApi(completeProject());
     const router = renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);

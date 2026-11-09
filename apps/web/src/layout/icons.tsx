@@ -115,6 +115,64 @@ export const Icons = {
       ],
       size,
     ),
+  /** Changes not saved yet (9 Nov 2026): a bar whose fill moves (CSS .save-status). */
+  saving: (size = 26) =>
+    svg(
+      [
+        <rect
+          key="a"
+          x="2.5"
+          y="9"
+          width="19"
+          height="6"
+          rx="3"
+          fill="none"
+          stroke={BLUE}
+          strokeWidth="2"
+        />,
+        <rect
+          key="b"
+          className="save-bar"
+          x="4"
+          y="10.5"
+          width="6"
+          height="3"
+          rx="1.5"
+          fill={BLUE}
+        />,
+      ],
+      size,
+    ),
+  /** Hide the toolbar (9 Nov 2026): a chevron up under a bar. */
+  hide: () =>
+    svg([
+      <rect key="a" x="3" y="4" width="18" height="3" rx="1.5" fill={BLUE} />,
+      <path
+        key="b"
+        d="M6 18l6-6 6 6"
+        fill="none"
+        stroke={BLUE}
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />,
+    ]),
+  /** Everything saved (9 Nov 2026). */
+  saved: (size = 26) =>
+    svg(
+      [
+        <circle key="a" cx="12" cy="12" r="9.5" fill="#16a34a" />,
+        <path
+          key="b"
+          d="M7.5 12.5l3 3 6-6.5"
+          fill="none"
+          stroke="#fff"
+          strokeWidth="2.4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />,
+      ],
+      size,
+    ),
   /** Floor not opened yet (A-08). */
   cross: (size = 26) =>
     svg(

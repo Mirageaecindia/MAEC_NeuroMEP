@@ -300,7 +300,7 @@ const ORDER: TabKey[] = ['projects', 'import', 'floor', 'schematic', 'output'];
 export function useProjectToolbar(
   tab: TabKey,
   own: Partial<Record<ToolKey, () => void>> = {},
-): Pick<ToolbarProps, 'onAction' | 'floorPicker' | 'statusIcon'> {
+): Pick<ToolbarProps, 'onAction' | 'floorPicker' | 'statusIcon' | 'saveStatus'> {
   const { editor, project, floorId, setFloorId } = useWorkspace();
   const navigate = useNavigate();
   const notice = useNotice();
@@ -344,6 +344,13 @@ export function useProjectToolbar(
     },
     // A-08: floor flagging arrives with WBS 1.3; until then every floor shows 'in progress'.
     statusIcon: 'pill',
+    // Status shows whether the work is saved (user request 9 Nov 2026; saving is manual, A-18).
+    saveStatus:
+      editor.saveState === 'saving'
+        ? 'saving'
+        : editor.dirty || editor.saveState === 'conflict' || editor.saveState === 'error'
+          ? 'unsaved'
+          : 'saved',
     onAction: (key) => {
       const handler = own[key];
       if (handler) return handler();

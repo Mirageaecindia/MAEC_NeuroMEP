@@ -233,8 +233,11 @@ export const SECTIONS: GuideSection[] = [
             <tr>
               <th scope="row">Status</th>
               <td>
-                Floor status per discipline: a pill = in progress, a flag = done and locked, an X =
-                not started. From the Status dialog you flag a floor done for your layer.
+                Shows whether your work is saved: a moving bar and &quot;Unsaved&quot; while there
+                are changes not saved yet, a green tick and &quot;Saved&quot; once everything is on
+                the server. On Floor Setup, clicking it opens the floor status dialog, where you
+                flag a floor done for your layer (a pill = in progress, a flag = done and locked, an
+                X = not started; also shown per floor in the Building tab).
               </td>
             </tr>
             <tr>
@@ -244,6 +247,13 @@ export const SECTIONS: GuideSection[] = [
             <tr>
               <th scope="row">Help</th>
               <td>Opens this guide at the section for the page you are on.</td>
+            </tr>
+            <tr>
+              <th scope="row">Hide / Unhide</th>
+              <td>
+                Hide folds the toolbar away so the floor plan gets more room; Unhide, at the top
+                right, brings it back. Your browser remembers the choice.
+              </td>
             </tr>
           </tbody>
         </table>
@@ -397,7 +407,8 @@ export const SECTIONS: GuideSection[] = [
         </Rule>
         <h3>2. Place components</h3>
         <p>
-          The <Term>Component Library</Term> on the left lists every item (see{' '}
+          The <Term>Component Library</Term> on the left shows every item as its symbol; the symbol
+          carries its short name (DB, SMDB, ISO 1P, TX ...) and hovering shows the full name (see{' '}
           <a href="#components">Components</a>). Drag an item onto the plan, or click it and then
           click the plan. Each component gets an automatic tag (e.g. SMDB-1F) that you can change -
           tags are unique. Drag a component to move it, drag a corner of the selected symbol to

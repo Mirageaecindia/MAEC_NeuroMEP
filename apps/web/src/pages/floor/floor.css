@@ -4,7 +4,7 @@
 }
 .library-chips {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 .library-chips > p {
@@ -25,8 +25,8 @@
   text-align: center;
 }
 .lib-icon {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
 }
@@ -42,6 +42,7 @@
 .floor-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 232px;
+  grid-template-rows: minmax(0, 1fr);
   gap: 10px;
   height: calc(100vh - 150px);
   min-height: 480px;
@@ -49,6 +50,7 @@
 .floor-canvas {
   padding: 10px;
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -65,6 +67,11 @@
   flex-direction: column;
   padding: 8px;
   font-size: 10px;
+  /* Its own scroll bar (user request 9 Nov 2026): scrolling the properties moves only them,
+     not the plan or the page. */
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .capacity-head {
   display: flex;
@@ -118,6 +125,7 @@
 .building-tab {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 240px;
+  grid-template-rows: minmax(0, 1fr);
   height: calc(100vh - 150px);
   min-height: 480px;
   background: #d9d9d9;
@@ -659,4 +667,17 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   font: inherit;
+}
+
+/* The plan and the Building tab fill the space left under the toolbar, so hiding the toolbar
+   (9 Nov 2026) gives them the room. Browsers without :has keep the fixed heights above. */
+.content:has(> .floor-layout),
+.content:has(> .building-tab) {
+  display: flex;
+  flex-direction: column;
+}
+.content > .floor-layout,
+.content > .building-tab {
+  flex: 1 0 480px;
+  height: auto;
 }
