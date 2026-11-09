@@ -681,3 +681,46 @@
   flex: 1 0 480px;
   height: auto;
 }
+
+/* Building tab symbols and hand-drawn feeders (9 Nov 2026). */
+.floor-board rect.board-frame {
+  fill: #fff;
+  stroke: transparent;
+}
+.floor-board.main rect.board-frame {
+  fill: #fff;
+  stroke: transparent;
+}
+.floor-board.feeding rect.board-frame,
+.floor-board.picking rect.board-frame {
+  stroke: #2563eb;
+  stroke-dasharray: 3 2;
+}
+.floor-board.picking rect.board-frame {
+  stroke: #e11d1d;
+}
+.floor-board.riser-source rect.board-frame {
+  stroke: #e11d1d;
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+.floor-board.feeder-from rect.board-frame {
+  fill: #bfdbfe;
+  stroke: #2563eb;
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+.floor-board.cable-fed image,
+.floor-board.equipment image {
+  opacity: 0.55;
+}
+svg.drawing-feeder {
+  cursor: crosshair;
+}
+.building-feeder-draft {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 2;
+  stroke-dasharray: 5 3;
+  pointer-events: none;
+}

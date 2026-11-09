@@ -17,7 +17,7 @@ import {
   testCable,
   testElement,
 } from '@neuromep/shared/testing';
-import { act, cleanup, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -762,6 +762,11 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     }
     await userEvent.click(within(c).getByRole('button', { name: 'Use this construction' }));
     await userEvent.click(screen.getByRole('button', { name: 'TX-1 board' }));
+    // The path is drawn by hand (9 Nov 2026): a click on the diagram makes a corner.
+    fireEvent.click(screen.getByRole('img', { name: 'Riser diagram' }), {
+      clientX: 600,
+      clientY: 10,
+    });
     await userEvent.click(screen.getByRole('button', { name: 'SMDB-1-01 board' }));
     const ask = screen.getByRole('dialog', { name: 'Feeder length' });
     const connect = within(ask).getByRole('button', { name: 'Connect' });
@@ -787,6 +792,10 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
         manualLengthM: 42.5,
       }),
     );
+    const route = (await api.getProject('p-1')).project.model.cables.at(-1)!.buildingRoute!;
+    // The corner clicked, kept horizontal or vertical from the transformer, then the elbow.
+    expect(route.length).toBeGreaterThanOrEqual(1);
+    expect(route[0]!.x === 600 || route[0]!.y === 10).toBe(true);
   });
 
   it('#TASK-18 a riser fed from the transformer feeds the floor boards; then Cable Size (A-07)', async () => {

@@ -89,6 +89,11 @@ export const CableSchema = z.object({
    * nothing can be measured on a plan (user request 8 Nov 2026). Used as the whole length.
    */
   manualLengthM: z.number().positive().optional(),
+  /**
+   * Corners of a feeder drawn in the Building tab, in that diagram's units (user request 9 Nov
+   * 2026: the engineer draws the path, as on a plan). Drawing only: the length is typed.
+   */
+  buildingRoute: z.array(ModelPointSchema).optional(),
   feederType: FeederTypeSchema.default('cable'),
   /** Kept while the feeder is a cable, so switching back and forth loses nothing. */
   busbar: BusbarSpecSchema.optional(),

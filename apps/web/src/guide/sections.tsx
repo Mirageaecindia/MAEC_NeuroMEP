@@ -558,12 +558,17 @@ export const SECTIONS: GuideSection[] = [
         </p>
         <h3>Feeders between floors</h3>
         <p>
-          Every component placed on the floor plans is drawn on its floor here. The component
-          library is greyed except the <Term>Feeder</Term>:
+          Every component placed on the floor plans is drawn on its floor here, with the same symbol
+          as in the Component Library. The component library is greyed except the{' '}
+          <Term>Feeder</Term>:
         </p>
         <ol>
           <li>Click Feeder in the library (choose the cable construction the first time).</li>
           <li>Click the component the feeder starts from, on any floor.</li>
+          <li>
+            Draw the path as on a plan: each click on the diagram makes a corner, the line kept
+            horizontal or vertical. Backspace removes the last corner.
+          </li>
           <li>
             Click the component it feeds, on any floor (Escape or the same component cancels).
           </li>

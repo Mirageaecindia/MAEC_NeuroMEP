@@ -237,13 +237,16 @@ export function Shell(props: {
               </HideToolbarContext.Provider>
             )}
           </div>
+          {/* Notices show at the top of the page, just below the toolbar (user request 9 Nov 2026). */}
+          <div className="notice-anchor">
+            {notice && (
+              <div className="notice" role="status">
+                {notice}
+              </div>
+            )}
+          </div>
           <main className="content">{props.children}</main>
         </div>
-        {notice && (
-          <div className="notice" role="status">
-            {notice}
-          </div>
-        )}
       </div>
     </>
   );

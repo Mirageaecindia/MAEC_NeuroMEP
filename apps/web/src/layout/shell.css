@@ -336,11 +336,17 @@
   display: inline-flex;
   vertical-align: middle;
 }
+.notice-anchor {
+  position: relative;
+  height: 0;
+  z-index: 60;
+}
 .notice {
-  position: fixed;
-  bottom: 20px;
+  position: absolute;
+  top: 8px;
   left: 50%;
   transform: translateX(-50%);
+  max-width: calc(100% - 40px);
   background: #1f2937;
   color: #fff;
   padding: 10px 16px;

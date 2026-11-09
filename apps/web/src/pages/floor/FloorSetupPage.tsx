@@ -641,7 +641,8 @@ export function FloorSetupPage() {
           }
           onSave={() => void editor.save()}
           feederArmed={armed === 'cable'}
-          onFeeder={(from, to, lengthM) => {
+          symbols={symbols}
+          onFeeder={(from, to, lengthM, route) => {
             if (!construction)
               return 'Choose the cable construction first (Feeder in the library).';
             const topology = topologyCheck(project.model, from, to);
@@ -655,6 +656,7 @@ export function FloorSetupPage() {
               lengthM,
               floorCode: sourceFloor?.code ?? '',
               construction,
+              buildingRoute: route,
             });
             editor.dispatch({ type: 'addCable', cable });
             setArmed(null);

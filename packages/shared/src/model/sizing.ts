@@ -91,7 +91,10 @@ export function inputsKey(p: Project): string {
     } = rest;
     return inputs;
   });
-  const cables = p.model.cables.map(({ version: _v, tag: _t, ...inputs }) => inputs);
+  // The Building-tab path is drawing only (9 Nov 2026).
+  const cables = p.model.cables.map(
+    ({ version: _v, tag: _t, buildingRoute: _b, ...inputs }) => inputs,
+  );
   return hash(
     stable({
       elements,

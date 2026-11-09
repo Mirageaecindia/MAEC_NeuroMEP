@@ -166,6 +166,8 @@ export function drawBuildingFeeder(args: {
   lengthM: number;
   floorCode: string;
   construction: CableConstruction;
+  /** Corners drawn in the Building tab (diagram units), when drawn by hand. */
+  buildingRoute?: { x: number; y: number }[];
 }): Cable {
   const port: Port =
     args.to.kind === 'ats'
@@ -184,6 +186,7 @@ export function drawBuildingFeeder(args: {
       construction: args.construction,
     }),
     manualLengthM: args.lengthM,
+    ...(args.buildingRoute?.length ? { buildingRoute: args.buildingRoute } : {}),
   };
 }
 
