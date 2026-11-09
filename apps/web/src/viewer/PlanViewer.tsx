@@ -155,6 +155,9 @@ export function PlanViewer(props: {
     zoom: number;
     panX: number;
     panY: number;
+    /** Screen rectangle drawn: the part of the sheet inside the viewer at that view. */
+    x: number;
+    y: number;
     width: number;
     height: number;
   } | null>(null);
@@ -313,20 +316,29 @@ export function PlanViewer(props: {
         setDetail(null);
         return;
       }
+      // Only the part of the sheet inside the viewer, drawn on white like the whole page (a
+      // transparent background turned some plans black, 9 Nov 2026).
+      const x = Math.max(0, view.panX);
+      const y = Math.max(0, view.panY);
+      const width = Math.min(size.width, view.panX + page.width * view.zoom) - x;
+      const height = Math.min(size.height, view.panY + page.height * view.zoom) - y;
+      if (width <= 0 || height <= 0) {
+        setDetail(null);
+        return;
+      }
       const viewport = page.proxy.getViewport({
         scale,
-        offsetX: view.panX * dpr,
-        offsetY: view.panY * dpr,
+        offsetX: (view.panX - x) * dpr,
+        offsetY: (view.panY - y) * dpr,
       });
       const off = document.createElement('canvas');
-      off.width = Math.ceil(size.width * dpr);
-      off.height = Math.ceil(size.height * dpr);
-      // Transparent outside the page, so the grey around the sheet stays grey.
-      task = page.proxy.render({ canvas: off, viewport, background: 'rgba(0,0,0,0)' });
+      off.width = Math.ceil(width * dpr);
+      off.height = Math.ceil(height * dpr);
+      task = page.proxy.render({ canvas: off, viewport });
       task.promise.then(
         () => {
           copyCanvas(detailCanvas.current, off);
-          setDetail({ ...view, width: size.width, height: size.height });
+          setDetail({ ...view, x, y, width, height });
         },
         () => undefined,
       );
@@ -830,8 +842,8 @@ export function PlanViewer(props: {
           style={
             page && detail
               ? {
-                  left: view.panX - (detail.panX * view.zoom) / detail.zoom,
-                  top: view.panY - (detail.panY * view.zoom) / detail.zoom,
+                  left: view.panX + ((detail.x - detail.panX) * view.zoom) / detail.zoom,
+                  top: view.panY + ((detail.y - detail.panY) * view.zoom) / detail.zoom,
                   width: (detail.width * view.zoom) / detail.zoom,
                   height: (detail.height * view.zoom) / detail.zoom,
                 }
