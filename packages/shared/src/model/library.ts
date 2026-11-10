@@ -10,6 +10,7 @@ import { ElementSchema, type Discipline, type Element, type ModelPoint } from '.
  * symbols are supplied (OI-34). Isolators (CMP-005 single-phase, CMP-006 three-phase) and the
  * connection unit (no CMP code yet) are not in the Figma library: they stand for the mechanical /
  * PHE equipment they feed, which is not modelled in Phase 1 (user decision 6 Nov 2026).
+ * PFC Bank and Meter (no CMP code yet) follow from the components workbook (10 Nov 2026).
  */
 
 /** How a tag is proposed (Section 12.4, OI-24 to be confirmed). `{floor}` = floor code (GF, B1, 2). */
@@ -128,6 +129,7 @@ export const LIBRARY_ITEMS: readonly LibraryItem[] = [
       ...common,
       kind: 'generator',
       kvaOverride: null,
+      secondaryV: 400,
       xdSubtransientPct: null,
       sustainedScKa: null,
     }),
@@ -151,6 +153,8 @@ export const LIBRARY_ITEMS: readonly LibraryItem[] = [
       kind: 'transformer',
       kva: null,
       primaryV: null,
+      // Components workbook: secondary voltage 400 V (the system voltage), editable.
+      secondaryV: 400,
       ukPct: null,
       urPct: null,
       vectorGroup: '',
@@ -237,6 +241,7 @@ export const LIBRARY_ITEMS: readonly LibraryItem[] = [
       ...common,
       kind: 'ups',
       kvaOverride: null,
+      secondaryV: 400,
       xdSubtransientPct: null,
       sustainedScKa: null,
     }),
@@ -264,6 +269,33 @@ export const LIBRARY_ITEMS: readonly LibraryItem[] = [
     cmpCode: null,
     tag: proposal('FCU'),
     create: loadPoint('connection-unit', 'SP'),
+  },
+  {
+    // Components workbook "PFC" column (user request 10 Nov 2026): fed from a panel, its kVAr is
+    // calculated from that panel's demand per category (10.15). Tag PFC-<Tx>-<n> in 12.4; the
+    // transformer is not known when placed, so the floor stands in until the engineer renames it.
+    key: 'pfc',
+    label: 'PFC Bank',
+    discipline: 'electrical',
+    cmpCode: null,
+    tag: proposal('PFC'),
+    create: () => ({
+      ...common,
+      kind: 'pfc-bank',
+      incomerDevice: 'MCCB',
+      detuned: false,
+      mounting: null,
+    }),
+  },
+  {
+    // kWh meter (user request 10 Nov 2026): placed on the plan, type 1-Ph / 3-Ph / LV/HV, linked
+    // to the component whose supply it measures; counted in the schedules' meter columns.
+    key: 'meter',
+    label: 'Meter',
+    discipline: 'electrical',
+    cmpCode: null,
+    tag: proposal('MTR'),
+    create: () => ({ ...common, kind: 'meter', meterType: null, meteredId: null }),
   },
   {
     key: 'mechanical-equipment',

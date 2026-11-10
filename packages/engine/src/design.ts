@@ -1,5 +1,6 @@
 import {
   loadSummaries,
+  pfcRating,
   suppliedIn,
   type Element,
   type ElementKind,
@@ -24,6 +25,8 @@ import {
 const SQRT3 = Math.sqrt(3);
 const V_LINE = 400;
 const V_PHASE = 230;
+/** Capacitor bank current factor (V-08: 1.5 x Q / (sqrt3 V), minimum 1.43, IEC 60831). */
+export const PFC_CURRENT_FACTOR = 1.5;
 /** IEC 60947-2 tolerance of the magnetic threshold: checks use Ia = 1.2 x Im (V-09). */
 export const IA_FACTOR = 1.2;
 
@@ -80,7 +83,17 @@ export function designFeeders(project: Project): FeederDesign[] {
   }
   const pack = getRulePack(project.rulePackId, project.rulePackVersion);
   // Per load type and the default (12.2): the Technical Lead's override, else the rule-pack value.
-  const summaries = loadSummaries(project, loadPowerFactors(project, pack));
+  const pfs = loadPowerFactors(project, pack);
+  const summaries = loadSummaries(project, pfs);
+  // PFC target power factor (12.2, 10.15): the Technical Lead's override, else the rule pack.
+  const targetOverride = project.calculation.defaultOverrides.targetPowerFactor;
+  const targetValue = pack.calculationDefaults.find((d) => d.key === 'targetPowerFactor')?.value;
+  const targetPf =
+    typeof targetOverride === 'number'
+      ? targetOverride
+      : typeof targetValue === 'number'
+        ? targetValue
+        : null;
   const supplied = new Set([
     ...suppliedIn(project.model, 'normal'),
     ...suppliedIn(project.model, 'standby'),
@@ -126,8 +139,70 @@ export function designFeeders(project: Project): FeederDesign[] {
       trace.push({ step: 'Ib', detail });
       return { ...base, ibA: null, ibCase: null, neutralA: null, device: null, status: 'blocked' };
     };
-    if (to.kind === 'pfc-bank')
-      return [blocked('Capacitor bank rating (kVAr) not calculated yet (10.15).')];
+    /** 10.5: In = lowest standard rating >= Ib; type by rating; Im / Ia from the catalogue (OI-03). */
+    function withDevice(
+      ibA: number,
+      ibCase: IbCase,
+      neutralA: number,
+      phases: number,
+    ): FeederDesign {
+      const ratingA = standardRating(pack.devices, ibA);
+      if (ratingA === null) {
+        errors.unshift('E2001');
+        trace.push({ step: 'Device', detail: `No standard rating at or above ${r1(ibA)} A.` });
+        return { ...base, ibA, ibCase, neutralA, device: null, status: 'blocked' };
+      }
+      const type = breakerTypeFor(pack.devices, ratingA)!;
+      const device: DeviceSelection = {
+        ratingA,
+        type: type.type,
+        poles: poles(from, to!, phases),
+        interim: type.interim,
+        imA: null,
+        iaA: null,
+      };
+      trace.push({
+        step: 'Device',
+        detail: `In = ${ratingA} A ${device.type} ${device.poles}${device.interim ? ' (type limit interim, OI-03)' : ''}; Im / Ia need the breaker catalogue (OI-03)`,
+      });
+      return { ...base, ibA, ibCase, neutralA, device, status: 'provisional' };
+    }
+    // 10.4 / 10.15: the design current, by connection type.
+    let ibA: number;
+    let ibCase: IbCase;
+    let neutralA: number;
+    if (to.kind === 'pfc-bank') {
+      // A PFC bank (user request 10 Nov 2026): its kVAr from the demand of the panel feeding it.
+      const rating = pfcRating(project, to.id, pfs, targetPf);
+      const panel = rating.panelId ? (byId.get(rating.panelId)?.tag ?? '?') : '?';
+      if (rating.missingPf.length) {
+        return [
+          blocked(
+            `Power factor missing on ${rating.missingPf.join(', ')}: the PFC rating of ${to.tag} needs it (10.15).`,
+          ),
+        ];
+      }
+      if (rating.kvar === null) return [blocked('Target power factor (PFC) not set (12.2).')];
+      trace.push({
+        step: 'PFC',
+        detail: `Qc = ${r1(rating.kvar)} kVAr: demand of ${panel} corrected to pf ${targetPf} - ${rating.rows
+          .map((r) => `${r.category} ${r1(r.demandKw)} kW / ${r1(r.kvar)} kVAr`)
+          .join(', ')} (10.15)`,
+      });
+      if (rating.kvar <= 0) {
+        return [
+          { ...base, ibA: 0, ibCase: null, neutralA: null, device: null, status: 'awaiting-load' },
+        ];
+      }
+      ibCase = 'three-phase';
+      ibA = (PFC_CURRENT_FACTOR * rating.kvar * 1000) / (SQRT3 * V_LINE);
+      neutralA = 0;
+      trace.push({
+        step: 'Ib',
+        detail: `capacitor bank: Ib = ${PFC_CURRENT_FACTOR} x ${r1(rating.kvar)} kVAr x 1000 / (sqrt3 x ${V_LINE}) = ${r1(ibA)} A (V-08)${to.detuned ? '; detuned bank: the manufacturer factor is awaited (OI-20), 1.5 used' : ''}; voltage drop worked out at the default load power factor (a capacitor current raises the voltage: conservative)`,
+      });
+      return [withDevice(ibA, ibCase, neutralA, 3)];
+    }
     if (s.incomplete.length) {
       return [
         blocked(
@@ -142,9 +217,6 @@ export function designFeeders(project: Project): FeederDesign[] {
     }
     if (s.pf === null) return [blocked('Power factor missing on the load.')];
 
-    // 10.4: Ib by connection type.
-    let ibA: number;
-    let ibCase: IbCase;
     const total = d.L1 + d.L2 + d.L3;
     if (to.kind === 'motor') {
       const eff = to.efficiency;
@@ -164,29 +236,8 @@ export function designFeeders(project: Project): FeederDesign[] {
       ibA = (Math.max(d.L1, d.L2, d.L3) * 1000) / (V_PHASE * s.pf);
     }
     const phaseA = [d.L1, d.L2, d.L3].map((p) => (p * 1000) / (V_PHASE * s.pf!));
-    const neutralA = ibCase === 'motor' ? 0 : neutralCurrent(phaseA[0]!, phaseA[1]!, phaseA[2]!);
+    neutralA = ibCase === 'motor' ? 0 : neutralCurrent(phaseA[0]!, phaseA[1]!, phaseA[2]!);
     trace.push({ step: 'Ib', detail: `${ibCase}: Ib = ${r1(ibA)} A, neutral ${r1(neutralA)} A` });
-
-    // 10.5: In = lowest standard rating >= Ib; type by rating; Im / Ia from the catalogue (OI-03).
-    const ratingA = standardRating(pack.devices, ibA);
-    if (ratingA === null) {
-      errors.unshift('E2001');
-      trace.push({ step: 'Device', detail: `No standard rating at or above ${r1(ibA)} A.` });
-      return [{ ...base, ibA, ibCase, neutralA, device: null, status: 'blocked' }];
-    }
-    const type = breakerTypeFor(pack.devices, ratingA)!;
-    const device: DeviceSelection = {
-      ratingA,
-      type: type.type,
-      poles: poles(from, to, phases),
-      interim: type.interim,
-      imA: null,
-      iaA: null,
-    };
-    trace.push({
-      step: 'Device',
-      detail: `In = ${ratingA} A ${device.type} ${device.poles}${device.interim ? ' (type limit interim, OI-03)' : ''}; Im / Ia need the breaker catalogue (OI-03)`,
-    });
-    return [{ ...base, ibA, ibCase, neutralA, device, status: 'provisional' }];
+    return [withDevice(ibA, ibCase, neutralA, phases)];
   });
 }

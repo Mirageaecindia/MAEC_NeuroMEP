@@ -69,28 +69,31 @@ function hash(text: string): string {
  * version - not tags, texts, positions on the plan or versions.
  */
 export function inputsKey(p: Project): string {
-  const elements = p.model.elements.map((e) => {
-    const {
-      version: _v,
-      tag: _t,
-      ...rest
-    } = e as Element & {
-      position?: unknown;
-      rotationDeg?: unknown;
-      symbolScale?: unknown;
-      description?: unknown;
-      location?: unknown;
-    };
-    const {
-      position: _p,
-      symbolScale: _s,
-      rotationDeg: _r,
-      description: _d,
-      location: _l,
-      ...inputs
-    } = rest;
-    return inputs;
-  });
+  // Meters are never part of the calculation (10 Nov 2026).
+  const elements = p.model.elements
+    .filter((e) => e.kind !== 'meter')
+    .map((e) => {
+      const {
+        version: _v,
+        tag: _t,
+        ...rest
+      } = e as Element & {
+        position?: unknown;
+        rotationDeg?: unknown;
+        symbolScale?: unknown;
+        description?: unknown;
+        location?: unknown;
+      };
+      const {
+        position: _p,
+        symbolScale: _s,
+        rotationDeg: _r,
+        description: _d,
+        location: _l,
+        ...inputs
+      } = rest;
+      return inputs;
+    });
   // The Building-tab path is drawing only (9 Nov 2026).
   const cables = p.model.cables.map(
     ({ version: _v, tag: _t, buildingRoute: _b, ...inputs }) => inputs,

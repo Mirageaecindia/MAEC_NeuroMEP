@@ -196,6 +196,7 @@
         "kind": "transformer",
         "kva": 1500,
         "primaryV": 11000,
+        "secondaryV": 400,
         "ukPct": null,
         "urPct": null,
         "vectorGroup": ""
@@ -248,6 +249,7 @@
         "libraryKey": "generator",
         "kind": "generator",
         "kvaOverride": 500,
+        "secondaryV": 400,
         "xdSubtransientPct": 14,
         "sustainedScKa": null
       },
@@ -985,7 +987,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "c-mdb-1-ats-1",
@@ -1130,7 +1132,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "c-g-1-ats-1",
@@ -1267,7 +1269,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "c-ats-1-esmdb-1",
@@ -1416,7 +1418,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "c-esmdb-1-iso-fp",
@@ -1561,7 +1563,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "c-esmdb-1-db-el",
@@ -1706,7 +1708,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "c-esmdb-1-db-ll",
@@ -1851,7 +1853,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "mdb-1",
@@ -2004,7 +2006,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "ats-1",
@@ -2149,7 +2151,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "esmdb-1",
@@ -2298,7 +2300,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "iso-fp",
@@ -2443,7 +2445,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "db-el",
@@ -2588,7 +2590,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "db-ll",
@@ -2733,7 +2735,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "riser-1",
@@ -2791,7 +2793,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "db-1f",
@@ -2850,7 +2852,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       },
       {
         "elementId": "db-2f",
@@ -2909,7 +2911,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "20vefekx3rm"
+        "inputsKey": "sc8eihpaiq"
       }
     ],
     "generatorFactors": []

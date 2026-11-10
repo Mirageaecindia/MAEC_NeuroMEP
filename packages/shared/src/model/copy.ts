@@ -69,7 +69,11 @@ export function copyComponents(
     const tag = nextTag(rule, floor.code, taken);
     taken.push(tag);
     const linked =
-      'fedFromId' in e ? { fedFromId: (e.fedFromId && idOf.get(e.fedFromId)) ?? null } : {};
+      'fedFromId' in e
+        ? { fedFromId: (e.fedFromId && idOf.get(e.fedFromId)) ?? null }
+        : 'meteredId' in e
+          ? { meteredId: (e.meteredId && idOf.get(e.meteredId)) ?? null }
+          : {};
     return ElementSchema.parse({
       ...e,
       ...linked,

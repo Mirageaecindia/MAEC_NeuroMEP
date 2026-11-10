@@ -13,13 +13,14 @@ export type Port = Cable['from']['port'];
  * Ports of each kind. Any component may feed or be fed (A-20, 7 Nov 2026): a feeder runs from
  * the component clicked first to the one clicked second. An ATS has a normal and a standby input
  * (the first and the second feeder into it). Equipment is linked to its isolator through
- * "Fed from", not by a feeder (A-17).
+ * "Fed from", not by a feeder (A-17); a meter to the component it measures (10 Nov 2026).
  */
 export function portsOf(e: Pick<Element, 'kind'>): Port[] {
   switch (e.kind) {
     case 'ats':
       return ['normal', 'standby', 'out'];
     case 'equipment':
+    case 'meter':
       return [];
     default:
       return ['in', 'out'];

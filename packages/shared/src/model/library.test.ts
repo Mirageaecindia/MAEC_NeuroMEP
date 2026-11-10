@@ -35,6 +35,9 @@ describe('#TASK-11 component library (A-11, Section 13)', () => {
       'Isolator 1P',
       'Isolator 3P',
       'Connection Unit',
+      // Components workbook (user request 10 Nov 2026).
+      'PFC Bank',
+      'Meter',
       // Briefing page 9 (6 Nov 2026): equipment on the mechanical / PHE layers.
       'Mechanical Equipment',
       'PHE Equipment',

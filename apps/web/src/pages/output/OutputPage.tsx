@@ -32,7 +32,7 @@ import {
 import { calcSheetPdf, calcSheetWorkbook } from './calcSheetFiles';
 import { scheduleWorkbook } from './scheduleExcel';
 import { schedulePdf } from './schedulePdf';
-import { emptyMeters, missingMeters, ScheduleSheet, type BoardMeters } from './ScheduleSheet';
+import { emptyMeters, ScheduleSheet, type BoardMeters } from './ScheduleSheet';
 import '../schematic/schematic.css';
 
 /** Report Library (Figma screen 5); levels by board hierarchy (decision 2 Nov 2026). */
@@ -83,8 +83,9 @@ type Format = keyof typeof FORMATS;
 
 /**
  * Output (Figma screen 5): Report Library, schedule previews from the model, and the inputs the
- * sheet needs before download (logo, planned completion date, kWh meters, type of meter) - asked
- * at every download and not stored (decision 2 Nov 2026). Download (WBS 1.7.2) runs Cable Size
+ * sheet needs before download (logo, planned completion date) - asked at every download and not
+ * stored (decision 2 Nov 2026). Meters come from the Meter components on the plans; typing them
+ * and the type of meter are optional (user decision 10 Nov 2026). Download (WBS 1.7.2) runs Cable Size
  * first (FR-21), stops on results that are blocked or failing (E3101), then saves the file in the
  * chosen format: one Excel workbook `<project>_Schedules_v<n>.xlsx` (a sheet per board) or one
  * PDF `<project>_Schedules_v<n>.pdf` (a page per board), each numbered on its own, never
@@ -159,7 +160,6 @@ export function OutputPage() {
   const missing = [
     ...(schedules.length && !logo ? ['logo'] : []),
     ...(schedules.length && !completionDate ? ['planned completion date'] : []),
-    ...schedules.flatMap((s) => missingMeters(s, meters[s.id])),
     ...(generators.length
       ? GEN_TITLE_FIELDS.filter(([k]) => !genTitle[k].trim()).map(
           ([, label]) => `generator analysis ${label.toLowerCase()}`,

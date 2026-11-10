@@ -61,6 +61,7 @@ export const KIND_LABELS: Record<ElementKind, string> = {
   motor: 'Motor',
   'pfc-bank': 'PFC bank',
   equipment: 'Equipment',
+  meter: 'Meter',
 };
 
 /** Does `from` usually feed `to` (Section 3)? Guidance only - never refuses a connection. */

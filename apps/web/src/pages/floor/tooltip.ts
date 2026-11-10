@@ -1,11 +1,13 @@
 import {
   cableLength,
   fedFrom,
+  pfcRating,
   resultOf,
   type LengthRule,
   type LoadSummary,
   type Project,
 } from '@neuromep/shared';
+import { calcDefault, powerFactors } from '../../workspace/projectDefaults';
 import { resultFigures } from './SizingResult';
 
 const val = (v: number | null | undefined, unit: string) => (v == null ? '-' : `${v} ${unit}`);
@@ -54,7 +56,7 @@ export function tooltipLines(
     case 'transformer':
       lines.push(
         `Rating: ${val(e.kva, 'kVA')} · %Z ${val(e.ukPct, '%')}`,
-        `Primary: ${val(e.primaryV, 'V')}`,
+        `Voltage (primary / secondary): ${val(e.primaryV, 'V')} / ${val(e.secondaryV ?? 400, 'V')}`,
         `Short-circuit: ${val(found?.result.values.ikMaxKa, 'kA')}`,
         `TCL ${kw(s?.connectedKw)} · MD ${kw(s?.maxDemandKw)} · Standby ${kw(s?.standbyKw)}`,
       );
@@ -63,6 +65,7 @@ export function tooltipLines(
     case 'ups':
       lines.push(
         `Rating: ${val(e.kvaOverride, 'kVA')} · %X"d ${val(e.xdSubtransientPct, '%')}`,
+        `Voltage: ${val(e.secondaryV ?? 400, 'V')}`,
         `Short-circuit: ${val(e.sustainedScKa, 'kA')}`,
         `TCL ${kw(s?.connectedKw)} · MD ${kw(s?.maxDemandKw)}`,
       );
@@ -79,9 +82,25 @@ export function tooltipLines(
         e.fedFromId ? `Fed from ${tagOf(e.fedFromId)}` : 'Not connected to a panel (E1803)',
       );
       break;
+    case 'pfc-bank': {
+      // Components workbook tooltip: "Rating - eg. 350kVAr | Fed from - source ref".
+      const r = pfcRating(
+        project,
+        e.id,
+        powerFactors(project),
+        calcDefault(project, 'targetPowerFactor'),
+      );
+      lines.push(`Rating: ${r.kvar === null ? '-' : `${r.kvar.toFixed(1)} kVAr`}`, from);
+      break;
+    }
+    case 'meter':
+      lines.push(
+        `${e.meterType ?? 'Type not chosen'} meter`,
+        e.meteredId ? `Measures ${tagOf(e.meteredId)}` : 'Not linked: not counted in the schedules',
+      );
+      break;
     case 'eb-utility':
     case 'ats':
-    case 'pfc-bank':
     case 'busbar':
       lines.push(from);
       break;

@@ -81,7 +81,7 @@ export const SECTIONS: GuideSection[] = [
         <p>A project goes through five pages, shown as tabs along the top:</p>
         <ol>
           <li>
-            <Term>All Projects</Term> - pick a project (or the Technical Lead creates one).
+            <Term>ALL PROJECTS</Term> - pick a project (or the Technical Lead creates one).
           </li>
           <li>
             <Term>Import File</Term> - the Technical Lead fills in the project set-up: details, site
@@ -508,6 +508,25 @@ export const SECTIONS: GuideSection[] = [
             efficiency, load type, FLS; choose its isolator in <Term>Fed from</Term> (a dashed line
             on the plan). Not linked: warning E1803.
           </li>
+          <li>
+            <Term>Meter</Term>: place it on the plan, choose its <Term>Meter type</Term> (1-Ph, 3-Ph
+            or LV/HV) and, under <Term>Measures</Term>, the component whose supply it measures (a
+            dashed line on the plan; no feeder). Each meter is counted in the 1-PH / 3-PH / LV/HV
+            columns of the schedule rows that feed that component - the way of the board above and
+            the incomer of the board itself. A meter without a type or a link is not counted.
+          </li>
+          <li>
+            <Term>PFC Bank</Term>: draw a feeder to it from the panel it corrects. Its rating (kVAr)
+            is calculated live from that panel&apos;s demand per demand category and shown under{' '}
+            <Term>Calculated</Term> in its Engineering Property; Cable Size then sizes its breaker
+            and cable (see <a href="#calc-pfc">PFC bank rating</a>). Choose its incomer device,
+            detuned or not, and mounting.
+          </li>
+          <li>
+            <Term>Transformer secondary voltage</Term>: 400 V by default (also the output voltage of
+            generators and UPS). The calculations use the 400 / 230 V system voltage of the rule
+            pack; another value shows warning E2803.
+          </li>
         </ul>
         <h3>5. The right panel</h3>
         <p>
@@ -682,9 +701,11 @@ export const SECTIONS: GuideSection[] = [
         </ul>
         <p>
           Choose the <Term>Format</Term> (Excel or PDF) and press <Term>Download</Term>. NeuroMEP
-          first runs Cable Size on the whole project. Schedules need a logo, the planned completion
-          date, kWh meters per way and the type of meter (asked in the preview each time); the
-          generator analysis asks for its title block.
+          first runs Cable Size on the whole project. Schedules need a logo and the planned
+          completion date (asked in the preview each time); the generator analysis asks for its
+          title block. The meter columns (1-PH, 3-PH, LV/HV) come from the Meter components on the
+          plans; on a way with no meter placed you may type the numbers, and the type of meter is
+          optional - neither is needed to download.
         </p>
         <Rule>
           Schedules are blocked (E3101) while a row is out of date, not calculated, blocked or has a
@@ -1156,6 +1177,36 @@ export const SECTIONS: GuideSection[] = [
     ),
   },
   {
+    id: 'calc-pfc',
+    group: 'Calculations',
+    title: 'PFC bank rating',
+    body: (
+      <>
+        <p>
+          A PFC bank corrects the panel that feeds it to the target power factor (0.95, DEWA
+          recommended; the Technical Lead may change it):
+        </p>
+        <p>
+          <code>
+            kVAr = Σ per demand category of Demand x [tan(acos pf_load) - tan(acos pf_target)]
+          </code>
+        </p>
+        <p>
+          Demand is the connected load x the demand factor the panel applies (the category factor at
+          an LV panel / MDB, the second-level factor at an SMDB, the load-type factor with the
+          manual method). pf_load is the DB&apos;s own power factor, else the load type&apos;s. A
+          load with no power factor blocks the rating (E2003). The rating is never below 0; standard
+          bank sizes are open (OI-20), so the calculated value is shown.
+        </p>
+        <p>
+          The feeder to the bank is sized for Ib = 1.5 x kVAr x 1000 / (√3 x 400) (V-08, IEC 60831),
+          then like any feeder (breaker, cable, voltage drop, checks).
+        </p>
+        <CalcButton example="pfc" />
+      </>
+    ),
+  },
+  {
     id: 'calc-generator',
     group: 'Calculations',
     title: 'Generator load analysis',
@@ -1351,6 +1402,14 @@ export const SECTIONS: GuideSection[] = [
           PVC ECC (OI-36), busbars below 800 A or aluminium, riser C7.
         </li>
         <li>The fault duty of a riser tap-off box breaker is not calculated yet.</li>
+        <li>
+          PFC banks: standard bank sizes and the detuned-bank current factor are open (OI-20) - the
+          calculated kVAr and the 1.5 factor are used.
+        </li>
+        <li>
+          Calculations are at 400 / 230 V: a secondary voltage other than 400 V is shown with
+          warning E2803 but not used.
+        </li>
         <li>The Bot and Smart-AI buttons are not active; Revit exchange comes in a later phase.</li>
         <li>Mechanical and PHE checks across separate files come in Phase 2.</li>
       </ul>

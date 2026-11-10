@@ -1,13 +1,16 @@
-import type { BoardSchedule, ScheduleRow } from '@neuromep/shared';
+import type { BoardSchedule, MeterCounts, ScheduleRow } from '@neuromep/shared';
 
-/** kWh meters of an outgoing way (1-Ph / 3-Ph / LV CT), typed in before download. */
+/**
+ * kWh meters of an outgoing way (1-Ph / 3-Ph / LV/HV) typed in the preview: optional, for ways
+ * with no meter placed on the plan (user decision 10 Nov 2026: meters are never required).
+ */
 export interface WayMeters {
   ph1: number | null;
   ph3: number | null;
   ct: number | null;
 }
 
-/** Type of meter of a board (rating of the incomer), typed in before download. */
+/** Type of meter of a board (rating of the incomer), chosen in the preview (optional). */
 export interface BoardMeters {
   type: '' | 'upto-60a-1ph' | 'upto-125a-3ph' | 'lv-ct';
   ctRatio: string;
@@ -23,19 +26,20 @@ export const METER_TYPES: { value: Exclude<BoardMeters['type'], ''>; label: stri
 export const emptyMeters = (): BoardMeters => ({ type: '', ctRatio: '', ways: {} });
 const NO_METERS: WayMeters = { ph1: null, ph3: null, ct: null };
 
-/** Inputs still missing on a board before its schedule can be downloaded. */
-export function missingMeters(s: BoardSchedule, m: BoardMeters | undefined): string[] {
-  const missing: string[] = [];
-  if (!m?.type) missing.push(`${s.tag}: type of meter`);
-  else if (m.type === 'lv-ct' && !m.ctRatio.trim()) missing.push(`${s.tag}: CT ratio`);
-  for (const w of s.ways) {
-    const v = m?.ways[w.wayNo] ?? NO_METERS;
-    if (v.ph1 === null || v.ph3 === null || v.ct === null) {
-      missing.push(`${s.tag} ${w.wayNo}: kWh meters`);
-    }
-  }
-  return missing;
+/**
+ * Meter columns of a row (1-Ph, 3-Ph, LV/HV): the meters placed on the plan for the component it
+ * feeds (10 Nov 2026), else what was typed in the preview; null = left empty.
+ */
+export function meterCells(
+  r: Pick<ScheduleRow, 'meters'>,
+  typed: WayMeters | undefined,
+): [number | null, number | null, number | null] {
+  if (r.meters) return [r.meters.ph1, r.meters.ph3, r.meters.lvhv];
+  return [typed?.ph1 ?? null, typed?.ph3 ?? null, typed?.ct ?? null];
 }
+
+const placed = (m: MeterCounts) =>
+  `From the meters on the plan: ${m.ph1} x 1-Ph, ${m.ph3} x 3-Ph, ${m.lvhv} x LV/HV`;
 
 const num = (v: number | null, d = 0) => (v === null ? '-' : v.toFixed(d));
 const kw = (n: number) => n.toFixed(2);
@@ -47,7 +51,9 @@ function MeterInput(props: {
 }) {
   return (
     <input
-      className={`meter-input${props.value === null ? ' missing' : ''}`}
+      className="meter-input"
+      placeholder="-"
+      title="Optional: no meter is placed on the plan for this way"
       aria-label={props.label}
       inputMode="numeric"
       value={props.value ?? ''}
@@ -62,7 +68,7 @@ function MeterInput(props: {
 
 /**
  * A board schedule in the company format (Figma screen 5, Section 14). Read-only except the
- * download inputs (meter columns and type of meter), which are asked at every download.
+ * optional meter inputs (ways with no meter on the plan) and the type of meter.
  */
 export function ScheduleSheet(props: {
   schedule: BoardSchedule;
@@ -136,7 +142,7 @@ export function ScheduleSheet(props: {
           <td>MD kW</td>
           <td>1-PH</td>
           <td>3-PH</td>
-          <td>LV CT</td>
+          <td>LV/HV</td>
           <td colSpan={2}>REMARKS</td>
         </tr>
         {s.incomers.map((r) => (
@@ -144,9 +150,11 @@ export function ScheduleSheet(props: {
             <td className="left">{r.feeder}</td>
             <td>-</td>
             {row(r, true)}
-            <td />
-            <td />
-            <td />
+            {meterCells(r, undefined).map((v, k) => (
+              <td key={k} title={r.meters ? placed(r.meters) : undefined}>
+                {v ?? ''}
+              </td>
+            ))}
             <td colSpan={2} className="left">
               {r.remarks}
             </td>
@@ -171,27 +179,37 @@ export function ScheduleSheet(props: {
               <td className="left">{w.feeder}</td>
               <td>{w.wayNo}</td>
               {row(w)}
-              <td>
-                <MeterInput
-                  label={`${w.wayNo} 1-phase meters`}
-                  value={v.ph1}
-                  onChange={(ph1) => setWay(w.wayNo, { ph1 })}
-                />
-              </td>
-              <td>
-                <MeterInput
-                  label={`${w.wayNo} 3-phase meters`}
-                  value={v.ph3}
-                  onChange={(ph3) => setWay(w.wayNo, { ph3 })}
-                />
-              </td>
-              <td>
-                <MeterInput
-                  label={`${w.wayNo} LV CT meters`}
-                  value={v.ct}
-                  onChange={(ct) => setWay(w.wayNo, { ct })}
-                />
-              </td>
+              {w.meters ? (
+                meterCells(w, undefined).map((v, k) => (
+                  <td key={k} className="meter-placed" title={placed(w.meters!)}>
+                    {v}
+                  </td>
+                ))
+              ) : (
+                <>
+                  <td>
+                    <MeterInput
+                      label={`${w.wayNo} 1-phase meters`}
+                      value={v.ph1}
+                      onChange={(ph1) => setWay(w.wayNo, { ph1 })}
+                    />
+                  </td>
+                  <td>
+                    <MeterInput
+                      label={`${w.wayNo} 3-phase meters`}
+                      value={v.ph3}
+                      onChange={(ph3) => setWay(w.wayNo, { ph3 })}
+                    />
+                  </td>
+                  <td>
+                    <MeterInput
+                      label={`${w.wayNo} LV/HV meters`}
+                      value={v.ct}
+                      onChange={(ct) => setWay(w.wayNo, { ct })}
+                    />
+                  </td>
+                </>
+              )}
               <td colSpan={2} className="left">
                 {w.remarks}
               </td>
@@ -227,13 +245,12 @@ export function ScheduleSheet(props: {
               Type of Meter (rating of incomer):{' '}
               <select
                 aria-label={`${s.tag} type of meter`}
-                className={m.type ? undefined : 'missing'}
                 value={m.type}
                 onChange={(e) =>
                   props.onMeters({ ...m, type: e.target.value as BoardMeters['type'] })
                 }
               >
-                <option value="">Select</option>
+                <option value="">-</option>
                 {METER_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
                     {t.label}
@@ -247,7 +264,6 @@ export function ScheduleSheet(props: {
                 CT ratio:{' '}
                 <input
                   aria-label={`${s.tag} CT ratio`}
-                  className={m.ctRatio.trim() ? undefined : 'missing'}
                   placeholder="e.g. 200/5 A"
                   value={m.ctRatio}
                   onChange={(e) => props.onMeters({ ...m, ctRatio: e.target.value })}

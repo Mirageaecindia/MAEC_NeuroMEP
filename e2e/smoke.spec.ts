@@ -60,7 +60,11 @@ test('#TASK-16 login, Import File, Floor Setup, Building tab and Cable Size', as
   await page.getByRole('button', { name: 'DB-db-1 board' }).click();
   await expect(calculator).toBeEnabled();
   await calculator.click();
-  await expect(page.getByText(/^Cable Size ran on the whole project/)).toBeVisible();
+  // The first run loads the engine Web Worker, which a fresh dev server compiles on demand (engine,
+  // rule pack, CableSizer tables): about 5 s on a busy machine (trace 10 Nov 2026), so wait longer.
+  await expect(page.getByText(/^Cable Size ran on the whole project/)).toBeVisible({
+    timeout: 30_000,
+  });
   await expect(summary.getByText(/^Cost :/)).toBeVisible();
   await summary.getByRole('button', { name: 'Save' }).click();
 

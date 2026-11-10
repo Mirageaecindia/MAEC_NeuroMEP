@@ -1126,6 +1126,13 @@ describe('#TASK-30 / #TASK-31 Schematic and Output (Figma 4, 5)', () => {
   it('#TASK-31 Output previews schedules by level and asks the sheet inputs before download', async () => {
     const project = buildingProject();
     project.meta.reachedPage = 'simulation-report';
+    // A 3-Ph meter on the plan measuring DB-db-1 (10 Nov 2026): counted on its incomer row.
+    project.model.elements.push({
+      ...testElement('meter', 'm1'),
+      tag: 'MTR-1',
+      meterType: '3-Ph',
+      meteredId: 'db-1',
+    } as Element);
     renderAt('/projects/p-1/output', new FakeAuth(LEAD), fakeApi(project));
     const floorLevel = await screen.findByRole('checkbox', { name: 'Floor Level Schedule' });
     await userEvent.click(screen.getByRole('checkbox', { name: 'Second Level Schedule' }));
@@ -1133,9 +1140,11 @@ describe('#TASK-30 / #TASK-31 Schematic and Output (Figma 4, 5)', () => {
     await userEvent.click(floorLevel);
     const sheet = screen.getByRole('table', { name: 'Schedule DB-db-1' });
     expect(sheet).toHaveTextContent('INCOMER');
+    expect(within(sheet).getByText('LV/HV')).toBeInTheDocument();
+    expect(within(sheet).getAllByTitle(/0 x 1-Ph, 1 x 3-Ph, 0 x LV\/HV/)).toHaveLength(3);
     const download = screen.getByRole('button', { name: 'Download' });
     expect(download).toBeDisabled();
-    await userEvent.selectOptions(screen.getByLabelText('DB-db-1 type of meter'), 'upto-125a-3ph');
+    // Meters and the type of meter are optional (user decision 10 Nov 2026).
     await userEvent.type(screen.getByLabelText('Planned completion date'), '2027-06-30');
     expect(download).toBeDisabled(); // the logo is still missing
     await userEvent.upload(screen.getByLabelText('Logo'), PNG_LOGO);
@@ -1272,7 +1281,6 @@ describe('#TASK-31 schedule download (WBS 1.7.2)', () => {
     renderAt('/projects/p-1/output', new FakeAuth(LEAD), api);
     await userEvent.click(await screen.findByRole('checkbox', { name: 'Floor Level Schedule' }));
     await userEvent.selectOptions(screen.getByLabelText('Format'), format);
-    await userEvent.selectOptions(screen.getByLabelText('DB-db-1 type of meter'), 'upto-125a-3ph');
     await userEvent.type(screen.getByLabelText('Planned completion date'), '2027-06-30');
     await userEvent.upload(screen.getByLabelText('Logo'), PNG_LOGO);
     const download = screen.getByRole('button', { name: 'Download' });
@@ -1289,7 +1297,14 @@ describe('#TASK-31 schedule download (WBS 1.7.2)', () => {
     });
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
     const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
-    const api = await fillAndDownload(fedProject());
+    const project = fedProject();
+    project.model.elements.push({
+      ...testElement('meter', 'm1'),
+      tag: 'MTR-1',
+      meterType: '3-Ph',
+      meteredId: 'db-1',
+    } as Element);
+    const api = await fillAndDownload(project);
     expect(
       await screen.findByText(/^Downloaded .*_Schedules_v1\.xlsx \(1 schedule\)\.$/, {}, SLOW),
     ).toBeVisible();
@@ -1304,6 +1319,9 @@ describe('#TASK-31 schedule download (WBS 1.7.2)', () => {
     // 60 kW at pf 0.85: Ib 101.9 A -> 125 A breaker; loads 20 / 20 / 20 kW.
     expect(ws.getCell('D6').value).toBe(125);
     expect([ws.getCell('K6').value, ws.getCell('N6').value]).toEqual([20, 60]);
+    // Meters from the plan: 1-PH / 3-PH / LV/HV (10 Nov 2026).
+    expect(['P6', 'Q6', 'R6'].map((c) => ws.getCell(c).value)).toEqual([0, 1, 0]);
+    expect(ws.getCell('R5').value).toBe('LV/HV');
     expect(ws.getImages()).toHaveLength(1); // the logo
     create.mockRestore();
     click.mockRestore();

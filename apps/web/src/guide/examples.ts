@@ -1,4 +1,4 @@
-import { checkNetworkFeeders, riserCosts } from '@neuromep/engine';
+import { checkNetworkFeeders, designFeeders, riserCosts } from '@neuromep/engine';
 import { busbarChoices } from '@neuromep/engine';
 import { getRulePack } from '@neuromep/rulepacks';
 import {
@@ -6,7 +6,11 @@ import {
   capacitySummary,
   generatorAnalyses,
   inputsKey,
+  isPlaceable,
+  libraryItem,
   loadSummaries,
+  pfcRating,
+  placeElement,
   resultOf,
   type Cable,
   type ElementResult,
@@ -776,6 +780,72 @@ function generator(): WorkedExample {
   };
 }
 
+function pfc(): WorkedExample {
+  // CC-01 with a PFC bank fed from LV-1 (user request 10 Nov 2026); every load there is office.
+  const p = structuredClone(building('CC-01'));
+  const lv = p.model.elements.find((e) => e.tag === 'LV-1')!;
+  const item = libraryItem('pfc');
+  if (!item || !isPlaceable(item)) throw new Error('No PFC Bank in the library');
+  const bank = placeElement(item, {
+    id: 'pfc-guide',
+    floorId: lv.floorId,
+    floorCode: 'GF',
+    position: lv.position,
+    taken: p.model.elements.map((e) => e.tag),
+  });
+  p.model.elements.push(bank);
+  // Its feeder: the construction of another feeder of the building, from LV-1 to the bank.
+  p.model.cables.push({
+    ...p.model.cables[0]!,
+    id: 'pfc-feeder',
+    tag: 'F-PFC',
+    from: { elementId: lv.id, port: 'out' },
+    to: { elementId: bank.id, port: 'in' },
+  });
+  const target = calcDefault(p, 'targetPowerFactor')!;
+  const s = summariesOf(p).get(lv.id)!;
+  const tan = (x: number) => Math.tan(Math.acos(x));
+  const kvar = s.maxDemandKw * (tan(s.pf!) - tan(target));
+  const ib = (1.5 * kvar * 1000) / (SQRT3 * 400);
+  const engine = designFeeders(p).find((d) => d.toId === bank.id)!;
+  return {
+    id: 'pfc',
+    title: 'PFC bank rating',
+    source: source('CC-01', `a PFC bank ${bank.tag} fed from LV-1 (office loads)`),
+    method: [
+      'The bank corrects the panel feeding it: kVAr = sum per demand category of Demand x [tan(acos pf_load) - tan(acos pf_target)].',
+      'Demand = connected load x the demand factor the panel applies; pf_load = the DB / load-type power factor; target 0.95 (Lead may change it).',
+      'With one category (all office here) this is MD x [tan(acos pf) - tan(acos target)] with the combined power factor of the panel.',
+      'Feeder design current Ib = 1.5 x kVAr x 1000 / (sqrt3 x 400 V) (V-08, IEC 60831); breaker and cable are then sized as for any feeder.',
+    ],
+    inputs: [
+      { label: 'MD of LV-1', how: 'load table', value: s.maxDemandKw, unit: 'kW', digits: 2 },
+      { label: 'Power factor', how: 'combined, LV-1', value: s.pf!, digits: 4 },
+      { label: 'Target power factor', how: 'rule pack', value: target },
+    ],
+    steps: [
+      {
+        label: 'kVAr',
+        how: `${f(s.maxDemandKw)} x (tan(acos ${f(s.pf!, 4)}) - tan(acos ${target}))`,
+        value: kvar,
+        unit: 'kVAr',
+        digits: 2,
+      },
+      {
+        label: 'Ib',
+        how: `1.5 x ${f(kvar)} x 1000 / (1.732 x 400)`,
+        value: ib,
+        unit: 'A',
+        digits: 2,
+      },
+    ],
+    compare: [
+      cmp('kVAr', kvar, pfcRating(p, bank.id, powerFactors(p), target).kvar, 'kVAr', 2),
+      cmp('Ib', ib, engine.ibA, 'A', 2),
+    ],
+  };
+}
+
 /** Every worked example, by id (the guide's Calculation buttons). */
 export const EXAMPLES: Record<string, () => WorkedExample> = {
   length,
@@ -791,6 +861,7 @@ export const EXAMPLES: Record<string, () => WorkedExample> = {
   riser,
   cost,
   loading: transformerLoading,
+  pfc,
   generator,
 };
 

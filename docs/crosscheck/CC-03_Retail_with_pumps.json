@@ -196,6 +196,7 @@
         "kind": "transformer",
         "kva": 1600,
         "primaryV": 11000,
+        "secondaryV": 400,
         "ukPct": null,
         "urPct": null,
         "vectorGroup": ""
@@ -981,7 +982,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "c-lv-1-mcc-1",
@@ -1126,7 +1127,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "c-mcc-1-iso-p1",
@@ -1271,7 +1272,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "c-mcc-1-iso-p2",
@@ -1416,7 +1417,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "c-lv-1-smdb-r",
@@ -1565,7 +1566,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "c-smdb-r-db-r1",
@@ -1710,7 +1711,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "c-smdb-r-db-r2",
@@ -1855,7 +1856,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "lv-1",
@@ -2008,7 +2009,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "mcc-1",
@@ -2153,7 +2154,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "iso-p1",
@@ -2298,7 +2299,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "iso-p2",
@@ -2443,7 +2444,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "smdb-r",
@@ -2592,7 +2593,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "db-r1",
@@ -2737,7 +2738,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "db-r2",
@@ -2882,7 +2883,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "riser-1",
@@ -2940,7 +2941,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       },
       {
         "elementId": "db-1f",
@@ -2999,7 +3000,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "2dl0e669pi0"
+        "inputsKey": "1707jbyiugp"
       }
     ],
     "generatorFactors": []

@@ -18,3 +18,4 @@ export * from './calcSheet.js';
 export * from './capacity.js';
 export * from './fireRated.js';
 export * from './generator.js';
+export * from './pfc.js';

@@ -741,3 +741,81 @@ describe('Change type and isolator label (manager feedback, 7 Nov 2026)', () => 
     expect(saved.model.cables).toHaveLength(1);
   });
 });
+
+describe('PFC bank and meter (components workbook, user request 10 Nov 2026)', () => {
+  const card = () => screen.getByRole('region', { name: 'Engineering Property' });
+  async function placeAt(name: string, x: number, y: number) {
+    await userEvent.click(chip(name));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: x, clientY: y });
+  }
+
+  it('rates a PFC bank from the panel feeding it and links a meter to what it measures', async () => {
+    const api = open(LEAD);
+    await planReady();
+    // MDB with 30 kW of lighting (pf 0.85, no category: factor 1).
+    await placeAt('MDB', 300, 300);
+    await userEvent.click(within(card()).getByRole('button', { name: 'Edit loads' }));
+    const dialog = screen.getByRole('dialog', { name: /^Manual loads/ });
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add load line' }));
+    for (const n of [1, 2, 3])
+      await userEvent.type(within(dialog).getByLabelText(`L${n} kW 1`), '10');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Save loads' }));
+
+    await placeAt('PFC Bank', 600, 300);
+    expect(card()).toHaveTextContent('Name :PFC Bank');
+    expect(within(card()).getByRole('list', { name: 'Calculated' })).toHaveTextContent(
+      'draw a feeder from the panel it corrects',
+    );
+    await userEvent.click(chip('Feeder'));
+    const c = await screen.findByRole('dialog', { name: 'Cable construction' });
+    for (const [label, value] of [
+      ['Cores', '4C'],
+      ['Conductor', 'Cu'],
+      ['Insulation', 'XLPE'],
+      ['Armour', 'SWA'],
+      ['Sheath', 'PVC'],
+      ['Voltage grade', '600/1000 V'],
+      ['Installation method', 'B'],
+    ]) {
+      await userEvent.selectOptions(within(c).getByLabelText(label!), value!);
+    }
+    await userEvent.click(within(c).getByRole('button', { name: 'Use this construction' }));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 300 });
+    await screen.findByRole('img', { name: /^Cable F/ });
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 300 });
+    // 30 x (tan(acos 0.85) - tan(acos 0.95)) = 8.7 kVAr (10.15).
+    const calculated = within(card()).getByRole('list', { name: 'Calculated' });
+    expect(calculated).toHaveTextContent('Rating: 8.7 kVAr');
+    expect(calculated).toHaveTextContent('Panel MDB-GF-01 to pf 0.95');
+
+    await placeAt('Meter', 600, 500);
+    expect(card()).toHaveTextContent('Name :Meter');
+    expect(within(card()).queryByLabelText('Fire rated :')).not.toBeInTheDocument();
+    await userEvent.selectOptions(within(card()).getByLabelText('Meter type :'), '3-Ph');
+    await userEvent.selectOptions(within(card()).getByLabelText('Measures :'), 'MDB-GF-01');
+    expect(screen.getByRole('img', { name: 'Link MTR-GF-01 - MDB-GF-01' })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.saveProject).toHaveBeenCalled());
+    const saved = api.saveProject.mock.calls.at(-1)![0].model.elements;
+    expect(saved.find((e) => e.kind === 'meter')).toMatchObject({
+      meterType: '3-Ph',
+      meteredId: saved.find((e) => e.kind === 'mdb')!.id,
+    });
+    expect(saved.find((e) => e.kind === 'pfc-bank')).toMatchObject({ tag: 'PFC-GF-01' });
+  });
+
+  it('gives a new transformer a 400 V secondary voltage and warns when it differs (E2803)', async () => {
+    open(LEAD);
+    await planReady();
+    await placeAt('Transformer', 300, 300);
+    const secondary = within(card()).getByLabelText('Secondary voltage :');
+    expect(secondary).toHaveValue('400');
+    await userEvent.clear(secondary);
+    await userEvent.type(secondary, '415');
+    await userEvent.tab();
+    expect(card()).toHaveTextContent('E2803 Secondary voltage 415 V differs from the 400 V');
+  });
+});

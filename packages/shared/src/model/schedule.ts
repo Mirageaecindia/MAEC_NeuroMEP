@@ -104,6 +104,31 @@ export interface ScheduleRow {
   remarks: string;
   /** Why the row's result blocks an export (E3101): blocked or a failing check; null if none. */
   problem: string | null;
+  /**
+   * Meter components linked to the component this row feeds (10 Nov 2026), by type: the
+   * "Proposed type & No of Meters" columns, acquired from the plan; null when none is placed
+   * (the engineer may type the numbers in the preview, optional).
+   */
+  meters: MeterCounts | null;
+}
+
+/** Meters of a schedule row by type (components workbook: 1-Ph / 3-Ph / LV/HV). */
+export interface MeterCounts {
+  ph1: number;
+  ph3: number;
+  lvhv: number;
+}
+
+/** Meters (with a type) linked to a component; null when there are none. */
+export function metersOn(
+  elements: readonly Element[],
+  id: string | null | undefined,
+): MeterCounts | null {
+  if (!id) return null;
+  const linked = elements.filter((e) => e.kind === 'meter' && e.meteredId === id && e.meterType);
+  if (linked.length === 0) return null;
+  const count = (t: string) => linked.filter((m) => m.kind === 'meter' && m.meterType === t).length;
+  return { ph1: count('1-Ph'), ph3: count('3-Ph'), lvhv: count('LV/HV') };
 }
 
 export interface BoardSchedule {
@@ -261,6 +286,7 @@ export function boardSchedule(
       ...cols,
       ...loadColumns(s),
       remarks: c.to.port === 'standby' ? `Standby from ${tagOf(c.from.elementId) ?? '?'}` : '',
+      meters: metersOn(elements, board.id),
     };
   });
   if (incomers.length === 0) {
@@ -282,6 +308,7 @@ export function boardSchedule(
       }),
       ...loadColumns(s),
       remarks: riser >= 0 ? `Tap-off from Riser ${riser + 1}` : '',
+      meters: metersOn(elements, board.id),
     });
   }
 
@@ -300,6 +327,7 @@ export function boardSchedule(
         ...cols,
         ...loadColumns(summaries.get(c.to.elementId)),
         remarks: remarksOf(child),
+        meters: metersOn(elements, child?.id),
       };
     });
 
@@ -358,6 +386,7 @@ export function busbarSchedule(
       ...cols,
       ...loadColumns(summaries.get(b.id)),
       remarks: remarksOf(b),
+      meters: metersOn(elements, b.id),
     };
   });
   const add = (f: (r: ScheduleRow) => number) => round2(ways.reduce((t, w) => t + f(w), 0));
@@ -391,6 +420,7 @@ export function busbarSchedule(
         ...totals,
         remarks: source ? `From ${source.tag}` : 'Not fed',
         problem: own.problem,
+        meters: null,
       },
     ],
     ways,

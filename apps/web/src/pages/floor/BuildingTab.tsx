@@ -243,6 +243,10 @@ export function BuildingTab(props: {
       notice(`${board.tag} is linked to its isolator through Fed from, not by a feeder.`);
       return;
     }
+    if (board.kind === 'meter') {
+      notice(`${board.tag} is a meter: choose what it measures in its Engineering Property.`);
+      return;
+    }
     const centre = centreOf(board.id);
     if (!centre) return;
     if (!drawing) {
@@ -445,7 +449,7 @@ export function BuildingTab(props: {
                       picking ? 'picking' : '',
                       drawing?.from.id === b.id ? 'feeder-from' : '',
                       props.feederArmed ? 'feeding' : '',
-                      b.kind === 'equipment' ? 'equipment' : '',
+                      b.kind === 'equipment' || b.kind === 'meter' ? 'equipment' : '',
                     ]
                       .filter(Boolean)
                       .join(' ');

@@ -34,6 +34,7 @@ import {
   onPlanOf,
   sheetMapping,
   resultOf,
+  pfcRating,
   DisciplineSchema,
   typicalSet,
   LIBRARY_ITEMS,
@@ -65,6 +66,7 @@ import { CableProperty } from './CableProperty';
 import { SizingResult } from './SizingResult';
 import { tooltipLines } from './tooltip';
 import {
+  calcDefault,
   defaultPf,
   lengthRule,
   loadingLimitPct,
@@ -218,6 +220,11 @@ export function FloorSetupPage() {
     if (target?.kind === 'equipment') {
       return notice(
         `${target.tag} is linked to its isolator or connection unit through Fed from in its Engineering Property, not by a feeder.`,
+      );
+    }
+    if (target?.kind === 'meter') {
+      return notice(
+        `${target.tag} is a meter: choose the component it measures under Measures in its Engineering Property, not by a feeder.`,
       );
     }
     if (!draft) {
@@ -422,6 +429,29 @@ export function FloorSetupPage() {
     ];
   }
 
+  /**
+   * PFC bank rating (10.15, user request 10 Nov 2026): live from the demand of the panel feeding
+   * it, per demand category, at the target power factor (Lead override, else rule pack).
+   */
+  function pfcLines(id: string): string[] {
+    const target = calcDefault(project, 'targetPowerFactor');
+    const r = pfcRating(project, id, powerFactors(project), target);
+    const panel = project.model.elements.find((e) => e.id === r.panelId);
+    if (!panel) return ['Rating: - (draw a feeder from the panel it corrects)'];
+    if (r.missingPf.length) {
+      return [`Rating: - (power factor missing on ${r.missingPf.join(', ')}, E2003)`];
+    }
+    if (r.kvar === null) return ['Rating: - (no target power factor)'];
+    return [
+      `Rating: ${r.kvar.toFixed(1)} kVAr (calculated; standard bank sizes OI-20)`,
+      `Panel ${panel.tag} to pf ${target}`,
+      ...r.rows.map(
+        (x) =>
+          `${x.category === 'none' ? 'No category' : x.category}: ${x.demandKw.toFixed(1)} kW demand, ${x.kvar.toFixed(1)} kVAr`,
+      ),
+    ];
+  }
+
   // Positions are stored in metres; the plan shows them through its calibration.
   const markers: PlanMarker[] = calibration
     ? onFloor.map((e) => ({
@@ -448,9 +478,12 @@ export function FloorSetupPage() {
           points: c.route.map(toPdf),
           busbar: c.feederType === 'busbar',
         })),
-        // Equipment to the isolator it is fed from, when both are on this floor (dashed).
+        // Equipment to the isolator it is fed from, a meter to what it measures (dashed), when
+        // both are on this floor.
         ...onFloor.flatMap((e) => {
-          const to = e.kind === 'equipment' && onFloor.find((x) => x.id === e.fedFromId);
+          const linkId =
+            e.kind === 'equipment' ? e.fedFromId : e.kind === 'meter' ? e.meteredId : null;
+          const to = linkId && onFloor.find((x) => x.id === linkId);
           return to
             ? [
                 {
@@ -836,6 +869,23 @@ export function FloorSetupPage() {
                       .filter((e) => EQUIPMENT_FEEDERS.includes(e.kind))
                       .map((e) => ({ id: e.id, tag: e.tag }))
                       .sort((a, b) => a.tag.localeCompare(b.tag, undefined, { numeric: true }))}
+                    meterTargets={
+                      selected.kind === 'meter'
+                        ? project.model.elements
+                            .filter(
+                              (e) =>
+                                e.discipline === 'electrical' &&
+                                e.kind !== 'meter' &&
+                                e.kind !== 'eb-utility',
+                            )
+                            .map((e) => ({ id: e.id, tag: e.tag }))
+                            .sort((a, b) =>
+                              a.tag.localeCompare(b.tag, undefined, { numeric: true }),
+                            )
+                        : undefined
+                    }
+                    calculated={selected.kind === 'pfc-bank' ? pfcLines(selected.id) : undefined}
+                    systemV={calcDefault(project, 'supplyVoltageLineV')}
                     onDelete={() => {
                       editor.dispatch({ type: 'removeElements', ids: [selected.id] });
                       setSelectedId(null);

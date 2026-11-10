@@ -61,7 +61,9 @@ export function suppliedIn(m: Network, scenario: Scenario): Set<string> {
  * linked to an isolator / connection unit (E1803), which carries the supply check.
  */
 const needsSupply = (m: Pick<Network, 'elements'>) =>
-  m.elements.filter((e) => !UPSTREAM.includes(e.kind) && e.kind !== 'equipment');
+  m.elements.filter(
+    (e) => !UPSTREAM.includes(e.kind) && e.kind !== 'equipment' && e.kind !== 'meter',
+  );
 
 /** What equipment may be fed from (6 Nov 2026). */
 export const EQUIPMENT_FEEDERS: ElementKind[] = ['isolator', 'connection-unit'];

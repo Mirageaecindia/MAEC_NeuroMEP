@@ -98,6 +98,11 @@ export const TransformerSchema = z.object({
   kind: z.literal('transformer'),
   kva: z.number().positive().nullable(),
   primaryV: z.number().positive().nullable(),
+  /**
+   * Secondary (output) voltage, V (components workbook "secondary_voltage_v", user request
+   * 10 Nov 2026): 400 V by default (the rule pack's system voltage). Optional for older data.
+   */
+  secondaryV: z.number().positive().nullable().optional(),
   ukPct: z.number().positive().nullable(),
   urPct: z.number().positive().nullable(),
   vectorGroup: z.string(),
@@ -108,6 +113,8 @@ export const GeneratorSchema = z.object({
   kind: z.enum(['generator', 'ups']),
   /** Calculated from the MD of the panel fed directly unless overridden. */
   kvaOverride: z.number().positive().nullable(),
+  /** Output voltage, V (components workbook; 400 V by default, 10 Nov 2026). */
+  secondaryV: z.number().positive().nullable().optional(),
   xdSubtransientPct: z.number().positive().nullable(),
   sustainedScKa: z.number().positive().nullable(),
 });
@@ -174,7 +181,28 @@ export const PfcBankSchema = z.object({
   kind: z.literal('pfc-bank'),
   incomerDevice: z.enum(['MCCB', 'ACB', 'isolator']),
   detuned: z.boolean(),
+  /** Components workbook (10 Nov 2026): wall mounted / recessed / floor mounted. */
+  mounting: MountingSchema.nullable().optional(),
 });
+
+/** Meter types of the schedules' "Proposed type & No of Meters" columns (components workbook). */
+export const MeterTypeSchema = z.enum(['1-Ph', '3-Ph', 'LV/HV']);
+export type MeterType = z.infer<typeof MeterTypeSchema>;
+
+/**
+ * kWh meter (user request 10 Nov 2026): placed on the plan and linked to the component whose
+ * supply it measures (no cable, dashed link on the plan, like equipment). Each meter is counted
+ * in the 1-Ph / 3-Ph / LV/HV meter columns of every schedule row whose feeder ends at that
+ * component. Never part of the calculation.
+ */
+export const MeterSchema = z.object({
+  ...base,
+  kind: z.literal('meter'),
+  meterType: MeterTypeSchema.nullable(),
+  /** The component whose supply it measures; null = not linked (not counted). */
+  meteredId: Id.nullable(),
+});
+export type Meter = z.infer<typeof MeterSchema>;
 
 /**
  * Mechanical / PHE equipment (briefing page 9, user request 6 Nov 2026): placed by the mechanical
@@ -208,6 +236,7 @@ export const ElementSchema = z.discriminatedUnion('kind', [
   LoadPointSchema,
   PfcBankSchema,
   EquipmentSchema,
+  MeterSchema,
 ]);
 export type Element = z.infer<typeof ElementSchema>;
 export type ElementKind = Element['kind'];
@@ -236,4 +265,5 @@ export const ELEMENT_LEVEL: Record<ElementKind, 'L0' | 'L1' | 'L2' | 'L3' | 'L4'
   motor: 'L5',
   'pfc-bank': 'L2',
   equipment: 'L6',
+  meter: 'L6',
 };

@@ -66,15 +66,15 @@ export interface LoadPowerFactors {
 }
 
 /** Main boards: the Dubai category factors apply here (LV panel / MDB level). */
-const MAIN = new Set<ElementKind>(['lv-panel', 'mdb', 'emdb', 'acb-panel']);
-const SECOND = new Set<ElementKind>(['smdb', 'esmdb']);
+export const MAIN_BOARDS = new Set<ElementKind>(['lv-panel', 'mdb', 'emdb', 'acb-panel']);
+export const SECOND_BOARDS = new Set<ElementKind>(['smdb', 'esmdb']);
 
 /** Demand category of a load: its DB's or load point's own category; none for panel lines. */
-const categoryOf = (e: Element): DemandCategory | 'none' =>
+export const categoryOf = (e: Element): DemandCategory | 'none' =>
   'demandCategory' in e && e.demandCategory ? e.demandCategory : 'none';
 
 /** Boards apply the demand factor of each load type to their connected load (10.3, manual). */
-const BOARDS = new Set<ElementKind>([
+export const DEMAND_BOARDS = new Set<ElementKind>([
   'lv-panel',
   'mdb',
   'emdb',
@@ -137,7 +137,8 @@ export function ownLines(e: Element): LoadLine[] {
   return [];
 }
 
-const ownPf = (e: Element): number | null =>
+/** The power factor entered on a DB or equipment for all its loads; null = by load type. */
+export const ownPf = (e: Element): number | null =>
   e.kind === 'db' || e.kind === 'equipment' ? e.powerFactor : null;
 const ownStandby = (e: Element): number | null => ('standbyKw' in e ? e.standbyKw : null);
 const reactive = (p: number, pf: number | null | undefined) =>
@@ -202,7 +203,7 @@ export function loadSummaries(
     const tbcCat = new Set<DemandCategory>(sub.flatMap((s) => s.tbcCategories));
     let demand: PhaseKw;
     if (method !== 'manual') {
-      if (MAIN.has(e.kind)) {
+      if (MAIN_BOARDS.has(e.kind)) {
         // Dubai: each category's connected load x its factor, once, at the LV panel / MDB.
         demand = zero();
         for (const [cat, kw] of Object.entries(byCategory) as [
@@ -213,7 +214,7 @@ export function loadSummaries(
           if (df === null && cat !== 'none') tbcCat.add(cat);
           demand = add(demand, scale(kw, df ?? 1));
         }
-      } else if (SECOND.has(e.kind)) {
+      } else if (SECOND_BOARDS.has(e.kind)) {
         demand = scale(connected, secondLevel ?? 1);
       } else {
         // 100 % below the SMDB, and at sources / ATS: what they feed plus their own load.
@@ -224,7 +225,7 @@ export function loadSummaries(
             sub.reduce((d, s) => add(d, s.demand), zero()),
           );
       }
-    } else if (BOARDS.has(e.kind)) {
+    } else if (DEMAND_BOARDS.has(e.kind)) {
       // Once at this board, per load type: a panel override (D-03) or the Page 1 factor.
       demand = zero();
       for (const [code, kw] of Object.entries(byType) as [LoadTypeCode, PhaseKw][]) {

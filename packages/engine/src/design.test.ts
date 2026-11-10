@@ -85,7 +85,7 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
     expect(() => designFeeders({ ...network([5, 5, 5]), rulePackId: null })).toThrow(/rule pack/);
   });
 
-  it('blocks a motor without efficiency and a capacitor bank without rating (E2003)', () => {
+  it('blocks a motor without efficiency (E2003)', () => {
     const p = network([5, 5, 5]);
     const f = p.building.floors[0]!.id;
     const mcc = testElement('mcc', 'mcc', f);
@@ -101,18 +101,43 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
       efficiency: null,
       starter: null,
     } as unknown as Element;
-    const pfc = { ...testElement('mdb', 'pfc', f), kind: 'pfc-bank' } as unknown as Element;
-    p.model.elements.push(mcc, motor, pfc);
+    p.model.elements.push(mcc, motor);
     p.model.cables.push(testCable(p.model.elements[1]!, mcc), testCable(mcc, motor));
-    p.model.cables.push({
-      ...testCable(p.model.elements[1]!, mcc),
-      id: 'c-pfc',
-      to: { elementId: 'pfc', port: 'in' },
-    });
     const m = feederTo(p, 'm');
     expect(m).toMatchObject({ status: 'blocked', ibA: null });
     expect(m.errors[0]).toBe('E2003');
-    expect(feederTo(p, 'pfc').errors[0]).toBe('E2003');
+  });
+
+  it('#TASK-28 sizes the feeder to a PFC bank from the kVAr of the panel it is fed from (10.15, V-08)', () => {
+    // MDB feeds DB 15 kW at pf 0.85 (no category: factor 1) and the PFC bank; target 0.95.
+    const p = network([5, 5, 5]);
+    const f = p.building.floors[0]!.id;
+    const pfc = {
+      ...testElement('mdb', 'pfc', f),
+      kind: 'pfc-bank',
+      incomerDevice: 'MCCB',
+      detuned: false,
+    } as unknown as Element;
+    p.model.elements.push(pfc);
+    p.model.cables.push({ ...testCable(p.model.elements[1]!, pfc), id: 'c-pfc' });
+    const tan = (pf: number) => Math.tan(Math.acos(pf));
+    const kvar = 15 * (tan(0.85) - tan(0.95));
+    const d = feederTo(p, 'pfc');
+    expect(d.errors).toEqual([]);
+    expect(d.ibCase).toBe('three-phase');
+    expect(d.ibA).toBeCloseTo((1.5 * kvar * 1000) / (Math.sqrt(3) * 400), 9);
+    expect(d.device?.ratingA).toBe(10);
+    expect(d.trace.map((t) => t.step)).toContain('PFC');
+    // The Technical Lead's target (override) is used: pf 1.0 needs the whole reactive power.
+    p.calculation.defaultOverrides.targetPowerFactor = 1;
+    expect(feederTo(p, 'pfc').ibA).toBeCloseTo(
+      (1.5 * 15 * tan(0.85) * 1000) / (Math.sqrt(3) * 400),
+      9,
+    );
+    // No load on the panel: nothing to correct, the feeder waits for load.
+    p.model.elements = p.model.elements.filter((e) => e.id !== 'db');
+    p.model.cables = p.model.cables.filter((c) => c.to.elementId !== 'db');
+    expect(feederTo(p, 'pfc').status).toBe('awaiting-load');
   });
 
   it('works out a motor current with its efficiency (10.4, V-06)', () => {

@@ -7,6 +7,7 @@ import {
   LoadCategorySchema,
   LoadTypeCodeSchema,
   LOAD_TYPE_LABELS,
+  MeterTypeSchema,
   StarterSchema,
   MountingSchema,
   type Element,
@@ -62,21 +63,43 @@ const BOARD: FieldDef[] = [
   select('mounting', 'Mounting', MountingSchema.options, '-'),
 ];
 
+type Option = { id: string; tag: string };
+/** A select of components, stored by id and shown by tag. */
+const pick = (key: string, label: string, options: readonly Option[], empty: string): FieldDef =>
+  ({
+    ...select(
+      key,
+      label,
+      options.map((f) => f.id),
+      empty,
+    ),
+    labels: Object.fromEntries(options.map((f) => [f.id, f.tag])),
+  }) as FieldDef;
+
 /** Equipment fields per kind (design doc 12.3); calculated values are not entered here. */
-function fieldsFor(e: Element, feeders: readonly { id: string; tag: string }[]): FieldDef[] {
+function fieldsFor(
+  e: Element,
+  feeders: readonly Option[],
+  meterTargets: readonly Option[],
+): FieldDef[] {
   switch (e.kind) {
+    // kWh meter (user request 10 Nov 2026): its type, and the component whose supply it measures.
+    case 'meter':
+      return [
+        select('meterType', 'Meter type', MeterTypeSchema.options, 'Select'),
+        pick('meteredId', 'Measures', meterTargets, 'Not linked'),
+      ];
+    // PFC bank (components workbook, 10 Nov 2026): kVAr is calculated, not entered.
+    case 'pfc-bank':
+      return [
+        select('incomerDevice', 'Incomer device', ['MCCB', 'ACB', 'isolator']),
+        { key: 'detuned', label: 'Detuned', type: 'bool' },
+        select('mounting', 'Mounting', MountingSchema.options, '-'),
+      ];
     // Mechanical / PHE equipment (briefing page 9, 6 Nov 2026): its load goes to its isolator.
     case 'equipment':
       return [
-        {
-          ...select(
-            'fedFromId',
-            'Fed from',
-            feeders.map((f) => f.id),
-            'Not connected (E1803)',
-          ),
-          labels: Object.fromEntries(feeders.map((f) => [f.id, f.tag])),
-        } as FieldDef,
+        pick('fedFromId', 'Fed from', feeders, 'Not connected (E1803)'),
         num('kw', 'Rated power', 'kW'),
         select('phases', 'Phases', ['3P', 'L1', 'L2', 'L3']),
         {
@@ -128,6 +151,8 @@ function fieldsFor(e: Element, feeders: readonly { id: string; tag: string }[]):
       return [
         num('kva', 'Capacity', 'kVA'),
         num('primaryV', 'Primary voltage', 'V'),
+        // Components workbook (10 Nov 2026): 400 V by default, the system voltage.
+        num('secondaryV', 'Secondary voltage', 'V'),
         num('ukPct', 'uk', '%'),
         num('urPct', 'ur', '%'),
         { key: 'vectorGroup', label: 'Vector group', type: 'text' },
@@ -137,11 +162,13 @@ function fieldsFor(e: Element, feeders: readonly { id: string; tag: string }[]):
     case 'ups':
       return [
         num('kvaOverride', 'Rating', 'kVA'),
+        num('secondaryV', 'Output voltage', 'V'),
         num('sustainedScKa', 'Fault current (datasheet)', 'kA'),
       ];
     case 'generator':
       return [
         num('kvaOverride', 'kVA (override)', 'kVA'),
+        num('secondaryV', 'Output voltage', 'V'),
         num('xdSubtransientPct', "X''d", '%'),
         num('sustainedScKa', 'Sustained short-circuit', 'kA'),
       ];
@@ -187,6 +214,8 @@ export function ElementFields(props: {
   editable: boolean;
   /** Isolators / connection units equipment may be fed from (tag order). */
   feeders?: readonly { id: string; tag: string }[];
+  /** Components a meter may measure (tag order). */
+  meterTargets?: readonly { id: string; tag: string }[];
   onChange: (patch: Record<string, unknown>) => void;
 }) {
   const { element } = props;
@@ -206,7 +235,11 @@ export function ElementFields(props: {
 
   return (
     <>
-      {[...fieldsFor(element, props.feeders ?? []), ...COMMON].map((f) => {
+      {[
+        ...fieldsFor(element, props.feeders ?? [], props.meterTargets ?? []),
+        // A meter has no fire rating.
+        ...COMMON.filter((f) => element.kind !== 'meter' || f.key !== 'fireRated'),
+      ].map((f) => {
         const id = `prop-${f.key}`;
         const value = values[f.key];
         return (

@@ -34,6 +34,12 @@ export function EngineeringProperty(props: {
   feeders?: readonly { id: string; tag: string }[];
   /** FLS equipment it feeds while its own category is not FLS: it counts as FLS (6 Nov 2026). */
   flsEquipment?: readonly string[];
+  /** Components a meter may measure. */
+  meterTargets?: readonly { id: string; tag: string }[];
+  /** Calculated values shown read-only (PFC bank kVAr per demand category, 10 Nov 2026). */
+  calculated?: readonly string[];
+  /** The system voltage the calculations use (rule pack, 400 V). */
+  systemV?: number | null;
 }) {
   const { element } = props;
   // Section 3 guidance (A-20): never a restriction.
@@ -146,7 +152,7 @@ export function EngineeringProperty(props: {
             }}
           />
         </dd>
-        {element.kind !== 'equipment' && (
+        {element.kind !== 'equipment' && element.kind !== 'meter' && (
           <>
             <dt>Fed From :</dt>
             <dd>{props.fedFrom ?? '-'}</dd>
@@ -175,8 +181,36 @@ export function EngineeringProperty(props: {
           element={element}
           editable={props.editable}
           feeders={props.feeders}
+          meterTargets={props.meterTargets}
           onChange={props.onChange}
         />
+        {element.kind === 'meter' && (!element.meterType || !element.meteredId) && (
+          <p className="field-hint" role="note">
+            Choose the meter type and the component whose supply it measures: the meter is then
+            counted in the 1-Ph / 3-Ph / LV/HV columns of the schedules.
+          </p>
+        )}
+        {'secondaryV' in element &&
+          element.secondaryV != null &&
+          props.systemV != null &&
+          element.secondaryV !== props.systemV && (
+            <p className="field-hint" role="note">
+              E2803 Secondary voltage {element.secondaryV} V differs from the {props.systemV} V
+              system voltage: Cable Size calculates at {props.systemV} V (rule pack).
+            </p>
+          )}
+        {props.calculated && props.calculated.length > 0 && (
+          <>
+            <dt>Calculated :</dt>
+            <dd>
+              <ul className="calculated-lines" aria-label="Calculated">
+                {props.calculated.map((l) => (
+                  <li key={l}>{l}</li>
+                ))}
+              </ul>
+            </dd>
+          </>
+        )}
         {props.flsEquipment && props.flsEquipment.length > 0 && (
           <p className="field-hint" role="note">
             Counts as FLS: it feeds FLS equipment {props.flsEquipment.join(', ')}
@@ -186,7 +220,7 @@ export function EngineeringProperty(props: {
         <dt>Symbol :</dt>
         <dd>{item ? `${item.cmpCode ?? 'no CMP code yet'} (draft)` : '-'}</dd>
       </dl>
-      {element.kind !== 'equipment' && (
+      {element.kind !== 'equipment' && element.kind !== 'meter' && (
         <div className="usual-connections" role="note" aria-label="Usual connections">
           <p>
             <strong>Usually fed from:</strong> {labels(usual.fedFrom)}

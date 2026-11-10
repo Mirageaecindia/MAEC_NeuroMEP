@@ -38,8 +38,8 @@ interface Network {
   risers: readonly Riser[];
 }
 
-/** Not on a riser: equipment (linked through "Fed from") and the supplies above the panels. */
-const OFF_RISER = new Set(['equipment', 'eb-utility', 'rmu']);
+/** Not on a riser: equipment and meters (linked, not fed) and the supplies above the panels. */
+const OFF_RISER = new Set(['equipment', 'meter', 'eb-utility', 'rmu']);
 
 /**
  * Components that may feed a riser: any electrical component (A-20); transformers and main

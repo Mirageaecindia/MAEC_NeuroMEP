@@ -104,6 +104,18 @@
       "status": "draft"
     },
     {
+      "key": "pfc",
+      "cmpCode": null,
+      "file": "pfc.svg",
+      "status": "draft"
+    },
+    {
+      "key": "meter",
+      "cmpCode": null,
+      "file": "meter.svg",
+      "status": "draft"
+    },
+    {
       "key": "mechanical-equipment",
       "cmpCode": null,
       "file": "mechanical-equipment.svg",

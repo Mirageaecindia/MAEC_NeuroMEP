@@ -372,6 +372,13 @@ export const ERROR_CATALOGUE = [
     'Check the loads and demand factors, or confirm a higher allocation with the authority.',
     true,
   ),
+  e(
+    'E2803',
+    'Secondary voltage differs from the system voltage',
+    'warning',
+    'A transformer, generator or UPS has a secondary voltage other than the rule-pack system voltage (400 V); the CableSizer tables and all calculations are at 400 / 230 V.',
+    'Use 400 V, or ask the Technical Lead: calculations at another voltage need a rule pack for it.',
+  ),
   // #TASK-31 Exports
   e(
     'E3101',
