@@ -19,3 +19,4 @@ export * from './capacity.js';
 export * from './fireRated.js';
 export * from './generator.js';
 export * from './pfc.js';
+export * from './revitExchange.js';
