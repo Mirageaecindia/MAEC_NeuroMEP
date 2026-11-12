@@ -1,2 +1,3 @@
-# Floor plan PDFs shared for the Revit samples stay local (client drawings).
-plans/
+# Placement checks are drawn on the client's floor plans: regenerate them locally
+# (python -I placement_check.py samples/<sample>.json ../Floor_plan_inputs).
+samples/*_check.pdf

@@ -11,9 +11,23 @@ NeuroMEP writes one JSON package per project. It holds every component the engin
 | File | What it is |
 |---|---|
 | `samples/<sample>.json` | Exchange package of a sample building, modelled and sized in NeuroMEP. |
-| `samples/<sample>_<floor>_check.pdf` | The floor plan with every component and feeder drawn from the JSON alone (see Placement check). |
-| `plans/` | The floor-plan PDFs the samples were modelled on. Kept out of git (client drawings). |
+| `samples/<sample>_project.json` | The NeuroMEP project it came from (open with Import File > Open project file). |
+| `samples/<sample>_<floor>_check.pdf` | The floor plan with every component and feeder drawn from the JSON alone (see Placement check). Made locally, not in git. |
+| `../Floor_plan_inputs/` | The floor-plan PDFs the samples were modelled on. |
 | `placement_check.py` | Draws a package back onto its plan PDFs. |
+
+## The two samples (DCH-F14)
+
+| Sample | Sheet | What is on it |
+|---|---|---|
+| `DCH-F14_L01_Podium` | `49-DCH-F14-MRG-DRW-PDM-L01-EEP-2006-A.pdf`: 1st floor (podium deck), A1 at 1:200 | Electrical room: SMDB-L1-LL-01 on the landlord busbar riser BUSBAR-6 (BB1-T-LL01), LCP-L1-LL-01, DB-L1-LL-01, ELCP-L1-LL-01 (emergency lighting, FLS, fire-rated feeder) and EDB-L1-LL-01 (essential) fed between floors from EMDB-GF-01 behind the generator's ATS; DB-L1-GYM at its symbol, fed along the drawn tray; 3 meters. |
+| `DCH-F14_L02_Typical` | `50-DCH-F14-MRG-DRW-TWR-L02-ELE-2102-A.pdf`: 2nd floor (typical tier 1, L03-L19), A1 at 1:100 printed reduced to letter size | SMDB-T-L2-AP in the electrical room on the apartment busbar riser BUSBAR-1 (BB1-T-AP1); DB-201 to DB-210 at their symbols in the apartments, each fed along the corridor and core trays; 10 meters (one per apartment). |
+
+Both have the Ground Floor supply (TX-GF-01 1500 kVA, LV-GF-01, PFC-GF-01; sample 1 also GEN-GF-01, ATS-GF-01, EMDB-GF-01). No GF plan was shared, so those components have positions in metres and no PDF point. Tags are the drawings' own. Loads, kVA and lengths are sample data.
+
+Both sheets are rotated 90° (`pageRotationDeg: 90`). Sheet 50 is a reduced print: its calibration (0.106187 m per pt) comes from the title block (A1, 1:100) and the page size, and should be confirmed against a dimension. Each floor lists two grid crossings with their PDF points (`alignment.referencePoints`); fill in their Revit coordinates to place the floor exactly.
+
+Results are Provisional only because of E2402: the let-through and earth-fault checks wait for the breaker catalogue (OI-03). There are no failing checks.
 
 ## Package contents
 
@@ -71,7 +85,7 @@ A `result` with `outOfDate: true` means the model changed after the last Cable S
 
 ```sh
 # Draw a package back onto its plans (needs: pip install pymupdf)
-python -I placement_check.py samples/<sample>.json plans/
+python -I placement_check.py samples/<sample>.json ../Floor_plan_inputs
 ```
 
 The check reads only the JSON. It draws each component (circle, tag, breaker rating) and each feeder route (tag, size) on a copy of the plan. Every marker must sit where the component was placed in NeuroMEP. After import, the Revit families should line up with this sheet once the floor is aligned.

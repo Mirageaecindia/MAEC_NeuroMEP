@@ -1,0 +1,5336 @@
+{
+  "schemaVersion": 2,
+  "id": "revit-sample-L02",
+  "rulePackId": "dubai",
+  "rulePackVersion": "1.0.0",
+  "version": 0,
+  "details": {
+    "name": "DCH-F14 L02 Typical - Revit sample",
+    "location": "Dubai",
+    "clientName": "MAEC - Revit exchange sample (test data)",
+    "plotRef": "Revit exchange sample",
+    "designStage": "SD",
+    "revision": "A",
+    "category": "OFFICE",
+    "plotLoad": {
+      "value": 2500,
+      "unit": "kVA"
+    }
+  },
+  "site": {
+    "ambientAirC": {
+      "value": 50,
+      "source": "rulepack"
+    },
+    "ambientSoilC": {
+      "value": 40,
+      "source": "rulepack"
+    },
+    "soilResistivity": {
+      "value": 2,
+      "source": "rulepack"
+    },
+    "altitudeM": null
+  },
+  "calculation": {
+    "region": "dubai",
+    "upstreamFaultMva": 350,
+    "system": {
+      "voltageLineV": {
+        "value": 400,
+        "source": "rulepack"
+      },
+      "voltagePhaseV": {
+        "value": 230,
+        "source": "rulepack"
+      },
+      "frequencyHz": {
+        "value": 50,
+        "source": "rulepack"
+      }
+    },
+    "checks": {
+      "currentCarryingCapacity": true,
+      "voltageDrop": true,
+      "shortCircuit": true,
+      "letThroughEnergy": true,
+      "earthFaultLoopImpedance": true
+    },
+    "demandFactors": {
+      "byLoadType": {
+        "1": {
+          "value": null,
+          "source": "rulepack"
+        },
+        "2": {
+          "value": null,
+          "source": "rulepack"
+        },
+        "3": {
+          "value": null,
+          "source": "rulepack"
+        },
+        "4": {
+          "value": null,
+          "source": "rulepack"
+        },
+        "5": {
+          "value": null,
+          "source": "rulepack"
+        },
+        "6": {
+          "value": null,
+          "source": "rulepack"
+        },
+        "7": {
+          "value": null,
+          "source": "rulepack"
+        },
+        "8": {
+          "value": null,
+          "source": "rulepack"
+        },
+        "9": {
+          "value": null,
+          "source": "rulepack"
+        },
+        "10": {
+          "value": null,
+          "source": "rulepack"
+        },
+        "11": {
+          "value": null,
+          "source": "rulepack"
+        },
+        "12": {
+          "value": null,
+          "source": "rulepack"
+        }
+      },
+      "byCategory": {
+        "residential": {
+          "value": 0.65,
+          "source": "rulepack"
+        },
+        "landlord": {
+          "value": 0.8,
+          "source": "rulepack"
+        },
+        "office": {
+          "value": 0.8,
+          "source": "rulepack"
+        },
+        "retail": {
+          "value": 0.8,
+          "source": "rulepack"
+        }
+      },
+      "secondLevel": {
+        "value": 1,
+        "source": "rulepack"
+      }
+    },
+    "demandMethod": "dubai-non-emaar",
+    "busbarMaker": "gersan",
+    "defaultOverrides": {}
+  },
+  "building": {
+    "counts": {
+      "basements": 0,
+      "grounds": 1,
+      "podiums": 1,
+      "typicals": 1
+    },
+    "gfLevelM": 0,
+    "mechanicalFloorIds": [],
+    "floors": [
+      {
+        "id": "f1",
+        "code": "GF",
+        "name": "Ground Floor",
+        "type": "ground",
+        "heightM": null,
+        "plan": null
+      },
+      {
+        "id": "f2",
+        "code": "P1",
+        "name": "Level 01 (Podium deck)",
+        "type": "podium",
+        "heightM": null,
+        "plan": null
+      },
+      {
+        "id": "f3",
+        "code": "1",
+        "name": "Level 02 (Typical tier 1)",
+        "type": "typical",
+        "heightM": null,
+        "plan": {
+          "kind": "pdf",
+          "fileId": "revit-sample-L02-1",
+          "fileName": "50-DCH-F14-MRG-DRW-TWR-L02-ELE-2102-A.pdf",
+          "uploadedAt": "2026-11-12T08:00:00.000Z",
+          "uploadedBy": "u-lead",
+          "page": {
+            "widthPt": 612,
+            "heightPt": 792
+          },
+          "calibration": {
+            "method": "two-point",
+            "pointA": {
+              "x": 0,
+              "y": 0
+            },
+            "pointB": {
+              "x": 1000,
+              "y": 0
+            },
+            "realDistanceM": 106.187,
+            "metresPerUnit": 0.106187,
+            "calibratedAt": "2026-11-12T08:00:00.000Z",
+            "calibratedBy": "u-lead"
+          }
+        }
+      }
+    ]
+  },
+  "workingDirectory": "",
+  "disciplines": {
+    "electrical": [],
+    "mechanical": [],
+    "phe": []
+  },
+  "model": {
+    "elements": [
+      {
+        "id": "tx-gf-01",
+        "version": 0,
+        "tag": "TX-GF-01",
+        "description": "",
+        "floorId": "f1",
+        "position": {
+          "x": 10,
+          "y": 10
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "transformer",
+        "kind": "transformer",
+        "kva": 1500,
+        "primaryV": 11000,
+        "secondaryV": 400,
+        "ukPct": null,
+        "urPct": null,
+        "vectorGroup": ""
+      },
+      {
+        "id": "lv-gf-01",
+        "version": 0,
+        "tag": "LV-GF-01",
+        "description": "",
+        "floorId": "f1",
+        "position": {
+          "x": 16,
+          "y": 10
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "lv-panel",
+        "poles": "TPN",
+        "loadCategory": "normal",
+        "incomerDevice": "ACB",
+        "earthLeakage": "none",
+        "mounting": null,
+        "standbyKw": null,
+        "kind": "lv-panel",
+        "demandCategories": [
+          "residential"
+        ],
+        "manualLoads": [],
+        "icwKa": null,
+        "ipkKa": null,
+        "demandFactorOverrides": {}
+      },
+      {
+        "id": "pfc-gf-01",
+        "version": 0,
+        "tag": "PFC-GF-01",
+        "description": "",
+        "floorId": "f1",
+        "position": {
+          "x": 16,
+          "y": 14
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "pfc",
+        "kind": "pfc-bank",
+        "incomerDevice": "MCCB",
+        "detuned": false,
+        "mounting": null
+      },
+      {
+        "id": "smdb-t-l2-ap",
+        "version": 0,
+        "tag": "SMDB-T-L2-AP",
+        "description": "",
+        "floorId": "f3",
+        "position": {
+          "x": 38.014946,
+          "y": 41.200556
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "smdb",
+        "poles": "TPN",
+        "loadCategory": "normal",
+        "incomerDevice": "MCCB",
+        "earthLeakage": "none",
+        "mounting": null,
+        "standbyKw": null,
+        "kind": "smdb",
+        "demandCategories": [
+          "residential"
+        ],
+        "manualLoads": [],
+        "icwKa": null,
+        "ipkKa": null,
+        "demandFactorOverrides": {}
+      },
+      {
+        "id": "db-201",
+        "version": 0,
+        "tag": "DB-201",
+        "description": "Apartment 201 (2BR)",
+        "floorId": "f3",
+        "position": {
+          "x": 32.1534236,
+          "y": 22.936392
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "db",
+        "poles": "TPN",
+        "loadCategory": "normal",
+        "incomerDevice": "MCCB",
+        "earthLeakage": "none",
+        "mounting": null,
+        "standbyKw": null,
+        "kind": "db",
+        "demandCategory": "residential",
+        "loads": [
+          {
+            "method": "kw",
+            "loadType": "1",
+            "kwL1": 0.7,
+            "kwL2": 0.7,
+            "kwL3": 0.7
+          },
+          {
+            "method": "kw",
+            "loadType": "2",
+            "kwL1": 2,
+            "kwL2": 2,
+            "kwL3": 2
+          },
+          {
+            "method": "kw",
+            "loadType": "3",
+            "kwL1": 3,
+            "kwL2": 3,
+            "kwL3": 3
+          }
+        ],
+        "powerFactor": null,
+        "thirdHarmonicPct": null
+      },
+      {
+        "id": "mtr-201",
+        "version": 0,
+        "tag": "MTR-201",
+        "description": "",
+        "floorId": "f3",
+        "position": {
+          "x": 38.439694,
+          "y": 41.625304
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "meter",
+        "kind": "meter",
+        "meterType": "3-Ph",
+        "meteredId": "db-201"
+      },
+      {
+        "id": "db-202",
+        "version": 0,
+        "tag": "DB-202",
+        "description": "Apartment 202 (1BR)",
+        "floorId": "f3",
+        "position": {
+          "x": 28.882864,
+          "y": 27.672332200000003
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "db",
+        "poles": "TPN",
+        "loadCategory": "normal",
+        "incomerDevice": "MCCB",
+        "earthLeakage": "none",
+        "mounting": null,
+        "standbyKw": null,
+        "kind": "db",
+        "demandCategory": "residential",
+        "loads": [
+          {
+            "method": "kw",
+            "loadType": "1",
+            "kwL1": 0.5,
+            "kwL2": 0.5,
+            "kwL3": 0.5
+          },
+          {
+            "method": "kw",
+            "loadType": "2",
+            "kwL1": 1.5,
+            "kwL2": 1.5,
+            "kwL3": 1.5
+          },
+          {
+            "method": "kw",
+            "loadType": "3",
+            "kwL1": 2,
+            "kwL2": 2,
+            "kwL3": 2
+          }
+        ],
+        "powerFactor": null,
+        "thirdHarmonicPct": null
+      },
+      {
+        "id": "mtr-202",
+        "version": 0,
+        "tag": "MTR-202",
+        "description": "",
+        "floorId": "f3",
+        "position": {
+          "x": 38.439694,
+          "y": 41.943865
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "meter",
+        "kind": "meter",
+        "meterType": "3-Ph",
+        "meteredId": "db-202"
+      },
+      {
+        "id": "db-203",
+        "version": 0,
+        "tag": "DB-203",
+        "description": "Apartment 203 (1BR)",
+        "floorId": "f3",
+        "position": {
+          "x": 28.882864,
+          "y": 35.254084
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "db",
+        "poles": "TPN",
+        "loadCategory": "normal",
+        "incomerDevice": "MCCB",
+        "earthLeakage": "none",
+        "mounting": null,
+        "standbyKw": null,
+        "kind": "db",
+        "demandCategory": "residential",
+        "loads": [
+          {
+            "method": "kw",
+            "loadType": "1",
+            "kwL1": 0.5,
+            "kwL2": 0.5,
+            "kwL3": 0.5
+          },
+          {
+            "method": "kw",
+            "loadType": "2",
+            "kwL1": 1.5,
+            "kwL2": 1.5,
+            "kwL3": 1.5
+          },
+          {
+            "method": "kw",
+            "loadType": "3",
+            "kwL1": 2,
+            "kwL2": 2,
+            "kwL3": 2
+          }
+        ],
+        "powerFactor": null,
+        "thirdHarmonicPct": null
+      },
+      {
+        "id": "mtr-203",
+        "version": 0,
+        "tag": "MTR-203",
+        "description": "",
+        "floorId": "f3",
+        "position": {
+          "x": 38.439694,
+          "y": 42.262426000000005
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "meter",
+        "kind": "meter",
+        "meterType": "3-Ph",
+        "meteredId": "db-203"
+      },
+      {
+        "id": "db-204",
+        "version": 0,
+        "tag": "DB-204",
+        "description": "Apartment 204 (1BR)",
+        "floorId": "f3",
+        "position": {
+          "x": 28.882864,
+          "y": 42.878310600000006
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "db",
+        "poles": "TPN",
+        "loadCategory": "normal",
+        "incomerDevice": "MCCB",
+        "earthLeakage": "none",
+        "mounting": null,
+        "standbyKw": null,
+        "kind": "db",
+        "demandCategory": "residential",
+        "loads": [
+          {
+            "method": "kw",
+            "loadType": "1",
+            "kwL1": 0.5,
+            "kwL2": 0.5,
+            "kwL3": 0.5
+          },
+          {
+            "method": "kw",
+            "loadType": "2",
+            "kwL1": 1.5,
+            "kwL2": 1.5,
+            "kwL3": 1.5
+          },
+          {
+            "method": "kw",
+            "loadType": "3",
+            "kwL1": 2,
+            "kwL2": 2,
+            "kwL3": 2
+          }
+        ],
+        "powerFactor": null,
+        "thirdHarmonicPct": null
+      },
+      {
+        "id": "mtr-204",
+        "version": 0,
+        "tag": "MTR-204",
+        "description": "",
+        "floorId": "f3",
+        "position": {
+          "x": 38.439694,
+          "y": 42.580987
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "meter",
+        "kind": "meter",
+        "meterType": "3-Ph",
+        "meteredId": "db-204"
+      },
+      {
+        "id": "db-205",
+        "version": 0,
+        "tag": "DB-205",
+        "description": "Apartment 205 (2BR)",
+        "floorId": "f3",
+        "position": {
+          "x": 32.1534236,
+          "y": 47.603632100000006
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "db",
+        "poles": "TPN",
+        "loadCategory": "normal",
+        "incomerDevice": "MCCB",
+        "earthLeakage": "none",
+        "mounting": null,
+        "standbyKw": null,
+        "kind": "db",
+        "demandCategory": "residential",
+        "loads": [
+          {
+            "method": "kw",
+            "loadType": "1",
+            "kwL1": 0.7,
+            "kwL2": 0.7,
+            "kwL3": 0.7
+          },
+          {
+            "method": "kw",
+            "loadType": "2",
+            "kwL1": 2,
+            "kwL2": 2,
+            "kwL3": 2
+          },
+          {
+            "method": "kw",
+            "loadType": "3",
+            "kwL1": 3,
+            "kwL2": 3,
+            "kwL3": 3
+          }
+        ],
+        "powerFactor": null,
+        "thirdHarmonicPct": null
+      },
+      {
+        "id": "mtr-205",
+        "version": 0,
+        "tag": "MTR-205",
+        "description": "",
+        "floorId": "f3",
+        "position": {
+          "x": 38.439694,
+          "y": 42.899548
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "meter",
+        "kind": "meter",
+        "meterType": "3-Ph",
+        "meteredId": "db-205"
+      },
+      {
+        "id": "db-206",
+        "version": 0,
+        "tag": "DB-206",
+        "description": "Apartment 206 (2BR)",
+        "floorId": "f3",
+        "position": {
+          "x": 41.3810739,
+          "y": 47.603632100000006
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "db",
+        "poles": "TPN",
+        "loadCategory": "normal",
+        "incomerDevice": "MCCB",
+        "earthLeakage": "none",
+        "mounting": null,
+        "standbyKw": null,
+        "kind": "db",
+        "demandCategory": "residential",
+        "loads": [
+          {
+            "method": "kw",
+            "loadType": "1",
+            "kwL1": 0.7,
+            "kwL2": 0.7,
+            "kwL3": 0.7
+          },
+          {
+            "method": "kw",
+            "loadType": "2",
+            "kwL1": 2,
+            "kwL2": 2,
+            "kwL3": 2
+          },
+          {
+            "method": "kw",
+            "loadType": "3",
+            "kwL1": 3,
+            "kwL2": 3,
+            "kwL3": 3
+          }
+        ],
+        "powerFactor": null,
+        "thirdHarmonicPct": null
+      },
+      {
+        "id": "mtr-206",
+        "version": 0,
+        "tag": "MTR-206",
+        "description": "",
+        "floorId": "f3",
+        "position": {
+          "x": 38.970629,
+          "y": 41.625304
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "meter",
+        "kind": "meter",
+        "meterType": "3-Ph",
+        "meteredId": "db-206"
+      },
+      {
+        "id": "db-207",
+        "version": 0,
+        "tag": "DB-207",
+        "description": "Apartment 207 (1BR)",
+        "floorId": "f3",
+        "position": {
+          "x": 44.6516335,
+          "y": 42.8889293
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "db",
+        "poles": "TPN",
+        "loadCategory": "normal",
+        "incomerDevice": "MCCB",
+        "earthLeakage": "none",
+        "mounting": null,
+        "standbyKw": null,
+        "kind": "db",
+        "demandCategory": "residential",
+        "loads": [
+          {
+            "method": "kw",
+            "loadType": "1",
+            "kwL1": 0.5,
+            "kwL2": 0.5,
+            "kwL3": 0.5
+          },
+          {
+            "method": "kw",
+            "loadType": "2",
+            "kwL1": 1.5,
+            "kwL2": 1.5,
+            "kwL3": 1.5
+          },
+          {
+            "method": "kw",
+            "loadType": "3",
+            "kwL1": 2,
+            "kwL2": 2,
+            "kwL3": 2
+          }
+        ],
+        "powerFactor": null,
+        "thirdHarmonicPct": null
+      },
+      {
+        "id": "mtr-207",
+        "version": 0,
+        "tag": "MTR-207",
+        "description": "",
+        "floorId": "f3",
+        "position": {
+          "x": 38.970629,
+          "y": 41.943865
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "meter",
+        "kind": "meter",
+        "meterType": "3-Ph",
+        "meteredId": "db-207"
+      },
+      {
+        "id": "db-208",
+        "version": 0,
+        "tag": "DB-208",
+        "description": "Apartment 208 (1BR)",
+        "floorId": "f3",
+        "position": {
+          "x": 44.6516335,
+          "y": 35.3071775
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "db",
+        "poles": "TPN",
+        "loadCategory": "normal",
+        "incomerDevice": "MCCB",
+        "earthLeakage": "none",
+        "mounting": null,
+        "standbyKw": null,
+        "kind": "db",
+        "demandCategory": "residential",
+        "loads": [
+          {
+            "method": "kw",
+            "loadType": "1",
+            "kwL1": 0.5,
+            "kwL2": 0.5,
+            "kwL3": 0.5
+          },
+          {
+            "method": "kw",
+            "loadType": "2",
+            "kwL1": 1.5,
+            "kwL2": 1.5,
+            "kwL3": 1.5
+          },
+          {
+            "method": "kw",
+            "loadType": "3",
+            "kwL1": 2,
+            "kwL2": 2,
+            "kwL3": 2
+          }
+        ],
+        "powerFactor": null,
+        "thirdHarmonicPct": null
+      },
+      {
+        "id": "mtr-208",
+        "version": 0,
+        "tag": "MTR-208",
+        "description": "",
+        "floorId": "f3",
+        "position": {
+          "x": 38.970629,
+          "y": 42.262426000000005
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "meter",
+        "kind": "meter",
+        "meterType": "3-Ph",
+        "meteredId": "db-208"
+      },
+      {
+        "id": "db-209",
+        "version": 0,
+        "tag": "DB-209",
+        "description": "Apartment 209 (1BR)",
+        "floorId": "f3",
+        "position": {
+          "x": 44.6516335,
+          "y": 27.682950899999998
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "db",
+        "poles": "TPN",
+        "loadCategory": "normal",
+        "incomerDevice": "MCCB",
+        "earthLeakage": "none",
+        "mounting": null,
+        "standbyKw": null,
+        "kind": "db",
+        "demandCategory": "residential",
+        "loads": [
+          {
+            "method": "kw",
+            "loadType": "1",
+            "kwL1": 0.5,
+            "kwL2": 0.5,
+            "kwL3": 0.5
+          },
+          {
+            "method": "kw",
+            "loadType": "2",
+            "kwL1": 1.5,
+            "kwL2": 1.5,
+            "kwL3": 1.5
+          },
+          {
+            "method": "kw",
+            "loadType": "3",
+            "kwL1": 2,
+            "kwL2": 2,
+            "kwL3": 2
+          }
+        ],
+        "powerFactor": null,
+        "thirdHarmonicPct": null
+      },
+      {
+        "id": "mtr-209",
+        "version": 0,
+        "tag": "MTR-209",
+        "description": "",
+        "floorId": "f3",
+        "position": {
+          "x": 38.970629,
+          "y": 42.580987
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "meter",
+        "kind": "meter",
+        "meterType": "3-Ph",
+        "meteredId": "db-209"
+      },
+      {
+        "id": "db-210",
+        "version": 0,
+        "tag": "DB-210",
+        "description": "Apartment 210 (2BR)",
+        "floorId": "f3",
+        "position": {
+          "x": 41.391692600000006,
+          "y": 22.9470107
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "db",
+        "poles": "TPN",
+        "loadCategory": "normal",
+        "incomerDevice": "MCCB",
+        "earthLeakage": "none",
+        "mounting": null,
+        "standbyKw": null,
+        "kind": "db",
+        "demandCategory": "residential",
+        "loads": [
+          {
+            "method": "kw",
+            "loadType": "1",
+            "kwL1": 0.7,
+            "kwL2": 0.7,
+            "kwL3": 0.7
+          },
+          {
+            "method": "kw",
+            "loadType": "2",
+            "kwL1": 2,
+            "kwL2": 2,
+            "kwL3": 2
+          },
+          {
+            "method": "kw",
+            "loadType": "3",
+            "kwL1": 3,
+            "kwL2": 3,
+            "kwL3": 3
+          }
+        ],
+        "powerFactor": null,
+        "thirdHarmonicPct": null
+      },
+      {
+        "id": "mtr-210",
+        "version": 0,
+        "tag": "MTR-210",
+        "description": "",
+        "floorId": "f3",
+        "position": {
+          "x": 38.970629,
+          "y": 42.899548
+        },
+        "location": "",
+        "discipline": "electrical",
+        "ipRating": null,
+        "fireRated": false,
+        "libraryKey": "meter",
+        "kind": "meter",
+        "meterType": "3-Ph",
+        "meteredId": "db-210"
+      }
+    ],
+    "cables": [
+      {
+        "id": "c-tx-gf-01-lv-gf-01",
+        "version": 0,
+        "tag": "FGF-1",
+        "from": {
+          "elementId": "tx-gf-01",
+          "port": "out"
+        },
+        "to": {
+          "elementId": "lv-gf-01",
+          "port": "in"
+        },
+        "circuitRef": "1RYB",
+        "floorId": "f1",
+        "route": [
+          {
+            "x": 10,
+            "y": 10
+          },
+          {
+            "x": 16,
+            "y": 10
+          }
+        ],
+        "verticalM": 1,
+        "feederType": "cable",
+        "construction": {
+          "cores": "1C",
+          "conductor": "Cu",
+          "insulation": "XLPE",
+          "armour": "AWA",
+          "sheath": "PVC",
+          "voltageGrade": "600/1000 V",
+          "method": "J",
+          "trays": 1,
+          "depthM": null,
+          "separation": "touching",
+          "groupedCircuits": 1
+        },
+        "locks": {
+          "sizeMm2": null,
+          "runs": null,
+          "eccMm2": null
+        }
+      },
+      {
+        "id": "c-lv-gf-01-pfc-gf-01",
+        "version": 0,
+        "tag": "FGF-1-1",
+        "from": {
+          "elementId": "lv-gf-01",
+          "port": "out"
+        },
+        "to": {
+          "elementId": "pfc-gf-01",
+          "port": "in"
+        },
+        "circuitRef": "1RYB",
+        "floorId": "f1",
+        "route": [
+          {
+            "x": 16,
+            "y": 10
+          },
+          {
+            "x": 16,
+            "y": 14
+          }
+        ],
+        "verticalM": 1,
+        "feederType": "cable",
+        "construction": {
+          "cores": "4C",
+          "conductor": "Cu",
+          "insulation": "XLPE",
+          "armour": "SWA",
+          "sheath": "PVC",
+          "voltageGrade": "600/1000 V",
+          "method": "J",
+          "trays": 1,
+          "depthM": null,
+          "separation": "touching",
+          "groupedCircuits": 3
+        },
+        "locks": {
+          "sizeMm2": null,
+          "runs": null,
+          "eccMm2": null
+        }
+      },
+      {
+        "id": "c-smdb-t-l2-ap-db-201",
+        "version": 0,
+        "tag": "F1-1",
+        "from": {
+          "elementId": "smdb-t-l2-ap",
+          "port": "out"
+        },
+        "to": {
+          "elementId": "db-201",
+          "port": "in"
+        },
+        "circuitRef": "1RYB",
+        "floorId": "f3",
+        "route": [
+          {
+            "x": 38.014946,
+            "y": 41.200556
+          },
+          {
+            "x": 38.014946,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 34.415206700000006
+          },
+          {
+            "x": 30.905726350000002,
+            "y": 34.415206700000006
+          },
+          {
+            "x": 30.905726350000002,
+            "y": 22.936392
+          },
+          {
+            "x": 32.1534236,
+            "y": 22.936392
+          }
+        ],
+        "verticalM": 1,
+        "feederType": "cable",
+        "construction": {
+          "cores": "4C",
+          "conductor": "Cu",
+          "insulation": "XLPE",
+          "armour": "SWA",
+          "sheath": "PVC",
+          "voltageGrade": "600/1000 V",
+          "method": "J",
+          "trays": 1,
+          "depthM": null,
+          "separation": "touching",
+          "groupedCircuits": 6
+        },
+        "locks": {
+          "sizeMm2": null,
+          "runs": null,
+          "eccMm2": null
+        }
+      },
+      {
+        "id": "c-smdb-t-l2-ap-db-202",
+        "version": 0,
+        "tag": "F1-2",
+        "from": {
+          "elementId": "smdb-t-l2-ap",
+          "port": "out"
+        },
+        "to": {
+          "elementId": "db-202",
+          "port": "in"
+        },
+        "circuitRef": "2RYB",
+        "floorId": "f3",
+        "route": [
+          {
+            "x": 38.014946,
+            "y": 41.200556
+          },
+          {
+            "x": 38.014946,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 34.415206700000006
+          },
+          {
+            "x": 30.905726350000002,
+            "y": 34.415206700000006
+          },
+          {
+            "x": 30.905726350000002,
+            "y": 27.672332200000003
+          },
+          {
+            "x": 28.882864,
+            "y": 27.672332200000003
+          }
+        ],
+        "verticalM": 1,
+        "feederType": "cable",
+        "construction": {
+          "cores": "4C",
+          "conductor": "Cu",
+          "insulation": "XLPE",
+          "armour": "SWA",
+          "sheath": "PVC",
+          "voltageGrade": "600/1000 V",
+          "method": "J",
+          "trays": 1,
+          "depthM": null,
+          "separation": "touching",
+          "groupedCircuits": 6
+        },
+        "locks": {
+          "sizeMm2": null,
+          "runs": null,
+          "eccMm2": null
+        }
+      },
+      {
+        "id": "c-smdb-t-l2-ap-db-203",
+        "version": 0,
+        "tag": "F1-3",
+        "from": {
+          "elementId": "smdb-t-l2-ap",
+          "port": "out"
+        },
+        "to": {
+          "elementId": "db-203",
+          "port": "in"
+        },
+        "circuitRef": "3RYB",
+        "floorId": "f3",
+        "route": [
+          {
+            "x": 38.014946,
+            "y": 41.200556
+          },
+          {
+            "x": 38.014946,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 34.415206700000006
+          },
+          {
+            "x": 30.905726350000002,
+            "y": 34.415206700000006
+          },
+          {
+            "x": 30.905726350000002,
+            "y": 35.254084
+          },
+          {
+            "x": 28.882864,
+            "y": 35.254084
+          }
+        ],
+        "verticalM": 1,
+        "feederType": "cable",
+        "construction": {
+          "cores": "4C",
+          "conductor": "Cu",
+          "insulation": "XLPE",
+          "armour": "SWA",
+          "sheath": "PVC",
+          "voltageGrade": "600/1000 V",
+          "method": "J",
+          "trays": 1,
+          "depthM": null,
+          "separation": "touching",
+          "groupedCircuits": 6
+        },
+        "locks": {
+          "sizeMm2": null,
+          "runs": null,
+          "eccMm2": null
+        }
+      },
+      {
+        "id": "c-smdb-t-l2-ap-db-204",
+        "version": 0,
+        "tag": "F1-4",
+        "from": {
+          "elementId": "smdb-t-l2-ap",
+          "port": "out"
+        },
+        "to": {
+          "elementId": "db-204",
+          "port": "in"
+        },
+        "circuitRef": "4RYB",
+        "floorId": "f3",
+        "route": [
+          {
+            "x": 38.014946,
+            "y": 41.200556
+          },
+          {
+            "x": 38.014946,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 34.415206700000006
+          },
+          {
+            "x": 30.905726350000002,
+            "y": 34.415206700000006
+          },
+          {
+            "x": 30.905726350000002,
+            "y": 42.878310600000006
+          },
+          {
+            "x": 28.882864,
+            "y": 42.878310600000006
+          }
+        ],
+        "verticalM": 1,
+        "feederType": "cable",
+        "construction": {
+          "cores": "4C",
+          "conductor": "Cu",
+          "insulation": "XLPE",
+          "armour": "SWA",
+          "sheath": "PVC",
+          "voltageGrade": "600/1000 V",
+          "method": "J",
+          "trays": 1,
+          "depthM": null,
+          "separation": "touching",
+          "groupedCircuits": 6
+        },
+        "locks": {
+          "sizeMm2": null,
+          "runs": null,
+          "eccMm2": null
+        }
+      },
+      {
+        "id": "c-smdb-t-l2-ap-db-205",
+        "version": 0,
+        "tag": "F1-5",
+        "from": {
+          "elementId": "smdb-t-l2-ap",
+          "port": "out"
+        },
+        "to": {
+          "elementId": "db-205",
+          "port": "in"
+        },
+        "circuitRef": "5RYB",
+        "floorId": "f3",
+        "route": [
+          {
+            "x": 38.014946,
+            "y": 41.200556
+          },
+          {
+            "x": 38.014946,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 34.415206700000006
+          },
+          {
+            "x": 30.905726350000002,
+            "y": 34.415206700000006
+          },
+          {
+            "x": 30.905726350000002,
+            "y": 47.603632100000006
+          },
+          {
+            "x": 32.1534236,
+            "y": 47.603632100000006
+          }
+        ],
+        "verticalM": 1,
+        "feederType": "cable",
+        "construction": {
+          "cores": "4C",
+          "conductor": "Cu",
+          "insulation": "XLPE",
+          "armour": "SWA",
+          "sheath": "PVC",
+          "voltageGrade": "600/1000 V",
+          "method": "J",
+          "trays": 1,
+          "depthM": null,
+          "separation": "touching",
+          "groupedCircuits": 6
+        },
+        "locks": {
+          "sizeMm2": null,
+          "runs": null,
+          "eccMm2": null
+        }
+      },
+      {
+        "id": "c-smdb-t-l2-ap-db-206",
+        "version": 0,
+        "tag": "F1-6",
+        "from": {
+          "elementId": "smdb-t-l2-ap",
+          "port": "out"
+        },
+        "to": {
+          "elementId": "db-206",
+          "port": "in"
+        },
+        "circuitRef": "6RYB",
+        "floorId": "f3",
+        "route": [
+          {
+            "x": 38.014946,
+            "y": 41.200556
+          },
+          {
+            "x": 38.014946,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 47.603632100000006
+          },
+          {
+            "x": 41.3810739,
+            "y": 47.603632100000006
+          }
+        ],
+        "verticalM": 1,
+        "feederType": "cable",
+        "construction": {
+          "cores": "4C",
+          "conductor": "Cu",
+          "insulation": "XLPE",
+          "armour": "SWA",
+          "sheath": "PVC",
+          "voltageGrade": "600/1000 V",
+          "method": "J",
+          "trays": 1,
+          "depthM": null,
+          "separation": "touching",
+          "groupedCircuits": 6
+        },
+        "locks": {
+          "sizeMm2": null,
+          "runs": null,
+          "eccMm2": null
+        }
+      },
+      {
+        "id": "c-smdb-t-l2-ap-db-207",
+        "version": 0,
+        "tag": "F1-7",
+        "from": {
+          "elementId": "smdb-t-l2-ap",
+          "port": "out"
+        },
+        "to": {
+          "elementId": "db-207",
+          "port": "in"
+        },
+        "circuitRef": "7RYB",
+        "floorId": "f3",
+        "route": [
+          {
+            "x": 38.014946,
+            "y": 41.200556
+          },
+          {
+            "x": 38.014946,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 42.8889293
+          },
+          {
+            "x": 44.6516335,
+            "y": 42.8889293
+          }
+        ],
+        "verticalM": 1,
+        "feederType": "cable",
+        "construction": {
+          "cores": "4C",
+          "conductor": "Cu",
+          "insulation": "XLPE",
+          "armour": "SWA",
+          "sheath": "PVC",
+          "voltageGrade": "600/1000 V",
+          "method": "J",
+          "trays": 1,
+          "depthM": null,
+          "separation": "touching",
+          "groupedCircuits": 6
+        },
+        "locks": {
+          "sizeMm2": null,
+          "runs": null,
+          "eccMm2": null
+        }
+      },
+      {
+        "id": "c-smdb-t-l2-ap-db-208",
+        "version": 0,
+        "tag": "F1-8",
+        "from": {
+          "elementId": "smdb-t-l2-ap",
+          "port": "out"
+        },
+        "to": {
+          "elementId": "db-208",
+          "port": "in"
+        },
+        "circuitRef": "8RYB",
+        "floorId": "f3",
+        "route": [
+          {
+            "x": 38.014946,
+            "y": 41.200556
+          },
+          {
+            "x": 38.014946,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 35.3071775
+          },
+          {
+            "x": 44.6516335,
+            "y": 35.3071775
+          }
+        ],
+        "verticalM": 1,
+        "feederType": "cable",
+        "construction": {
+          "cores": "4C",
+          "conductor": "Cu",
+          "insulation": "XLPE",
+          "armour": "SWA",
+          "sheath": "PVC",
+          "voltageGrade": "600/1000 V",
+          "method": "J",
+          "trays": 1,
+          "depthM": null,
+          "separation": "touching",
+          "groupedCircuits": 6
+        },
+        "locks": {
+          "sizeMm2": null,
+          "runs": null,
+          "eccMm2": null
+        }
+      },
+      {
+        "id": "c-smdb-t-l2-ap-db-209",
+        "version": 0,
+        "tag": "F1-9",
+        "from": {
+          "elementId": "smdb-t-l2-ap",
+          "port": "out"
+        },
+        "to": {
+          "elementId": "db-209",
+          "port": "in"
+        },
+        "circuitRef": "9RYB",
+        "floorId": "f3",
+        "route": [
+          {
+            "x": 38.014946,
+            "y": 41.200556
+          },
+          {
+            "x": 38.014946,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 27.682950899999998
+          },
+          {
+            "x": 44.6516335,
+            "y": 27.682950899999998
+          }
+        ],
+        "verticalM": 1,
+        "feederType": "cable",
+        "construction": {
+          "cores": "4C",
+          "conductor": "Cu",
+          "insulation": "XLPE",
+          "armour": "SWA",
+          "sheath": "PVC",
+          "voltageGrade": "600/1000 V",
+          "method": "J",
+          "trays": 1,
+          "depthM": null,
+          "separation": "touching",
+          "groupedCircuits": 6
+        },
+        "locks": {
+          "sizeMm2": null,
+          "runs": null,
+          "eccMm2": null
+        }
+      },
+      {
+        "id": "c-smdb-t-l2-ap-db-210",
+        "version": 0,
+        "tag": "F1-10",
+        "from": {
+          "elementId": "smdb-t-l2-ap",
+          "port": "out"
+        },
+        "to": {
+          "elementId": "db-210",
+          "port": "in"
+        },
+        "circuitRef": "10RYB",
+        "floorId": "f3",
+        "route": [
+          {
+            "x": 38.014946,
+            "y": 41.200556
+          },
+          {
+            "x": 38.014946,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 39.8732185
+          },
+          {
+            "x": 42.1668577,
+            "y": 22.9470107
+          },
+          {
+            "x": 41.391692600000006,
+            "y": 22.9470107
+          }
+        ],
+        "verticalM": 1,
+        "feederType": "cable",
+        "construction": {
+          "cores": "4C",
+          "conductor": "Cu",
+          "insulation": "XLPE",
+          "armour": "SWA",
+          "sheath": "PVC",
+          "voltageGrade": "600/1000 V",
+          "method": "J",
+          "trays": 1,
+          "depthM": null,
+          "separation": "touching",
+          "groupedCircuits": 6
+        },
+        "locks": {
+          "sizeMm2": null,
+          "runs": null,
+          "eccMm2": null
+        }
+      }
+    ],
+    "risers": [
+      {
+        "id": "riser-1",
+        "lengthM": 10,
+        "widthM": 1,
+        "fedFromId": "lv-gf-01",
+        "feeds": [
+          "smdb-t-l2-ap"
+        ]
+      }
+    ],
+    "floorFlags": [],
+    "results": [
+      {
+        "elementId": "c-tx-gf-01-lv-gf-01",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 95 mm²: It 298 A x K1 0.820 x K2 0.95 x Kr 1.000 x K3 1.000 = Iz 232.1 A vs In 200 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 0.424 mV/A/m, 11.0 m: Vc 0.19 %, total 0.19 % vs 2 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 33.69 kA, ip 74.45 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 1.846e+8 A²s, withstands 33.69 kA for 0.163 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Zs (hot) 12.327 mOhm: passes if the breaker disconnects within 5 s at Ia <= 17726 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 95 mm² vs DEWA minimum 1 x 95 mm² for 200 A"
+          },
+          "C7": {
+            "state": "not-calculated",
+            "detail": "Enter Icw and Ipk of LV-GF-01 to check C7."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "1C",
+          "sizeMm2": 95,
+          "eccMm2": 50,
+          "lengthM": 11
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 200,
+          "poles": "4P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 46.8,
+            "L2": 46.8,
+            "L3": 46.8
+          },
+          "maxDemandKw": 91.25999999999999,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 163.38611432091588,
+          "inA": 200,
+          "izA": 232.14199999999997,
+          "vdOwnPct": 0.19031972236448128,
+          "vdTotalPct": 0.19031972236448128,
+          "ikMaxKa": 33.68968001143598,
+          "ikMinKa": 25.27099521465888,
+          "ipKa": 74.44743341871045,
+          "zsMohm": 12.32652886735672
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062035409991427,
+          "itA": 298,
+          "k1": 0.82,
+          "k2": 0.95,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 0.42358049860325686,
+          "vdOwnV": 0.7612788894579251,
+          "vdUpstreamPct": 0,
+          "vdLimitPct": 2,
+          "busbarA": null,
+          "lengthM": 11,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 30.4 / 30.4 / 30.4 kW (L1 / L2 / L3), pf 0.8062035409991427"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 163.4 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 200 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 95 mm²: It 298 A x K1 0.820 x K2 0.95 x Kr 1.000 x K3 1.000 = Iz 232.1 A vs In 200 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Single-core r / x taken from multicore values (V-15)."
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 0.424 mV/A/m, 11.0 m: Vc 0.19 %, total 0.19 % vs 2 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 33.69 kA, ip 74.45 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "C7",
+            "detail": "Enter Icw and Ipk of LV-GF-01 to check C7."
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 50 mm² Cu/PVC (CPC table for 95 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "c-lv-gf-01-pfc-gf-01",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 35 mm²: It 162 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 106.3 A vs In 100 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 1.049 mV/A/m, 9.0 m: Vc 0.19 %, total 0.38 % vs 4 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 27.01 kA, ip 48.94 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 27.01 kA for 0.034 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Zs (hot) 29.224 mOhm: passes if the breaker disconnects within 5 s at Ia <= 7477 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 35 mm² vs DEWA minimum 1 x 35 mm² for 100 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 35,
+          "eccMm2": 16,
+          "lengthM": 9
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 100,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 0,
+            "L2": 0,
+            "L3": 0
+          },
+          "maxDemandKw": 0,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 80.05559839916592,
+          "inA": 100,
+          "izA": 106.272,
+          "vdOwnPct": 0.18888199735215203,
+          "vdTotalPct": 0.3792017197166333,
+          "ikMaxKa": 27.0074312281366,
+          "ikMinKa": 15.349473257858829,
+          "ipKa": 48.94370754210188,
+          "zsMohm": 29.224126394182697
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.85,
+          "itA": 162,
+          "k1": 0.82,
+          "k2": 0.8,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 1.048615662831756,
+          "vdOwnV": 0.7555279894086081,
+          "vdUpstreamPct": 0.19031972236448128,
+          "vdLimitPct": 4,
+          "busbarA": null,
+          "lengthM": 9,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 0 / 0 / 0 kW (L1 / L2 / L3), pf 0.85"
+          },
+          {
+            "step": "PFC",
+            "detail": "Qc = 37 kVAr: demand of LV-GF-01 corrected to pf 0.95 - residential 91.3 kW / 37 kVAr (10.15)"
+          },
+          {
+            "step": "Ib",
+            "detail": "capacitor bank: Ib = 1.5 x 37 kVAr x 1000 / (sqrt3 x 400) = 80.1 A (V-08); voltage drop worked out at the default load power factor (a capacitor current raises the voltage: conservative)"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 100 A MCCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 35 mm²: It 162 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 106.3 A vs In 100 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 1.049 mV/A/m, 9.0 m: Vc 0.19 %, total 0.38 % vs 4 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 27.01 kA, ip 48.94 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 16 mm² Cu/PVC (CPC table for 35 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "c-smdb-t-l2-ap-db-201",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.33 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 39.924904299999994
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 32,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 5.7,
+            "L2": 5.7,
+            "L3": 5.7
+          },
+          "maxDemandKw": 17.1,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 30.61689437691768,
+          "inA": 32,
+          "izA": 34.44,
+          "vdOwnPct": 2.078040182534799,
+          "vdTotalPct": 2.328842188439095,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.150505669749943,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8061472108831602,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 8.312160730139196,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 39.924904299999994,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 5.7 / 5.7 / 5.7 kW (L1 / L2 / L3), pf 0.8061472108831602"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 30.6 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.33 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "c-smdb-t-l2-ap-db-202",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.56 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 25 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 35.964129199999995
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 25,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 4,
+            "L2": 4,
+            "L3": 4
+          },
+          "maxDemandKw": 12,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 21.48261272934775,
+          "inA": 25,
+          "izA": 34.44,
+          "vdOwnPct": 1.313425881578106,
+          "vdTotalPct": 1.5642278874824018,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.2731566823755216,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062570551312385,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 5.253703526312424,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 35.964129199999995,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.56 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "c-smdb-t-l2-ap-db-203",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.35 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 25 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 30.060131999999985
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 25,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 4,
+            "L2": 4,
+            "L3": 4
+          },
+          "maxDemandKw": 12,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 21.48261272934775,
+          "inA": 25,
+          "izA": 34.44,
+          "vdOwnPct": 1.0978092963934245,
+          "vdTotalPct": 1.3486113022977204,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.5136205781549907,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062570551312385,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 4.391237185573698,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 30.060131999999985,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.35 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "c-smdb-t-l2-ap-db-204",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.63 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 25 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 37.684358599999996
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 25,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 4,
+            "L2": 4,
+            "L3": 4
+          },
+          "maxDemandKw": 12,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 21.48261272934775,
+          "inA": 25,
+          "izA": 34.44,
+          "vdOwnPct": 1.376249418988031,
+          "vdTotalPct": 1.627051424892327,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.2168196843028711,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062570551312385,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 5.504997675952124,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 37.684358599999996,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.63 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "c-smdb-t-l2-ap-db-205",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.42 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 41.63451499999999
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 32,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 5.7,
+            "L2": 5.7,
+            "L3": 5.7
+          },
+          "maxDemandKw": 17.1,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 30.61689437691768,
+          "inA": 32,
+          "izA": 34.44,
+          "vdOwnPct": 2.167023231921631,
+          "vdTotalPct": 2.417825237825927,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.1045702082439608,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8061472108831602,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 8.668092927686525,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 41.63451499999999,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 5.7 / 5.7 / 5.7 kW (L1 / L2 / L3), pf 0.8061472108831602"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 30.6 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.42 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "c-smdb-t-l2-ap-db-206",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.24 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 18.995446600000008
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 32,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 5.7,
+            "L2": 5.7,
+            "L3": 5.7
+          },
+          "maxDemandKw": 17.1,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 30.61689437691768,
+          "inA": 32,
+          "izA": 34.44,
+          "vdOwnPct": 0.9886886897307868,
+          "vdTotalPct": 1.2394906956350829,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 2.341745914091288,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8061472108831602,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 3.954754758923147,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 18.995446600000008,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 5.7 / 5.7 / 5.7 kW (L1 / L2 / L3), pf 0.8061472108831602"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 30.6 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.24 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "c-smdb-t-l2-ap-db-207",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.83 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 25 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 15.9797358
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 25,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 4,
+            "L2": 4,
+            "L3": 4
+          },
+          "maxDemandKw": 12,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 21.48261272934775,
+          "inA": 25,
+          "izA": 34.44,
+          "vdOwnPct": 0.5835870087047796,
+          "vdTotalPct": 0.8343890146090756,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 2.7513329477821937,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062570551312385,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 2.3343480348191186,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 15.9797358,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.83 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "c-smdb-t-l2-ap-db-208",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.89 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 25 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 17.530065999999998
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 25,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 4,
+            "L2": 4,
+            "L3": 4
+          },
+          "maxDemandKw": 12,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 21.48261272934775,
+          "inA": 25,
+          "izA": 34.44,
+          "vdOwnPct": 0.6402057522964404,
+          "vdTotalPct": 0.8910077582007363,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 2.5244118149515216,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062570551312385,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 2.5608230091857616,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 17.530065999999998,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.89 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "c-smdb-t-l2-ap-db-209",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.17 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 25 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 25.1542926
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 25,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 4,
+            "L2": 4,
+            "L3": 4
+          },
+          "maxDemandKw": 12,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 21.48261272934775,
+          "inA": 25,
+          "izA": 34.44,
+          "vdOwnPct": 0.9186458748910464,
+          "vdTotalPct": 1.1694478807953423,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.7952381465402716,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062570551312385,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 3.6745834995641857,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 25.1542926,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.17 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "c-smdb-t-l2-ap-db-210",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.72 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 28.180622099999994
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 32,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 5.7,
+            "L2": 5.7,
+            "L3": 5.7
+          },
+          "maxDemandKw": 17.1,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 30.61689437691768,
+          "inA": 32,
+          "izA": 34.44,
+          "vdOwnPct": 1.4667653215296044,
+          "vdTotalPct": 1.7175673274339003,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.6104212610380801,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8061472108831602,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 5.8670612861184175,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 28.180622099999994,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 5.7 / 5.7 / 5.7 kW (L1 / L2 / L3), pf 0.8061472108831602"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 30.6 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.72 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "lv-gf-01",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 95 mm²: It 298 A x K1 0.820 x K2 0.95 x Kr 1.000 x K3 1.000 = Iz 232.1 A vs In 200 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 0.424 mV/A/m, 11.0 m: Vc 0.19 %, total 0.19 % vs 2 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 33.69 kA, ip 74.45 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 1.846e+8 A²s, withstands 33.69 kA for 0.163 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Zs (hot) 12.327 mOhm: passes if the breaker disconnects within 5 s at Ia <= 17726 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 95 mm² vs DEWA minimum 1 x 95 mm² for 200 A"
+          },
+          "C7": {
+            "state": "not-calculated",
+            "detail": "Enter Icw and Ipk of LV-GF-01 to check C7."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "1C",
+          "sizeMm2": 95,
+          "eccMm2": 50,
+          "lengthM": 11
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 200,
+          "poles": "4P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 46.8,
+            "L2": 46.8,
+            "L3": 46.8
+          },
+          "maxDemandKw": 91.25999999999999,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 163.38611432091588,
+          "inA": 200,
+          "izA": 232.14199999999997,
+          "vdOwnPct": 0.19031972236448128,
+          "vdTotalPct": 0.19031972236448128,
+          "ikMaxKa": 33.68968001143598,
+          "ikMinKa": 25.27099521465888,
+          "ipKa": 74.44743341871045,
+          "zsMohm": 12.32652886735672
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062035409991427,
+          "itA": 298,
+          "k1": 0.82,
+          "k2": 0.95,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 0.42358049860325686,
+          "vdOwnV": 0.7612788894579251,
+          "vdUpstreamPct": 0,
+          "vdLimitPct": 2,
+          "busbarA": null,
+          "lengthM": 11,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 30.4 / 30.4 / 30.4 kW (L1 / L2 / L3), pf 0.8062035409991427"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 163.4 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 200 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 95 mm²: It 298 A x K1 0.820 x K2 0.95 x Kr 1.000 x K3 1.000 = Iz 232.1 A vs In 200 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Single-core r / x taken from multicore values (V-15)."
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 0.424 mV/A/m, 11.0 m: Vc 0.19 %, total 0.19 % vs 2 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 33.69 kA, ip 74.45 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "C7",
+            "detail": "Enter Icw and Ipk of LV-GF-01 to check C7."
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 50 mm² Cu/PVC (CPC table for 95 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "pfc-gf-01",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 35 mm²: It 162 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 106.3 A vs In 100 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 1.049 mV/A/m, 9.0 m: Vc 0.19 %, total 0.38 % vs 4 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 27.01 kA, ip 48.94 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 27.01 kA for 0.034 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Zs (hot) 29.224 mOhm: passes if the breaker disconnects within 5 s at Ia <= 7477 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 35 mm² vs DEWA minimum 1 x 35 mm² for 100 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 35,
+          "eccMm2": 16,
+          "lengthM": 9
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 100,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 0,
+            "L2": 0,
+            "L3": 0
+          },
+          "maxDemandKw": 0,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 80.05559839916592,
+          "inA": 100,
+          "izA": 106.272,
+          "vdOwnPct": 0.18888199735215203,
+          "vdTotalPct": 0.3792017197166333,
+          "ikMaxKa": 27.0074312281366,
+          "ikMinKa": 15.349473257858829,
+          "ipKa": 48.94370754210188,
+          "zsMohm": 29.224126394182697
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.85,
+          "itA": 162,
+          "k1": 0.82,
+          "k2": 0.8,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 1.048615662831756,
+          "vdOwnV": 0.7555279894086081,
+          "vdUpstreamPct": 0.19031972236448128,
+          "vdLimitPct": 4,
+          "busbarA": null,
+          "lengthM": 9,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 0 / 0 / 0 kW (L1 / L2 / L3), pf 0.85"
+          },
+          {
+            "step": "PFC",
+            "detail": "Qc = 37 kVAr: demand of LV-GF-01 corrected to pf 0.95 - residential 91.3 kW / 37 kVAr (10.15)"
+          },
+          {
+            "step": "Ib",
+            "detail": "capacitor bank: Ib = 1.5 x 37 kVAr x 1000 / (sqrt3 x 400) = 80.1 A (V-08); voltage drop worked out at the default load power factor (a capacitor current raises the voltage: conservative)"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 100 A MCCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 35 mm²: It 162 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 106.3 A vs In 100 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 1.049 mV/A/m, 9.0 m: Vc 0.19 %, total 0.38 % vs 4 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 27.01 kA, ip 48.94 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 16 mm² Cu/PVC (CPC table for 35 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "db-201",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.33 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 39.924904299999994
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 32,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 5.7,
+            "L2": 5.7,
+            "L3": 5.7
+          },
+          "maxDemandKw": 17.1,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 30.61689437691768,
+          "inA": 32,
+          "izA": 34.44,
+          "vdOwnPct": 2.078040182534799,
+          "vdTotalPct": 2.328842188439095,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.150505669749943,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8061472108831602,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 8.312160730139196,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 39.924904299999994,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 5.7 / 5.7 / 5.7 kW (L1 / L2 / L3), pf 0.8061472108831602"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 30.6 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.33 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "db-202",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.56 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 25 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 35.964129199999995
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 25,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 4,
+            "L2": 4,
+            "L3": 4
+          },
+          "maxDemandKw": 12,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 21.48261272934775,
+          "inA": 25,
+          "izA": 34.44,
+          "vdOwnPct": 1.313425881578106,
+          "vdTotalPct": 1.5642278874824018,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.2731566823755216,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062570551312385,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 5.253703526312424,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 35.964129199999995,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.56 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "db-203",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.35 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 25 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 30.060131999999985
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 25,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 4,
+            "L2": 4,
+            "L3": 4
+          },
+          "maxDemandKw": 12,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 21.48261272934775,
+          "inA": 25,
+          "izA": 34.44,
+          "vdOwnPct": 1.0978092963934245,
+          "vdTotalPct": 1.3486113022977204,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.5136205781549907,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062570551312385,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 4.391237185573698,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 30.060131999999985,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.35 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "db-204",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.63 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 25 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 37.684358599999996
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 25,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 4,
+            "L2": 4,
+            "L3": 4
+          },
+          "maxDemandKw": 12,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 21.48261272934775,
+          "inA": 25,
+          "izA": 34.44,
+          "vdOwnPct": 1.376249418988031,
+          "vdTotalPct": 1.627051424892327,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.2168196843028711,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062570551312385,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 5.504997675952124,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 37.684358599999996,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.63 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "db-205",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.42 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 41.63451499999999
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 32,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 5.7,
+            "L2": 5.7,
+            "L3": 5.7
+          },
+          "maxDemandKw": 17.1,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 30.61689437691768,
+          "inA": 32,
+          "izA": 34.44,
+          "vdOwnPct": 2.167023231921631,
+          "vdTotalPct": 2.417825237825927,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.1045702082439608,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8061472108831602,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 8.668092927686525,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 41.63451499999999,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 5.7 / 5.7 / 5.7 kW (L1 / L2 / L3), pf 0.8061472108831602"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 30.6 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.42 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "db-206",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.24 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 18.995446600000008
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 32,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 5.7,
+            "L2": 5.7,
+            "L3": 5.7
+          },
+          "maxDemandKw": 17.1,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 30.61689437691768,
+          "inA": 32,
+          "izA": 34.44,
+          "vdOwnPct": 0.9886886897307868,
+          "vdTotalPct": 1.2394906956350829,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 2.341745914091288,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8061472108831602,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 3.954754758923147,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 18.995446600000008,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 5.7 / 5.7 / 5.7 kW (L1 / L2 / L3), pf 0.8061472108831602"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 30.6 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.24 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "db-207",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.83 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 25 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 15.9797358
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 25,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 4,
+            "L2": 4,
+            "L3": 4
+          },
+          "maxDemandKw": 12,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 21.48261272934775,
+          "inA": 25,
+          "izA": 34.44,
+          "vdOwnPct": 0.5835870087047796,
+          "vdTotalPct": 0.8343890146090756,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 2.7513329477821937,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062570551312385,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 2.3343480348191186,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 15.9797358,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.83 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "db-208",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.89 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 25 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 17.530065999999998
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 25,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 4,
+            "L2": 4,
+            "L3": 4
+          },
+          "maxDemandKw": 12,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 21.48261272934775,
+          "inA": 25,
+          "izA": 34.44,
+          "vdOwnPct": 0.6402057522964404,
+          "vdTotalPct": 0.8910077582007363,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 2.5244118149515216,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062570551312385,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 2.5608230091857616,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 17.530065999999998,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.89 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "db-209",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.17 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 25 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 25.1542926
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 25,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 4,
+            "L2": 4,
+            "L3": 4
+          },
+          "maxDemandKw": 12,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 21.48261272934775,
+          "inA": 25,
+          "izA": 34.44,
+          "vdOwnPct": 0.9186458748910464,
+          "vdTotalPct": 1.1694478807953423,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.7952381465402716,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8062570551312385,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 3.6745834995641857,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 25.1542926,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 25 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.17 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "db-210",
+        "status": "provisional",
+        "provisionalReasons": [
+          "device-data-required"
+        ],
+        "errors": [
+          "E2402"
+        ],
+        "sizedBy": "C6",
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.72 % vs 2.5 %"
+          },
+          "C3": {
+            "state": "pass",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          "C4": {
+            "state": "not-calculated",
+            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+          },
+          "C5": {
+            "state": "not-calculated",
+            "detail": "Upstream loop unknown (riser busbar, OI-13, or no source)."
+          },
+          "C6": {
+            "state": "pass",
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
+          },
+          "C7": {
+            "state": "not-required",
+            "detail": "No switchboard withstand to check."
+          },
+          "C8": {
+            "state": "not-required",
+            "detail": "Normal load."
+          },
+          "C9": {
+            "state": "not-required",
+            "detail": "Not on a fire & life-safety path."
+          }
+        },
+        "size": {
+          "runs": 1,
+          "cores": "4C",
+          "sizeMm2": 6,
+          "eccMm2": 6,
+          "lengthM": 28.180622099999994
+        },
+        "device": {
+          "type": "MCCB",
+          "ratingA": 32,
+          "poles": "3P",
+          "faultRatingKa": 36
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 5.7,
+            "L2": 5.7,
+            "L3": 5.7
+          },
+          "maxDemandKw": 17.1,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 30.61689437691768,
+          "inA": 32,
+          "izA": 34.44,
+          "vdOwnPct": 1.4667653215296044,
+          "vdTotalPct": 1.7175673274339003,
+          "ikMaxKa": 26.096361920466844,
+          "ikMinKa": 1.6104212610380801,
+          "ipKa": 45.87123956590738,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": "three-phase",
+          "pf": 0.8061472108831602,
+          "itA": 56,
+          "k1": 0.82,
+          "k2": 0.75,
+          "kr": 1,
+          "k3": 1,
+          "vuMvAm": 6.8,
+          "vdOwnV": 5.8670612861184175,
+          "vdUpstreamPct": 0.25080200590429597,
+          "vdLimitPct": 2.5,
+          "busbarA": null,
+          "lengthM": 28.180622099999994,
+          "loadFactorK": null
+        },
+        "trace": [
+          {
+            "step": "Load",
+            "detail": "Demand 5.7 / 5.7 / 5.7 kW (L1 / L2 / L3), pf 0.8061472108831602"
+          },
+          {
+            "step": "Ib",
+            "detail": "three-phase: Ib = 30.6 A, neutral 0 A"
+          },
+          {
+            "step": "Device",
+            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+          },
+          {
+            "step": "C1",
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.75 x Kr 1.000 x K3 1.000 = Iz 34.4 A vs In 32 A: pass"
+          },
+          {
+            "step": "C2",
+            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.72 % vs 2.5 %"
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: uk 6 % (manufacturer catalogue, 1500 kVA, 11 kV)."
+          },
+          {
+            "step": "C3",
+            "detail": "TX-GF-01: ur 1.2 % (CableSizer table)."
+          },
+          {
+            "step": "C3",
+            "detail": "Ik\"max 26.10 kA, ip 45.87 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
+          },
+          {
+            "step": "ECC",
+            "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
+          },
+          {
+            "step": "Sizing",
+            "detail": "Sized by C6."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "riser-1",
+        "status": "final",
+        "provisionalReasons": [],
+        "errors": [],
+        "sizedBy": null,
+        "checks": {
+          "C1": {
+            "state": "pass",
+            "detail": "800 A busbar vs In 300 A"
+          },
+          "C2": {
+            "state": "pass",
+            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.06 %, total 0.25 % vs 2 %"
+          }
+        },
+        "size": null,
+        "device": null,
+        "load": null,
+        "values": {
+          "ibA": 251.363252801409,
+          "inA": 300,
+          "izA": 800,
+          "vdOwnPct": 0.060482283539814705,
+          "vdTotalPct": 0.25080200590429597,
+          "ikMaxKa": null,
+          "ikMinKa": null,
+          "ipKa": null,
+          "zsMohm": null
+        },
+        "calc": {
+          "ibCase": null,
+          "pf": null,
+          "itA": null,
+          "k1": null,
+          "k2": null,
+          "kr": null,
+          "k3": null,
+          "vuMvAm": null,
+          "vdOwnV": null,
+          "vdUpstreamPct": 0.19031972236448125,
+          "vdLimitPct": 2,
+          "busbarA": 800,
+          "lengthM": 10,
+          "loadFactorK": 1
+        },
+        "trace": [
+          {
+            "step": "Riser",
+            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.06 %, total 0.25 % vs 2 %"
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      },
+      {
+        "elementId": "smdb-t-l2-ap",
+        "status": "final",
+        "provisionalReasons": [],
+        "errors": [],
+        "sizedBy": null,
+        "checks": {
+          "C2": {
+            "state": "pass",
+            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.06 %, total 0.25 % vs 2 %"
+          },
+          "C3": {
+            "state": "not-calculated",
+            "detail": "Tap-off breaker fault duty not calculated yet."
+          }
+        },
+        "size": null,
+        "device": {
+          "type": "MCCB",
+          "ratingA": 300,
+          "poles": "3P",
+          "faultRatingKa": null
+        },
+        "load": {
+          "connectedKw": {
+            "L1": 46.8,
+            "L2": 46.8,
+            "L3": 46.8
+          },
+          "maxDemandKw": 140.39999999999998,
+          "standbyKw": null
+        },
+        "values": {
+          "ibA": 251.363252801409,
+          "inA": 300,
+          "izA": null,
+          "vdOwnPct": null,
+          "vdTotalPct": 0.25080200590429597,
+          "ikMaxKa": null,
+          "ikMinKa": null,
+          "ipKa": null,
+          "zsMohm": null
+        },
+        "trace": [
+          {
+            "step": "Riser",
+            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.06 %, total 0.25 % vs 2 %"
+          },
+          {
+            "step": "Tap-off",
+            "detail": "Tap-off box on Riser 1: Ib 251.4 A, breaker 300 A."
+          }
+        ],
+        "runId": "revit-sample-revit-sample-L02",
+        "ranAt": "2026-11-12T08:00:00.000Z",
+        "engineVersion": "0.1.0",
+        "rulePackVersion": "1.0.0",
+        "inputsKey": "1es0226vjbv"
+      }
+    ],
+    "generatorFactors": []
+  },
+  "auditLog": [],
+  "meta": {
+    "createdAt": "2026-11-12T08:00:00.000Z",
+    "createdBy": "u-lead",
+    "updatedAt": "2026-11-12T08:00:00.000Z",
+    "lastPage": "setup"
+  }
+}

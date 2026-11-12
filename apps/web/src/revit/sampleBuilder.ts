@@ -74,6 +74,8 @@ export function sampleBuilder(args: {
   name: string;
   floors: { basements: number; grounds: number; podiums: number; typicals: number };
   plans: Record<string, PlanSheet>;
+  /** Floor names as the engineer renamed them (Building tab), by code. */
+  names?: Record<string, string>;
 }): SampleBuilder {
   let project = createEmptyProject({ id: args.id, userId: 'u-lead', now: SAMPLE_RUN_AT });
   project.details = {
@@ -92,7 +94,10 @@ export function sampleBuilder(args: {
   project.calculation.busbarMaker = 'gersan';
   project.building.counts = args.floors;
   let n = 0;
-  project.building.floors = generateRegistry(args.floors, [], () => `f${++n}`).floors;
+  project.building.floors = generateRegistry(args.floors, [], () => `f${++n}`).floors.map((f) => ({
+    ...f,
+    name: args.names?.[f.code] ?? f.name,
+  }));
   project = applyRulePackDefaults(project, pack);
   const p = project;
 
@@ -123,9 +128,10 @@ export function sampleBuilder(args: {
     };
   }
   const floorOf = (code: string) => p.building.floors.find((f) => f.code === code)!;
+  // On a plan: PDF points through its calibration. A floor without a plan (e.g. GF here):
+  // positions are metres already (the package then has no PDF point for them).
   const metres = (code: string, [x, y]: Pt): ModelPoint => {
-    const k = mpp.get(code);
-    if (!k) throw new Error(`Floor ${code} has no plan`);
+    const k = mpp.get(code) ?? 1;
     return { x: x * k, y: y * k };
   };
   const byTag = (tag: string) => {

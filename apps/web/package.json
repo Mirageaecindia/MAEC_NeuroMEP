@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
-    "crosscheck": "tsx --conditions=source src/crosscheck/build.ts"
+    "crosscheck": "tsx --conditions=source src/crosscheck/build.ts",
+    "revit:samples": "tsx --conditions=source src/revit/build.ts"
   },
   "dependencies": {
     "@neuromep/engine": "0.1.0",

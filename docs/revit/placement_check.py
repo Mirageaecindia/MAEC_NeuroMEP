@@ -53,7 +53,7 @@ def main(exchange_path: str, plans_dir: str) -> None:
             mid = pts[len(pts) // 2]
             size = f["result"]["cable"] if f["result"] else None
             label = f["tag"] + (f" {size['runs']}x{size['sizeMm2']}mm2" if size else "")
-            page.insert_text(mid + (2, -2), label, fontsize=5, color=BLUE)
+            page.insert_text(mid + (2, -2), label, fontsize=5, color=BLUE, rotate=page.rotation)
         for c in data["components"]:
             if c["floorId"] != floor["id"] or not c["placement"]["pdf"]:
                 continue
@@ -64,7 +64,7 @@ def main(exchange_path: str, plans_dir: str) -> None:
             page.draw_line(p + (0, -6), p + (0, 6), color=colour, width=0.6)
             device = c["result"]["device"] if c["result"] else None
             label = c["tag"] + (f" {device['ratingA']}A" if device else "")
-            page.insert_text(p + (6, -5), label, fontsize=6, color=colour)
+            page.insert_text(p + (6, -5), label, fontsize=6, color=colour, rotate=page.rotation)
             drawn += 1
         target = out_dir / f"{Path(exchange_path).stem}_{floor['code']}_check.pdf"
         doc.save(target)
