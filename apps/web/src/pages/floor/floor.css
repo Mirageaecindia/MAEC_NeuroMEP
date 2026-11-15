@@ -590,16 +590,12 @@
 }
 
 /* Building view (manager feedback, 7 Nov 2026): every component on its floor. Main panels and
-   transformers stand out, cable-fed boards are greyed, a riser source is outlined in red, and
+   transformers stand out (cable-fed boards no longer faded, 15 Nov 2026: greyed = view filter only), a riser source is outlined in red, and
    while a riser's source is being chosen the components are highlighted to click. */
 .floor-board.main rect {
   fill: #dbeafe;
   stroke: #1d4ed8;
   stroke-width: 1.5;
-}
-.floor-board.cable-fed rect,
-.floor-board.cable-fed line {
-  opacity: 0.55;
 }
 .floor-board.riser-source rect {
   stroke: #e11d1d;
@@ -651,10 +647,6 @@
 .floor-board.feeder-from rect {
   fill: #bfdbfe;
   stroke-width: 2;
-}
-.floor-board.equipment rect,
-.floor-board.equipment line {
-  opacity: 0.45;
 }
 .feeder-length {
   display: flex;
@@ -709,10 +701,6 @@
   stroke: #2563eb;
   stroke-width: 2;
   stroke-dasharray: none;
-}
-.floor-board.cable-fed image,
-.floor-board.equipment image {
-  opacity: 0.55;
 }
 svg.drawing-feeder {
   cursor: crosshair;

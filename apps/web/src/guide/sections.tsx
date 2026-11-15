@@ -639,10 +639,9 @@ export const SECTIONS: GuideSection[] = [
           <li>
             Click the riser, then click the component that feeds it on any floor - usually the
             transformer, an LV panel or an MDB. Every component is drawn on its floor: main panels
-            and transformers in blue, boards fed by a feeder greyed (hover for what feeds them), a
-            riser source outlined in red. Click the riser twice to remove its source; Escape
-            cancels. The source box is drawn under the riser; &quot;no supply&quot; when that source
-            has no feeder itself.
+            and transformers in blue, hover a board for what feeds it, a riser source outlined in
+            red. Click the riser twice to remove its source; Escape cancels. The source box is drawn
+            under the riser; &quot;no supply&quot; when that source has no feeder itself.
           </li>
           <li>
             Click a board (usually an SMDB, MCC or DB) on a floor to connect it to a riser tap-off;
