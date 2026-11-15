@@ -9,6 +9,7 @@ import {
   type PdfPoint,
   type SheetSize,
   orthogonal,
+  nextRoutePoint,
 } from '@neuromep/shared';
 import type { PDFDocumentProxy, PDFPageProxy, RenderTask } from 'pdfjs-dist';
 import {
@@ -140,7 +141,8 @@ export function PlanViewer(props: {
   cableMode?: boolean;
   /** Route of the cable being drawn so far; a preview leg follows the pointer. */
   drawingPoints?: PdfPoint[] | null;
-  onCableClick?: (at: PdfPoint, componentId: string | null) => void;
+  /** square: Shift held - the leg is kept horizontal or vertical. */
+  onCableClick?: (at: PdfPoint, componentId: string | null, square: boolean) => void;
 }) {
   const { plan } = props;
   const api = useApi();
@@ -398,6 +400,8 @@ export function PlanViewer(props: {
   const cables = props.cables ?? [];
   /** Pointer position while drawing a cable (preview leg). */
   const [pointer, setPointer] = useState<PdfPoint | null>(null);
+  /** Shift held while drawing a feeder: the preview leg is horizontal or vertical. */
+  const [square, setSquare] = useState(false);
   /** The cable under a screen point (within 6 px of a leg), if any. */
   const hitCable = (s: { x: number; y: number }) =>
     page
@@ -453,7 +457,7 @@ export function PlanViewer(props: {
     if (e.button === 0 && !picking && page) {
       const s = local(e);
       if (props.cableMode) {
-        props.onCableClick?.(screenToPdf(s, view, page.transform), hit(s)?.id ?? null);
+        props.onCableClick?.(screenToPdf(s, view, page.transform), hit(s)?.id ?? null, e.shiftKey);
         return;
       }
       if (props.placing) {
@@ -528,6 +532,7 @@ export function PlanViewer(props: {
     }
     if ((props.drawingPoints || picking) && page) {
       setPointer(screenToPdf(local(e), view, page.transform));
+      setSquare(e.shiftKey);
     }
     if (rotating && page) {
       const m = markers.find((x) => x.id === rotating.id);
@@ -877,7 +882,9 @@ export function PlanViewer(props: {
                 className="cable-preview"
                 points={[
                   ...props.drawingPoints,
-                  ...(pointer ? [orthogonal(props.drawingPoints.at(-1)!, pointer)] : []),
+                  ...(pointer
+                    ? [nextRoutePoint(props.drawingPoints.at(-1)!, pointer, square)]
+                    : []),
                 ]
                   .map(toScreen)
                   .map((p) => `${p.x},${p.y}`)

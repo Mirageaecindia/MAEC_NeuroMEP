@@ -793,9 +793,8 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
       }),
     );
     const route = (await api.getProject('p-1')).project.model.cables.at(-1)!.buildingRoute!;
-    // The corner clicked, kept horizontal or vertical from the transformer, then the elbow.
-    expect(route.length).toBeGreaterThanOrEqual(1);
-    expect(route[0]!.x === 600 || route[0]!.y === 10).toBe(true);
+    // The corner where it was clicked (any angle, 15 Nov 2026), then straight to the SMDB.
+    expect(route).toEqual([{ x: 600, y: 10 }]);
   });
 
   it('#TASK-18 a riser fed from the transformer feeds the floor boards; then Cable Size (A-07)', async () => {

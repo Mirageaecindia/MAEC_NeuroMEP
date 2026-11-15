@@ -467,8 +467,10 @@ export const SECTIONS: GuideSection[] = [
           </li>
           <li>Click the component the feeder starts from (the board that supplies).</li>
           <li>
-            Click on the plan to add bends (the route is drawn with right angles); Backspace removes
-            the last bend.
+            Click on the plan to add bends: each click is joined to the last by a straight line, at
+            any angle. Hold Shift while clicking to keep a leg horizontal or vertical (the last leg
+            then reaches the component with a right-angle bend). Backspace removes the last bend.
+            The length is measured along the line as drawn.
           </li>
           <li>Click the component it feeds. The feeder gets a tag, a way number and a length.</li>
         </ol>
@@ -613,8 +615,9 @@ export const SECTIONS: GuideSection[] = [
           <li>Click Feeder in the library (choose the cable construction the first time).</li>
           <li>Click the component the feeder starts from, on any floor.</li>
           <li>
-            Draw the path as on a plan: each click on the diagram makes a corner, the line kept
-            horizontal or vertical. Backspace removes the last corner.
+            Draw the path as on a plan: each click on the diagram makes a corner, joined to the last
+            by a straight line at any angle (hold Shift for horizontal / vertical). Backspace
+            removes the last corner.
           </li>
           <li>
             Click the component it feeds, on any floor (Escape or the same component cancels).

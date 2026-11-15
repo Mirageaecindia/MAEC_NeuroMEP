@@ -4,7 +4,7 @@ import {
   parseLoadSheet,
   planLoadImport,
   type LoadImportPlan,
-  closeRoute,
+  finishRoute,
   capacitySummary,
   loadCategoryOf,
   unlinkedEquipment,
@@ -20,7 +20,7 @@ import {
   isOutput,
   isPlaceable,
   itemOfElement,
-  orthogonal,
+  nextRoutePoint,
   portsOf,
   topologyCheck,
   unusualConnections,
@@ -209,7 +209,7 @@ export function FloorSetupPage() {
   } | null>(null);
   const length = lengthRule(project);
 
-  function cableClick(at: PdfPoint, componentId: string | null) {
+  function cableClick(at: PdfPoint, componentId: string | null, square = false) {
     if (!floor || !calibration || !construction) {
       notice('Calibrate the plan before drawing cables (E0701).');
       return;
@@ -233,7 +233,10 @@ export function FloorSetupPage() {
       return;
     }
     if (!target) {
-      setDraft({ ...draft, points: [...draft.points, orthogonal(draft.points.at(-1)!, point)] });
+      setDraft({
+        ...draft,
+        points: [...draft.points, nextRoutePoint(draft.points.at(-1)!, point, square)],
+      });
       return;
     }
     const source = onFloor.find((e) => e.id === draft.from.elementId)!;
@@ -255,7 +258,7 @@ export function FloorSetupPage() {
       cables: project.model.cables,
       from: { element: source, port: 'out' },
       to: { element: target, port },
-      route: closeRoute(draft.points, target.position),
+      route: finishRoute(draft.points, target.position, square),
       floorCode: floor.code,
       construction,
     });

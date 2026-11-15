@@ -58,15 +58,32 @@ export function closeRoute(points: ModelPoint[], end: ModelPoint): ModelPoint[] 
   return [...points, { x: end.x, y: last.y }, end];
 }
 
-/** A cable whose component moved: the end follows, with an elbow if a leg would turn diagonal. */
+/**
+ * Feeders are drawn at any angle (user request 15 Nov 2026): each click joins the last point by a
+ * straight line. Shift keeps the leg horizontal or vertical (and closes on the target with an
+ * elbow), as all routes were drawn before.
+ */
+export const nextRoutePoint = (prev: ModelPoint, p: ModelPoint, square = false): ModelPoint =>
+  square ? orthogonal(prev, p) : p;
+
+/** Closes a route drawn at any angle on its end: straight, or with an elbow when square. */
+export const finishRoute = (points: ModelPoint[], end: ModelPoint, square = false): ModelPoint[] =>
+  square ? closeRoute(points, end) : [...points, end];
+
+/**
+ * A cable whose component moved: the end follows. A right-angled last leg stays right-angled (an
+ * elbow is added); a leg drawn at an angle just follows the component.
+ */
 export function moveCableEnd<T extends Pick<Cable, 'route'>>(
   cable: T,
   end: 'from' | 'to',
   p: ModelPoint,
 ): T {
-  if (end === 'to') return { ...cable, route: closeRoute(cable.route.slice(0, -1), p) };
-  const reversed = closeRoute([...cable.route].reverse().slice(0, -1), p);
-  return { ...cable, route: reversed.reverse() };
+  const route = end === 'to' ? cable.route : [...cable.route].reverse();
+  const [a, b] = route.slice(-2);
+  const square = !a || !b || a.x === b.x || a.y === b.y;
+  const moved = square ? closeRoute(route.slice(0, -1), p) : [...route.slice(0, -1), p];
+  return { ...cable, route: end === 'to' ? moved : moved.reverse() };
 }
 
 const segmentsLength = (route: ModelPoint[]) =>

@@ -10,7 +10,9 @@ import {
   connectionProblem,
   drawCable,
   fedFrom,
+  finishRoute,
   moveCableEnd,
+  nextRoutePoint,
   nextWay,
   orthogonal,
   portsOf,
@@ -70,6 +72,34 @@ describe('#TASK-13 routes and length (FR-15, A-05)', () => {
       { x: 0, y: 0 },
       { x: 6, y: 0 },
       { x: 6, y: 4 },
+    ]);
+  });
+
+  it('draws at any angle; square (Shift) keeps legs horizontal or vertical (15 Nov 2026)', () => {
+    const a = { x: 0, y: 0 };
+    expect(nextRoutePoint(a, { x: 10, y: 2 })).toEqual({ x: 10, y: 2 });
+    expect(nextRoutePoint(a, { x: 10, y: 2 }, true)).toEqual({ x: 10, y: 0 });
+    expect(finishRoute([a], { x: 6, y: 4 })).toEqual([a, { x: 6, y: 4 }]);
+    expect(finishRoute([a], { x: 6, y: 4 }, true)).toEqual([a, { x: 6, y: 0 }, { x: 6, y: 4 }]);
+    // Measured along the drawn line: 3-4-5.
+    const rule = { allowancePct: 0, additionM: 0 };
+    expect(cableLength({ route: [a, { x: 3, y: 4 }], verticalM: 1 }, rule).routedM).toBe(5);
+  });
+
+  it('a leg drawn at an angle follows a moved component without an elbow', () => {
+    const cable = {
+      route: [
+        { x: 0, y: 0 },
+        { x: 4, y: 3 },
+      ],
+    };
+    expect(moveCableEnd(cable, 'to', { x: 8, y: 1 }).route).toEqual([
+      { x: 0, y: 0 },
+      { x: 8, y: 1 },
+    ]);
+    expect(moveCableEnd(cable, 'from', { x: -1, y: 2 }).route).toEqual([
+      { x: -1, y: 2 },
+      { x: 4, y: 3 },
     ]);
   });
 

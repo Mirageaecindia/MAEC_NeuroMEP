@@ -13,7 +13,8 @@ import {
   setRiser,
   sourceConnected,
   onPlanOf,
-  orthogonal,
+  nextRoutePoint,
+  finishRoute,
   itemOfElement,
   usuallyFeeds,
   KIND_LABELS,
@@ -259,10 +260,10 @@ export function BuildingTab(props: {
     notice(`Riser ${n} is fed from ${board.tag}.`);
   }
 
-  function chooseRiser(board: Element) {
+  function chooseRiser(board: Element, square = false) {
     if (props.readOnly) return;
     if (picking) return pickSource(board);
-    if (props.feederArmed) return feederClick(board);
+    if (props.feederArmed) return feederClick(board, square);
     const usable = risers.filter((r) => r.lengthM).map((r) => r.id);
     if (usable.length === 0) {
       notice('Enter a riser length in Busbar Riser Design first.');
@@ -277,6 +278,8 @@ export function BuildingTab(props: {
   /** Feeder being drawn: its start component and the corners so far (diagram units). */
   const [draft, setDraft] = useState<{ from: Element; points: Pt[] } | null>(null);
   const [pointer, setPointer] = useState<Pt | null>(null);
+  /** Shift held: the preview leg is horizontal or vertical. */
+  const [square, setSquare] = useState(false);
   const [askLength, setAskLength] = useState<{
     from: Element;
     to: Element;
@@ -306,7 +309,7 @@ export function BuildingTab(props: {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [drawing]);
-  function feederClick(board: Element) {
+  function feederClick(board: Element, square = false) {
     if (board.kind === 'equipment') {
       notice(`${board.tag} is linked to its isolator through Fed from, not by a feeder.`);
       return;
@@ -320,7 +323,7 @@ export function BuildingTab(props: {
     if (!drawing) {
       setDraft({ from: board, points: [centre] });
       notice(
-        `Feeder from ${board.tag} (${floorName(board)}): click on the diagram to make each corner, then click the component it feeds. Escape cancels, Backspace removes the last corner.`,
+        `Feeder from ${board.tag} (${floorName(board)}): click on the diagram to make each corner (straight lines at any angle; hold Shift for horizontal / vertical), then click the component it feeds. Escape cancels, Backspace removes the last corner.`,
       );
       return;
     }
@@ -328,16 +331,15 @@ export function BuildingTab(props: {
       setDraft(null);
       return;
     }
-    // The last leg ends on the component: a corner keeps it horizontal then vertical.
-    const last = drawing.points.at(-1)!;
-    const corner = last.x !== centre.x && last.y !== centre.y ? [{ x: centre.x, y: last.y }] : [];
+    // The last leg goes straight to the component; with Shift, a corner keeps it square.
+    const route = finishRoute(drawing.points, centre, square).slice(1, -1);
     setLengthText('');
-    setAskLength({ from: drawing.from, to: board, route: [...drawing.points.slice(1), ...corner] });
+    setAskLength({ from: drawing.from, to: board, route });
   }
-  /** A click on the diagram while drawing adds a corner, kept horizontal or vertical. */
+  /** A click on the diagram while drawing adds a corner: a straight line at any angle (Shift: square). */
   function diagramClick(e: ReactMouseEvent) {
     if (!drawing || props.readOnly) return;
-    const p = orthogonal(drawing.points.at(-1)!, at(e));
+    const p = nextRoutePoint(drawing.points.at(-1)!, at(e), e.shiftKey);
     setDraft({ ...drawing, points: [...drawing.points, p] });
   }
   const finishFeeder = () => {
@@ -407,7 +409,11 @@ export function BuildingTab(props: {
           ref={svgRef}
           className={drawing ? 'drawing-feeder' : undefined}
           onClick={diagramClick}
-          onMouseMove={(e) => drawing && setPointer(at(e))}
+          onMouseMove={(e) => {
+            if (!drawing) return;
+            setPointer(at(e));
+            setSquare(e.shiftKey);
+          }}
         >
           {/* Feeders between floors, under the symbols (9 Nov 2026: the path the engineer drew). */}
           {buildingFeeders.map((c, i) => {
@@ -466,7 +472,7 @@ export function BuildingTab(props: {
               className="building-feeder-draft"
               points={[
                 ...drawing.points,
-                ...(pointer ? [orthogonal(drawing.points.at(-1)!, pointer)] : []),
+                ...(pointer ? [nextRoutePoint(drawing.points.at(-1)!, pointer, square)] : []),
               ]
                 .map((p) => `${p.x},${p.y}`)
                 .join(' ')}
@@ -586,7 +592,7 @@ export function BuildingTab(props: {
                           data-greyed={greyed(b) || undefined}
                           onClick={(e) => {
                             e.stopPropagation();
-                            chooseRiser(b);
+                            chooseRiser(b, e.shiftKey);
                           }}
                           onMouseEnter={() => {
                             keepMenu();

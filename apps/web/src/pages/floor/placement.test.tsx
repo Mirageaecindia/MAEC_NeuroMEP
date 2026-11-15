@@ -353,6 +353,40 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     expect(screen.getByRole('img', { name: 'SMDB-GF-01' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'DB-GF-01' })).toBeInTheDocument();
   });
+
+  it('draws a feeder at any angle: a straight line from click to click; Shift keeps it square (15 Nov 2026)', async () => {
+    const api = open(LEAD);
+    await planReady();
+    await placeAt('SMDB', 300, 300);
+    await placeAt('DB', 500, 450);
+    await placeAt('DB', 700, 300);
+    await userEvent.click(chip('Feeder'));
+    await chooseConstruction();
+    // Diagonal: a corner at an angle, then straight on to the DB.
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 380, clientY: 400 });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 500, clientY: 450 });
+    await screen.findByRole('img', { name: /^Cable FGF-1/ });
+    // Shift: square legs and an elbow onto the DB.
+    await userEvent.click(chip('Feeder'));
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 450, clientY: 330, shiftKey: true });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 700, clientY: 300, shiftKey: true });
+    await screen.findByRole('img', { name: /^Cable FGF-2/ });
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.saveProject).toHaveBeenCalled());
+    const [angled, square] = api.saveProject.mock.calls.at(-1)![0].model.cables;
+    const legs = (r: { x: number; y: number }[]) => r.slice(1).map((q, i) => [r[i]!, q] as const);
+    // Three points, both legs at an angle.
+    expect(angled!.route).toHaveLength(3);
+    for (const [a, b] of legs(angled!.route)) {
+      expect(a.x !== b.x && a.y !== b.y).toBe(true);
+    }
+    // Every leg horizontal or vertical.
+    for (const [a, b] of legs(square!.route)) {
+      expect(a.x === b.x || a.y === b.y).toBe(true);
+    }
+  });
 });
 
 describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
