@@ -715,9 +715,11 @@ export const SECTIONS: GuideSection[] = [
         </p>
         <ul>
           <li>
-            <Term>First Level</Term> (LV Panel / MDB / EMDB / ACB, with the busbar schedules of the
-            risers), <Term>Second Level</Term> (SMDB / MCC), <Term>Floor Level</Term> (DBs),{' '}
-            <Term>Completed</Term> (all). <Term>Schedule Type</Term> narrows to one board type.
+            <Term>Main Panel Schedules</Term> (LV Panel / MDB / EMDB / ACB panel, with the busbar
+            schedules of the risers), <Term>Sub-Main &amp; MCC Schedules</Term> (SMDB / ESMDB / MCC
+            / EMCC), <Term>DB Schedules</Term> (the distribution boards on each floor),{' '}
+            <Term>All Board Schedules</Term> (every board). <Term>Schedule Type</Term> narrows to
+            one board type.
           </li>
           <li>
             <Term>Calculation Sheet</Term> - one row per cable, busbar feeder and riser with every

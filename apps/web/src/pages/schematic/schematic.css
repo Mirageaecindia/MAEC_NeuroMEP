@@ -263,3 +263,11 @@
   color: var(--danger);
   font-weight: 600;
 }
+
+/* Report Library: what each schedule holds, under its name (15 Nov 2026). */
+.report-holds {
+  display: block;
+  font-size: 8.5px;
+  color: var(--text-faint);
+  line-height: 1.3;
+}

@@ -1224,8 +1224,8 @@ describe('#TASK-30 / #TASK-31 Schematic and Output (Figma 4, 5)', () => {
       meteredId: 'db-1',
     } as Element);
     renderAt('/projects/p-1/output', new FakeAuth(LEAD), fakeApi(project));
-    const floorLevel = await screen.findByRole('checkbox', { name: 'Floor Level Schedule' });
-    await userEvent.click(screen.getByRole('checkbox', { name: 'Second Level Schedule' }));
+    const floorLevel = await screen.findByRole('checkbox', { name: 'DB Schedules' });
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Sub-Main & MCC Schedules' }));
     expect(screen.getByText('No boards of the ticked levels in this project yet.')).toBeVisible();
     await userEvent.click(floorLevel);
     const sheet = screen.getByRole('table', { name: 'Schedule DB-db-1' });
@@ -1371,7 +1371,7 @@ describe('#TASK-31 schedule download (WBS 1.7.2)', () => {
   async function fillAndDownload(project: Project, format: 'xlsx' | 'pdf' = 'xlsx') {
     const api = fakeApi(project);
     renderAt('/projects/p-1/output', new FakeAuth(LEAD), api);
-    await userEvent.click(await screen.findByRole('checkbox', { name: 'Floor Level Schedule' }));
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'DB Schedules' }));
     await userEvent.selectOptions(screen.getByLabelText('Format'), format);
     await userEvent.type(screen.getByLabelText('Planned completion date'), '2027-06-30');
     await userEvent.upload(screen.getByLabelText('Logo'), PNG_LOGO);

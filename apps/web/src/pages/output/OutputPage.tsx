@@ -35,12 +35,24 @@ import { schedulePdf } from './schedulePdf';
 import { emptyMeters, ScheduleSheet, type BoardMeters } from './ScheduleSheet';
 import '../schematic/schematic.css';
 
-/** Report Library (Figma screen 5); levels by board hierarchy (decision 2 Nov 2026). */
-const REPORTS: { key: ScheduleLevel | 'completed' | 'calc' | 'generator'; label: string }[] = [
-  { key: 'completed', label: 'Completed Schedule' },
-  { key: 'first', label: 'First Level Schedule' },
-  { key: 'second', label: 'Second Level Schedule' },
-  { key: 'floor', label: 'Floor Level Schedule' },
+/**
+ * Report Library (Figma screen 5); levels by board hierarchy (decision 2 Nov 2026), named after
+ * the boards each one holds (user request 15 Nov 2026; were Completed / First / Second / Floor
+ * Level Schedule). `holds` is shown under the name.
+ */
+const REPORTS: {
+  key: ScheduleLevel | 'completed' | 'calc' | 'generator';
+  label: string;
+  holds?: string;
+}[] = [
+  { key: 'completed', label: 'All Board Schedules', holds: 'Every board below, in one set' },
+  {
+    key: 'first',
+    label: 'Main Panel Schedules',
+    holds: 'LV Panel, MDB, EMDB, ACB panel + busbar risers',
+  },
+  { key: 'second', label: 'Sub-Main & MCC Schedules', holds: 'SMDB, ESMDB, MCC, EMCC' },
+  { key: 'floor', label: 'DB Schedules', holds: 'Distribution boards on each floor' },
   // Not in Figma: Section 14 "Cable schedule", WBS 1.7.3 (user decision 5 Nov 2026).
   { key: 'calc', label: 'Calculation Sheet' },
   { key: 'generator', label: 'Generator Load Analysis' },
@@ -251,9 +263,13 @@ export function OutputPage() {
             {REPORTS.map((r) => (
               <li key={r.key}>
                 <label>
-                  {r.label}
+                  <span>
+                    {r.label}
+                    {r.holds && <small className="report-holds">{r.holds}</small>}
+                  </span>
                   <input
                     type="checkbox"
+                    aria-label={r.label}
                     checked={reports.has(r.key)}
                     onChange={() => toggle(r.key)}
                   />
