@@ -948,6 +948,75 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(within(check).getByText(/On generator supply: 0 of 1 components/)).toBeVisible();
   });
 
+  it('Building tab view filters: per floor, and Hide / Hide Reverse / Show on hover (15 Nov 2026)', async () => {
+    const project = buildingProject();
+    const tx = project.model.elements.find((e) => e.id === 'tx')!;
+    const db = project.model.elements.find((e) => e.id === 'db-1')!;
+    project.model.cables.push(testCable(tx, db));
+    const floors = new Set([tx.floorId, db.floorId]);
+    expect(floors.size).toBe(1); // both on one floor
+    const floor = project.building.floors.find((f) => f.id === tx.floorId)!.name;
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(project));
+    const board = async (tag: string) => screen.findByRole('button', { name: `${tag} board` });
+    const grey = async (tag: string) => (await board(tag)).hasAttribute('data-greyed');
+    const filter = (now: string) =>
+      userEvent.click(screen.getByRole('button', { name: `Filter ${floor}: ${now}` }));
+    expect(await grey('TX-1')).toBe(false);
+
+    // Power required: no incoming connection - the transformer stays, the fed DB is greyed.
+    await filter('All components');
+    let menu = screen.getByRole('menu', { name: `Filter ${floor}` });
+    expect(
+      within(menu)
+        .getAllByRole('menuitem')
+        .map((b) => b.textContent),
+    ).toEqual(['Show All Components', 'Show Power Required']);
+    await userEvent.click(within(menu).getByRole('menuitem', { name: 'Show Power Required' }));
+    expect(await grey('TX-1')).toBe(false);
+    expect(await grey('DB-db-1')).toBe(true);
+    expect(screen.getByText(/Some components are greyed/)).toBeVisible();
+
+    // Then the second choice is Disconnected: both are connected, so both greyed.
+    await filter('Power required');
+    menu = screen.getByRole('menu', { name: `Filter ${floor}` });
+    await userEvent.click(
+      within(menu).getByRole('menuitem', { name: 'Show Disconnected Components' }),
+    );
+    expect(await grey('TX-1')).toBe(true);
+
+    // Hover a greyed component: Show brings it back.
+    fireEvent.mouseEnter(await board('TX-1'));
+    let view = screen.getByRole('menu', { name: 'View TX-1' });
+    await userEvent.click(within(view).getByRole('menuitem', { name: 'Show' }));
+    expect(await grey('TX-1')).toBe(false);
+    expect(await grey('DB-db-1')).toBe(true);
+
+    // Hide Reverse: only the DB stays.
+    fireEvent.mouseEnter(await board('DB-db-1'));
+    view = screen.getByRole('menu', { name: 'View DB-db-1' });
+    expect(
+      within(view)
+        .getAllByRole('menuitem')
+        .map((b) => b.textContent),
+    ).toEqual(['Show', 'Hide Reverse']);
+    await userEvent.click(within(view).getByRole('menuitem', { name: 'Hide Reverse' }));
+    expect(await grey('DB-db-1')).toBe(false);
+    expect(await grey('TX-1')).toBe(true);
+
+    // Hide, then Show all clears everything.
+    fireEvent.mouseEnter(await board('DB-db-1'));
+    await userEvent.click(
+      within(screen.getByRole('menu', { name: 'View DB-db-1' })).getByRole('menuitem', {
+        name: 'Hide',
+      }),
+    );
+    expect(await grey('DB-db-1')).toBe(true);
+    await userEvent.click(screen.getByRole('button', { name: 'Show all' }));
+    expect(await grey('DB-db-1')).toBe(false);
+    expect(await grey('TX-1')).toBe(false);
+    expect(screen.queryByText(/Some components are greyed/)).toBeNull();
+  });
+
   it('#TASK-18 a riser fed from an MDB with no feeder: one warning naming the MDB, source marked', async () => {
     const project = buildingProject();
     const gf = project.building.floors.find((f) => f.code === 'GF')!.id;

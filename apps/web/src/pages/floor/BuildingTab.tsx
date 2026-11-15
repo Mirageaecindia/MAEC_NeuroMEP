@@ -38,16 +38,24 @@ import { StatusMark } from '../../layout/icons';
 import { useNotice } from '../../layout/Shell';
 import { DemandFactorsDialog } from './DemandFactorsDialog';
 import { STATUS_ICON } from './FloorStatusDialog';
+import {
+  boardGap,
+  connections,
+  FILTER_LABEL,
+  isGreyed,
+  type FloorFilter,
+  type ViewOverride,
+} from './buildingFilter';
 
 /** Height between floors in the riser diagram (doubled 8 Nov 2026: 70 was congested). */
 const ROW = 140;
 const TOP = 40;
 const RISER_X = [330, 352, 374];
 const BOARD_X = 760;
-const BOARD_GAP = 74;
 const SOURCE_X = 16;
 const SOURCE_W = 78;
 const SOURCE_GAP = 92;
+const FILTER_W = 104;
 
 /** The next item after `current` in `list`, then none, then the first again (click to cycle). */
 function cycle<T>(list: readonly T[], current: T | null): T | null {
@@ -132,16 +140,65 @@ export function BuildingTab(props: {
     setSized(false);
   };
 
+  // ----- view filters (user request 15 Nov 2026): view only, not stored in the project -----
+  const [filters, setFilters] = useState<Record<string, FloorFilter>>({});
+  const [overrides, setOverrides] = useState<Record<string, ViewOverride>>({});
+  /** The floor whose filter menu is open. */
+  const [floorMenu, setFloorMenu] = useState<string | null>(null);
+  /** The component under the mouse: its Hide / Hide Reverse menu is shown. */
+  const [hovered, setHovered] = useState<string | null>(null);
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const keepMenu = () => {
+    if (leaveTimer.current) clearTimeout(leaveTimer.current);
+    leaveTimer.current = null;
+  };
+  /** Leaving the component or its menu: closes the menu unless the mouse moves into the other. */
+  const leaveMenu = () => {
+    keepMenu();
+    leaveTimer.current = setTimeout(() => setHovered(null), 200);
+  };
+  useEffect(() => keepMenu, []);
+  useEffect(() => {
+    if (!floorMenu) return;
+    const onKey = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && setFloorMenu(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [floorMenu]);
+  const linked = connections({ ...model, risers });
+  const greyed = (e: Element) => isGreyed(e, filters[e.floorId] ?? 'all', overrides[e.id], linked);
+  /** A floor's filter: its components' own Hide / Show are cleared. */
+  function chooseFilter(floorId: string, filter: FloorFilter) {
+    setFilters((f) => ({ ...f, [floorId]: filter }));
+    setOverrides((o) =>
+      Object.fromEntries(
+        Object.entries(o).filter(
+          ([id]) => model.elements.find((e) => e.id === id)?.floorId !== floorId,
+        ),
+      ),
+    );
+    setFloorMenu(null);
+  }
+  /** Hide Reverse: only this component stays, every other one in the building is greyed. */
+  function hideReverse(id: string) {
+    setOverrides(
+      Object.fromEntries(model.elements.map((e) => [e.id, e.id === id ? 'shown' : 'hidden'])),
+    );
+    setHovered(null);
+  }
+  const anyGreyed = model.elements.some(greyed);
+
   // Top floor first, then Ground, basements at the bottom - as in the building section (A-13).
   const rows = useMemo(() => [...props.floors].reverse(), [props.floors]);
   const floorY = (i: number) => TOP + i * ROW + 40;
   const bottomY = floorY(rows.length - 1);
   const boards = rows.map((f) => riserBoards(model, f.id));
-  const width = BOARD_X + Math.max(1, ...boards.map((b) => b.length)) * BOARD_GAP + 20;
+  /** Wide enough for the longest tag, so neighbouring names never overlap (15 Nov 2026). */
+  const gap = boardGap(boards.flat().map((b) => b.tag));
+  const width = BOARD_X + Math.max(1, ...boards.map((b) => b.length)) * gap + 40;
   /** Where each component is drawn (left of its box, floor line), for the feeders between them. */
   const boxAt = new Map(
     boards.flatMap((list, i) =>
-      list.map((b, k) => [b.id, { x: BOARD_X + k * BOARD_GAP, y: floorY(i) }] as const),
+      list.map((b, k) => [b.id, { x: BOARD_X + k * gap, y: floorY(i) }] as const),
     ),
   );
   /** Centre of a component's symbol: where its feeders start and end. */
@@ -301,6 +358,10 @@ export function BuildingTab(props: {
     ? null
     : 'Connect the transformer: draw a feeder from it on its floor plan, or here with Feeder to a component on another floor. A busbar riser is optional - if you use one, feed it from the transformer or from a board fed from it.';
 
+  /** Filter button beside the floor name, clear of the first component on the floor. */
+  const filterX = (f: Floor) =>
+    Math.min((RISER_X[2]! + BOARD_X) / 2 + f.name.length * 2.9 + 8, BOARD_X - FILTER_W - 22);
+
   return (
     <div className="building-tab">
       <div className="building-canvas" aria-label="Building view">
@@ -310,6 +371,21 @@ export function BuildingTab(props: {
           scenario={scenario}
           onScenario={setScenario}
         />
+        {anyGreyed && (
+          <p className="building-greyed">
+            Some components are greyed (view only).{' '}
+            <button
+              type="button"
+              className="link-btn"
+              onClick={() => {
+                setFilters({});
+                setOverrides({});
+              }}
+            >
+              Show all
+            </button>
+          </p>
+        )}
         <svg
           width={width * props.zoom}
           height={(bottomY + 50) * props.zoom}
@@ -339,6 +415,11 @@ export function BuildingTab(props: {
                   b,
                 ];
             const d = pts.map((p, k) => `${k ? 'L' : 'M'} ${p.x} ${p.y}`).join(' ');
+            // Greyed with its two ends.
+            const ends = [c.from.elementId, c.to.elementId].map((id) =>
+              model.elements.find((e) => e.id === id),
+            );
+            const faded = ends.every((e) => e && greyed(e));
             // Label on the longest leg.
             const legs = pts.slice(1).map((p, k) => [pts[k]!, p] as const);
             const len = (l: readonly [Pt, Pt]) => Math.hypot(l[1].x - l[0].x, l[1].y - l[0].y);
@@ -346,7 +427,7 @@ export function BuildingTab(props: {
             return (
               <g
                 key={c.id}
-                className="building-feeder"
+                className={`building-feeder${faded ? ' greyed' : ''}`}
                 role="button"
                 aria-label={`Feeder ${c.tag}, ${c.manualLengthM ?? '?'} m`}
                 onClick={(e) => {
@@ -423,6 +504,30 @@ export function BuildingTab(props: {
                     {props.onRename && <title>Click to rename this floor</title>}
                   </text>
                 )}
+                {/* Filter beside the floor name (user request 15 Nov 2026). */}
+                {renaming?.id !== f.id && (
+                  <foreignObject
+                    x={filterX(f)}
+                    y={y - 19}
+                    width={FILTER_W}
+                    height={17}
+                    className="floor-filter"
+                  >
+                    <button
+                      type="button"
+                      className={`floor-filter-btn${(filters[f.id] ?? 'all') !== 'all' ? ' on' : ''}`}
+                      aria-label={`Filter ${f.name}: ${FILTER_LABEL[filters[f.id] ?? 'all']}`}
+                      aria-haspopup="menu"
+                      aria-expanded={floorMenu === f.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFloorMenu(floorMenu === f.id ? null : f.id);
+                      }}
+                    >
+                      {FILTER_LABEL[filters[f.id] ?? 'all']} ▾
+                    </button>
+                  </foreignObject>
+                )}
                 {onFloor.length === 0 ? (
                   <g
                     className="floor-board empty"
@@ -437,7 +542,7 @@ export function BuildingTab(props: {
                   </g>
                 ) : (
                   onFloor.map((b, k) => {
-                    const x = BOARD_X + k * BOARD_GAP;
+                    const x = BOARD_X + k * gap;
                     const riser = risers.findIndex((r) => r.feeds.includes(b.id));
                     const main = usuallyFeeds(b.kind, 'busbar');
                     const byCable = cableFrom.get(b.id);
@@ -450,6 +555,7 @@ export function BuildingTab(props: {
                       drawing?.from.id === b.id ? 'feeder-from' : '',
                       props.feederArmed ? 'feeding' : '',
                       b.kind === 'equipment' || b.kind === 'meter' ? 'equipment' : '',
+                      greyed(b) ? 'greyed' : '',
                     ]
                       .filter(Boolean)
                       .join(' ');
@@ -457,7 +563,7 @@ export function BuildingTab(props: {
                       <g key={b.id}>
                         {riser >= 0 && (
                           <path
-                            className="riser-link"
+                            className={`riser-link${greyed(b) ? ' greyed' : ''}`}
                             d={`M ${RISER_X[riser]! + 6} ${y - 28} H ${x + 16} V ${y - 8}`}
                           />
                         )}
@@ -465,10 +571,16 @@ export function BuildingTab(props: {
                           className={`floor-board ${kind}`}
                           role="button"
                           aria-label={`${b.tag} board`}
+                          data-greyed={greyed(b) || undefined}
                           onClick={(e) => {
                             e.stopPropagation();
                             chooseRiser(b);
                           }}
+                          onMouseEnter={() => {
+                            keepMenu();
+                            setHovered(b.id);
+                          }}
+                          onMouseLeave={leaveMenu}
                         >
                           <title>
                             {`${b.tag} - ${KIND_LABELS[b.kind]}${byCable ? `, fed from ${byCable} by a feeder` : ''}${riser >= 0 ? `, on Riser ${riser + 1}` : ''}${source ? ', feeds a riser' : ''}`}
@@ -476,10 +588,10 @@ export function BuildingTab(props: {
                           {/* The whole board and its tag take the click (no gaps). */}
                           <rect
                             className="board-hit"
-                            x={x - 18}
+                            x={x + 16 - (gap - 8) / 2}
                             y={y - 19}
-                            width={68}
-                            height={k % 2 ? 60 : 50}
+                            width={gap - 8}
+                            height={50}
                           />
                           {/* The symbol of the Component Library (9 Nov 2026). */}
                           <rect
@@ -498,8 +610,8 @@ export function BuildingTab(props: {
                               <line x1={x} y1={y + 7} x2={x + 32} y2={y - 9} />
                             </>
                           )}
-                          {/* Alternate heights so neighbouring tags never overlap. */}
-                          <text x={x + 16} y={y + (k % 2 ? 36 : 26)} className="floor-label">
+                          {/* The gap fits the longest tag: all tags on one line. */}
+                          <text x={x + 16} y={y + 28} className="floor-label">
                             {b.tag}
                           </text>
                         </g>
@@ -590,6 +702,71 @@ export function BuildingTab(props: {
               </g>
             );
           })}
+          {/* Menus last, so they are drawn over the components next to them. */}
+          {floorMenu &&
+            (() => {
+              const i = rows.findIndex((f) => f.id === floorMenu);
+              const f = rows[i];
+              if (!f) return null;
+              const current = filters[f.id] ?? 'all';
+              // The second choice changes: Power Required, then Disconnected (Figma).
+              const next: FloorFilter =
+                current === 'power-required' ? 'disconnected' : 'power-required';
+              return (
+                <foreignObject x={filterX(f)} y={floorY(i)} width={190} height={46}>
+                  <div
+                    className="building-menu"
+                    role="menu"
+                    aria-label={`Filter ${f.name}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button type="button" role="menuitem" onClick={() => chooseFilter(f.id, 'all')}>
+                      Show All Components
+                    </button>
+                    <button type="button" role="menuitem" onClick={() => chooseFilter(f.id, next)}>
+                      {next === 'power-required'
+                        ? 'Show Power Required'
+                        : 'Show Disconnected Components'}
+                    </button>
+                  </div>
+                </foreignObject>
+              );
+            })()}
+          {hovered &&
+            !drawing &&
+            !picking &&
+            (() => {
+              const e = model.elements.find((x) => x.id === hovered);
+              const at = boxAt.get(hovered);
+              if (!e || !at) return null;
+              const grey = greyed(e);
+              return (
+                <foreignObject x={at.x + 35} y={at.y - 18} width={92} height={40}>
+                  <div
+                    className="building-menu"
+                    role="menu"
+                    aria-label={`View ${e.tag}`}
+                    onMouseEnter={keepMenu}
+                    onMouseLeave={leaveMenu}
+                    onClick={(ev) => ev.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setOverrides((o) => ({ ...o, [e.id]: grey ? 'shown' : 'hidden' }));
+                        setHovered(null);
+                      }}
+                    >
+                      {grey ? 'Show' : 'Hide'}
+                    </button>
+                    <button type="button" role="menuitem" onClick={() => hideReverse(e.id)}>
+                      Hide Reverse
+                    </button>
+                  </div>
+                </foreignObject>
+              );
+            })()}
         </svg>
       </div>
 

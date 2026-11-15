@@ -575,6 +575,32 @@ export const SECTIONS: GuideSection[] = [
           (Escape cancels). Only the name changes; the floor&apos;s tags keep its code (GF, 1, 2
           ...).
         </p>
+        <h3>Filtering the view</h3>
+        <p>
+          Components are spaced for the longest tag, so names do not overlap. Greying only changes
+          what you see: nothing is saved, the calculation is the same, and a greyed component can
+          still be clicked.
+        </p>
+        <ul>
+          <li>
+            <strong>Floor filter</strong> - the button beside each floor name:{' '}
+            <Term>Show All Components</Term> shows every component; <Term>Show Power Required</Term>{' '}
+            shows the components with no incoming connection (no feeder to them, no riser tap-off,
+            equipment not linked to its isolator) and greys the others - a transformer is shown too,
+            although it needs none. After that the second choice becomes{' '}
+            <Term>Show Disconnected Components</Term>: only components with no incoming and no
+            outgoing connection are shown.
+          </li>
+          <li>
+            <strong>Hover a component</strong> - <Term>Hide</Term> greys it,{' '}
+            <Term>Hide Reverse</Term> keeps only that component and greys every other one; on a
+            greyed component <Term>Show</Term> brings it back. These win over the floor filter until
+            that floor&apos;s filter is chosen again.
+          </li>
+          <li>
+            <strong>Show all</strong> above the diagram clears every filter and hidden component.
+          </li>
+        </ul>
         <h3>Feeders between floors</h3>
         <p>
           Every component placed on the floor plans is drawn on its floor here, with the same symbol
