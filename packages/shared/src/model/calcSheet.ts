@@ -1,3 +1,4 @@
+import { ERROR_CATALOGUE } from '../errors/catalogue.js';
 import type { Project } from '../project/schema.js';
 import type { Cable, CableConstruction } from './cable.js';
 import type { Element } from './elements.js';
@@ -72,6 +73,8 @@ export const CALC_COLUMNS: readonly CalcColumn[] = [
   { key: 'sizedBy', step: 'CHECKS', label: 'Sized by', unit: '' },
   { key: 'status', step: 'CHECKS', label: 'Status', unit: '' },
   { key: 'errors', step: 'CHECKS', label: 'Codes', unit: '' },
+  // Why a row has no figures (user report 15 Nov 2026: blank cells with no reason).
+  { key: 'note', step: 'CHECKS', label: 'Why not sized', unit: '' },
 ];
 
 export type CalcRow = Record<string, CalcCell>;
@@ -82,6 +85,43 @@ export interface CalcSheet {
   rows: CalcRow[];
   /** Any row whose figures come from a run that is out of date or not run yet. */
   sizesPending: boolean;
+  /** Why rows have no figures, by cause, so the engineer can fix the source (15 Nov 2026). */
+  notSized: NotSized;
+}
+
+export interface NotSized {
+  /** Feeders to components with no load entered on them or below (status Awaiting load). */
+  awaitingLoad: string[];
+  /** Components with a load but no power factor: every feeder above them is blocked (E2003). */
+  missingPf: string[];
+  /** Motor-driven equipment without its efficiency: every feeder above is blocked (E2003). */
+  missingEfficiency: string[];
+  /** Other blocked rows (table value, device, data missing): see their Why not sized. */
+  otherBlocked: number;
+  /** Rows not calculated yet or changed since the last Cable Size. */
+  notRun: number;
+}
+
+const BLOCKING = new Map<string, string>(
+  ERROR_CATALOGUE.filter((e) => e.effect === 'blocks').map((e) => [e.code, e.message]),
+);
+
+/** Why a row has no figures, in plain words; null when it is sized. */
+function whyNotSized(found: ReturnType<typeof resultOf>, to: string): string | null {
+  const r = found?.result;
+  if (!r) return 'Cable Size not run yet for this item: press Cable Size.';
+  if (found.outOfDate) return 'Changed since the last Cable Size: run it again.';
+  if (r.status === 'awaiting-load') {
+    return `No load entered on ${to} or below it: nothing to size (enter its loads).`;
+  }
+  if (r.status !== 'blocked') return null;
+  // Design current not worked out: the engine's own reason names what is missing.
+  const ib = [...r.trace].reverse().find((t) => t.step === 'Ib');
+  if (r.values.ibA === null && ib) return ib.detail;
+  const codes = r.errors.filter((c) => BLOCKING.has(c));
+  return codes.length
+    ? codes.map((c) => `${BLOCKING.get(c)!.replace(/\.$/, '')} (${c})`).join('; ')
+    : 'Blocked: see the codes and the calculation trace.';
 }
 
 const METHODS: Record<CableConstruction['method'], string> = {
@@ -173,6 +213,49 @@ function figures(found: ReturnType<typeof resultOf>): CalcRow {
   };
 }
 
+/**
+ * Voltage and phases from the load itself when the engine did not get as far as Ib: the phases
+ * carrying demand, else (equipment whose input kW is unknown) the phases of the equipment below.
+ */
+function phasesBelow(
+  p: Project,
+  id: string,
+  summaries: Map<string, LoadSummary>,
+  seen = new Set<string>(),
+): number {
+  if (seen.has(id)) return 0;
+  seen.add(id);
+  const d = summaries.get(id)?.demand;
+  const n = d ? [d.L1, d.L2, d.L3].filter((kw) => kw > 0).length : 0;
+  if (n > 0) return n === 1 ? 1 : 3;
+  let most = 0;
+  for (const e of p.model.elements) {
+    if (e.kind === 'equipment' && e.fedFromId === id && e.kw) {
+      most = Math.max(most, e.phases === '3P' ? 3 : 1);
+    }
+  }
+  for (const c of p.model.cables) {
+    if (c.from.elementId === id)
+      most = Math.max(most, phasesBelow(p, c.to.elementId, summaries, seen));
+  }
+  for (const r of p.model.risers) {
+    if (r.fedFromId === id) {
+      for (const b of r.feeds) most = Math.max(most, phasesBelow(p, b, summaries, seen));
+    }
+  }
+  return most;
+}
+
+function supplyOf(
+  p: Project,
+  id: string,
+  summaries: Map<string, LoadSummary>,
+): Pick<CalcRow, 'voltageV' | 'phases'> {
+  const n = phasesBelow(p, id, summaries);
+  if (n === 0) return { voltageV: null, phases: null };
+  return n === 1 ? { voltageV: 230, phases: 1 } : { voltageV: 400, phases: 3 };
+}
+
 function cableRow(
   p: Project,
   cable: Cable,
@@ -184,13 +267,20 @@ function cableRow(
   const k = cable.construction;
   const busbar = cable.feederType === 'busbar';
   const fig = figures(found);
+  const to = byId.get(cable.to.elementId)?.tag ?? '-';
+  const load = summaries.get(cable.to.elementId);
+  const supply = supplyOf(p, cable.to.elementId, summaries);
   return {
     ref: cable.tag,
     kind: busbar ? 'Busbar feeder' : 'Cable',
     from: byId.get(cable.from.elementId)?.tag ?? '-',
-    to: byId.get(cable.to.elementId)?.tag ?? '-',
+    to,
     ...fig,
-    loadKw: fig.loadKw ?? summaries.get(cable.to.elementId)?.maxDemandKw ?? null,
+    voltageV: fig.voltageV ?? supply.voltageV ?? null,
+    phases: fig.phases ?? supply.phases ?? null,
+    loadKw: fig.loadKw ?? load?.maxDemandKw ?? null,
+    pf: fig.pf ?? load?.pf ?? null,
+    note: whyNotSized(found, to),
     method: busbar ? null : METHODS[k.method],
     construction: busbar ? 'Busbar TPN+E' : construction(k),
     trays: busbar ? null : k.trays,
@@ -206,6 +296,7 @@ function riserRow(p: Project, index: number, byId: Map<string, Element>, key: st
   const found = resultOf(p, r.id, key);
   const fig = figures(found);
   return {
+    note: whyNotSized(found, `Riser ${index + 1}`),
     ref: `Riser ${index + 1}`,
     kind: 'Riser',
     from: (r.fedFromId && byId.get(r.fedFromId)?.tag) || '-',
@@ -254,10 +345,35 @@ export function calculationSheet(p: Project, summaries: Map<string, LoadSummary>
   p.model.risers.forEach((r, i) => {
     if (!risers.has(i) && (r.fedFromId || r.feeds.length)) rows.push(riserRow(p, i, byId, key));
   });
+  // Causes of the rows without figures, traced to the components to fix.
+  const notSized: NotSized = {
+    awaitingLoad: [],
+    missingPf: [],
+    missingEfficiency: [],
+    otherBlocked: 0,
+    notRun: 0,
+  };
+  const add = (list: string[], tags: string[]) =>
+    tags.forEach((t) => list.includes(t) || list.push(t));
+  for (const c of p.model.cables) {
+    const found = resultOf(p, c.id, key);
+    const s = summaries.get(c.to.elementId);
+    if (!found || found.outOfDate) notSized.notRun++;
+    else if (found.result.status === 'awaiting-load')
+      add(notSized.awaitingLoad, [byId.get(c.to.elementId)?.tag ?? '-']);
+    else if (found.result.status === 'blocked') {
+      const traced = (s?.missingPf.length ?? 0) + (s?.incomplete.length ?? 0) > 0;
+      if (found.result.values.ibA === null && traced) {
+        add(notSized.missingPf, s!.missingPf);
+        add(notSized.missingEfficiency, s!.incomplete);
+      } else notSized.otherBlocked++;
+    }
+  }
   return {
     project: p.details.name,
     rulePack: `${p.rulePackId ?? '-'} v${p.rulePackVersion ?? '-'}`,
     rows,
     sizesPending: rows.some((r) => r.status === 'Out of date' || r.status === 'Not calculated'),
+    notSized,
   };
 }

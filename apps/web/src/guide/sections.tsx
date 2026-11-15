@@ -725,7 +725,10 @@ export const SECTIONS: GuideSection[] = [
           <li>
             <Term>Calculation Sheet</Term> - one row per cable, busbar feeder and riser with every
             calculation step (load, breaker, installation, It / K factors / Iz, ECC, voltage drop,
-            short circuit, checks).
+            short circuit, checks). A row the engine could not size keeps its voltage and phases
+            (from its load) and says why in <Term>Why not sized</Term>; a box above the sheet lists
+            the components to fix. One missing power factor or motor efficiency blocks every feeder
+            above that load, and a board with no load waits (Awaiting load).
           </li>
           <li>
             <Term>Generator Load Analysis</Term> - the one editable report: demand factors per load

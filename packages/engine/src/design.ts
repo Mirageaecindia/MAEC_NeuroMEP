@@ -206,7 +206,7 @@ export function designFeeders(project: Project): FeederDesign[] {
     if (s.incomplete.length) {
       return [
         blocked(
-          `Efficiency missing on motor-driven equipment ${s.incomplete.join(', ')}: input kW = rated kW / efficiency.`,
+          `Efficiency missing on motor-driven equipment ${[...new Set(s.incomplete)].join(', ')}: input kW = rated kW / efficiency; enter it on the equipment (every feeder above it waits for it).`,
         ),
       ];
     }
@@ -215,7 +215,15 @@ export function designFeeders(project: Project): FeederDesign[] {
         { ...base, ibA: 0, ibCase: null, neutralA: null, device: null, status: 'awaiting-load' },
       ];
     }
-    if (s.pf === null) return [blocked('Power factor missing on the load.')];
+    if (s.pf === null) {
+      return [
+        blocked(
+          s.missingPf.length
+            ? `Power factor missing on ${[...new Set(s.missingPf)].join(', ')}: enter it on that load (or a default for its load type on Import File); every feeder above it waits for it.`
+            : 'Power factor missing on the load.',
+        ),
+      ];
+    }
 
     const total = d.L1 + d.L2 + d.L3;
     if (to.kind === 'motor') {

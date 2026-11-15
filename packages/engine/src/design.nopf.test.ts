@@ -36,7 +36,8 @@ describe('#TASK-20 missing power factor (V-14)', () => {
     const d = designFeeders(p)[0]!;
     expect(d).toMatchObject({ status: 'blocked', ibA: null, pf: null });
     expect(d.errors[0]).toBe('E2003');
-    expect(d.trace.at(-1)?.detail).toBe('Power factor missing on the load.');
+    // Names the component to fix (15 Nov 2026).
+    expect(d.trace.at(-1)?.detail).toMatch(/^Power factor missing on DB-db: enter it on that load/);
   });
 });
 

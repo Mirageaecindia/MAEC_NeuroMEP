@@ -17,6 +17,7 @@ const WIDTH: Record<string, number> = {
   method: 15,
   status: 11,
   errors: 11,
+  note: 34,
 };
 const widthOf = (c: CalcColumn) => WIDTH[c.key] ?? (/^C\d$/.test(c.key) ? 7 : 9);
 

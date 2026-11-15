@@ -266,6 +266,51 @@ describe('#TASK-31 calculation sheet from a real run (WBS 1.7.3)', () => {
   });
 });
 
+describe('calculation sheet: why rows are blank (user report 15 Nov 2026)', () => {
+  it('fills voltage / phases from the load, says why each row is not sized and lists the causes', () => {
+    const b = small();
+    // A board with no load, and an isolator whose motor has a starter but no efficiency.
+    b.db('empty', [0, 0, 0]);
+    b.feed('mdb', 'empty', 10, { groupedCircuits: 1 });
+    b.add('smdb', 'sm');
+    b.feed('mdb', 'sm', 10, { groupedCircuits: 1 });
+    b.add('isolator-tp', 'iso');
+    b.feed('sm', 'iso', 10, { groupedCircuits: 1 });
+    b.add('mechanical-equipment', 'ahu', {
+      fedFromId: 'iso',
+      kw: 15,
+      phases: '3P',
+      powerFactor: 0.8,
+      efficiency: null,
+      starter: 'DOL',
+    });
+    const p = b.project;
+    p.model.results = mergeRun(p, { kind: 'project' }, elementResults(p, cableSize(p)), {
+      runId: 'r',
+      at: '2026-11-15T08:00:00Z',
+      engineVersion: 't',
+      inputsKey: inputsKey(p),
+    });
+    const sheet = calculationSheet(p, loadSummaries(p, 0.85));
+    const row = (to: string) => sheet.rows.find((r) => r.to === to)!;
+    // Blocked above the motor: no Ib, but voltage and phases are those of its load.
+    for (const to of ['ISO', 'SM']) {
+      expect(row(to)).toMatchObject({ status: 'Blocked', ibA: null, voltageV: 400, phases: 3 });
+      expect(String(row(to).note)).toMatch(/^Efficiency missing on motor-driven equipment AHU/);
+    }
+    expect(row('EMPTY')).toMatchObject({ status: 'Awaiting load', voltageV: null });
+    expect(String(row('EMPTY').note)).toMatch(/^No load entered on EMPTY/);
+    expect(row('DB').note).toBeNull(); // sized
+    expect(sheet.notSized).toEqual({
+      awaitingLoad: ['EMPTY'],
+      missingPf: [],
+      missingEfficiency: ['AHU'],
+      otherBlocked: 0,
+      notRun: 0,
+    });
+  });
+});
+
 describe('feeder cost (user decision 8 Nov 2026: cost = ampere x 2.2 AED)', () => {
   it('prices every feeder at its breaker rating In x 2.2 AED; a feeder without one leaves no total', () => {
     const p = completeProject();

@@ -53,6 +53,11 @@ export interface LoadSummary {
   tbcCategories: DemandCategory[];
   /** Equipment at or below whose input load cannot be worked out (no efficiency, E2003). */
   incomplete: string[];
+  /**
+   * Components at or below with a load but no power factor (none entered, none for its load
+   * type, no default): the power factor of everything above them is unknown (E2003, 15 Nov 2026).
+   */
+  missingPf: string[];
 }
 
 /**
@@ -293,6 +298,10 @@ export function loadSummaries(
         ...(e.kind === 'equipment' && equipmentInputKw(e) === null ? [e.tag] : []),
         ...(starterInputFactor(e) === null && ownLines(e).length > 0 ? [e.tag] : []),
         ...sub.flatMap((x) => x.incomplete),
+      ],
+      missingPf: [
+        ...(lines.some((l) => l.kw > 0 && !l.pf) ? [e.tag] : []),
+        ...sub.flatMap((x) => x.missingPf),
       ],
       q,
     };

@@ -51,6 +51,23 @@ describe('#TASK-15 #TASK-18 mechanical / PHE equipment', () => {
     expect(s.get('smdb')!.incomplete).toEqual(['PUMP']);
   });
 
+  it('names the board with a load but no power factor up the tree (E2003, 15 Nov 2026)', () => {
+    const p = completeProject();
+    const smdb = testElement('smdb', 'smdb');
+    const db = {
+      ...sampleDb('gf', 'db'),
+      powerFactor: null,
+      loads: [{ method: 'kw', loadType: '6', kwL1: 1, kwL2: 1, kwL3: 1 }],
+    } as Element;
+    p.model.elements = [smdb, db];
+    p.model.cables = [testCable(smdb, db)];
+    const s = loadSummaries(p, { defaultPf: null, byType: {} });
+    expect(s.get('db')).toMatchObject({ pf: null, missingPf: ['DB-db'] });
+    expect(s.get('smdb')).toMatchObject({ pf: null, missingPf: ['DB-db'] });
+    // With a default power factor nothing is missing.
+    expect(loadSummaries(p, 0.85).get('smdb')!.missingPf).toEqual([]);
+  });
+
   it('warns while equipment is not connected to a panel (E1803) and keeps the floor from flagging', () => {
     const p = completeProject();
     const gf = p.building.floors.find((f) => f.code === 'GF')!.id;
