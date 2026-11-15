@@ -143,6 +143,8 @@ export function BuildingTab(props: {
   // ----- view filters (user request 15 Nov 2026): view only, not stored in the project -----
   const [filters, setFilters] = useState<Record<string, FloorFilter>>({});
   const [overrides, setOverrides] = useState<Record<string, ViewOverride>>({});
+  /** Per floor, the component whose Hide Reverse greyed the rest of it (its menu: Show Reverse). */
+  const [reversed, setReversed] = useState<Record<string, string>>({});
   /** The floor whose filter menu is open. */
   const [floorMenu, setFloorMenu] = useState<string | null>(null);
   /** The component under the mouse: its Hide / Hide Reverse menu is shown. */
@@ -169,6 +171,7 @@ export function BuildingTab(props: {
   /** A floor's filter: its components' own Hide / Show are cleared. */
   function chooseFilter(floorId: string, filter: FloorFilter) {
     setFilters((f) => ({ ...f, [floorId]: filter }));
+    setReversed(({ [floorId]: _, ...rest }) => rest);
     setOverrides((o) =>
       Object.fromEntries(
         Object.entries(o).filter(
@@ -178,11 +181,19 @@ export function BuildingTab(props: {
     );
     setFloorMenu(null);
   }
-  /** Hide Reverse: only this component stays, every other one in the building is greyed. */
-  function hideReverse(id: string) {
-    setOverrides(
-      Object.fromEntries(model.elements.map((e) => [e.id, e.id === id ? 'shown' : 'hidden'])),
-    );
+  /**
+   * Hide Reverse: only this component stays on its floor, every other one on that floor is
+   * greyed (other floors untouched, 15 Nov 2026). Its menu then offers Show Reverse: every other
+   * component on the floor shown again, this one left as it is.
+   */
+  function reverse(e: Element, show: boolean) {
+    const others = model.elements.filter((x) => x.floorId === e.floorId && x.id !== e.id);
+    setOverrides((o) => ({
+      ...o,
+      ...Object.fromEntries(others.map((x) => [x.id, show ? 'shown' : 'hidden'])),
+      ...(show ? {} : { [e.id]: 'shown' }),
+    }));
+    setReversed(({ [e.floorId]: _, ...rest }) => (show ? rest : { ...rest, [e.floorId]: e.id }));
     setHovered(null);
   }
   const anyGreyed = model.elements.some(greyed);
@@ -380,6 +391,7 @@ export function BuildingTab(props: {
               onClick={() => {
                 setFilters({});
                 setOverrides({});
+                setReversed({});
               }}
             >
               Show all
@@ -760,8 +772,12 @@ export function BuildingTab(props: {
                     >
                       {grey ? 'Show' : 'Hide'}
                     </button>
-                    <button type="button" role="menuitem" onClick={() => hideReverse(e.id)}>
-                      Hide Reverse
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => reverse(e, reversed[e.floorId] === e.id)}
+                    >
+                      {reversed[e.floorId] === e.id ? 'Show Reverse' : 'Hide Reverse'}
                     </button>
                   </div>
                 </foreignObject>

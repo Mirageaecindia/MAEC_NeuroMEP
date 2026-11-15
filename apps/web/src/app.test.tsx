@@ -956,6 +956,9 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     const floors = new Set([tx.floorId, db.floorId]);
     expect(floors.size).toBe(1); // both on one floor
     const floor = project.building.floors.find((f) => f.id === tx.floorId)!.name;
+    // A board on another floor: Hide Reverse leaves it alone.
+    const other = project.building.floors.find((f) => f.id !== tx.floorId)!;
+    project.model.elements.push({ ...testElement('mdb', 'mdb-up', other.id), tag: 'MDB-UP' });
     renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(project));
     const board = async (tag: string) => screen.findByRole('button', { name: `${tag} board` });
     const grey = async (tag: string) => (await board(tag)).hasAttribute('data-greyed');
@@ -1002,6 +1005,25 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     await userEvent.click(within(view).getByRole('menuitem', { name: 'Hide Reverse' }));
     expect(await grey('DB-db-1')).toBe(false);
     expect(await grey('TX-1')).toBe(true);
+    expect(await grey('MDB-UP')).toBe(false); // its own floor only
+
+    // It becomes Show Reverse: every other component on the floor comes back.
+    fireEvent.mouseEnter(await board('DB-db-1'));
+    view = screen.getByRole('menu', { name: 'View DB-db-1' });
+    expect(
+      within(view)
+        .getAllByRole('menuitem')
+        .map((b) => b.textContent),
+    ).toEqual(['Hide', 'Show Reverse']);
+    await userEvent.click(within(view).getByRole('menuitem', { name: 'Show Reverse' }));
+    expect(await grey('TX-1')).toBe(false);
+    expect(await grey('DB-db-1')).toBe(false);
+    fireEvent.mouseEnter(await board('DB-db-1'));
+    expect(
+      within(screen.getByRole('menu', { name: 'View DB-db-1' })).getByRole('menuitem', {
+        name: 'Hide Reverse',
+      }),
+    ).toBeInTheDocument();
 
     // Hide, then Show all clears everything.
     fireEvent.mouseEnter(await board('DB-db-1'));

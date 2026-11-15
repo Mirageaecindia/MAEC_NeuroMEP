@@ -593,9 +593,11 @@ export const SECTIONS: GuideSection[] = [
           </li>
           <li>
             <strong>Hover a component</strong> - <Term>Hide</Term> greys it,{' '}
-            <Term>Hide Reverse</Term> keeps only that component and greys every other one; on a
-            greyed component <Term>Show</Term> brings it back. These win over the floor filter until
-            that floor&apos;s filter is chosen again.
+            <Term>Hide Reverse</Term> keeps only that component and greys every other one on the
+            same floor (other floors are not changed); its menu then reads <Term>Show Reverse</Term>
+            , which shows every other component on that floor again. On a greyed component{' '}
+            <Term>Show</Term> brings it back. These win over the floor filter until that
+            floor&apos;s filter is chosen again.
           </li>
           <li>
             <strong>Show all</strong> above the diagram clears every filter and hidden component.
