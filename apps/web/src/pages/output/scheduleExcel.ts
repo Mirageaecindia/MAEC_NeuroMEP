@@ -50,6 +50,8 @@ export async function scheduleWorkbook(
     const l = scheduleLayout(s, inputs);
     const ws = wb.addWorksheet(sheetName(s.tag, used), {
       pageSetup: { orientation: 'landscape', paperSize: 9, fitToPage: true, fitToWidth: 1 },
+      // Title block and column heads stay in view when scrolling (user request 15 Nov 2026).
+      views: [{ state: 'frozen', ySplit: 5 }],
     });
     ws.columns = COLUMNS.map(([, width]) => ({ width }));
 

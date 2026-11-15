@@ -124,7 +124,8 @@ export function ScheduleSheet(props: {
             LOCATION OF {s.tag}: {s.location || '—'}
           </td>
         </tr>
-        <tr className="strong">
+        {/* Column heads frozen while the sheet scrolls (user request 15 Nov 2026). */}
+        <tr className="strong sheet-head">
           <td>CIRCUIT / FEEDER</td>
           <td>WAY NO</td>
           <td>SP/TP</td>

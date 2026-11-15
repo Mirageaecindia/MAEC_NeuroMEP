@@ -1229,6 +1229,8 @@ describe('#TASK-30 / #TASK-31 Schematic and Output (Figma 4, 5)', () => {
     expect(screen.getByText('No boards of the ticked levels in this project yet.')).toBeVisible();
     await userEvent.click(floorLevel);
     const sheet = screen.getByRole('table', { name: 'Schedule DB-db-1' });
+    // The column-name row is the frozen head (15 Nov 2026).
+    expect(within(sheet).getByText('CIRCUIT / FEEDER').closest('tr')).toHaveClass('sheet-head');
     expect(sheet).toHaveTextContent('INCOMER');
     expect(within(sheet).getByText('LV/HV')).toBeInTheDocument();
     expect(within(sheet).getAllByTitle(/0 x 1-Ph, 1 x 3-Ph, 0 x LV\/HV/)).toHaveLength(3);
@@ -1412,6 +1414,8 @@ describe('#TASK-31 schedule download (WBS 1.7.2)', () => {
     // Meters from the plan: 1-PH / 3-PH / LV/HV (10 Nov 2026).
     expect(['P6', 'Q6', 'R6'].map((c) => ws.getCell(c).value)).toEqual([0, 1, 0]);
     expect(ws.getCell('R5').value).toBe('LV/HV');
+    // Title block and column heads frozen (15 Nov 2026).
+    expect(ws.views[0]).toMatchObject({ state: 'frozen', ySplit: 5 });
     expect(ws.getImages()).toHaveLength(1); // the logo
     create.mockRestore();
     click.mockRestore();
