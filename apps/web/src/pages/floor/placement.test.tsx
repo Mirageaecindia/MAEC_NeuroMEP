@@ -628,14 +628,23 @@ describe('rotate, copy / paste, Replicate floor, floor names (user request 7 Nov
     await planReady();
     await placeDb(300);
     await screen.findByRole('img', { name: 'DB-GF-01 (selected)' });
-    // The handle sits off the top-right corner: centre + (16 + 4 + 12) px each way.
-    expect(document.querySelector('.marker-rotate')).not.toBeNull();
-    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 332, clientY: 268 }); // -45 degrees
+    // The handle sits off the top-right corner of the symbol, whose size follows the zoom.
+    const handle = document.querySelector('.marker-rotate circle')!;
+    const hx = Number(handle.getAttribute('cx'));
+    const hy = Number(handle.getAttribute('cy'));
+    // From the centre (300, 300) the handle is at -45 degrees.
+    expect(hx - 300).toBeCloseTo(300 - hy, 6);
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: hx, clientY: hy }); // -45 degrees
     fireEvent.mouseMove(canvasArea(), { clientX: 340, clientY: 300 }); // 0 degrees: +45
     fireEvent.mouseUp(canvasArea(), { clientX: 340, clientY: 300 });
     await waitFor(() => expect(screen.getByLabelText('Rotation (°) :')).toHaveValue(45));
     // Shift snaps: from 45, a further 50 degrees becomes 90.
-    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 332, clientY: 268 });
+    const turned = document.querySelector('.marker-rotate circle')!;
+    fireEvent.mouseDown(canvasArea(), {
+      button: 0,
+      clientX: Number(turned.getAttribute('cx')),
+      clientY: Number(turned.getAttribute('cy')),
+    });
     const a = (-45 + 50) * (Math.PI / 180);
     fireEvent.mouseMove(canvasArea(), {
       clientX: 300 + 40 * Math.cos(a),
@@ -644,6 +653,22 @@ describe('rotate, copy / paste, Replicate floor, floor names (user request 7 Nov
     });
     fireEvent.mouseUp(canvasArea());
     await waitFor(() => expect(screen.getByLabelText('Rotation (°) :')).toHaveValue(90));
+  });
+
+  it('zooms the placed symbols with the plan: same size relative to the sheet (18 Nov 2026)', async () => {
+    open(LEAD);
+    await planReady();
+    await placeDb(300);
+    const width = () =>
+      Number(
+        screen
+          .getByRole('img', { name: /^DB-GF-01/ })
+          .querySelector('image')!
+          .getAttribute('width'),
+      );
+    const before = width();
+    await userEvent.click(screen.getByRole('button', { name: 'Zoom In' }));
+    await waitFor(() => expect(width()).toBeCloseTo(before * 1.25, 6));
   });
 
   it('sets an exact angle in the Engineering Property', async () => {

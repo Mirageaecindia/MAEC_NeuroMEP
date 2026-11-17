@@ -65,7 +65,13 @@ export interface PlanCable {
 
 /** Data type of a library item dragged onto the plan. */
 export const LIBRARY_DRAG_TYPE = 'application/x-neuromep-item';
-/** Symbol size on screen (px), and how close a click must be to hit one. */
+/**
+ * Symbol size (user report 18 Nov 2026: symbols must zoom with the plan): a fixed part of the
+ * sheet - 1.5 % of its longer side at scale 1 - so the placed symbols and the drawing keep their
+ * proportions at every zoom. Clicks hit within at least HIT_PX of a symbol's centre.
+ */
+const SYMBOL_PAGE_FRACTION = 0.015;
+/** Before the page is read (no size yet). */
 const MARKER_PX = 32;
 const HIT_PX = 20;
 /** Corner handles of the selected symbol: size and grab distance (px); allowed scale range. */
@@ -75,7 +81,6 @@ const SCALE_MAX = 4;
 /** Rotate handle (7 Nov 2026): a circle this far off the top-right corner, this radius (px). */
 const ROTATE_OFFSET = 12;
 const ROTATE_R = 7;
-const half = (m: PlanMarker) => (MARKER_PX * (m.scale ?? 1)) / 2;
 
 /** Driven from the shared toolbar (Zoom In / Zoom Out / Reset). */
 export interface ViewerControls {
@@ -415,6 +420,11 @@ export function PlanViewer(props: {
             }),
         )
       : undefined;
+  /** Size of a standard symbol on screen now (px): a fixed part of the sheet, zoomed with it. */
+  const symbolPx = page
+    ? SYMBOL_PAGE_FRACTION * Math.max(page.width, page.height) * view.zoom
+    : MARKER_PX;
+  const half = (m: PlanMarker) => (symbolPx * (m.scale ?? 1)) / 2;
   /** The component under a screen point, if any. */
   const hit = (s: { x: number; y: number }) =>
     page
@@ -550,7 +560,7 @@ export function PlanViewer(props: {
       const c = pdfToScreen(m.at, view, page.transform);
       const p = local(e);
       const reach = Math.max(Math.abs(p.x - c.x), Math.abs(p.y - c.y)) - 4;
-      const scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, (2 * reach) / MARKER_PX));
+      const scale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, (2 * reach) / symbolPx));
       setResizing({ id: m.id, scale: Math.round(scale * 20) / 20 });
       return;
     }
@@ -905,7 +915,10 @@ export function PlanViewer(props: {
                 m.id === props.selectedId || (props.selectedIds ?? []).includes(m.id);
               const angle = rotating?.id === m.id ? rotating.deg : m.rotation;
               const turn = angle ? `rotate(${angle} ${s.x} ${s.y})` : undefined;
-              const size = MARKER_PX * (resizing?.id === m.id ? resizing.scale : (m.scale ?? 1));
+              const size = symbolPx * (resizing?.id === m.id ? resizing.scale : (m.scale ?? 1));
+              // Tag and detail lines scale with the symbol (were a fixed 10 / 8 px).
+              const tagPx = size * 0.31;
+              const detailPx = size * 0.25;
               return (
                 <g
                   key={m.id}
@@ -992,16 +1005,23 @@ export function PlanViewer(props: {
                       transform={turn}
                     />
                   )}
-                  <text x={s.x} y={s.y + size / 2 + 11} textAnchor="middle" className="marker-tag">
+                  <text
+                    x={s.x}
+                    y={s.y + size / 2 + tagPx * 1.1}
+                    textAnchor="middle"
+                    className="marker-tag"
+                    style={{ fontSize: tagPx, strokeWidth: tagPx * 0.3 }}
+                  >
                     {m.tag}
                   </text>
                   {m.detail?.map((line, i) => (
                     <text
                       key={i}
                       x={s.x}
-                      y={s.y + size / 2 + 21 + i * 9}
+                      y={s.y + size / 2 + tagPx * 1.1 + detailPx * 1.15 * (i + 1)}
                       textAnchor="middle"
                       className="marker-detail"
+                      style={{ fontSize: detailPx, strokeWidth: detailPx * 0.35 }}
                     >
                       {line}
                     </text>
