@@ -785,9 +785,10 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     await userEvent.type(within(ask).getByLabelText('Feeder length (m)'), '35');
     await userEvent.click(connect);
     const feeder = await screen.findByRole('button', { name: /^Feeder FGF-\S+, 35 m$/ });
-    // Change its length.
+    // A click shows its length and properties in the Building Summary (18 Nov 2026).
     await userEvent.click(feeder);
-    const edit = screen.getByRole('dialog', { name: /^Feeder FGF-/ });
+    const edit = screen.getByRole('region', { name: 'Selected in the Building tab' });
+    expect((within(edit).getByLabelText('Tag :') as HTMLInputElement).value).toMatch(/^FGF-/);
     const length = within(edit).getByLabelText('Feeder length (m)');
     await userEvent.clear(length);
     await userEvent.type(length, '42.5');
@@ -803,9 +804,23 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
         manualLengthM: 42.5,
       }),
     );
-    const route = (await api.getProject('p-1')).project.model.cables.at(-1)!.buildingRoute!;
-    // The corner where it was clicked (any angle, 15 Nov 2026), then straight to the SMDB.
-    expect(route).toEqual([{ x: 600, y: 10 }]);
+    const saved = (await api.getProject('p-1')).project.model.cables.at(-1)!;
+    // Corners tied to the layout (floor, offset, component slots), so they move with it.
+    expect(saved.buildingRoute).toBeUndefined();
+    expect(saved.buildingPath!.length).toBeGreaterThanOrEqual(1);
+    // Drawn horizontal / vertical, ending on both components.
+    const d = document
+      .querySelector('.building-feeder path:not(.building-feeder-hit)')!
+      .getAttribute('d')!;
+    const pts = [...d.matchAll(/[ML] ([-\d.]+) ([-\d.]+)/g)].map((m) => [
+      Number(m[1]),
+      Number(m[2]),
+    ]);
+    for (let k = 1; k < pts.length; k++) {
+      const [x0, y0] = pts[k - 1]!;
+      const [x1, y1] = pts[k]!;
+      expect(x0 === x1 || y0 === y1).toBe(true);
+    }
   });
 
   it('#TASK-18 a riser fed from the transformer feeds the floor boards; then Cable Size (A-07)', async () => {
@@ -819,9 +834,11 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     const summary = screen.getByRole('complementary', { name: 'Building Summary' });
     const calc = within(summary).getByRole('button', { name: 'Cable Size Calculator' });
     expect(calc).toBeDisabled();
+    // A click selects the DB; its riser tap-off is chosen in the Building Summary (18 Nov 2026).
     await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
+    expect(within(summary).getByLabelText('Riser tap-off of DB-db-1')).toBeDisabled();
     expect(
-      await screen.findByText('Enter a riser length in Busbar Riser Design first.'),
+      within(summary).getByText('Enter a riser length in Busbar Riser Design first.'),
     ).toBeVisible();
     await userEvent.type(within(summary).getByLabelText('Riser 1 length'), '26');
     // Click the riser, then its source - the transformer is drawn on its floor (7 Nov 2026).
@@ -830,6 +847,10 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(await screen.findByText('Riser 1 is fed from TX-1.')).toBeVisible();
     expect(calc).toBeEnabled();
     await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
+    await userEvent.selectOptions(
+      within(summary).getByLabelText('Riser tap-off of DB-db-1'),
+      'Riser 1',
+    );
     await userEvent.click(tool('Save'));
     await waitFor(async () =>
       expect((await api.getProject('p-1')).project.model.risers[0]).toMatchObject({
@@ -950,9 +971,10 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     );
     // Where the chain breaks, and what to do about it.
     expect(warnings).toHaveTextContent(
-      'E1801 DB-db-1 has no incoming feeder. In Floor Setup, draw a feeder to DB-db-1 from a panel above it, or click it in this diagram to put it on a riser tap-off.',
+      'E1801 DB-db-1 has no incoming feeder. In Floor Setup, draw a feeder to DB-db-1 from a panel above it, or select it in this diagram and choose its riser tap-off in the Building Summary.',
     );
     await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
+    await userEvent.selectOptions(screen.getByLabelText('Riser tap-off of DB-db-1'), 'Riser 1');
     expect(within(check).getByText(/^Every component has a path to a source;/)).toBeVisible();
     await userEvent.click(within(check).getByRole('radio', { name: 'Standby' }));
     expect(within(check).getByText(/On generator supply: 0 of 1 components/)).toBeVisible();
@@ -1049,6 +1071,32 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(screen.queryByText(/Some components are greyed/)).toBeNull();
   });
 
+  it('Building tab: items after the Feeder are not in the library and greyed with no actions (18 Nov 2026)', async () => {
+    const project = buildingProject();
+    const gf = project.model.elements.find((e) => e.id === 'tx')!.floorId;
+    project.model.elements.push({ ...testElement('isolator-tp', 'iso', gf), tag: 'ISO-1' });
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(project));
+    const iso = await screen.findByRole('button', { name: 'ISO-1 board' });
+    expect(iso).toHaveAttribute('aria-disabled', 'true');
+    expect(iso).toHaveClass('fixed-grey');
+    // No hover menu, no selection.
+    fireEvent.mouseEnter(iso);
+    expect(screen.queryByRole('menu', { name: 'View ISO-1' })).toBeNull();
+    await userEvent.click(iso);
+    expect(screen.queryByRole('region', { name: 'Selected in the Building tab' })).toBeNull();
+    // Not counted as hidden by a filter: no Show all bar.
+    expect(screen.queryByText(/Some components are greyed/)).toBeNull();
+    // The library keeps the items up to the Feeder only.
+    const library = screen.getByLabelText('Component Library');
+    expect(within(library).queryByRole('button', { name: /^Isolator 3P/ })).toBeNull();
+    expect(within(library).getByRole('button', { name: /Feeder/ })).toBeInTheDocument();
+    // A board is selected and shows its properties below Save / Cancel.
+    await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
+    const panel = screen.getByRole('region', { name: 'Selected in the Building tab' });
+    expect(within(panel).getByRole('region', { name: 'Engineering Property' })).toBeInTheDocument();
+    expect(within(panel).getByRole('region', { name: 'Cable Size result' })).toBeInTheDocument();
+  });
+
   it('#TASK-18 a riser fed from an MDB with no feeder: one warning naming the MDB, source marked', async () => {
     const project = buildingProject();
     const gf = project.building.floors.find((f) => f.code === 'GF')!.id;
@@ -1138,6 +1186,7 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
 
     await userEvent.click(tool('Building'));
     await userEvent.click(await screen.findByRole('button', { name: 'DB-db-1 board' }));
+    await userEvent.selectOptions(screen.getByLabelText('Riser tap-off of DB-db-1'), 'Riser 1');
     await userEvent.click(tool('Building'));
     await userEvent.click(await screenTool('Status'));
     dialog = screen.getByRole('dialog', { name: 'Ground Floor status' });

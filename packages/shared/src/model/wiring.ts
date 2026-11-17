@@ -184,7 +184,9 @@ export function drawBuildingFeeder(args: {
   lengthM: number;
   floorCode: string;
   construction: CableConstruction;
-  /** Corners drawn in the Building tab (diagram units), when drawn by hand. */
+  /** Corners drawn in the Building tab, tied to its layout (18 Nov 2026). */
+  buildingPath?: { floorId: string; dy: number; slot: number }[];
+  /** Corners in plain diagram units (before 18 Nov 2026). */
   buildingRoute?: { x: number; y: number }[];
 }): Cable {
   const port: Port =
@@ -205,6 +207,7 @@ export function drawBuildingFeeder(args: {
     }),
     manualLengthM: args.lengthM,
     ...(args.buildingRoute?.length ? { buildingRoute: args.buildingRoute } : {}),
+    ...(args.buildingPath?.length ? { buildingPath: args.buildingPath } : {}),
   };
 }
 

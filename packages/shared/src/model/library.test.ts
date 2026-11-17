@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { isPlaceable, LIBRARY_ITEMS, libraryItem, nextTag, placeElement } from './library.js';
+import {
+  BUILDING_TAB_HIDDEN,
+  hiddenInBuildingTab,
+  isPlaceable,
+  LIBRARY_ITEMS,
+  libraryItem,
+  nextTag,
+  placeElement,
+} from './library.js';
 
 const place = (key: string, taken: string[] = [], floorCode = 'GF') => {
   const item = libraryItem(key)!;
@@ -70,6 +78,33 @@ describe('#TASK-11 component library (A-11, Section 13)', () => {
     expect(place('transformer')).toMatchObject({ kind: 'transformer', kva: null, ukPct: null });
     expect(place('lighting')).toMatchObject({ kind: 'db', description: 'Lighting' });
     expect(place('rmu')).toMatchObject({ kind: 'eb-utility', description: 'RMU' });
+  });
+});
+
+describe('Building tab: the items after the Feeder (user request 18 Nov 2026)', () => {
+  it('are left out of the Building tab and greyed there', () => {
+    expect([...BUILDING_TAB_HIDDEN]).toEqual([
+      'lighting',
+      'ups',
+      'isolator-sp',
+      'isolator-tp',
+      'connection-unit',
+      'pfc',
+      'meter',
+      'mechanical-equipment',
+      'phe-equipment',
+    ]);
+    const at = { floorId: 'gf', floorCode: 'GF', position: { x: 0, y: 0 }, taken: [] };
+    const make = (key: string) => {
+      const item = libraryItem(key)!;
+      if (!isPlaceable(item)) throw new Error(key);
+      return placeElement(item, { id: key, ...at });
+    };
+    expect(hiddenInBuildingTab(make('isolator-tp'))).toBe(true);
+    // A lighting board is a DB in the model, still left out as the Lighting item.
+    expect(hiddenInBuildingTab(make('lighting'))).toBe(true);
+    expect(hiddenInBuildingTab(make('db'))).toBe(false);
+    expect(hiddenInBuildingTab(make('smdb'))).toBe(false);
   });
 });
 

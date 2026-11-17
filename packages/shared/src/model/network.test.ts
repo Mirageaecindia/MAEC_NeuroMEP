@@ -100,7 +100,7 @@ describe('#TASK-18 where the supply breaks (E1801 grouped by cause)', () => {
       {
         at: { kind: 'element', id: 'DB-2', tag: 'DB-2' },
         message: 'DB-2 has no incoming feeder',
-        fix: 'In Floor Setup, draw a feeder to DB-2 from a panel above it, or click it in this diagram to put it on a riser tap-off.',
+        fix: 'In Floor Setup, draw a feeder to DB-2 from a panel above it, or select it in this diagram and choose its riser tap-off in the Building Summary.',
         cutOff: [],
       },
     ]);

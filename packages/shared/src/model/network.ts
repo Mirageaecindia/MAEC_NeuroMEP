@@ -191,7 +191,7 @@ export function supplyBreaks(m: Network): SupplyBreak[] {
               message: `${at.tag} has no incoming feeder`,
               fix: main
                 ? `In Floor Setup, draw a feeder to ${at.tag} from the transformer (or from the generator through an ATS).`
-                : `In Floor Setup, draw a feeder to ${at.tag} from a panel above it, or click it in this diagram to put it on a riser tap-off.`,
+                : `In Floor Setup, draw a feeder to ${at.tag} from a panel above it, or select it in this diagram and choose its riser tap-off in the Building Summary.`,
               cutOff: [],
             };
       breaks.set(key, b);

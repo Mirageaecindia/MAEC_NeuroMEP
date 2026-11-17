@@ -94,6 +94,14 @@ export const CableSchema = z.object({
    * 2026: the engineer draws the path, as on a plan). Drawing only: the length is typed.
    */
   buildingRoute: z.array(ModelPointSchema).optional(),
+  /**
+   * The same corners tied to the diagram's layout (18 Nov 2026), so they move with it when
+   * components are added or the spacing changes: the floor row, the offset from its line, and the
+   * position in component slots (0 = the first component's centre). Replaces buildingRoute.
+   */
+  buildingPath: z
+    .array(z.object({ floorId: z.string().min(1), dy: z.number(), slot: z.number() }))
+    .optional(),
   feederType: FeederTypeSchema.default('cable'),
   /** Kept while the feeder is a cable, so switching back and forth loses nothing. */
   busbar: BusbarSpecSchema.optional(),

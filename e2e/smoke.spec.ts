@@ -57,7 +57,9 @@ test('#TASK-16 login, Import File, Floor Setup, Building tab and Cable Size', as
   await page.getByRole('button', { name: 'Riser 1', exact: true }).click();
   await page.getByRole('button', { name: 'TX-1 board' }).click();
   await expect(page.getByText('Riser 1 is fed from TX-1.')).toBeVisible();
+  // Select the DB, then choose its riser tap-off in the Building Summary (18 Nov 2026).
   await page.getByRole('button', { name: 'DB-db-1 board' }).click();
+  await summary.getByLabel('Riser tap-off of DB-db-1').selectOption({ label: 'Riser 1' });
   await expect(calculator).toBeEnabled();
   await calculator.click();
   // The first run loads the engine Web Worker, which a fresh dev server compiles on demand (engine,

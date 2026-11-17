@@ -8,6 +8,7 @@ import {
   capacitySummary,
   loadCategoryOf,
   EQUIPMENT_FEEDERS,
+  BUILDING_TAB_HIDDEN,
   loadSummaries,
   type CapacitySummary,
   connectionProblem,
@@ -503,6 +504,81 @@ export function FloorSetupPage() {
       ]
     : [];
 
+  /**
+   * Engineering Property of a component or feeder, anywhere in the project: the Floor Setup right
+   * panel and the Building tab (user request 18 Nov 2026) show the same card.
+   */
+  function propertyCard(id: string | null): ReactNode {
+    const cableOf = id ? (project.model.cables.find((c) => c.id === id) ?? null) : null;
+    const el = id ? (project.model.elements.find((e) => e.id === id) ?? null) : null;
+    return cableOf ? (
+      <CableProperty
+        key={`${cableOf.id}:${cableOf.version}`}
+        cable={cableOf}
+        elements={project.model.elements}
+        length={length}
+        editable={editor.layers.includes('electrical')}
+        takenTags={project.model.cables.filter((c) => c.id !== cableOf.id).map((c) => c.tag)}
+        onChange={(patch) => editor.dispatch({ type: 'updateCable', id: cableOf.id, patch })}
+        onEditConstruction={() => setConstructionFor(cableOf.id)}
+        onDelete={() => {
+          editor.dispatch({ type: 'removeCables', ids: [cableOf.id] });
+          setSelectedId(null);
+        }}
+      />
+    ) : (
+      el && (
+        <EngineeringProperty
+          key={`${el.id}:${el.version}`}
+          element={el}
+          editable={editor.layers.includes(el.discipline)}
+          takenTags={project.model.elements.filter((e) => e.id !== el.id).map((e) => e.tag)}
+          onChange={(patch) => editor.dispatch({ type: 'updateElement', id: el.id, patch })}
+          fedFrom={fedFrom(el, project.model)}
+          connectionNotes={unusualConnections(project.model, el)}
+          onChangeKind={(kind) => {
+            editor.dispatch({ type: 'changeKind', id: el.id, kind });
+            notice(
+              `${el.tag} is now ${/^[AEIOU]/.test(KIND_LABELS[kind]) ? 'an' : 'a'} ${KIND_LABELS[kind]}; its feeders and loads are kept.`,
+            );
+          }}
+          flsEquipment={
+            'loadCategory' in el &&
+            el.loadCategory !== 'fls' &&
+            loadCategoryOf(el, project.model.elements) === 'fls'
+              ? project.model.elements
+                  .filter((e) => e.kind === 'equipment' && e.fedFromId === el.id && e.fls)
+                  .map((e) => e.tag)
+              : []
+          }
+          feeders={project.model.elements
+            .filter((e) => EQUIPMENT_FEEDERS.includes(e.kind))
+            .map((e) => ({ id: e.id, tag: e.tag }))
+            .sort((a, b) => a.tag.localeCompare(b.tag, undefined, { numeric: true }))}
+          meterTargets={
+            el.kind === 'meter'
+              ? project.model.elements
+                  .filter(
+                    (e) =>
+                      e.discipline === 'electrical' &&
+                      e.kind !== 'meter' &&
+                      e.kind !== 'eb-utility',
+                  )
+                  .map((e) => ({ id: e.id, tag: e.tag }))
+                  .sort((a, b) => a.tag.localeCompare(b.tag, undefined, { numeric: true }))
+              : undefined
+          }
+          calculated={el.kind === 'pfc-bank' ? pfcLines(el.id) : undefined}
+          systemV={calcDefault(project, 'supplyVoltageLineV')}
+          onDelete={() => {
+            editor.dispatch({ type: 'removeElements', ids: [el.id] });
+            setSelectedId(null);
+          }}
+        />
+      )
+    );
+  }
+
   async function upload(target: Floor, file: File) {
     setUploading(true);
     try {
@@ -594,54 +670,57 @@ export function FloorSetupPage() {
           <p className="sidebar-title">Component Library</p>
           <DisciplineTabs value={tab} onChange={setTab} disabled={building} />
           <div className="library-chips">
-            {LIBRARY_ITEMS.filter((i) => tab === 'All' || i.discipline === tab.toLowerCase()).map(
-              (item) => (
-                <button
-                  key={item.key}
-                  className={`lib-chip${armed === item.key ? ' armed' : ''}`}
-                  // The Building tab keeps only the Feeder: between floors (8 Nov 2026).
-                  disabled={(building && item.key !== 'cable') || !canPlace}
-                  aria-pressed={armed === item.key}
-                  // Icons only (user request 9 Nov 2026): the symbol carries its name; the label
-                  // stays for the tooltip and screen readers.
-                  aria-label={item.label}
-                  draggable={!building && canPlace && isPlaceable(item)}
-                  title={
-                    isPlaceable(item)
-                      ? `${item.label} (${item.cmpCode ?? 'no CMP code yet'}, draft symbol): drag onto the plan, or click it and then click the plan`
-                      : 'Feeder: draw a cable or busbar between two components'
-                  }
-                  onDragStart={(e) => {
-                    e.dataTransfer.setData(LIBRARY_DRAG_TYPE, item.key);
-                    e.dataTransfer.effectAllowed = 'copy';
-                  }}
-                  onClick={() => {
-                    setDraft(null);
-                    if (isPlaceable(item)) setArmed((k) => (k === item.key ? null : item.key));
-                    else if (armed === 'cable') setArmed(null);
-                    else if (construction) {
-                      setArmed('cable');
-                      if (building) {
-                        notice(
-                          'Click the component the feeder starts from, then the one it feeds - on any floor.',
-                        );
-                      }
-                    } else setConstructionFor('tool');
-                  }}
-                >
-                  <span className="lib-icon" aria-hidden>
-                    {symbols.get(item.key) ? (
-                      <img src={symbols.get(item.key)} alt="" draggable={false} />
-                    ) : item.key === 'cable' ? (
-                      // Blue like the other symbols (user request 9 Nov 2026).
-                      <svg viewBox="0 0 24 24">
-                        <path d="M3 18h7V6h11" fill="none" stroke="#1d4ed8" strokeWidth="2" />
-                      </svg>
-                    ) : null}
-                  </span>
-                </button>
-              ),
-            )}
+            {LIBRARY_ITEMS.filter(
+              (i) =>
+                (tab === 'All' || i.discipline === tab.toLowerCase()) &&
+                // The Building tab leaves out the items after the Feeder (18 Nov 2026).
+                !(building && BUILDING_TAB_HIDDEN.has(i.key)),
+            ).map((item) => (
+              <button
+                key={item.key}
+                className={`lib-chip${armed === item.key ? ' armed' : ''}`}
+                // The Building tab keeps only the Feeder: between floors (8 Nov 2026).
+                disabled={(building && item.key !== 'cable') || !canPlace}
+                aria-pressed={armed === item.key}
+                // Icons only (user request 9 Nov 2026): the symbol carries its name; the label
+                // stays for the tooltip and screen readers.
+                aria-label={item.label}
+                draggable={!building && canPlace && isPlaceable(item)}
+                title={
+                  isPlaceable(item)
+                    ? `${item.label} (${item.cmpCode ?? 'no CMP code yet'}, draft symbol): drag onto the plan, or click it and then click the plan`
+                    : 'Feeder: draw a cable or busbar between two components'
+                }
+                onDragStart={(e) => {
+                  e.dataTransfer.setData(LIBRARY_DRAG_TYPE, item.key);
+                  e.dataTransfer.effectAllowed = 'copy';
+                }}
+                onClick={() => {
+                  setDraft(null);
+                  if (isPlaceable(item)) setArmed((k) => (k === item.key ? null : item.key));
+                  else if (armed === 'cable') setArmed(null);
+                  else if (construction) {
+                    setArmed('cable');
+                    if (building) {
+                      notice(
+                        'Click the component the feeder starts from, then the one it feeds - on any floor.',
+                      );
+                    }
+                  } else setConstructionFor('tool');
+                }}
+              >
+                <span className="lib-icon" aria-hidden>
+                  {symbols.get(item.key) ? (
+                    <img src={symbols.get(item.key)} alt="" draggable={false} />
+                  ) : item.key === 'cable' ? (
+                    // Blue like the other symbols (user request 9 Nov 2026).
+                    <svg viewBox="0 0 24 24">
+                      <path d="M3 18h7V6h11" fill="none" stroke="#1d4ed8" strokeWidth="2" />
+                    </svg>
+                  ) : null}
+                </span>
+              </button>
+            ))}
             {tab !== 'All' && tab !== 'Electrical' && (
               <p className="muted">No {tab.toLowerCase()} components yet.</p>
             )}
@@ -680,7 +759,7 @@ export function FloorSetupPage() {
           onSave={() => void editor.save()}
           feederArmed={armed === 'cable'}
           symbols={symbols}
-          onFeeder={(from, to, lengthM, route) => {
+          onFeeder={(from, to, lengthM, path) => {
             if (!construction)
               return 'Choose the cable construction first (Feeder in the library).';
             const topology = topologyCheck(project.model, from, to);
@@ -694,7 +773,7 @@ export function FloorSetupPage() {
               lengthM,
               floorCode: sourceFloor?.code ?? '',
               construction,
-              buildingRoute: route,
+              buildingPath: path,
             });
             editor.dispatch({ type: 'addCable', cable });
             setArmed(null);
@@ -711,6 +790,12 @@ export function FloorSetupPage() {
           onCableSize={() =>
             cableSize.run({ kind: 'project' }, 'the whole project').then((r) => r?.reply ?? null)
           }
+          properties={(id) => (
+            <>
+              {propertyCard(id)}
+              <SizingResult project={project} id={id} />
+            </>
+          )}
         />
       ) : (
         <div className="floor-layout" style={{ ['--right-w' as string]: `${rightPanel.width}px` }}>
@@ -838,86 +923,7 @@ export function FloorSetupPage() {
               setSelectedId(issue.targetId);
               setFocus((f) => ({ id: issue.targetId, n: (f?.n ?? 0) + 1 }));
             }}
-            property={
-              selectedCable ? (
-                <CableProperty
-                  key={`${selectedCable.id}:${selectedCable.version}`}
-                  cable={selectedCable}
-                  elements={project.model.elements}
-                  length={length}
-                  editable={editor.layers.includes('electrical')}
-                  takenTags={project.model.cables
-                    .filter((c) => c.id !== selectedCable.id)
-                    .map((c) => c.tag)}
-                  onChange={(patch) =>
-                    editor.dispatch({ type: 'updateCable', id: selectedCable.id, patch })
-                  }
-                  onEditConstruction={() => setConstructionFor(selectedCable.id)}
-                  onDelete={() => {
-                    editor.dispatch({ type: 'removeCables', ids: [selectedCable.id] });
-                    setSelectedId(null);
-                  }}
-                />
-              ) : (
-                selected && (
-                  <EngineeringProperty
-                    key={`${selected.id}:${selected.version}`}
-                    element={selected}
-                    editable={editor.layers.includes(selected.discipline)}
-                    takenTags={project.model.elements
-                      .filter((e) => e.id !== selected.id)
-                      .map((e) => e.tag)}
-                    onChange={(patch) =>
-                      editor.dispatch({ type: 'updateElement', id: selected.id, patch })
-                    }
-                    fedFrom={fedFrom(selected, project.model)}
-                    connectionNotes={unusualConnections(project.model, selected)}
-                    onChangeKind={(kind) => {
-                      editor.dispatch({ type: 'changeKind', id: selected.id, kind });
-                      notice(
-                        `${selected.tag} is now ${/^[AEIOU]/.test(KIND_LABELS[kind]) ? 'an' : 'a'} ${KIND_LABELS[kind]}; its feeders and loads are kept.`,
-                      );
-                    }}
-                    flsEquipment={
-                      'loadCategory' in selected &&
-                      selected.loadCategory !== 'fls' &&
-                      loadCategoryOf(selected, project.model.elements) === 'fls'
-                        ? project.model.elements
-                            .filter(
-                              (e) => e.kind === 'equipment' && e.fedFromId === selected.id && e.fls,
-                            )
-                            .map((e) => e.tag)
-                        : []
-                    }
-                    feeders={project.model.elements
-                      .filter((e) => EQUIPMENT_FEEDERS.includes(e.kind))
-                      .map((e) => ({ id: e.id, tag: e.tag }))
-                      .sort((a, b) => a.tag.localeCompare(b.tag, undefined, { numeric: true }))}
-                    meterTargets={
-                      selected.kind === 'meter'
-                        ? project.model.elements
-                            .filter(
-                              (e) =>
-                                e.discipline === 'electrical' &&
-                                e.kind !== 'meter' &&
-                                e.kind !== 'eb-utility',
-                            )
-                            .map((e) => ({ id: e.id, tag: e.tag }))
-                            .sort((a, b) =>
-                              a.tag.localeCompare(b.tag, undefined, { numeric: true }),
-                            )
-                        : undefined
-                    }
-                    calculated={selected.kind === 'pfc-bank' ? pfcLines(selected.id) : undefined}
-                    systemV={calcDefault(project, 'supplyVoltageLineV')}
-                    onDelete={() => {
-                      editor.dispatch({ type: 'removeElements', ids: [selected.id] });
-                      setSelectedId(null);
-                    }}
-                  />
-                )
-              )
-            }
+            property={propertyCard(selectedCable?.id ?? selected?.id ?? null)}
           />
         </div>
       )}

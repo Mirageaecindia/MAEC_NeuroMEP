@@ -533,10 +533,17 @@ export const SECTIONS: GuideSection[] = [
         <h3>5. The right panel</h3>
         <p>
           It shows the transformer capacity and connected load, the live load table (connected load
-          and maximum demand as you type), warnings for the floor (loading, fire-rated feeders,
-          unlinked equipment), and after Cable Size the result of the selected item: size, ECC,
-          breaker, Ib / In / Iz, voltage drops, fault currents, checks and the full calculation
-          trace. Hover over a component or feeder for a summary.
+          and maximum demand as you type), the issues of the floor, and after Cable Size the result
+          of the selected item: size, ECC, breaker, Ib / In / Iz, voltage drops, fault currents,
+          checks and the full calculation trace. Hover over a component or feeder for a summary.
+          Drag the panel&apos;s left edge to make it wider or narrower.
+        </p>
+        <p>
+          <Term>Issues</Term> are one short line each: the code, the component or the feeder with
+          its two ends (e.g. <code>F-01 (MDB-1 → DB-1)</code>) and a few words - unlinked equipment
+          (E1803), fire-rated feeders (E2701 / E2702) and, from the last Cable Size, blocked feeders
+          and failing checks. Hover for the full message and what to do; click to select the item,
+          open its floor and show it on the plan (it flashes orange).
         </p>
         <p>
           In the capacity box, Connected, Demand and Loaded count only loads that reach a
@@ -615,9 +622,9 @@ export const SECTIONS: GuideSection[] = [
           <li>Click Feeder in the library (choose the cable construction the first time).</li>
           <li>Click the component the feeder starts from, on any floor.</li>
           <li>
-            Draw the path as on a plan: each click on the diagram makes a corner, joined to the last
-            by a straight line at any angle (hold Shift for horizontal / vertical). Backspace
-            removes the last corner.
+            Draw the path: each click on the diagram makes a corner, kept horizontal or vertical
+            like a riser diagram; the path always ends on the two components and moves with them
+            when the diagram is re-spaced. Backspace removes the last corner.
           </li>
           <li>
             Click the component it feeds, on any floor (Escape or the same component cancels).
@@ -629,9 +636,16 @@ export const SECTIONS: GuideSection[] = [
           </li>
         </ol>
         <p>
-          The feeder is drawn in blue with its tag and length; click it to change the length or
-          delete it. It is not drawn on the floor plans, but Fed From, the schematic, schedules and
-          Cable Size all include it.
+          The feeder is drawn in blue with its tag and length. Click it to see its properties in the
+          Building Summary, below Save and Cancel: its length (change it or delete the feeder), its
+          Engineering Property and its last Cable Size result. It is not drawn on the floor plans,
+          but Fed From, the schematic, schedules and Cable Size all include it.
+        </p>
+        <p>
+          Click a component to see its Engineering Property and result there too. The library items
+          after the Feeder (Lighting, UPS, isolators, connection unit, PFC bank, meter, mechanical
+          and PHE equipment) are not offered in the Building tab and are drawn greyed, with no
+          actions.
         </p>
         <h3>Placing a riser</h3>
         <ol>
@@ -647,9 +661,9 @@ export const SECTIONS: GuideSection[] = [
             under the riser; &quot;no supply&quot; when that source has no feeder itself.
           </li>
           <li>
-            Click a board (usually an SMDB, MCC or DB) on a floor to connect it to a riser tap-off;
-            each click moves it to the next riser, then off. A board may have a riser and a feeder
-            as well; its Engineering Property then notes the two supplies.
+            Click a board (usually an SMDB, MCC or DB) and choose its <Term>Riser tap-off</Term> in
+            the Building Summary (None, Riser 1 ...). A board may have a riser and a feeder as well;
+            its Engineering Property then notes the two supplies.
           </li>
         </ol>
         <Rule>

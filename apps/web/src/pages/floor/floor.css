@@ -848,3 +848,43 @@ svg.drawing-feeder {
 .issue-text {
   color: #4b5563;
 }
+
+/* Building tab (18 Nov 2026): items after the Feeder are greyed with no actions; the selected
+   component or feeder is outlined in orange and its properties shown in the Building Summary. */
+.floor-board.fixed-grey {
+  opacity: 0.22;
+  cursor: default;
+}
+.floor-board.selected rect.board-frame {
+  stroke: #f97316;
+  stroke-width: 2;
+  stroke-dasharray: none;
+}
+.building-feeder.selected path:not(.building-feeder-hit) {
+  stroke: #f97316;
+  stroke-width: 3;
+}
+.building-selection {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #6b7280;
+}
+.building-selection-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+.building-selection .property-card {
+  background: #fff;
+  margin-top: 8px;
+}
+.building-selection .link-btn {
+  border: 0;
+  background: none;
+  padding: 0 4px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}

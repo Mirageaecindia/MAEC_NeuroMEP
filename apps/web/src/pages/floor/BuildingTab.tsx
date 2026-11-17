@@ -18,6 +18,7 @@ import {
   itemOfElement,
   usuallyFeeds,
   KIND_LABELS,
+  hiddenInBuildingTab,
   floorStatus,
   type Element,
   type Project,
@@ -32,6 +33,7 @@ import {
   useState,
   type KeyboardEvent,
   type MouseEvent as ReactMouseEvent,
+  type ReactNode,
 } from 'react';
 import type { EngineReply } from '../../workspace/engineRun';
 import { Modal, NumberInput } from '../../components/fields';
@@ -59,12 +61,6 @@ const SOURCE_W = 78;
 const SOURCE_GAP = 92;
 const FILTER_W = 104;
 
-/** The next item after `current` in `list`, then none, then the first again (click to cycle). */
-function cycle<T>(list: readonly T[], current: T | null): T | null {
-  const i = current === null ? -1 : list.indexOf(current);
-  return i + 1 < list.length ? list[i + 1]! : null;
-}
-
 /**
  * Building tab (Figma 3.5 - 3.8, FR-19 / FR-20): floors stacked top-down (A-13) with the risers on
  * the left. Click a riser to choose what feeds it (transformer or LV panel / MDB), click a floor
@@ -74,6 +70,23 @@ function cycle<T>(list: readonly T[], current: T | null): T | null {
  * Save / Cancel.
  */
 type Pt = { x: number; y: number };
+/** A feeder corner tied to the layout (`Cable.buildingPath`, 18 Nov 2026). */
+export type BuildingCorner = { floorId: string; dy: number; slot: number };
+
+/**
+ * The drawn path held horizontal / vertical (18 Nov 2026): leaves the start component up or down,
+ * reaches every later point along the floor first, so it always ends on the component.
+ */
+function squared(pts: Pt[]): Pt[] {
+  const out: Pt[] = [pts[0]!];
+  for (let k = 1; k < pts.length; k++) {
+    const p = out.at(-1)!;
+    const q = pts[k]!;
+    if (p.x !== q.x && p.y !== q.y) out.push(k === 1 ? { x: p.x, y: q.y } : { x: q.x, y: p.y });
+    out.push(q);
+  }
+  return out;
+}
 
 export function BuildingTab(props: {
   floors: Floor[];
@@ -92,16 +105,16 @@ export function BuildingTab(props: {
    */
   feederArmed?: boolean;
   /** A new feeder between two components with the length typed; returns why it cannot be. */
-  onFeeder?: (
-    from: Element,
-    to: Element,
-    lengthM: number,
-    route: { x: number; y: number }[],
-  ) => string | null;
+  onFeeder?: (from: Element, to: Element, lengthM: number, path: BuildingCorner[]) => string | null;
   /** Library symbols by item key (data URLs), drawn as in the Component Library (9 Nov 2026). */
   symbols?: Map<string, string>;
   /** A feeder's typed length changed, or the feeder removed (null). */
   onFeederLength?: (cableId: string, lengthM: number | null) => void;
+  /**
+   * Properties of a clicked component or feeder, shown in the Building Summary below Save /
+   * Cancel (user request 18 Nov 2026) - the same cards as the Floor Setup right panel.
+   */
+  properties?: (id: string) => ReactNode;
 }) {
   const notice = useNotice();
   const { model } = props;
@@ -120,6 +133,8 @@ export function BuildingTab(props: {
   const [scenario, setScenario] = useState<Scenario>('normal');
   /** The riser whose source is being chosen (click a component on any floor). */
   const [picking, setPicking] = useState<string | null>(null);
+  /** The component or feeder clicked: its properties are shown in the Building Summary. */
+  const [selected, setSelected] = useState<string | null>(null);
   useEffect(() => {
     if (!picking) return;
     const onKey = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && setPicking(null);
@@ -171,7 +186,10 @@ export function BuildingTab(props: {
     return () => window.removeEventListener('keydown', onKey);
   }, [floorMenu]);
   const linked = connections({ ...model, risers });
-  const greyed = (e: Element) => isGreyed(e, filters[e.floorId] ?? 'all', overrides[e.id], linked);
+  /** Items below the Feeder in the library: always greyed here, no actions (18 Nov 2026). */
+  const fixedGrey = (e: Element) => hiddenInBuildingTab(e);
+  const greyed = (e: Element) =>
+    fixedGrey(e) || isGreyed(e, filters[e.floorId] ?? 'all', overrides[e.id], linked);
   /** A floor's filter: its components' own Hide / Show are cleared. */
   function chooseFilter(floorId: string, filter: FloorFilter) {
     setFilters((f) => ({ ...f, [floorId]: filter }));
@@ -200,7 +218,7 @@ export function BuildingTab(props: {
     setReversed(({ [e.floorId]: _, ...rest }) => (show ? rest : { ...rest, [e.floorId]: e.id }));
     setHovered(null);
   }
-  const anyGreyed = model.elements.some(greyed);
+  const anyGreyed = model.elements.some((e) => !fixedGrey(e) && greyed(e));
 
   // Top floor first, then Ground, basements at the bottom - as in the building section (A-13).
   const rows = useMemo(() => [...props.floors].reverse(), [props.floors]);
@@ -220,6 +238,18 @@ export function BuildingTab(props: {
   const centreOf = (id: string): Pt | null => {
     const b = boxAt.get(id);
     return b ? { x: b.x + 16, y: b.y - 1 } : null;
+  };
+  /** A diagram point tied to the layout: nearest floor line, offset, component slots. */
+  const toCorner = (p: Pt): BuildingCorner => {
+    let i = 0;
+    rows.forEach((_, k) => {
+      if (Math.abs(p.y - floorY(k)) < Math.abs(p.y - floorY(i))) i = k;
+    });
+    return { floorId: rows[i]!.id, dy: p.y - floorY(i), slot: (p.x - BOARD_X - 16) / gap };
+  };
+  const fromCorner = (c: BuildingCorner): Pt | null => {
+    const i = rows.findIndex((f) => f.id === c.floorId);
+    return i < 0 ? null : { x: BOARD_X + 16 + c.slot * gap, y: floorY(i) + c.dy };
   };
   const maxLen = Math.max(0, ...risers.map((r) => r.lengthM ?? 0));
   const tag = (id: string | null) => model.elements.find((e) => e.id === id)?.tag ?? null;
@@ -263,32 +293,29 @@ export function BuildingTab(props: {
     notice(`Riser ${n} is fed from ${board.tag}.`);
   }
 
-  function chooseRiser(board: Element, square = false) {
-    if (props.readOnly) return;
-    if (picking) return pickSource(board);
-    if (props.feederArmed) return feederClick(board, square);
-    const usable = risers.filter((r) => r.lengthM).map((r) => r.id);
-    if (usable.length === 0) {
-      notice('Enter a riser length in Busbar Riser Design first.');
-      return;
-    }
-    change(
-      setBoardRiser(model.risers, board.id, cycle(usable, riserOf(risers, board.id)?.id ?? null)),
-    );
+  /** A click on a component: riser source or feeder end while choosing / drawing, else select it. */
+  function boardClick(board: Element) {
+    if (fixedGrey(board)) return;
+    if (!props.readOnly && picking) return pickSource(board);
+    if (!props.readOnly && props.feederArmed) return feederClick(board);
+    setSelected(board.id);
   }
+  const selectedItem =
+    model.elements.find((e) => e.id === selected) ??
+    model.cables.find((c) => c.id === selected) ??
+    null;
+  /** Risers with a length: the tap-offs a board can be put on. */
+  const usableRisers = risers.flatMap((r, i) => (r.lengthM ? [{ id: r.id, n: i + 1 }] : []));
 
   // ----- feeders between floors (user request 8 Nov 2026; path drawn by hand, 9 Nov 2026) -----
   /** Feeder being drawn: its start component and the corners so far (diagram units). */
   const [draft, setDraft] = useState<{ from: Element; points: Pt[] } | null>(null);
   const [pointer, setPointer] = useState<Pt | null>(null);
-  /** Shift held: the preview leg is horizontal or vertical. */
-  const [square, setSquare] = useState(false);
   const [askLength, setAskLength] = useState<{
     from: Element;
     to: Element;
     route: Pt[];
   } | null>(null);
-  const [editing, setEditing] = useState<string | null>(null);
   const [lengthText, setLengthText] = useState('');
   const svgRef = useRef<SVGSVGElement>(null);
   // A feeder being drawn counts only while the Feeder tool is armed.
@@ -312,7 +339,7 @@ export function BuildingTab(props: {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [drawing]);
-  function feederClick(board: Element, square = false) {
+  function feederClick(board: Element) {
     if (board.kind === 'equipment') {
       notice(`${board.tag} is linked to its isolator through Fed from, not by a feeder.`);
       return;
@@ -326,7 +353,7 @@ export function BuildingTab(props: {
     if (!drawing) {
       setDraft({ from: board, points: [centre] });
       notice(
-        `Feeder from ${board.tag} (${floorName(board)}): click on the diagram to make each corner (straight lines at any angle; hold Shift for horizontal / vertical), then click the component it feeds. Escape cancels, Backspace removes the last corner.`,
+        `Feeder from ${board.tag} (${floorName(board)}): click on the diagram to make each corner (kept horizontal or vertical), then click the component it feeds. Escape cancels, Backspace removes the last corner.`,
       );
       return;
     }
@@ -334,20 +361,25 @@ export function BuildingTab(props: {
       setDraft(null);
       return;
     }
-    // The last leg goes straight to the component; with Shift, a corner keeps it square.
-    const route = finishRoute(drawing.points, centre, square).slice(1, -1);
+    // Horizontal / vertical legs here (18 Nov 2026): a corner keeps the last leg square.
+    const route = finishRoute(drawing.points, centre, true).slice(1, -1);
     setLengthText('');
     setAskLength({ from: drawing.from, to: board, route });
   }
-  /** A click on the diagram while drawing adds a corner: a straight line at any angle (Shift: square). */
+  /** A click on the diagram while drawing adds a corner, kept horizontal or vertical. */
   function diagramClick(e: ReactMouseEvent) {
     if (!drawing || props.readOnly) return;
-    const p = nextRoutePoint(drawing.points.at(-1)!, at(e), e.shiftKey);
+    const p = nextRoutePoint(drawing.points.at(-1)!, at(e), true);
     setDraft({ ...drawing, points: [...drawing.points, p] });
   }
   const finishFeeder = () => {
     if (!askLength) return;
-    const problem = props.onFeeder?.(askLength.from, askLength.to, typedLength, askLength.route);
+    const problem = props.onFeeder?.(
+      askLength.from,
+      askLength.to,
+      typedLength,
+      askLength.route.map(toCorner),
+    );
     if (problem) notice(problem);
     setAskLength(null);
     setDraft(null);
@@ -412,11 +444,7 @@ export function BuildingTab(props: {
           ref={svgRef}
           className={drawing ? 'drawing-feeder' : undefined}
           onClick={diagramClick}
-          onMouseMove={(e) => {
-            if (!drawing) return;
-            setPointer(at(e));
-            setSquare(e.shiftKey);
-          }}
+          onMouseMove={(e) => drawing && setPointer(at(e))}
         >
           {/* Feeders between floors, under the symbols (9 Nov 2026: the path the engineer drew). */}
           {buildingFeeders.map((c, i) => {
@@ -424,9 +452,13 @@ export function BuildingTab(props: {
             const b = centreOf(c.to.elementId);
             if (!a || !b) return null;
             const lane = BOARD_X - 12 - (i % 8) * 6;
-            const pts: Pt[] = c.buildingRoute?.length
-              ? [a, ...c.buildingRoute, b]
-              : // Drawn before paths could be drawn: an automatic lane left of the boards.
+            // The corners move with the layout (18 Nov 2026); older ones are plain diagram points.
+            const corners = c.buildingPath?.length
+              ? c.buildingPath.flatMap((k) => fromCorner(k) ?? [])
+              : (c.buildingRoute ?? []);
+            const pts: Pt[] = corners.length
+              ? squared([a, ...corners, b])
+              : // No corners drawn: an automatic lane left of the boards.
                 [
                   a,
                   { x: a.x, y: a.y - 22 },
@@ -448,14 +480,15 @@ export function BuildingTab(props: {
             return (
               <g
                 key={c.id}
-                className={`building-feeder${faded ? ' greyed' : ''}`}
+                className={`building-feeder${faded ? ' greyed' : ''}${selected === c.id ? ' selected' : ''}`}
                 role="button"
                 aria-label={`Feeder ${c.tag}, ${c.manualLengthM ?? '?'} m`}
+                aria-pressed={selected === c.id}
                 onClick={(e) => {
-                  if (props.readOnly || drawing) return;
+                  if (drawing) return;
                   e.stopPropagation();
                   setLengthText(String(c.manualLengthM ?? ''));
-                  setEditing(c.id);
+                  setSelected(c.id);
                 }}
               >
                 <path d={d} className="building-feeder-hit" />
@@ -475,7 +508,7 @@ export function BuildingTab(props: {
               className="building-feeder-draft"
               points={[
                 ...drawing.points,
-                ...(pointer ? [nextRoutePoint(drawing.points.at(-1)!, pointer, square)] : []),
+                ...(pointer ? [nextRoutePoint(drawing.points.at(-1)!, pointer, true)] : []),
               ]
                 .map((p) => `${p.x},${p.y}`)
                 .join(' ')}
@@ -577,6 +610,8 @@ export function BuildingTab(props: {
                       props.feederArmed ? 'feeding' : '',
                       b.kind === 'equipment' || b.kind === 'meter' ? 'equipment' : '',
                       greyed(b) ? 'greyed' : '',
+                      fixedGrey(b) ? 'fixed-grey' : '',
+                      selected === b.id ? 'selected' : '',
                     ]
                       .filter(Boolean)
                       .join(' ');
@@ -592,16 +627,20 @@ export function BuildingTab(props: {
                           className={`floor-board ${kind}`}
                           role="button"
                           aria-label={`${b.tag} board`}
+                          aria-disabled={fixedGrey(b) || undefined}
+                          aria-pressed={selected === b.id}
                           data-greyed={greyed(b) || undefined}
                           onClick={(e) => {
                             e.stopPropagation();
-                            chooseRiser(b, e.shiftKey);
+                            boardClick(b);
                           }}
-                          onMouseEnter={() => {
-                            keepMenu();
-                            setHovered(b.id);
-                          }}
-                          onMouseLeave={leaveMenu}
+                          {...(!fixedGrey(b) && {
+                            onMouseEnter: () => {
+                              keepMenu();
+                              setHovered(b.id);
+                            },
+                            onMouseLeave: leaveMenu,
+                          })}
                         >
                           <title>
                             {`${b.tag} - ${KIND_LABELS[b.kind]}${byCable ? `, fed from ${byCable} by a feeder` : ''}${riser >= 0 ? `, on Riser ${riser + 1}` : ''}${source ? ', feeds a riser' : ''}`}
@@ -952,6 +991,82 @@ export function BuildingTab(props: {
             Demand Factors
           </button>
         )}
+        {selectedItem && (
+          <section className="building-selection" aria-label="Selected in the Building tab">
+            <div className="building-selection-head">
+              <strong>
+                {'kind' in selectedItem ? selectedItem.tag : `Feeder ${selectedItem.tag}`}
+              </strong>
+              <button
+                type="button"
+                className="link-btn"
+                aria-label="Close the properties"
+                onClick={() => setSelected(null)}
+              >
+                ×
+              </button>
+            </div>
+            {'kind' in selectedItem ? (
+              <label className="feeder-length">
+                Riser tap-off
+                <select
+                  aria-label={`Riser tap-off of ${selectedItem.tag}`}
+                  disabled={props.readOnly || usableRisers.length === 0}
+                  value={riserOf(risers, selectedItem.id)?.id ?? ''}
+                  onChange={(e) =>
+                    change(setBoardRiser(model.risers, selectedItem.id, e.target.value || null))
+                  }
+                >
+                  <option value="">None</option>
+                  {usableRisers.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      Riser {r.n}
+                    </option>
+                  ))}
+                </select>
+                {usableRisers.length === 0 && (
+                  <span className="muted">Enter a riser length in Busbar Riser Design first.</span>
+                )}
+              </label>
+            ) : (
+              <>
+                <label className="feeder-length">
+                  Total length (m) - between floors
+                  <input
+                    type="number"
+                    min={0}
+                    step="any"
+                    value={lengthText}
+                    disabled={props.readOnly}
+                    aria-label="Feeder length (m)"
+                    onChange={(e) => setLengthText(e.target.value)}
+                  />
+                </label>
+                {!props.readOnly && (
+                  <div className="summary-actions">
+                    <button
+                      className="summary-btn ready"
+                      disabled={!lengthOk || typedLength === selectedItem.manualLengthM}
+                      onClick={() => props.onFeederLength?.(selectedItem.id, typedLength)}
+                    >
+                      Save length
+                    </button>
+                    <button
+                      className="summary-btn"
+                      onClick={() => {
+                        props.onFeederLength?.(selectedItem.id, null);
+                        setSelected(null);
+                      }}
+                    >
+                      Delete feeder
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+            {props.properties?.(selectedItem.id)}
+          </section>
+        )}
         {askLength && (
           <Modal
             title="Feeder length"
@@ -998,51 +1113,6 @@ export function BuildingTab(props: {
             <p className="muted">
               Nothing can be measured between floors, so Cable Size uses this length as it is.
             </p>
-          </Modal>
-        )}
-        {editing && (
-          <Modal
-            title={`Feeder ${model.cables.find((c) => c.id === editing)?.tag ?? ''}`}
-            onClose={() => setEditing(null)}
-            actions={
-              <>
-                <button
-                  className="btn btn-danger-outline"
-                  onClick={() => {
-                    props.onFeederLength?.(editing, null);
-                    setEditing(null);
-                  }}
-                >
-                  Delete feeder
-                </button>
-                <button className="btn" onClick={() => setEditing(null)}>
-                  Cancel
-                </button>
-                <button
-                  className="btn btn-primary"
-                  disabled={!lengthOk}
-                  onClick={() => {
-                    props.onFeederLength?.(editing, typedLength);
-                    setEditing(null);
-                  }}
-                >
-                  Save length
-                </button>
-              </>
-            }
-          >
-            <label className="feeder-length">
-              Total length (m)
-              <input
-                type="number"
-                min={0}
-                step="any"
-                value={lengthText}
-                autoFocus
-                aria-label="Feeder length (m)"
-                onChange={(e) => setLengthText(e.target.value)}
-              />
-            </label>
           </Modal>
         )}
         {dfOpen && (

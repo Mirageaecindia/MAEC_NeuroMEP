@@ -354,6 +354,17 @@ export function placeElement(
 export const isPlaceable = (item: LibraryItem): item is PlaceableItem => !item.tool;
 
 /** The library item an element was placed from (by its libraryKey, or by its kind for older data). */
+/**
+ * Library items after the Feeder (Lighting, UPS, isolators, connection unit, PFC bank, meter,
+ * mechanical and PHE equipment): not offered in the Building tab and drawn greyed there, with no
+ * actions (user request 18 Nov 2026).
+ */
+export const BUILDING_TAB_HIDDEN: ReadonlySet<string> = new Set(
+  LIBRARY_ITEMS.slice(LIBRARY_ITEMS.findIndex((i) => i.key === 'cable') + 1).map((i) => i.key),
+);
+export const hiddenInBuildingTab = (e: Element) =>
+  BUILDING_TAB_HIDDEN.has(itemOfElement(e)?.key ?? '');
+
 export function itemOfElement(e: Element): PlaceableItem | undefined {
   const placeable = LIBRARY_ITEMS.filter(isPlaceable);
   return (
