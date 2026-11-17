@@ -271,3 +271,28 @@
   stroke: #fff;
   stroke-width: 3px;
 }
+
+/* An item shown from the right panel's issue list (18 Nov 2026): flashes, then fades. */
+.focus-flash {
+  fill: none;
+  stroke: #f97316;
+  stroke-width: 4;
+  pointer-events: none;
+  animation: focus-flash 0.65s ease-in-out 4;
+}
+polyline.focus-flash {
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.8;
+}
+@keyframes focus-flash {
+  50% {
+    stroke-opacity: 0.15;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .focus-flash {
+    animation: none;
+  }
+}

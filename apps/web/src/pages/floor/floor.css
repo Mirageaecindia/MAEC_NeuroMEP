@@ -41,9 +41,10 @@
 }
 .floor-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 232px;
+  /* Right panel resized by dragging its left edge (18 Nov 2026). */
+  grid-template-columns: minmax(0, 1fr) 10px var(--right-w, 232px);
   grid-template-rows: minmax(0, 1fr);
-  gap: 10px;
+  gap: 0;
   height: calc(100vh - 150px);
   min-height: 480px;
 }
@@ -124,7 +125,7 @@
 /* Building tab */
 .building-tab {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 240px;
+  grid-template-columns: minmax(0, 1fr) 6px var(--side-w, 240px);
   grid-template-rows: minmax(0, 1fr);
   height: calc(100vh - 150px);
   min-height: 480px;
@@ -779,4 +780,71 @@ svg.drawing-feeder {
   text-decoration: underline;
   font: inherit;
   cursor: pointer;
+}
+
+/* Drag handle on a side panel's left edge (18 Nov 2026). */
+.panel-resizer {
+  cursor: col-resize;
+  position: relative;
+  outline: none;
+}
+.panel-resizer::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 36px;
+  transform: translate(-50%, -50%);
+  border-radius: 2px;
+  background: #9ca3af;
+  opacity: 0.6;
+}
+.panel-resizer:hover::after,
+.panel-resizer:focus-visible::after,
+.panel-resizer.dragging::after {
+  background: var(--primary, #2563eb);
+  opacity: 1;
+  height: 60px;
+}
+
+/* Right panel issues (18 Nov 2026): one short line each, full text on hover, click to show. */
+.issue-list {
+  list-style: none;
+  margin: 6px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.issue {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid #fecaca;
+  border-left: 3px solid #dc2626;
+  border-radius: 4px;
+  background: #fff7f7;
+  color: #1f2937;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.issue:hover,
+.issue:focus-visible {
+  background: #fee2e2;
+}
+.issue-code {
+  font-weight: 700;
+  color: #b91c1c;
+}
+.issue-label {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.issue-text {
+  color: #4b5563;
 }

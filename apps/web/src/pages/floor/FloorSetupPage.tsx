@@ -7,12 +7,8 @@ import {
   finishRoute,
   capacitySummary,
   loadCategoryOf,
-  unlinkedEquipment,
   EQUIPMENT_FEEDERS,
-  fireRatedFlags,
-  type FireRatedFlag,
   loadSummaries,
-  type Cable,
   type CapacitySummary,
   connectionProblem,
   drawCable,
@@ -48,6 +44,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router';
 import { useApi, useUser } from '../../auth/AuthContext';
 import { Modal } from '../../components/fields';
+import { PanelResizer, usePanelWidth } from '../../components/PanelResizer';
 import { DisciplineTabs, Shell, useNotice } from '../../layout/Shell';
 import { Toolbar, type OpenMenuItem, type ToolKey } from '../../layout/Toolbar';
 import { newAudit } from '../../workspace/formProps';
@@ -65,6 +62,7 @@ import {
 import { CableProperty } from './CableProperty';
 import { SizingResult } from './SizingResult';
 import { tooltipLines } from './tooltip';
+import { issuesInScope, panelIssues, type PanelIssue } from './issues';
 import {
   calcDefault,
   defaultPf,
@@ -102,7 +100,7 @@ function saveConstruction(projectId: string, c: CableConstruction) {
 
 /** Floor Setup (Figma 3.1 - 3.8): floor plan canvas, and the Building tab via the toolbar. */
 export function FloorSetupPage() {
-  const { editor, project, floorId } = useWorkspace();
+  const { editor, project, floorId, setFloorId } = useWorkspace();
   const api = useApi();
   const user = useUser();
   const notice = useNotice();
@@ -166,6 +164,10 @@ export function FloorSetupPage() {
   // ----- components (#TASK-11 / #TASK-12) -----
   const [symbols, setSymbols] = useState<Map<string, string>>(new Map());
   const [armed, setArmed] = useState<string | null>(null);
+  /** Right panel width, dragged by its left edge (18 Nov 2026). */
+  const rightPanel = usePanelWidth('floor-right', 232);
+  /** A component or feeder to show on the plan (an issue clicked; `n` counts the requests). */
+  const [focus, setFocus] = useState<{ id: string; n: number } | null>(null);
   /** Selected components (several with Shift / Ctrl + click or a box), or one feeder. */
   const [selection, setSelection] = useState<string[]>([]);
   const selectedId = selection.length === 1 ? selection[0]! : null;
@@ -711,7 +713,7 @@ export function FloorSetupPage() {
           }
         />
       ) : (
-        <div className="floor-layout">
+        <div className="floor-layout" style={{ ['--right-w' as string]: `${rightPanel.width}px` }}>
           <section className="panel floor-canvas" aria-label="Floor view">
             {!floor ? (
               <p className="canvas-empty muted">
@@ -747,6 +749,7 @@ export function FloorSetupPage() {
                     editor.dispatch({ type: 'calibration', floorId: floor.id, calibration })
                   }
                   markers={markers}
+                  focus={focus}
                   selectedId={selectedId}
                   selectedIds={selection}
                   onSelectBox={(ids) => setSelection([...new Set([...selection, ...ids])])}
@@ -814,9 +817,27 @@ export function FloorSetupPage() {
               </p>
             )}
           </section>
+          <PanelResizer
+            label="Resize the right panel"
+            width={rightPanel.width}
+            min={rightPanel.min}
+            max={rightPanel.max}
+            onWidth={rightPanel.setWidth}
+          />
           <RightPanel
             floor={floor}
             selectedId={selectedId}
+            onLocate={(issue) => {
+              if (!issue.floorId) {
+                notice(
+                  `${issue.label} is a feeder between floors: it is drawn in the Building tab, not on a plan.`,
+                );
+                return;
+              }
+              if (issue.floorId !== floor?.id) setFloorId(issue.floorId);
+              setSelectedId(issue.targetId);
+              setFocus((f) => ({ id: issue.targetId, n: (f?.n ?? 0) + 1 }));
+            }}
             property={
               selectedCable ? (
                 <CableProperty
@@ -1151,30 +1172,31 @@ function CapacityChecks({ capacity }: { capacity: CapacitySummary }) {
   );
 }
 
-/** Equipment not connected to a panel (E1803, briefing page 9): live, per floor or selection. */
-function UnlinkedEquipment({ items }: { items: { id: string; tag: string }[] }) {
-  if (items.length === 0) return null;
+/**
+ * Issues of the floor or the selected item (18 Nov 2026): one short line each - code, component
+ * or feeder (from -> to), a few words; the full message on hover. A click shows it on the plan.
+ * E1803 (briefing page 9), E2701 / E2702 fire-rated flags (live), blocked feeders and failing
+ * checks of the last Cable Size.
+ */
+function IssueList(props: { issues: PanelIssue[]; onLocate: (issue: PanelIssue) => void }) {
+  if (props.issues.length === 0) return null;
   return (
-    <ul className="capacity-checks fire-checks" aria-label="Equipment not connected">
-      {items.map((e) => (
-        <li key={e.id} className="over">
-          <strong>E1803 </strong>
-          {e.tag} is not connected to a panel: choose its isolator or connection unit in Fed from.
-        </li>
-      ))}
-    </ul>
-  );
-}
+    <ul className="issue-list" aria-label="Issues">
+      {props.issues.map((i) => (
+        <li key={i.key}>
+          <button
+            type="button"
+            className="issue"
+            title={`${i.detail}
 
-/** Fire-rated feeder flags (E2701 / E2702, briefing page 9): live, the cable is never changed. */
-function FireRatedChecks({ flags }: { flags: FireRatedFlag[] }) {
-  if (flags.length === 0) return null;
-  return (
-    <ul className="capacity-checks fire-checks" aria-label="Fire-rated feeders">
-      {flags.map((f) => (
-        <li key={f.cableId} className="over">
-          <strong>{f.code} </strong>
-          {f.message}. {f.fix}
+Click to show it on the plan.`}
+            aria-label={`${i.code} ${i.label}: ${i.text}. Show on the plan`}
+            onClick={() => props.onLocate(i)}
+          >
+            <span className="issue-code">{i.code}</span>
+            <span className="issue-label">{i.label}</span>
+            <span className="issue-text">{i.text}</span>
+          </button>
         </li>
       ))}
     </ul>
@@ -1186,6 +1208,8 @@ function RightPanel(props: {
   floor: Floor | null;
   selectedId: string | null;
   property: ReactNode;
+  /** An issue clicked: show its component or feeder on the plan. */
+  onLocate: (issue: PanelIssue) => void;
 }) {
   const { project, editor } = useWorkspace();
   const cableSize = useCableSize();
@@ -1240,10 +1264,6 @@ function RightPanel(props: {
     : [];
   const tops = scope ? scope.tops.map((e) => summaries.get(e.id)!) : [];
   const fedFromSource = sourceConnected(project.model);
-  const floorOf = new Map(project.model.elements.map((e) => [e.id, e.floorId]));
-  const onFloor = (c: Cable) =>
-    !!props.floor &&
-    [c.from.elementId, c.to.elementId].some((id) => floorOf.get(id) === props.floor!.id);
   // Cable Size scope (FR-21, decision 1 Nov 2026): the selected component or feeder, else the floor.
   const selectedItem =
     selected ?? project.model.cables.find((c) => c.id === props.selectedId) ?? null;
@@ -1301,17 +1321,12 @@ function RightPanel(props: {
           <p className="field-hint">Calibrate the plan before placing components (E0701).</p>
         )}
         {props.property}
-        <UnlinkedEquipment
-          items={unlinkedEquipment(project.model).filter((e) =>
-            selectedItem ? e.id === selectedItem.id : e.floorId === props.floor?.id,
-          )}
-        />
-        <FireRatedChecks
-          flags={fireRatedFlags(project.model).filter((f) =>
-            selectedItem
-              ? f.cableId === selectedItem.id
-              : onFloor(project.model.cables.find((c) => c.id === f.cableId)!),
-          )}
+        <IssueList
+          issues={issuesInScope(project, panelIssues(project), {
+            selectedId: selectedItem?.id ?? null,
+            floorId: props.floor?.id ?? null,
+          })}
+          onLocate={props.onLocate}
         />
         {selectedItem && <SizingResult project={project} id={selectedItem.id} />}
         {scope && (

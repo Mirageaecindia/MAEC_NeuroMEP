@@ -148,6 +148,11 @@ export function PlanViewer(props: {
   drawingPoints?: PdfPoint[] | null;
   /** square: Shift held - the leg is kept horizontal or vertical. */
   onCableClick?: (at: PdfPoint, componentId: string | null, square: boolean) => void;
+  /**
+   * Show a component or feeder (18 Nov 2026: an issue clicked in the right panel): the plan is
+   * centred on it and it flashes. `n` changes on every request, so the same item can be shown again.
+   */
+  focus?: { id: string; n: number } | null;
 }) {
   const { plan } = props;
   const api = useApi();
@@ -403,6 +408,42 @@ export function PlanViewer(props: {
 
   const markers = props.markers ?? [];
   const cables = props.cables ?? [];
+  /** The item being shown after a focus request (flashes for a moment). */
+  const [flash, setFlash] = useState<string | null>(null);
+  const focusPoint = (id: string): PdfPoint | null => {
+    const m = markers.find((x) => x.id === id);
+    if (m) return m.at;
+    const c = cables.find((x) => x.id === id);
+    if (!c || c.points.length === 0) return null;
+    // The middle of the route's middle leg.
+    const i = Math.max(0, Math.floor((c.points.length - 1) / 2));
+    const a = c.points[i]!;
+    const b = c.points[Math.min(i + 1, c.points.length - 1)]!;
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  };
+  const focusN = props.focus?.n;
+  useEffect(() => {
+    if (!props.focus || !page) return;
+    const at = focusPoint(props.focus.id);
+    if (!at) return;
+    const id = props.focus.id;
+    let t: ReturnType<typeof setTimeout> | undefined;
+    // After the frame is laid out (the viewer's size is known on a newly opened floor).
+    const frame = requestAnimationFrame(() => {
+      setView((v) => {
+        const s = pdfToScreen(at, v, page.transform);
+        return { ...v, panX: v.panX + size.width / 2 - s.x, panY: v.panY + size.height / 2 - s.y };
+      });
+      setFlash(id);
+      t = setTimeout(() => setFlash(null), 2600);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(t);
+    };
+    // Runs per request (focusN) and once the page is read; markers / cables are read as they are.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusN, page]);
   /** Pointer position while drawing a cable (preview leg). */
   const [pointer, setPointer] = useState<PdfPoint | null>(null);
   /** Shift held while drawing a feeder: the preview leg is horizontal or vertical. */
@@ -1070,6 +1111,33 @@ export function PlanViewer(props: {
             {picking && hover && (
               <circle className="snap-ring" cx={toScreen(hover).x} cy={toScreen(hover).y} r={9} />
             )}
+            {flash &&
+              (() => {
+                const m = markers.find((x) => x.id === flash);
+                if (m) {
+                  const c = toScreen(m.at);
+                  return (
+                    <circle
+                      className="focus-flash"
+                      aria-label={`Shown: ${m.tag}`}
+                      cx={c.x}
+                      cy={c.y}
+                      r={half(m) + 10}
+                    />
+                  );
+                }
+                const cable = cables.find((x) => x.id === flash);
+                return cable ? (
+                  <polyline
+                    className="focus-flash"
+                    aria-label={`Shown: ${cable.tag}`}
+                    points={cable.points
+                      .map(toScreen)
+                      .map((p) => `${p.x},${p.y}`)
+                      .join(' ')}
+                  />
+                ) : null;
+              })()}
           </svg>
         )}
         {hovered && props.tooltip?.(hovered.id) && (

@@ -507,13 +507,13 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     await placeAt('Mechanical Equipment', 300, 500);
     const props = card();
     expect(props).toHaveTextContent('Name :Mechanical Equipment');
-    expect(screen.getByRole('list', { name: 'Equipment not connected' })).toHaveTextContent(
-      'E1803 ME-GF-01 is not connected to a panel',
+    expect(screen.getByRole('list', { name: 'Issues' })).toHaveTextContent(
+      'E1803ME-GF-01not linked to an isolator',
     );
     await userEvent.type(within(props).getByLabelText('Rated power :'), '7.5');
     await userEvent.tab();
     await userEvent.selectOptions(within(card()).getByLabelText('Fed from :'), 'ISO-GF-01');
-    expect(screen.queryByRole('list', { name: 'Equipment not connected' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Issues' })).not.toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Link ME-GF-01 - ISO-GF-01' })).toBeInTheDocument();
     // A feeder cannot be drawn to equipment.
     await userEvent.click(chip('Feeder'));

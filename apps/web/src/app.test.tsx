@@ -683,9 +683,20 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     Object.assign(db, { loadCategory: 'fls' });
     project.model.cables.push({ ...testCable(tx, db), tag: 'F-01' });
     renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(project));
-    expect(await screen.findByRole('list', { name: 'Fire-rated feeders' })).toHaveTextContent(
-      'E2701 F-01 feeds fire & life-safety load DB-db-1 and is not fire-rated. Select it and choose FR insulation in its Engineering Property.',
+    // One short line (18 Nov 2026): code, feeder with its ends, a few words; the rest on hover.
+    const issue = await screen.findByRole('button', {
+      name: 'E2701 F-01 (TX-1 → DB-db-1): FLS feeder not fire-rated. Show on the plan',
+    });
+    expect(issue.getAttribute('title')).toContain(
+      'F-01 feeds fire & life-safety load DB-db-1 and is not fire-rated. Select it and choose FR insulation',
     );
+    // A click selects the feeder: its properties and only its issues are shown.
+    await userEvent.click(issue);
+    const props = await screen.findByRole('region', { name: 'Engineering Property' });
+    expect(within(props).getByLabelText('Tag :')).toHaveValue('F-01');
+    expect(
+      within(screen.getByRole('list', { name: 'Issues' })).getAllByRole('button'),
+    ).toHaveLength(1);
   });
 
   it('Import File ticks the 80 % transformer loading limit as a Lead override (6 Nov 2026)', async () => {

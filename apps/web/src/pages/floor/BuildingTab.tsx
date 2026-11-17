@@ -35,6 +35,7 @@ import {
 } from 'react';
 import type { EngineReply } from '../../workspace/engineRun';
 import { Modal, NumberInput } from '../../components/fields';
+import { PanelResizer, usePanelWidth } from '../../components/PanelResizer';
 import { StatusMark } from '../../layout/icons';
 import { useNotice } from '../../layout/Shell';
 import { DemandFactorsDialog } from './DemandFactorsDialog';
@@ -104,6 +105,8 @@ export function BuildingTab(props: {
 }) {
   const notice = useNotice();
   const { model } = props;
+  /** Building Summary width, dragged by its left edge (18 Nov 2026). */
+  const side = usePanelWidth('building-summary', 240);
   const risers = riserRows(model.risers);
   /** Risers as they were when the tab opened (Cancel). */
   const [opened] = useState(model.risers);
@@ -376,7 +379,7 @@ export function BuildingTab(props: {
     Math.min((RISER_X[2]! + BOARD_X) / 2 + f.name.length * 2.9 + 8, BOARD_X - FILTER_W - 22);
 
   return (
-    <div className="building-tab">
+    <div className="building-tab" style={{ ['--side-w' as string]: `${side.width}px` }}>
       <div className="building-canvas" aria-label="Building view">
         <NetworkCheck
           model={{ ...model, risers }}
@@ -792,6 +795,13 @@ export function BuildingTab(props: {
         </svg>
       </div>
 
+      <PanelResizer
+        label="Resize the Building Summary"
+        width={side.width}
+        min={side.min}
+        max={side.max}
+        onWidth={side.setWidth}
+      />
       <aside className="building-summary" aria-label="Building Summary">
         <h2>Building Summary</h2>
         <p className="summary-count">
