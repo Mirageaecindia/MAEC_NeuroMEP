@@ -1095,6 +1095,9 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     const panel = screen.getByRole('region', { name: 'Selected in the Building tab' });
     expect(within(panel).getByRole('region', { name: 'Engineering Property' })).toBeInTheDocument();
     expect(within(panel).getByRole('region', { name: 'Cable Size result' })).toBeInTheDocument();
+    // A click on empty space closes it (18 Nov 2026).
+    await userEvent.click(screen.getByLabelText('Building view'));
+    expect(screen.queryByRole('region', { name: 'Selected in the Building tab' })).toBeNull();
   });
 
   it('#TASK-18 a riser fed from an MDB with no feeder: one warning naming the MDB, source marked', async () => {

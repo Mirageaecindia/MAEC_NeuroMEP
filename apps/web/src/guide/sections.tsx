@@ -542,8 +542,10 @@ export const SECTIONS: GuideSection[] = [
           <Term>Issues</Term> are one short line each: the code, the component or the feeder with
           its two ends (e.g. <code>F-01 (MDB-1 → DB-1)</code>) and a few words - unlinked equipment
           (E1803), fire-rated feeders (E2701 / E2702) and, from the last Cable Size, blocked feeders
-          and failing checks. Hover for the full message and what to do; click to select the item,
-          open its floor and show it on the plan (it flashes orange).
+          and failing checks (a blocked feeder names what is missing, e.g.{' '}
+          <em>Enter the number of grouped circuits</em> for E2102). Hover for the full message and
+          what to do; click to select the item, open its floor and show it on the plan (it flashes
+          orange).
         </p>
         <p>
           In the capacity box, Connected, Demand and Loaded count only loads that reach a
@@ -642,10 +644,10 @@ export const SECTIONS: GuideSection[] = [
           but Fed From, the schematic, schedules and Cable Size all include it.
         </p>
         <p>
-          Click a component to see its Engineering Property and result there too. The library items
-          after the Feeder (Lighting, UPS, isolators, connection unit, PFC bank, meter, mechanical
-          and PHE equipment) are not offered in the Building tab and are drawn greyed, with no
-          actions.
+          Click a component to see its Engineering Property and result there too; click an empty
+          part of the diagram to close them. The library items after the Feeder (Lighting, UPS,
+          isolators, connection unit, PFC bank, meter, mechanical and PHE equipment) are not offered
+          in the Building tab and are drawn greyed, with no actions.
         </p>
         <h3>Placing a riser</h3>
         <ol>

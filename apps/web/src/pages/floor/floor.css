@@ -72,6 +72,8 @@
      not the plan or the page. */
   min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
   overscroll-behavior: contain;
 }
 .capacity-head {
@@ -216,7 +218,12 @@
 .building-summary {
   background: #a3a3a3;
   padding: 10px 10px 14px;
-  overflow: auto;
+  /* Scrolls down only, with room kept for the scroll bar: the panel no longer jumps when the
+     properties of a clicked item appear or go (18 Nov 2026). */
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  min-width: 0;
   font-size: 9px;
   color: #111;
 }
@@ -887,4 +894,21 @@ svg.drawing-feeder {
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
+}
+
+/* Properties inside the narrow panels wrap instead of widening them (18 Nov 2026). */
+.building-selection,
+.building-selection .property-card,
+.right-panel .property-card {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.building-selection input,
+.building-selection select,
+.right-panel .property-card input,
+.right-panel .property-card select {
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }

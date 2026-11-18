@@ -95,6 +95,11 @@ export function panelIssues(p: Project): PanelIssue[] {
     if (r.status === 'blocked') {
       const code = r.errors.find((x) => BLOCKING.has(x)) ?? r.errors[0] ?? 'Blocked';
       const ib = [...r.trace].reverse().find((t) => t.step === 'Ib');
+      // What exactly is missing (18 Nov 2026: "Derating factor missing" alone did not say):
+      // the blocked check's own reason, e.g. "Enter the number of grouped circuits."
+      const check = Object.values(r.checks).find((v) => v?.state === 'blocked' && v.detail);
+      const reason = r.values.ibA === null && ib ? ib.detail : check?.detail;
+      const meaning = BLOCKING.get(code) ?? code;
       issues.push({
         key: `blocked-${cable.id}`,
         code,
@@ -102,8 +107,8 @@ export function panelIssues(p: Project): PanelIssue[] {
         floorId: c.floorId,
         onFloors: c.onFloors,
         label: c.label,
-        text: SHORT[code] ?? BLOCKING.get(code) ?? 'not sized',
-        detail: r.values.ibA === null && ib ? ib.detail : (BLOCKING.get(code) ?? code),
+        text: reason && reason.length <= 70 ? reason.replace(/\.$/, '') : (SHORT[code] ?? meaning),
+        detail: reason ? `${meaning} (${code}): ${reason}` : meaning,
       });
     }
     for (const [check, v] of Object.entries(r.checks) as [

@@ -412,7 +412,13 @@ export function BuildingTab(props: {
 
   return (
     <div className="building-tab" style={{ ['--side-w' as string]: `${side.width}px` }}>
-      <div className="building-canvas" aria-label="Building view">
+      <div
+        className="building-canvas"
+        aria-label="Building view"
+        // A click on empty space closes the properties (18 Nov 2026); components and feeders stop
+        // their own clicks, so only a click elsewhere gets here.
+        onClick={() => !drawing && setSelected(null)}
+      >
         <NetworkCheck
           model={{ ...model, risers }}
           floors={props.floors}

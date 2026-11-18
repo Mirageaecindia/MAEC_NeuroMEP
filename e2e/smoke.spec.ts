@@ -60,6 +60,12 @@ test('#TASK-16 login, Import File, Floor Setup, Building tab and Cable Size', as
   // Select the DB, then choose its riser tap-off in the Building Summary (18 Nov 2026).
   await page.getByRole('button', { name: 'DB-db-1 board' }).click();
   await summary.getByLabel('Riser tap-off of DB-db-1').selectOption({ label: 'Riser 1' });
+  // The properties fit the panel: no sideways scroll bar (18 Nov 2026); a click elsewhere closes them.
+  const selection = summary.getByRole('region', { name: 'Selected in the Building tab' });
+  await expect(selection).toBeVisible();
+  expect(await summary.evaluate((el) => el.scrollWidth - el.clientWidth)).toBeLessThanOrEqual(0);
+  await page.getByLabel('Building view').click({ position: { x: 5, y: 5 } });
+  await expect(selection).toBeHidden();
   await expect(calculator).toBeEnabled();
   await calculator.click();
   // The first run loads the engine Web Worker, which a fresh dev server compiles on demand (engine,
