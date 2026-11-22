@@ -59,7 +59,7 @@ export interface FeederDesign {
   device: DeviceSelection | null;
   status: 'provisional' | 'awaiting-load' | 'blocked';
   provisionalReasons: ProvisionalReason[];
-  /** Error codes (Appendix D): E2003 / E2001 block, E1901 warns. */
+  /** Error codes (Appendix D): E2003 / E2001 block, W1901 warns. */
   errors: string[];
   trace: { step: string; detail: string }[];
 }
@@ -112,7 +112,7 @@ export function designFeeders(project: Project): FeederDesign[] {
     if (!supplied.has(to.id)) reasons.unshift('upstream-not-connected');
     if (s.tbcFactors.length || s.tbcCategories.length) {
       reasons.push('demand-factors-tbc');
-      errors.push('E1901');
+      errors.push('W1901');
       trace.push({
         step: 'Demand',
         detail: `TBC factors counted as 1.0: ${[...s.tbcFactors, ...s.tbcCategories].join(', ')}`,

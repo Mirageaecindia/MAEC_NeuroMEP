@@ -448,7 +448,7 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     ).toBeInTheDocument();
     expect(table).toHaveTextContent('Connected 6.0 kW · Max demand 6.0 kW');
     // Dubai method (default): a DB on its own is at 100 %, nothing TBC.
-    expect(table).not.toHaveTextContent('E1901');
+    expect(table).not.toHaveTextContent('W1901');
     // Not fed yet: no supply, so it is shown apart, not as connected (manager feedback).
     expect(screen.getByText(/^Connected:/)).toHaveTextContent('Connected: 0 kVA');
     expect(screen.getByText(/^Not connected yet:/)).toHaveTextContent(
@@ -500,7 +500,7 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     expect(within(card()).getByLabelText('Fire rated :')).toBeChecked();
   });
 
-  it('#TASK-18 mechanical equipment: E1803 until Fed from names its isolator, then a dashed link', async () => {
+  it('#TASK-18 mechanical equipment: W1803 until Fed from names its isolator, then a dashed link', async () => {
     open(LEAD);
     await planReady();
     await placeAt('Isolator 3P', 300, 300);
@@ -508,7 +508,7 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
     const props = card();
     expect(props).toHaveTextContent('Name :Mechanical Equipment');
     expect(screen.getByRole('list', { name: 'Issues' })).toHaveTextContent(
-      'E1803ME-GF-01not linked to an isolator',
+      'W1803ME-GF-01not linked to an isolator',
     );
     await userEvent.type(within(props).getByLabelText('Rated power :'), '7.5');
     await userEvent.tab();
@@ -538,7 +538,7 @@ describe('#TASK-15 load and equipment entry (WBS 1.3.4, 12.3)', () => {
 });
 
 describe('#TASK-15 DB loads from Excel (FR-35)', () => {
-  it('previews matched and unmatched rows (E1503), imports and writes the audit log', async () => {
+  it('previews matched and unmatched rows (W1503), imports and writes the audit log', async () => {
     const api = open(LEAD);
     await planReady();
     await userEvent.click(chip('DB'));
@@ -565,7 +565,7 @@ describe('#TASK-15 DB loads from Excel (FR-35)', () => {
     expect(
       within(dialog).getByRole('row', { name: 'DB-GF-01 0.00 kW 9.00 kW' }),
     ).toBeInTheDocument();
-    expect(dialog).toHaveTextContent('Not matched (E1503): row 3 "DB-NOT-HERE"');
+    expect(dialog).toHaveTextContent('Not matched (W1503): row 3 "DB-NOT-HERE"');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Import 1 DB' }));
     expect(screen.getByRole('region', { name: 'Engineering Property' })).toHaveTextContent(
       'Loads :1 line, 9.00 kW',
@@ -866,7 +866,7 @@ describe('PFC bank and meter (components workbook, user request 10 Nov 2026)', (
     expect(saved.find((e) => e.kind === 'pfc-bank')).toMatchObject({ tag: 'PFC-GF-01' });
   });
 
-  it('gives a new transformer a 400 V secondary voltage and warns when it differs (E2803)', async () => {
+  it('gives a new transformer a 400 V secondary voltage and warns when it differs (W2803)', async () => {
     open(LEAD);
     await planReady();
     await placeAt('Transformer', 300, 300);
@@ -875,6 +875,6 @@ describe('PFC bank and meter (components workbook, user request 10 Nov 2026)', (
     await userEvent.clear(secondary);
     await userEvent.type(secondary, '415');
     await userEvent.tab();
-    expect(card()).toHaveTextContent('E2803 Secondary voltage 415 V differs from the 400 V');
+    expect(card()).toHaveTextContent('W2803 Secondary voltage 415 V differs from the 400 V');
   });
 });

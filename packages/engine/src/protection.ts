@@ -10,7 +10,7 @@ import { tableValue } from './tables.js';
  * earth-fault loop C5 (10.10) - each only when ticked on Page 1 (D-08) - and the DEWA minimum
  * size C6 (10.11). C4 and C5 need the breaker's let-through energy, clearing time and trip
  * current from the breaker catalogue (OI-03); until then they show "Device data required"
- * (E2402) with every value the engine can work out.
+ * (W2402) with every value the engine can work out.
  */
 
 export type ProtectionState =
@@ -177,7 +177,7 @@ export function checkAll(project: Project, sized?: ReadonlyMap<string, Sizes>): 
           state: 'device-data-required',
           detail: `Phase k ${k.value}: k²S² ${k2s2.toExponential(3)} A²s, withstands ${d.faultAtBreaker.ikMaxKa.toFixed(2)} kA for ${withstandS.toFixed(3)} s; ECC k ${kE.value}. Needs the${mv} breaker let-through I²t (OI-03).`,
         };
-        if (!result.errors.includes('E2402')) result.errors.push('E2402');
+        if (!result.errors.includes('W2402')) result.errors.push('W2402');
       }
     }
 
@@ -206,7 +206,7 @@ export function checkAll(project: Project, sized?: ReadonlyMap<string, Sizes>): 
           state: 'device-data-required',
           detail: `Zs (hot) ${result.zsHotMohm.toFixed(3)} mOhm: passes if the breaker disconnects within ${DISCONNECT_S} s at Ia <= ${iaMax.toFixed(0)} A; Ia = 1.2 x Im needs the catalogue (OI-03).`,
         };
-        if (!result.errors.includes('E2402')) result.errors.push('E2402');
+        if (!result.errors.includes('W2402')) result.errors.push('W2402');
       } else {
         result.c5 = {
           state: 'not-calculated',

@@ -58,7 +58,7 @@ export function suppliedIn(m: Network, scenario: Scenario): Set<string> {
 
 /**
  * LV components below the sources (those that need a supply). Equipment is checked on its own:
- * linked to an isolator / connection unit (E1803), which carries the supply check.
+ * linked to an isolator / connection unit (W1803), which carries the supply check.
  */
 const needsSupply = (m: Pick<Network, 'elements'>) =>
   m.elements.filter(
@@ -68,7 +68,7 @@ const needsSupply = (m: Pick<Network, 'elements'>) =>
 /** What equipment may be fed from (6 Nov 2026). */
 export const EQUIPMENT_FEEDERS: ElementKind[] = ['isolator', 'connection-unit'];
 
-/** E1803: mechanical / PHE equipment not linked to an isolator or connection unit. */
+/** W1803: mechanical / PHE equipment not linked to an isolator or connection unit. */
 export function unlinkedEquipment(m: Pick<Network, 'elements'>): Element[] {
   const byId = new Map(m.elements.map((e) => [e.id, e]));
   return m.elements.filter((e) => {
@@ -79,22 +79,22 @@ export function unlinkedEquipment(m: Pick<Network, 'elements'>): Element[] {
 }
 
 export interface NetworkIssue {
-  code: 'E1801' | 'E1802' | 'E1803';
+  code: 'W1801' | 'W1802' | 'W1803';
   floorId: string;
   elementId?: string;
   message: string;
 }
 
 /**
- * E1801: a component with no path to a transformer or generator (results stay Provisional).
- * E1802: a floor with boards not fed by a cable, none of them fed from a riser tap-off.
- * E1803: mechanical / PHE equipment not connected to a panel (briefing page 9).
+ * W1801: a component with no path to a transformer or generator (results stay Provisional).
+ * W1802: a floor with boards not fed by a cable, none of them fed from a riser tap-off.
+ * W1803: mechanical / PHE equipment not connected to a panel (briefing page 9).
  */
 export function completenessIssues(m: Network, floors: readonly Floor[]): NetworkIssue[] {
   const normal = suppliedIn(m, 'normal');
   const standby = suppliedIn(m, 'standby');
   const issues: NetworkIssue[] = [];
-  // E1802 only when the building uses a busbar riser at all (risers are optional, A-22).
+  // W1802 only when the building uses a busbar riser at all (risers are optional, A-22).
   const risersInUse = m.risers.some((r) => r.lengthM || r.fedFromId || r.feeds.length);
   for (const f of risersInUse ? floors : []) {
     // Boards a tap-off usually feeds that no feeder reaches (the riser's place on the floor).
@@ -104,7 +104,7 @@ export function completenessIssues(m: Network, floors: readonly Floor[]): Networ
     );
     if (boards.length > 0 && !boards.some((b) => m.risers.some((r) => r.feeds.includes(b.id)))) {
       issues.push({
-        code: 'E1802',
+        code: 'W1802',
         floorId: f.id,
         message: `${f.name} has boards but no tap-off from a riser.`,
       });
@@ -113,7 +113,7 @@ export function completenessIssues(m: Network, floors: readonly Floor[]): Networ
   for (const e of needsSupply(m)) {
     if (normal.has(e.id) || standby.has(e.id)) continue;
     issues.push({
-      code: 'E1801',
+      code: 'W1801',
       floorId: e.floorId,
       elementId: e.id,
       message: `${e.tag} has no path to a transformer or generator.`,
@@ -121,7 +121,7 @@ export function completenessIssues(m: Network, floors: readonly Floor[]): Networ
   }
   for (const e of unlinkedEquipment(m)) {
     issues.push({
-      code: 'E1803',
+      code: 'W1803',
       floorId: e.floorId,
       elementId: e.id,
       message: `${e.tag} is not connected to a panel: choose its isolator or connection unit in Fed from.`,
@@ -130,7 +130,7 @@ export function completenessIssues(m: Network, floors: readonly Floor[]): Networ
   return issues;
 }
 
-/** Where a supply path breaks (E1801), with what it cuts off and how to fix it. */
+/** Where a supply path breaks (W1801), with what it cuts off and how to fix it. */
 export interface SupplyBreak {
   /** The component without an incoming feeder, or the riser without a source. */
   at: { kind: 'element'; id: string; tag: string } | { kind: 'riser'; index: number };
@@ -143,7 +143,7 @@ export interface SupplyBreak {
 const MAIN_PANELS: ElementKind[] = ['lv-panel', 'mdb', 'emdb', 'acb-panel', 'ats'];
 
 /**
- * E1801 grouped by cause (Building tab): for every component without a path to a source, walk up
+ * W1801 grouped by cause (Building tab): for every component without a path to a source, walk up
  * its feeders and risers to where the chain stops - a component nothing feeds, or a riser with no
  * source - and report that point once with everything it cuts off.
  */

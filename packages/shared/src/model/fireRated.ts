@@ -7,7 +7,7 @@ import type { Riser } from './riser.js';
  * load back to the generator must be fire-rated: the feeder into the load, then up through the
  * standby input of an ATS to the generator (manager 3 Nov 2026: FR only on the generator side).
  * The flags are live and never change a cable (user decision 6 Nov 2026): a feeder on that path
- * that is not fire-rated (E2701), and a fire-rated one with no FLS load below it (E2702).
+ * that is not fire-rated (W2701), and a fire-rated one with no FLS load below it (W2702).
  */
 
 interface Network {
@@ -58,7 +58,7 @@ export function flsPaths(m: Network): Map<string, string[]> {
 
 export interface FireRatedFlag {
   cableId: string;
-  code: 'E2701' | 'E2702';
+  code: 'W2701' | 'W2702';
   message: string;
   fix: string;
 }
@@ -72,7 +72,7 @@ export function fireRatedFlags(m: Network): FireRatedFlag[] {
       return [
         {
           cableId: c.id,
-          code: 'E2701',
+          code: 'W2701',
           message: `${c.tag} feeds fire & life-safety load ${loads.join(', ')} and is not fire-rated`,
           fix:
             c.feederType === 'busbar'
@@ -85,7 +85,7 @@ export function fireRatedFlags(m: Network): FireRatedFlag[] {
       return [
         {
           cableId: c.id,
-          code: 'E2702',
+          code: 'W2702',
           message: `${c.tag} is fire-rated but has no fire & life-safety load below it on the generator side`,
           fix: 'Use a normal cable unless it is needed for another reason.',
         },

@@ -1134,7 +1134,7 @@ const formatAed = (aed: number) =>
 
 /**
  * Network check above the riser diagram (FR-20, WBS 1.4.3): the scenario switch and, for normal
- * supply, the completeness warnings (E1801 / E1802); for standby, what the generator supplies.
+ * supply, the completeness warnings (W1801 / W1802); for standby, what the generator supplies.
  */
 function NetworkCheck(props: {
   model: Parameters<typeof completenessIssues>[0];
@@ -1142,9 +1142,9 @@ function NetworkCheck(props: {
   scenario: Scenario;
   onScenario: (s: Scenario) => void;
 }) {
-  // E1802 per floor; E1801 grouped by where the supply chain breaks, with the fix.
+  // W1802 per floor; W1801 grouped by where the supply chain breaks, with the fix.
   const floorIssues = completenessIssues(props.model, props.floors).filter(
-    (i) => i.code === 'E1802' || i.code === 'E1803',
+    (i) => i.code === 'W1802' || i.code === 'W1803',
   );
   const breaks = supplyBreaks(props.model);
   const fire = fireRatedFlags(props.model);
@@ -1174,7 +1174,7 @@ function NetworkCheck(props: {
           <ul className="network-issues" aria-label="Network warnings">
             {breaks.map((b) => (
               <li key={b.at.kind === 'riser' ? `riser-${b.at.index}` : b.at.id}>
-                <strong>E1801</strong> {b.message}
+                <strong>W1801</strong> {b.message}
                 {b.cutOff.length > 0 &&
                   ` - ${b.cutOff.length} component${b.cutOff.length === 1 ? '' : 's'} below it ${b.cutOff.length === 1 ? 'has' : 'have'} no supply: ${b.cutOff.join(', ')}`}
                 .<span className="issue-fix"> {b.fix}</span>
@@ -1188,7 +1188,7 @@ function NetworkCheck(props: {
             {floorIssues.map((i) => (
               <li key={`${i.code}-${i.elementId ?? i.floorId}`}>
                 <strong>{i.code}</strong> {i.message}
-                {i.code === 'E1802' && (
+                {i.code === 'W1802' && (
                   <span className="issue-fix">
                     {' '}
                     Click a board on that floor in this diagram to put it on a riser tap-off.

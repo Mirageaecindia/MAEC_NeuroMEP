@@ -212,7 +212,7 @@ describe('#TASK-19 Dubai demand method (manager 3 Nov 2026)', () => {
     expect(s.get('mdb')!.maxDemandKw).toBeCloseTo(36 * 0.6 + 10 * 0.8, 9);
   });
 
-  it('a TBC category factor counts as 1.0 and is reported (E1901)', () => {
+  it('a TBC category factor counts as 1.0 and is reported (W1901)', () => {
     const project = completeProject();
     project.calculation.demandMethod = 'dubai-non-emaar';
     const tx = el('transformer', 'tx');

@@ -66,7 +66,7 @@ describe('#TASK-15 DB loads from Excel (FR-35)', () => {
     expect(parseLoadSheet([['Name', 'kW']]).problems[0]!.message).toMatch(/template header/);
   });
 
-  it('matches rows to DBs by tag and lists unmatched rows (E1503) and changes', () => {
+  it('matches rows to DBs by tag and lists unmatched rows (W1503) and changes', () => {
     const db = { ...sampleDb('f-gf', 'db-1'), tag: 'DB-GF-01' };
     const { rows } = parseLoadSheet(
       sheet([

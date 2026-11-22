@@ -8,6 +8,7 @@ import {
   capacitySummary,
   loadCategoryOf,
   EQUIPMENT_FEEDERS,
+  isWarningCode,
   BUILDING_TAB_HIDDEN,
   loadSummaries,
   type CapacitySummary,
@@ -1150,8 +1151,8 @@ export function FloorSetupPage() {
 }
 
 /**
- * Each transformer's maximum demand against its rating x the loading limit (E2801) and the whole
- * project's against the plot allocation (E2802) - briefing page 9, design doc 10.15.
+ * Each transformer's maximum demand against its rating x the loading limit (W2801) and the whole
+ * project's against the plot allocation (W2802) - briefing page 9, design doc 10.15.
  */
 function CapacityChecks({ capacity }: { capacity: CapacitySummary }) {
   const { transformers, plot, limitPct } = capacity;
@@ -1160,7 +1161,7 @@ function CapacityChecks({ capacity }: { capacity: CapacitySummary }) {
     <ul className="capacity-checks" aria-label="Transformer loading">
       {transformers.map((t) => (
         <li key={t.id} className={t.over ? 'over' : undefined}>
-          {t.over && <strong>E2801 </strong>}
+          {t.over && <strong>W2801 </strong>}
           {t.tag}:{' '}
           {t.ratingKva === null
             ? 'enter its kVA rating'
@@ -1170,7 +1171,7 @@ function CapacityChecks({ capacity }: { capacity: CapacitySummary }) {
       ))}
       {plot?.over && (
         <li className="over">
-          <strong>E2802 </strong>Project demand {Math.round(plot.demand)} {plot.unit} is above the
+          <strong>W2802 </strong>Project demand {Math.round(plot.demand)} {plot.unit} is above the
           plot allocation of {plot.allocation} {plot.unit}
         </li>
       )}
@@ -1181,7 +1182,7 @@ function CapacityChecks({ capacity }: { capacity: CapacitySummary }) {
 /**
  * Issues of the floor or the selected item (18 Nov 2026): one short line each - code, component
  * or feeder (from -> to), a few words; the full message on hover. A click shows it on the plan.
- * E1803 (briefing page 9), E2701 / E2702 fire-rated flags (live), blocked feeders and failing
+ * W1803 (briefing page 9), W2701 / W2702 fire-rated flags (live), blocked feeders and failing
  * checks of the last Cable Size.
  */
 function IssueList(props: { issues: PanelIssue[]; onLocate: (issue: PanelIssue) => void }) {
@@ -1192,7 +1193,7 @@ function IssueList(props: { issues: PanelIssue[]; onLocate: (issue: PanelIssue) 
         <li key={i.key}>
           <button
             type="button"
-            className="issue"
+            className={`issue ${isWarningCode(i.code) || /^C\d/.test(i.code) ? 'warning' : 'error'}`}
             title={`${i.detail}
 
 Click to show it on the plan.`}

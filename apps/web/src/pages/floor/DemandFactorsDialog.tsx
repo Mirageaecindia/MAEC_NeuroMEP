@@ -66,7 +66,7 @@ export function DemandFactorsDialog(props: { onClose: () => void; onChanged: () 
     >
       <p className="muted">
         Demand factors by load type, as entered on Import File (empty = TBC, 1.0 is used and the
-        result stays Provisional, E1901). Changing a factor marks the cable sizes out of date: run
+        result stays Provisional, W1901). Changing a factor marks the cable sizes out of date: run
         the Cable Size Calculator again.
       </p>
       {hasModel(impact) && <p>A change affects {describeImpact(impact)}.</p>}

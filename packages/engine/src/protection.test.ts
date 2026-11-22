@@ -106,13 +106,13 @@ describe('#TASK-24 / #TASK-25 protection checks C4 - C6 (10.9 - 10.11)', () => {
     expect(d.c5.detail).toBe(d.c4.detail);
   });
 
-  it('C4 gives the cable withstand and waits for the breaker let-through (E2402)', () => {
+  it('C4 gives the cable withstand and waits for the breaker let-through (W2402)', () => {
     const d = toDb(network());
     expect(d.c4.state).toBe('device-data-required');
     const ik = d.faultAtBreaker!.ikMaxKa * 1000;
     const seconds = (143 * 10) ** 2 / (ik * ik);
     expect(d.c4.detail).toContain(`for ${seconds.toFixed(3)} s`);
-    expect(d.errors).toContain('E2402');
+    expect(d.errors).toContain('W2402');
     const main = checkAll(network()).find((c) => c.toId === 'mdb')!;
     expect(main.c4.detail).toMatch(/MV protection time \(OI-31\)/);
   });

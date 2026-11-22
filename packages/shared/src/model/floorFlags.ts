@@ -43,7 +43,7 @@ export function floorStatus(m: Network, floorId: string, discipline: Discipline)
 
 /**
  * What stops a floor from being flagged done (Page 2 exit criteria: no unconnected components):
- * components of the discipline on the floor without a path to a source (E1801).
+ * components of the discipline on the floor without a path to a source (W1801).
  */
 export function flagBlockers(
   m: Network,
@@ -56,7 +56,7 @@ export function flagBlockers(
   );
   return completenessIssues(m, floors).filter(
     (i) =>
-      (i.code === 'E1801' || i.code === 'E1803') &&
+      (i.code === 'W1801' || i.code === 'W1803') &&
       i.floorId === floorId &&
       ofDiscipline.has(i.elementId!),
   );

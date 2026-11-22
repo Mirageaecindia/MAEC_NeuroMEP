@@ -132,7 +132,7 @@ export const ERROR_CATALOGUE = [
   ),
   // #TASK-08 Persistence
   e(
-    'E0801',
+    'W0801',
     'Changes not saved yet',
     'warning',
     'The save did not reach the server (connection lost); the changes are kept in the tab.',
@@ -155,7 +155,7 @@ export const ERROR_CATALOGUE = [
   ),
   // #TASK-09 / #TASK-10 Collaboration
   e(
-    'E0902',
+    'W0902',
     'Element was changed by another user',
     'warning',
     'Your edit was based on an older version of the element.',
@@ -219,7 +219,7 @@ export const ERROR_CATALOGUE = [
     true,
   ),
   e(
-    'E1503',
+    'W1503',
     'Load upload row not matched',
     'warning',
     'A DB name in the uploaded Excel sheet does not match any DB tag in the project.',
@@ -228,7 +228,7 @@ export const ERROR_CATALOGUE = [
   ),
   // #TASK-18 Network completeness
   e(
-    'E1801',
+    'W1801',
     'Element not connected to a source',
     'warning',
     'No path to a transformer or generator; results stay Provisional.',
@@ -236,7 +236,7 @@ export const ERROR_CATALOGUE = [
     true,
   ),
   e(
-    'E1802',
+    'W1802',
     'Floor not connected to the riser',
     'warning',
     'A floor has panels but no tap-off from the riser.',
@@ -245,7 +245,7 @@ export const ERROR_CATALOGUE = [
   ),
   // #TASK-19..#TASK-26 Engine
   e(
-    'E1803',
+    'W1803',
     'Equipment not connected to a panel',
     'warning',
     'Mechanical / PHE equipment has no isolator or connection unit in Fed from, so its load reaches no panel.',
@@ -253,7 +253,7 @@ export const ERROR_CATALOGUE = [
     true,
   ),
   e(
-    'E1901',
+    'W1901',
     'Demand factor not confirmed',
     'warning',
     'The factor for this load type is still TBC, so 1.0 is used and the result is Provisional.',
@@ -300,7 +300,7 @@ export const ERROR_CATALOGUE = [
     true,
   ),
   e(
-    'E2103',
+    'W2103',
     'Table value suspected wrong',
     'warning',
     'A CableSizer rating is lower than the rating of the next smaller size (known table errors, V-12).',
@@ -315,7 +315,7 @@ export const ERROR_CATALOGUE = [
     true,
   ),
   e(
-    'E2402',
+    'W2402',
     'Device data required',
     'warning',
     'Breaker let-through (I2t) data is missing, so the thermal check cannot pass.',
@@ -331,7 +331,7 @@ export const ERROR_CATALOGUE = [
     true,
   ),
   e(
-    'E2690',
+    'W2690',
     'Results differ between screen and server',
     'warning',
     'The server re-check on save or export got a different result.',
@@ -340,7 +340,7 @@ export const ERROR_CATALOGUE = [
   ),
   // #TASK-27 Safety rules: fire-rated feeders (10.14; briefing page 9, 6 Nov 2026)
   e(
-    'E2701',
+    'W2701',
     'Feeder to a fire & life-safety load not fire-rated',
     'warning',
     'Every feeder from an FLS load back to the generator must be fire-rated so it keeps working in a fire.',
@@ -348,7 +348,7 @@ export const ERROR_CATALOGUE = [
     true,
   ),
   e(
-    'E2702',
+    'W2702',
     'Fire-rated feeder not needed',
     'warning',
     'The feeder is fire-rated but no fire & life-safety load is fed through it from the generator.',
@@ -357,7 +357,7 @@ export const ERROR_CATALOGUE = [
   ),
   // #TASK-28 Transformer loading (10.15; briefing page 9, 6 Nov 2026)
   e(
-    'E2801',
+    'W2801',
     'Transformer loaded above its limit',
     'warning',
     'The maximum demand on a transformer is above its kVA rating x the loading limit (100 %, or 80 % when ticked on Import File).',
@@ -365,7 +365,7 @@ export const ERROR_CATALOGUE = [
     true,
   ),
   e(
-    'E2802',
+    'W2802',
     'Project load above the plot allocation',
     'warning',
     'The maximum demand of the whole project (all transformers) is above the plot load allocation entered on Import File.',
@@ -373,7 +373,7 @@ export const ERROR_CATALOGUE = [
     true,
   ),
   e(
-    'E2803',
+    'W2803',
     'Secondary voltage differs from the system voltage',
     'warning',
     'A transformer, generator or UPS has a secondary voltage other than the rule-pack system voltage (400 V); the CableSizer tables and all calculations are at 400 / 230 V.',
@@ -408,6 +408,19 @@ export const ERROR_CATALOGUE = [
 export type ErrorCode = (typeof ERROR_CATALOGUE)[number]['code'];
 
 const BY_CODE = new Map<string, ErrorEntry>(ERROR_CATALOGUE.map((x) => [x.code, x]));
+
+/**
+ * Warnings carry W codes (A-26, user decision 22 Nov 2026: E + task + sequence for errors that
+ * block, W + task + sequence for warnings). The earlier E form of each warning stays an alias,
+ * so results, files and log lines written before still read.
+ */
+export const CODE_ALIASES: Readonly<Record<string, string>> = Object.fromEntries(
+  ERROR_CATALOGUE.filter((x) => x.code.startsWith('W')).map((x) => [`E${x.code.slice(1)}`, x.code]),
+);
+/** The current code for a code read from stored data (an old E form of a warning -> its W code). */
+export const currentCode = (code: string): string => CODE_ALIASES[code] ?? code;
+/** A warning (W): shown in orange; an error (E) blocks the item or the action, shown in red. */
+export const isWarningCode = (code: string): boolean => currentCode(code).startsWith('W');
 
 export function errorEntry(code: ErrorCode): ErrorEntry {
   return BY_CODE.get(code)!;

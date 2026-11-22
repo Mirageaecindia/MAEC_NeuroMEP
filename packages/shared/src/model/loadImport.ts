@@ -115,7 +115,7 @@ export interface LoadImportPlan {
     afterKw: number;
     changed: boolean;
   }[];
-  /** Rows whose DB name matches no DB tag in the project (E1503). */
+  /** Rows whose DB name matches no DB tag in the project (W1503). */
   unmatched: { row: number; tag: string }[];
 }
 

@@ -42,7 +42,7 @@ function network() {
   };
 }
 
-describe('#TASK-18 network completeness (FR-20, E1801 / E1802)', () => {
+describe('#TASK-18 network completeness (FR-20, W1801 / W1802)', () => {
   it('follows cables, ATS inputs and risers to the sources of each scenario', () => {
     const m = network();
     for (const scenario of ['normal', 'standby'] as const) {
@@ -56,12 +56,12 @@ describe('#TASK-18 network completeness (FR-20, E1801 / E1802)', () => {
   it('reports a floor without a riser tap-off and components without a source', () => {
     expect(completenessIssues(network(), floors)).toEqual([
       {
-        code: 'E1802',
+        code: 'W1802',
         floorId: 'f2',
         message: 'Second Floor has boards but no tap-off from a riser.',
       },
       {
-        code: 'E1801',
+        code: 'W1801',
         floorId: 'f2',
         elementId: 'DB-2',
         message: 'DB-2 has no path to a transformer or generator.',
@@ -86,7 +86,7 @@ describe('#TASK-18 network completeness (FR-20, E1801 / E1802)', () => {
   });
 });
 
-describe('#TASK-18 where the supply breaks (E1801 grouped by cause)', () => {
+describe('#TASK-18 where the supply breaks (W1801 grouped by cause)', () => {
   it('names the panel with no incoming feeder once, with everything below it', () => {
     const m = network();
     m.cables = m.cables.filter((c) => c.to.elementId !== 'MDB'); // ATS no longer feeds the MDB

@@ -5,7 +5,7 @@ const kw = (v: number) => `${v.toFixed(2)} kW`;
 
 /**
  * Preview of a DB load upload (FR-35): matched DBs with their total before and after, rows that
- * match no DB (E1503) and rows that could not be read. Nothing changes until Import.
+ * match no DB (W1503) and rows that could not be read. Nothing changes until Import.
  */
 export function LoadImportDialog(props: {
   fileName: string;
@@ -61,7 +61,7 @@ export function LoadImportDialog(props: {
       )}
       {props.plan.unmatched.length > 0 && (
         <div className="banner banner-warning">
-          <strong>Not matched (E1503):</strong>{' '}
+          <strong>Not matched (W1503):</strong>{' '}
           {props.plan.unmatched.map((u) => `row ${u.row} "${u.tag}"`).join(', ')} - no DB with this
           tag in the project.
         </div>

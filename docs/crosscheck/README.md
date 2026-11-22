@@ -53,7 +53,7 @@ The worksheet applies both rules for you. Please write a remark against every **
 
 ## What you will see that is by design
 
-- **C4 and C5 show "N.C." with code E2402.** They need breaker let-through and trip data (OI-03, no catalogue yet). The cable's own withstand and Zs are worked out and shown in the trace.
+- **C4 and C5 show "N.C." with code W2402.** They need breaker let-through and trip data (OI-03, no catalogue yet). The cable's own withstand and Zs are worked out and shown in the trace.
 - **C7 shows "N.C."** until a board's Icw / Ipk are entered.
 - **Status is Provisional** for these two reasons only. Risers and tap-off boxes, which don't wait for breaker data, are Final.
 

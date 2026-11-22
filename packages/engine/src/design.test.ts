@@ -186,14 +186,14 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
     expect(m.device?.poles).toBe('1P');
   });
 
-  it('marks results Provisional: upstream not connected, TBC factors (E1901), not the CableSizer tables', () => {
+  it('marks results Provisional: upstream not connected, TBC factors (W1901), not the CableSizer tables', () => {
     const p = network([5, 5, 5]);
     p.calculation.demandMethod = 'manual';
     p.calculation.demandFactors.byLoadType['2'] = { value: null, source: 'rulepack' };
     p.model.cables = p.model.cables.slice(1); // TX no longer feeds the MDB
     const d = feederTo(p, 'db');
     expect(d.provisionalReasons).toEqual(['upstream-not-connected', 'demand-factors-tbc']);
-    expect(d.errors).toEqual(['E1901']);
+    expect(d.errors).toEqual(['W1901']);
   });
 
   it('blocks a current above the largest standard rating (E2001)', () => {

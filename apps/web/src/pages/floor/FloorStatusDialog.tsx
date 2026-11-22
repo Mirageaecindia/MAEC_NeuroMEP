@@ -23,7 +23,7 @@ const LABEL: Record<Discipline, string> = {
 
 /**
  * Toolbar Status (A-08): the floor's status per discipline. An engineer flags their layer done
- * once every component of it has a source (no E1801); the flag saves and locks the layer on this
+ * once every component of it has a source (no W1801); the flag saves and locks the layer on this
  * floor. Only the Technical Lead reopens a flagged floor.
  */
 export function FloorStatusDialog(props: {

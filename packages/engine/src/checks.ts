@@ -348,7 +348,7 @@ export function checkNetworkFeeders(
     else {
       result.rating = rating;
       result.warnings.push(...rating.warnings);
-      if (rating.warnings.length && !result.errors.includes('E2103')) result.errors.push('E2103');
+      if (rating.warnings.length && !result.errors.includes('W2103')) result.errors.push('W2103');
       // C1 (BS 7671 433.1.1): Ib <= In <= Iz.
       result.c1 = rating.izA >= d.device.ratingA ? 'pass' : 'fail';
       result.trace.push({

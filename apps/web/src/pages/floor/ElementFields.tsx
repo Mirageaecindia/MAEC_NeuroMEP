@@ -99,7 +99,7 @@ function fieldsFor(
     // Mechanical / PHE equipment (briefing page 9, 6 Nov 2026): its load goes to its isolator.
     case 'equipment':
       return [
-        pick('fedFromId', 'Fed from', feeders, 'Not connected (E1803)'),
+        pick('fedFromId', 'Fed from', feeders, 'Not connected (W1803)'),
         num('kw', 'Rated power', 'kW'),
         select('phases', 'Phases', ['3P', 'L1', 'L2', 'L3']),
         {

@@ -61,7 +61,7 @@ export function GuidePage() {
         <input
           type="search"
           className="guide-search"
-          placeholder="Search the guide (e.g. riser, voltage drop, E1801)"
+          placeholder="Search the guide (e.g. riser, voltage drop, W1801)"
           aria-label="Search the guide"
           value={query}
           onChange={(e) => setQuery(e.target.value)}

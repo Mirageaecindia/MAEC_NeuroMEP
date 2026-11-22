@@ -36,9 +36,9 @@ const BLOCKING = new Map<string, string>(
   ERROR_CATALOGUE.filter((e) => e.effect === 'blocks').map((e) => [e.code, e.message]),
 );
 const SHORT: Record<string, string> = {
-  E1803: 'not linked to an isolator',
-  E2701: 'FLS feeder not fire-rated',
-  E2702: 'fire-rated, no FLS load below',
+  W1803: 'not linked to an isolator',
+  W2701: 'FLS feeder not fire-rated',
+  W2702: 'fire-rated, no FLS load below',
   E2001: 'no breaker large enough',
   E2003: 'Ib unknown - data missing',
   E2101: 'size outside the table',
@@ -61,13 +61,13 @@ export function panelIssues(p: Project): PanelIssue[] {
   const issues: PanelIssue[] = [];
   for (const e of unlinkedEquipment(p.model)) {
     issues.push({
-      key: `E1803-${e.id}`,
-      code: 'E1803',
+      key: `W1803-${e.id}`,
+      code: 'W1803',
       targetId: e.id,
       floorId: e.floorId,
       onFloors: [e.floorId],
       label: e.tag,
-      text: SHORT.E1803!,
+      text: SHORT.W1803!,
       detail: `${e.tag} is not connected to a panel: choose its isolator or connection unit in Fed from.`,
     });
   }

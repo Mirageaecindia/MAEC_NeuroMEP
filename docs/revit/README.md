@@ -27,7 +27,7 @@ Both have the Ground Floor supply (TX-GF-01 1500 kVA, LV-GF-01, PFC-GF-01; sampl
 
 Both sheets are rotated 90° (`pageRotationDeg: 90`). Sheet 50 is a reduced print: its calibration (0.106187 m per pt) comes from the title block (A1, 1:100) and the page size, and should be confirmed against a dimension. Each floor lists two grid crossings with their PDF points (`alignment.referencePoints`); fill in their Revit coordinates to place the floor exactly.
 
-Results are Provisional only because of E2402: the let-through and earth-fault checks wait for the breaker catalogue (OI-03). There are no failing checks.
+Results are Provisional only because of W2402: the let-through and earth-fault checks wait for the breaker catalogue (OI-03). There are no failing checks.
 
 ## Package contents
 

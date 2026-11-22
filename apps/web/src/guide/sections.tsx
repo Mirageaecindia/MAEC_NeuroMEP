@@ -258,7 +258,7 @@ export const SECTIONS: GuideSection[] = [
           </tbody>
         </table>
         <p>
-          Messages appear at the top of the page. Each problem carries a code such as E1801 - see{' '}
+          Messages appear at the top of the page. Each problem carries a code such as W1801 - see{' '}
           <a href="#errors">Errors and warnings</a> for every code and what to do.
         </p>
       </>
@@ -306,7 +306,7 @@ export const SECTIONS: GuideSection[] = [
         <p>
           Name, location, client, plot reference, design stage, project category and the{' '}
           <Term>plot load allocation</Term> (kVA or kW from the utility - the building&apos;s
-          maximum demand is compared with it, E2802).
+          maximum demand is compared with it, W2802).
         </p>
         <h3>Site conditions</h3>
         <p>
@@ -508,7 +508,7 @@ export const SECTIONS: GuideSection[] = [
           <li>
             <Term>Mechanical / PHE equipment</Term>: rated kW, phases, power factor, starter,
             efficiency, load type, FLS; choose its isolator in <Term>Fed from</Term> (a dashed line
-            on the plan). Not linked: warning E1803.
+            on the plan). Not linked: warning W1803.
           </li>
           <li>
             <Term>Meter</Term>: place it on the plan, choose its <Term>Meter type</Term> (1-Ph, 3-Ph
@@ -527,7 +527,7 @@ export const SECTIONS: GuideSection[] = [
           <li>
             <Term>Transformer secondary voltage</Term>: 400 V by default (also the output voltage of
             generators and UPS). The calculations use the 400 / 230 V system voltage of the rule
-            pack; another value shows warning E2803.
+            pack; another value shows warning W2803.
           </li>
         </ul>
         <h3>5. The right panel</h3>
@@ -541,7 +541,7 @@ export const SECTIONS: GuideSection[] = [
         <p>
           <Term>Issues</Term> are one short line each: the code, the component or the feeder with
           its two ends (e.g. <code>F-01 (MDB-1 → DB-1)</code>) and a few words - unlinked equipment
-          (E1803), fire-rated feeders (E2701 / E2702) and, from the last Cable Size, blocked feeders
+          (W1803), fire-rated feeders (W2701 / W2702) and, from the last Cable Size, blocked feeders
           and failing checks (a blocked feeder names what is missing, e.g.{' '}
           <em>Enter the number of grouped circuits</em> for E2102). Hover for the full message and
           what to do; click to select the item, open its floor and show it on the plan (it flashes
@@ -564,8 +564,8 @@ export const SECTIONS: GuideSection[] = [
         <p>
           When your layer of a floor is finished, flag it done in the <Term>Status</Term> dialog:
           the floor is saved and locked for everyone (E1003) until the Technical Lead reopens it. A
-          floor cannot be flagged while one of its components has no supply (E1801) or equipment is
-          unlinked (E1803).
+          floor cannot be flagged while one of its components has no supply (W1801) or equipment is
+          unlinked (W1803).
         </p>
       </>
     ),
@@ -674,9 +674,9 @@ export const SECTIONS: GuideSection[] = [
         </Rule>
         <h3>Network check</h3>
         <p>
-          Above the diagram, <Term>Normal</Term> lists every break in the supply chain (E1801: which
-          component has no supply, what it cuts off, and the fix), floors without boards (E1802),
-          unlinked equipment (E1803) and fire-rated feeder flags (E2701 / E2702).{' '}
+          Above the diagram, <Term>Normal</Term> lists every break in the supply chain (W1801: which
+          component has no supply, what it cuts off, and the fix), floors without boards (W1802),
+          unlinked equipment (W1803) and fire-rated feeder flags (W2701 / W2702).{' '}
           <Term>Standby</Term> shows what the generator supplies.
         </p>
         <h3>Building Summary</h3>
@@ -797,7 +797,7 @@ export const SECTIONS: GuideSection[] = [
           </li>
           <li>
             <Term>FLS (fire &amp; life safety)</Term> - fire pumps, emergency lighting... Needs a
-            generator; every cable from it to the generator should be fire-rated (C9, E2701).
+            generator; every cable from it to the generator should be fire-rated (C9, W2701).
             Setting FLS ticks Fire rated; a new Fire Pumps load makes the item FLS (both can be
             changed).
           </li>
@@ -854,7 +854,7 @@ export const SECTIONS: GuideSection[] = [
           </li>
         </ul>
         <p>
-          A component with no path back to a source is reported as E1801 in the Building tab, with
+          A component with no path back to a source is reported as W1801 in the Building tab, with
           the place where the chain breaks and the fix.
         </p>
       </>
@@ -954,8 +954,8 @@ export const SECTIONS: GuideSection[] = [
             <tr>
               <th scope="row">Provisional</th>
               <td>
-                Sized, but something is still open - e.g. demand factors TBC (E1901), device data
-                required for C4 / C5 (E2402), upstream not connected.
+                Sized, but something is still open - e.g. demand factors TBC (W1901), device data
+                required for C4 / C5 (W2402), upstream not connected.
               </td>
             </tr>
             <tr>
@@ -1022,7 +1022,7 @@ export const SECTIONS: GuideSection[] = [
         <h3>Manual method</h3>
         <p>
           The 12 load-type factors typed on Import File are applied once per board. A factor not
-          confirmed yet (TBC) counts as 1.0 and the result stays Provisional (E1901).
+          confirmed yet (TBC) counts as 1.0 and the result stays Provisional (W1901).
         </p>
         <CalcButton example="demand" />
       </>
@@ -1183,7 +1183,7 @@ export const SECTIONS: GuideSection[] = [
         </p>
         <Note>
           Both need the breaker&apos;s let-through and trip data, which come with the breaker
-          catalogue (OI-03). Until then they end in &quot;Device data required&quot; (E2402) and the
+          catalogue (OI-03). Until then they end in &quot;Device data required&quot; (W2402) and the
           result stays Provisional; the cable side is shown in the trace.
         </Note>
       </>
@@ -1221,8 +1221,8 @@ export const SECTIONS: GuideSection[] = [
       <>
         <p>
           Each transformer&apos;s maximum demand (kVA) is compared with its rating x the loading
-          limit (100 %, or 80 % when ticked on Import File) - warning E2801. The maximum demand of
-          the whole project (each load once) is compared with the plot load allocation - E2802.
+          limit (100 %, or 80 % when ticked on Import File) - warning W2801. The maximum demand of
+          the whole project (each load once) is compared with the plot load allocation - W2802.
         </p>
         <CalcButton example="loading" />
       </>
@@ -1285,11 +1285,11 @@ export const SECTIONS: GuideSection[] = [
           UPS and a generator.
         </li>
         <li>
-          <Term>C9 / E2701</Term>: every feeder on the path from an FLS load to the generator should
+          <Term>C9 / W2701</Term>: every feeder on the path from an FLS load to the generator should
           be fire-rated (warning; you may still choose otherwise).
         </li>
         <li>
-          <Term>E2702</Term>: a fire-rated feeder with no FLS load below it (warning - possibly an
+          <Term>W2702</Term>: a fire-rated feeder with no FLS load below it (warning - possibly an
           unnecessary cost).
         </li>
         <li>
@@ -1357,7 +1357,7 @@ export const SECTIONS: GuideSection[] = [
             </td>
           </tr>
           <tr>
-            <td>E1801 in the Building tab</td>
+            <td>W1801 in the Building tab</td>
             <td>A component or riser has no path to a source.</td>
             <td>Follow the fix given in the message; usually a missing feeder or riser source.</td>
           </tr>
@@ -1444,7 +1444,7 @@ export const SECTIONS: GuideSection[] = [
           DB final circuits (sockets, lights) are not designed - Phase 1 ends at the DB feeder.
         </li>
         <li>
-          C4 / C5 wait for the breaker catalogue (E2402); breaker Im, curves and I²t are not
+          C4 / C5 wait for the breaker catalogue (W2402); breaker Im, curves and I²t are not
           available (OI-03).
         </li>
         <li>C10 (harmonics) and C11 (motor starting dip) are not calculated yet.</li>
@@ -1460,7 +1460,7 @@ export const SECTIONS: GuideSection[] = [
         </li>
         <li>
           Calculations are at 400 / 230 V: a secondary voltage other than 400 V is shown with
-          warning E2803 but not used.
+          warning W2803 but not used.
         </li>
         <li>The Bot and Smart-AI buttons are not active; Revit exchange comes in a later phase.</li>
         <li>Mechanical and PHE checks across separate files come in Phase 2.</li>

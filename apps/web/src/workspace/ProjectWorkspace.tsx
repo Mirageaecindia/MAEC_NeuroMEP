@@ -193,7 +193,7 @@ export function SaveBanner() {
   } else if (editor.saveState === 'error') {
     banner = (
       <div className="banner banner-warning save-banner" role="alert">
-        Changes not saved (E0801): {editor.saveError} They are kept in this tab: click Save to try
+        Changes not saved (W0801): {editor.saveError} They are kept in this tab: click Save to try
         again.
       </div>
     );

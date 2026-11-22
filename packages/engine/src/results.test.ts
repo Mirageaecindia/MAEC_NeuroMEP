@@ -60,7 +60,7 @@ describe('#TASK-26 / #TASK-27 Cable Size results as stored (WBS 1.7.1)', () => {
       detail: 'Not calculated - not selected on Page 1',
     });
     expect(r.checks.C5?.detail).toBe('Not calculated - not selected on Page 1');
-    expect(r.checks.C4?.detail).toMatch(/^Device data required \(E2402\)/);
+    expect(r.checks.C4?.detail).toMatch(/^Device data required \(W2402\)/);
   });
 });
 

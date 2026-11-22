@@ -843,7 +843,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "checks": {
@@ -861,11 +861,11 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 1.002e+8 A²s, withstands 33.69 kA for 0.088 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 1.002e+8 A²s, withstands 33.69 kA for 0.088 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Zs (hot) 17.952 mOhm: passes if the breaker disconnects within 5 s at Ia <= 12171 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 17.952 mOhm: passes if the breaker disconnects within 5 s at Ia <= 12171 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "state": "pass",
@@ -996,7 +996,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "checks": {
@@ -1014,11 +1014,11 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 22.61 kA for 0.049 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 22.61 kA for 0.049 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Zs (hot) 55.503 mOhm: passes if the breaker disconnects within 5 s at Ia <= 3937 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 55.503 mOhm: passes if the breaker disconnects within 5 s at Ia <= 3937 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "state": "pass",
@@ -1141,7 +1141,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "checks": {
@@ -1159,7 +1159,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 5.13 kA for 0.952 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 5.13 kA for 0.952 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",
@@ -1278,7 +1278,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "checks": {
@@ -1296,7 +1296,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 11.97 kA for 0.175 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 11.97 kA for 0.175 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",
@@ -1427,7 +1427,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "checks": {
@@ -1445,7 +1445,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 5.235e+6 A²s, withstands 8.93 kA for 0.066 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 5.235e+6 A²s, withstands 8.93 kA for 0.066 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",
@@ -1572,7 +1572,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C2",
         "checks": {
@@ -1590,7 +1590,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 8.93 kA for 0.009 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 8.93 kA for 0.009 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",
@@ -1717,7 +1717,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C2",
         "checks": {
@@ -1735,7 +1735,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 2.045e+6 A²s, withstands 8.93 kA for 0.026 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 2.045e+6 A²s, withstands 8.93 kA for 0.026 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",
@@ -1862,7 +1862,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "checks": {
@@ -1880,11 +1880,11 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 1.002e+8 A²s, withstands 33.69 kA for 0.088 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 1.002e+8 A²s, withstands 33.69 kA for 0.088 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Zs (hot) 17.952 mOhm: passes if the breaker disconnects within 5 s at Ia <= 12171 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 17.952 mOhm: passes if the breaker disconnects within 5 s at Ia <= 12171 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "state": "pass",
@@ -2015,7 +2015,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "checks": {
@@ -2033,11 +2033,11 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 22.61 kA for 0.049 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 22.61 kA for 0.049 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Zs (hot) 55.503 mOhm: passes if the breaker disconnects within 5 s at Ia <= 3937 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 55.503 mOhm: passes if the breaker disconnects within 5 s at Ia <= 3937 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "state": "pass",
@@ -2160,7 +2160,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "checks": {
@@ -2178,7 +2178,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 11.97 kA for 0.175 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 11.97 kA for 0.175 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",
@@ -2309,7 +2309,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "checks": {
@@ -2327,7 +2327,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 5.235e+6 A²s, withstands 8.93 kA for 0.066 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 5.235e+6 A²s, withstands 8.93 kA for 0.066 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",
@@ -2454,7 +2454,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C2",
         "checks": {
@@ -2472,7 +2472,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 8.93 kA for 0.009 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 8.93 kA for 0.009 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",
@@ -2599,7 +2599,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C2",
         "checks": {
@@ -2617,7 +2617,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 2.045e+6 A²s, withstands 8.93 kA for 0.026 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 2.045e+6 A²s, withstands 8.93 kA for 0.026 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "state": "not-calculated",

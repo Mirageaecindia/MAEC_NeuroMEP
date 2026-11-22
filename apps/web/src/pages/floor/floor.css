@@ -174,7 +174,7 @@
   overflow: auto;
   color: #92400e;
 }
-/* What to do about a warning (E1801 / E1802), under its cause. */
+/* What to do about a warning (W1801 / W1802), under its cause. */
 .issue-fix {
   color: #374151;
 }
@@ -517,9 +517,10 @@
   overflow-wrap: anywhere;
 }
 /* Transformer loading and plot allocation (10.15, briefing page 9). */
+/* Warnings are orange (A-26, 22 Nov 2026); red is kept for errors that block. */
 .loaded-badge.over {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: #ffedd5;
+  color: #c2410c;
 }
 .capacity-checks {
   list-style: none;
@@ -529,7 +530,7 @@
   color: var(--text-muted);
 }
 .capacity-checks li.over {
-  color: #b91c1c;
+  color: #c2410c;
 }
 
 /* Floor names: the Technical Lead renames a floor by clicking its name (7 Nov 2026). */
@@ -824,6 +825,7 @@ svg.drawing-feeder {
   flex-direction: column;
   gap: 3px;
 }
+/* A warning (W code, failing check) in orange; an error that stops a feeder being sized (E) in red. */
 .issue {
   display: flex;
   flex-wrap: wrap;
@@ -831,10 +833,10 @@ svg.drawing-feeder {
   gap: 2px 6px;
   width: 100%;
   padding: 4px 6px;
-  border: 1px solid #fecaca;
-  border-left: 3px solid #dc2626;
+  border: 1px solid #fed7aa;
+  border-left: 3px solid #f97316;
   border-radius: 4px;
-  background: #fff7f7;
+  background: #fff7ed;
   color: #1f2937;
   font: inherit;
   text-align: left;
@@ -842,10 +844,22 @@ svg.drawing-feeder {
 }
 .issue:hover,
 .issue:focus-visible {
-  background: #fee2e2;
+  background: #ffedd5;
 }
 .issue-code {
   font-weight: 700;
+  color: #c2410c;
+}
+.issue.error {
+  border-color: #fecaca;
+  border-left-color: #dc2626;
+  background: #fff7f7;
+}
+.issue.error:hover,
+.issue.error:focus-visible {
+  background: #fee2e2;
+}
+.issue.error .issue-code {
   color: #b91c1c;
 }
 .issue-label {

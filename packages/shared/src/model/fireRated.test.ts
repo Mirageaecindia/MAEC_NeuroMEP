@@ -34,19 +34,19 @@ describe('#TASK-27 fire-rated feeder flags (10.14, briefing page 9)', () => {
     expect(paths.get('c-smdb-fls')).toEqual(['DB-FLS']);
   });
 
-  it('flags every feeder on that path that is not fire-rated (E2701)', () => {
+  it('flags every feeder on that path that is not fire-rated (W2701)', () => {
     const flags = fireRatedFlags(network());
     expect(flags.map((f) => [f.code, f.cableId])).toEqual([
-      ['E2701', 'c-gen-ats'],
-      ['E2701', 'c-ats-smdb'],
-      ['E2701', 'c-smdb-fls'],
+      ['W2701', 'c-gen-ats'],
+      ['W2701', 'c-ats-smdb'],
+      ['W2701', 'c-smdb-fls'],
     ]);
     expect(flags[2]!.message).toBe(
       'smdbFls feeds fire & life-safety load DB-FLS and is not fire-rated',
     );
   });
 
-  it('is quiet once the path is fire-rated, and flags a fire-rated feeder not needed (E2702)', () => {
+  it('is quiet once the path is fire-rated, and flags a fire-rated feeder not needed (W2702)', () => {
     const m = network((c) => {
       c.genAts = fr(c.genAts!);
       c.atsSmdb = fr(c.atsSmdb!);
@@ -55,8 +55,8 @@ describe('#TASK-27 fire-rated feeder flags (10.14, briefing page 9)', () => {
       c.txAts = fr(c.txAts!); // transformer side (manager: FR on the generator side only)
     });
     expect(fireRatedFlags(m).map((f) => [f.code, f.cableId])).toEqual([
-      ['E2702', 'c-tx-ats'],
-      ['E2702', 'c-smdb-db'],
+      ['W2702', 'c-tx-ats'],
+      ['W2702', 'c-smdb-db'],
     ]);
   });
 

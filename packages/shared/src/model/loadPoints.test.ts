@@ -70,7 +70,7 @@ describe('#TASK-15 #TASK-27 isolators and connection units as equipment', () => 
     expect(withSafetyDefaults(db, { loadCategory: 'fls' })).toEqual({ loadCategory: 'fls' });
   });
 
-  it('an FLS isolator flags its feeders to the generator (E2701) and starts at fire 1.0', () => {
+  it('an FLS isolator flags its feeders to the generator (W2701) and starts at fire 1.0', () => {
     const p = completeProject();
     const tx = testElement('transformer', 'tx');
     const gen = { ...testElement('generator', 'gen'), tag: 'GEN', kvaOverride: 100 } as Element;
@@ -91,9 +91,9 @@ describe('#TASK-15 #TASK-27 isolators and connection units as equipment', () => 
       testCable(smdb, ahu),
     ];
     expect(fireRatedFlags(p.model).map((f) => [f.code, f.cableId])).toEqual([
-      ['E2701', 'c-gen-ats'],
-      ['E2701', 'c-ats-smdb'],
-      ['E2701', 'c-smdb-spf'],
+      ['W2701', 'c-gen-ats'],
+      ['W2701', 'c-ats-smdb'],
+      ['W2701', 'c-smdb-spf'],
     ]);
     const [g] = generatorAnalyses(p, loadSummaries(p, 0.85), { sparePct: 10, pf: 0.8 });
     const rows = g!.groups.flatMap((x) => x.rows);

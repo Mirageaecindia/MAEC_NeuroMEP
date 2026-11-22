@@ -68,7 +68,7 @@ describe('#TASK-15 #TASK-18 mechanical / PHE equipment', () => {
     expect(loadSummaries(p, 0.85).get('smdb')!.missingPf).toEqual([]);
   });
 
-  it('warns while equipment is not connected to a panel (E1803) and keeps the floor from flagging', () => {
+  it('warns while equipment is not connected to a panel (W1803) and keeps the floor from flagging', () => {
     const p = completeProject();
     const gf = p.building.floors.find((f) => f.code === 'GF')!.id;
     const loose = { ...equip('ahu-1'), floorId: gf } as Element;
@@ -76,24 +76,24 @@ describe('#TASK-15 #TASK-18 mechanical / PHE equipment', () => {
     const ok = { ...equip('ahu-3', { fedFromId: 'iso' }), floorId: gf } as Element;
     p.model.elements = [{ ...sampleDb(gf, 'db') }, { ...iso('iso'), floorId: gf }, loose, onDb, ok];
     expect(unlinkedEquipment(p.model).map((e) => e.tag)).toEqual(['AHU-1', 'AHU-2']);
-    const issues = completenessIssues(p.model, p.building.floors).filter((i) => i.code === 'E1803');
+    const issues = completenessIssues(p.model, p.building.floors).filter((i) => i.code === 'W1803');
     expect(issues.map((i) => i.message)).toEqual([
       'AHU-1 is not connected to a panel: choose its isolator or connection unit in Fed from.',
       'AHU-2 is not connected to a panel: choose its isolator or connection unit in Fed from.',
     ]);
-    // Equipment is never reported as E1801 itself: its isolator carries the supply check.
+    // Equipment is never reported as W1801 itself: its isolator carries the supply check.
     expect(
       completenessIssues(p.model, p.building.floors).some(
-        (i) => i.code === 'E1801' && i.elementId?.startsWith('ahu'),
+        (i) => i.code === 'W1801' && i.elementId?.startsWith('ahu'),
       ),
     ).toBe(false);
     expect(flagBlockers(p.model, p.building.floors, gf, 'mechanical').map((i) => i.code)).toEqual([
-      'E1803',
-      'E1803',
+      'W1803',
+      'W1803',
     ]);
   });
 
-  it('FLS equipment makes its isolator count as FLS: E2701 path and the fire column', () => {
+  it('FLS equipment makes its isolator count as FLS: W2701 path and the fire column', () => {
     const p = completeProject();
     const tx = testElement('transformer', 'tx');
     const gen = { ...testElement('generator', 'gen'), kvaOverride: 100 } as Element;

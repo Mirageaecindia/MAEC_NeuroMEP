@@ -90,7 +90,7 @@ describe('#TASK-33 NeuroMEP -> Revit exchange (Section 16, user request 12 Nov 2
       elementId: feeder.id,
       status: 'provisional',
       provisionalReasons: ['device-data-required'],
-      errors: ['E2402'],
+      errors: ['W2402'],
       sizedBy: 'C1',
       checks: { C1: { state: 'pass' } },
       size: { runs: 1, cores: '4C', sizeMm2: 10, eccMm2: 10, lengthM: 35 },

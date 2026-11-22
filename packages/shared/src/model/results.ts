@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { currentCode } from '../errors/catalogue.js';
 
 /**
  * Results of a Cable Size run (FR-18, 10.12-10.13). Stored with run ID, engine and rule-pack
@@ -51,11 +52,11 @@ export const ResultStatusSchema = z.enum([
   'out-of-date',
 ]);
 
-/** Why a result is Provisional (10.13, E1901, V-12). */
+/** Why a result is Provisional (10.13, W1901, V-12). */
 export const ProvisionalReasonSchema = z.enum([
   'upstream-not-connected',
   'demand-factors-tbc',
-  /** A ticked check (C4 / C5) waits for breaker catalogue data (OI-03, E2402). */
+  /** A ticked check (C4 / C5) waits for breaker catalogue data (OI-03, W2402). */
   'device-data-required',
   /** No longer produced since 2 Nov 2026 (CableSizer tables approved); kept for stored results. */
   'unverified-ampacity-tables',
@@ -66,8 +67,16 @@ export const ElementResultSchema = z.object({
   elementId: z.string().min(1),
   status: ResultStatusSchema,
   provisionalReasons: z.array(ProvisionalReasonSchema),
-  /** Error codes raised on this element (Appendix D). */
-  errors: z.array(z.string().regex(/^E\d{4}$/)),
+  /**
+   * Codes raised on this element (Appendix D): E errors, W warnings (A-26). Results stored before
+   * 22 Nov 2026 hold the old E form of a warning; it is read as its W code.
+   */
+  errors: z.array(
+    z.preprocess(
+      (c) => (typeof c === 'string' ? currentCode(c) : c),
+      z.string().regex(/^[EW]\d{4}$/),
+    ),
+  ),
   /** Check that decided the size ("Sized by"). */
   sizedBy: CheckCodeSchema.nullable(),
   checks: z.partialRecord(CheckCodeSchema, CheckResultSchema),

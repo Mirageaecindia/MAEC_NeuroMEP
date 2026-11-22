@@ -23,10 +23,10 @@ describe('#TASK-10 floor status and flags (A-08)', () => {
     expect(setFloorFlag(p.model.floorFlags, gf, 'electrical', null)).toEqual([]);
   });
 
-  it('cannot be flagged while a component of the discipline has no source (E1801)', () => {
+  it('cannot be flagged while a component of the discipline has no source (W1801)', () => {
     const { p, gf } = project();
     expect(flagBlockers(p.model, p.building.floors, gf, 'electrical').map((i) => i.code)).toEqual([
-      'E1801',
+      'W1801',
     ]);
     expect(flagBlockers(p.model, p.building.floors, gf, 'mechanical')).toEqual([]);
     // TX > riser 1 > DB: connected, the floor can be flagged.

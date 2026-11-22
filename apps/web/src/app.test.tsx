@@ -656,7 +656,7 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(tool('Open')).toBeDisabled();
   });
 
-  it('#TASK-28 checks each transformer against its kVA x the loading limit (E2801, 80 % ticked)', async () => {
+  it('#TASK-28 checks each transformer against its kVA x the loading limit (W2801, 80 % ticked)', async () => {
     const project = buildingProject();
     const tx = project.model.elements.find((e) => e.id === 'tx')!;
     const db = project.model.elements.find((e) => e.id === 'db-1')!;
@@ -667,16 +667,16 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(structuredClone(project)));
     const list = await screen.findByRole('list', { name: 'Transformer loading' });
     expect(list).toHaveTextContent('TX-1: 71 of 80 kVA (88 %)');
-    expect(list).not.toHaveTextContent('E2801');
+    expect(list).not.toHaveTextContent('W2801');
     cleanup();
     project.calculation.defaultOverrides = { transformerLoadingLimitPct: 80 };
     renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(project));
     expect(await screen.findByRole('list', { name: 'Transformer loading' })).toHaveTextContent(
-      'E2801 TX-1: 71 of 80 kVA (88 %) - above the 80 % limit (64 kVA)',
+      'W2801 TX-1: 71 of 80 kVA (88 %) - above the 80 % limit (64 kVA)',
     );
   });
 
-  it('#TASK-27 flags a feeder to an FLS load that is not fire-rated (E2701), live', async () => {
+  it('#TASK-27 flags a feeder to an FLS load that is not fire-rated (W2701), live', async () => {
     const project = buildingProject();
     const tx = project.model.elements.find((e) => e.id === 'tx')!;
     const db = project.model.elements.find((e) => e.id === 'db-1')!;
@@ -685,7 +685,7 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(project));
     // One short line (18 Nov 2026): code, feeder with its ends, a few words; the rest on hover.
     const issue = await screen.findByRole('button', {
-      name: 'E2701 F-01 (TX-1 → DB-db-1): FLS feeder not fire-rated. Show on the plan',
+      name: 'W2701 F-01 (TX-1 → DB-db-1): FLS feeder not fire-rated. Show on the plan',
     });
     expect(issue.getAttribute('title')).toContain(
       'F-01 feeds fire & life-safety load DB-db-1 and is not fire-rated. Select it and choose FR insulation',
@@ -967,11 +967,11 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     const check = await screen.findByRole('region', { name: 'Network check' });
     const warnings = within(check).getByRole('list', { name: 'Network warnings' });
     expect(warnings).toHaveTextContent(
-      'E1802 Ground Floor has boards but no tap-off from a riser.',
+      'W1802 Ground Floor has boards but no tap-off from a riser.',
     );
     // Where the chain breaks, and what to do about it.
     expect(warnings).toHaveTextContent(
-      'E1801 DB-db-1 has no incoming feeder. In Floor Setup, draw a feeder to DB-db-1 from a panel above it, or select it in this diagram and choose its riser tap-off in the Building Summary.',
+      'W1801 DB-db-1 has no incoming feeder. In Floor Setup, draw a feeder to DB-db-1 from a panel above it, or select it in this diagram and choose its riser tap-off in the Building Summary.',
     );
     await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
     await userEvent.selectOptions(screen.getByLabelText('Riser tap-off of DB-db-1'), 'Riser 1');
@@ -1114,7 +1114,7 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     const check = await screen.findByRole('region', { name: 'Network check' });
     const warnings = within(check).getByRole('list', { name: 'Network warnings' });
     expect(warnings).toHaveTextContent(
-      'E1801 MDB-GF-01 has no incoming feeder - 1 component below it has no supply: DB-db-1. In Floor Setup, draw a feeder to MDB-GF-01 from the transformer (or from the generator through an ATS).',
+      'W1801 MDB-GF-01 has no incoming feeder - 1 component below it has no supply: DB-db-1. In Floor Setup, draw a feeder to MDB-GF-01 from the transformer (or from the generator through an ATS).',
     );
     // A source box per riser source, labelled with its own tag; the MDB is marked "no supply".
     const diagram = screen.getByRole('img', { name: 'Riser diagram' });
@@ -1183,8 +1183,8 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     await userEvent.click(await screenTool('Status'));
     let dialog = screen.getByRole('dialog', { name: 'Ground Floor status' });
     const flag = within(dialog).getByRole('button', { name: 'Flag Electrical done' });
-    expect(flag).toBeDisabled(); // DB-db-1 has no source yet (E1801)
-    expect(dialog).toHaveTextContent('DB-db-1 has no path to a transformer or generator. (E1801)');
+    expect(flag).toBeDisabled(); // DB-db-1 has no source yet (W1801)
+    expect(dialog).toHaveTextContent('DB-db-1 has no path to a transformer or generator. (W1801)');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Close' }));
 
     await userEvent.click(tool('Building'));

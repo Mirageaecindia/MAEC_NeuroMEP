@@ -21,7 +21,7 @@ const fromState = (state: string, detail?: string): Check => {
   if (state === 'device-data-required') {
     return {
       state: 'not-calculated',
-      detail: `Device data required (E2402). ${detail ?? ''}`.trim(),
+      detail: `Device data required (W2402). ${detail ?? ''}`.trim(),
     };
   }
   return { state: state as Check['state'], ...(detail ? { detail } : {}) };

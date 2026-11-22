@@ -79,7 +79,7 @@ export function tooltipLines(
     case 'equipment':
       lines.push(
         `${val(e.kw, 'kW')} rated · ${e.phases} · ${e.fls ? 'FLS' : 'non-FLS'}`,
-        e.fedFromId ? `Fed from ${tagOf(e.fedFromId)}` : 'Not connected to a panel (E1803)',
+        e.fedFromId ? `Fed from ${tagOf(e.fedFromId)}` : 'Not connected to a panel (W1803)',
       );
       break;
     case 'pfc-bank': {

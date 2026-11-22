@@ -105,7 +105,7 @@ export function cableRating(
   const prev = smaller === undefined ? null : ratingAt(smaller);
   if (prev?.found && prev.value > itA) {
     warnings.push(
-      `E2103: ${rating} rates ${sizeMm2} mm² at ${itA} A, below ${smaller} mm² (${prev.value} A) - suspected table error (V-12, OI-07).`,
+      `W2103: ${rating} rates ${sizeMm2} mm² at ${itA} A, below ${smaller} mm² (${prev.value} A) - suspected table error (V-12, OI-07).`,
     );
   }
 

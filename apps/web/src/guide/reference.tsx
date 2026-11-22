@@ -187,11 +187,11 @@ const CHECK_TEXT: Record<string, { when: string; status: string }> = {
   },
   C4: {
     when: 'The let-through energy I²t exceeds what the cable withstands (k²S²).',
-    status: 'Cable side worked out; needs breaker data (E2402, OI-03)',
+    status: 'Cable side worked out; needs breaker data (W2402, OI-03)',
   },
   C5: {
     when: 'The earth-fault loop Zs is too high for the breaker to disconnect in time.',
-    status: 'Zs worked out; needs breaker data (E2402, OI-03)',
+    status: 'Zs worked out; needs breaker data (W2402, OI-03)',
   },
   C6: { when: 'Size x runs is below the DEWA minimum for the breaker.', status: 'Calculated' },
   C7: {
@@ -216,7 +216,7 @@ const CHECK_TEXT: Record<string, { when: string; status: string }> = {
   },
   C12: {
     when: 'Transformer / generator above its loading limit, or a board with more than 18 ways (warning).',
-    status: 'Shown as E2801 / E2802 and the ways warning',
+    status: 'Shown as W2801 / W2802 and the ways warning',
   },
 };
 

@@ -73,10 +73,10 @@ describe('#TASK-21 current-carrying capacity C1 (10.6, CableSizer tables)', () =
     }
   });
 
-  it('warns on a suspected table error: 300 mm² rated below 240 mm² (E2103, V-12)', () => {
+  it('warns on a suspected table error: 300 mm² rated below 240 mm² (W2103, V-12)', () => {
     const conduit: C = { ...TRAY, cores: '3C', method: 'B', separation: null, trays: null };
     const r = cableRating(conduit, 3, 300, 1, SITE);
-    expect(r.ok && r.warnings[0]).toMatch(/^E2103: NOMRATCU rates 300 mm² at 461 A, below 240 mm²/);
+    expect(r.ok && r.warnings[0]).toMatch(/^W2103: NOMRATCU rates 300 mm² at 461 A, below 240 mm²/);
   });
 
   it('blocks instead of assuming: missing grouping, trays, depth, temperature, FR cable', () => {

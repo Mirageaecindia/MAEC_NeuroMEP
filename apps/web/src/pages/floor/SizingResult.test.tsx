@@ -8,7 +8,7 @@ import { tooltipLines } from './tooltip';
 const RESULT: Omit<ElementResult, 'elementId'> = {
   status: 'provisional',
   provisionalReasons: ['device-data-required'],
-  errors: ['E2402'],
+  errors: ['W2402'],
   sizedBy: 'C2',
   checks: {
     C1: { state: 'pass', detail: '1 x 16 mm²: Iz 77.0 A vs In 63 A: pass' },
@@ -54,7 +54,7 @@ describe('#TASK-16 right-panel results and tooltips (FR-18, FR-21, FR-36)', () =
     const { p, db } = sized();
     render(<SizingResult project={p} id={db.id} />);
     expect(screen.getByRole('status')).toHaveTextContent(
-      'Provisional - breaker data required (E2402)',
+      'Provisional - breaker data required (W2402)',
     );
     const card = screen.getByRole('region', { name: 'Cable Size result' });
     expect(card).toHaveTextContent('C2 Voltage drop');

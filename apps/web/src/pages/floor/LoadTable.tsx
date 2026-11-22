@@ -64,7 +64,7 @@ export function LoadTable(props: {
       {(props.tbcFactors || props.categoriesPending) && (
         <p className="field-hint">
           Provisional
-          {props.tbcFactors && ' - demand factors TBC, 1.0 used (E1901)'}
+          {props.tbcFactors && ' - demand factors TBC, 1.0 used (W1901)'}
           {props.categoriesPending && ' - OI-02 open: category factors not applied'}
         </p>
       )}

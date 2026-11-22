@@ -5,8 +5,8 @@ import { suppliedIn } from './network.js';
 /**
  * Transformer loading and plot allocation (design doc 10.15; briefing page 9, 6 Nov 2026), live
  * from the load summaries: loading = maximum demand (kVA) / rating, a warning above the loading
- * limit (E2801); the maximum demand of the whole project - every transformer, not one - compared
- * with the plot load allocation (E2802).
+ * limit (W2801); the maximum demand of the whole project - every transformer, not one - compared
+ * with the plot load allocation (W2802).
  */
 
 export interface TransformerLoading {

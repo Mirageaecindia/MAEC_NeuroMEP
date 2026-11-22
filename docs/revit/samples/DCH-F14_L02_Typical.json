@@ -220,7 +220,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -267,12 +267,12 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 1.846e+8 A²s, withstands 33.69 kA for 0.163 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 1.846e+8 A²s, withstands 33.69 kA for 0.163 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Zs (hot) 12.327 mOhm: passes if the breaker disconnects within 5 s at Ia <= 17726 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 12.327 mOhm: passes if the breaker disconnects within 5 s at Ia <= 17726 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "name": "Regional minimum size",
@@ -368,7 +368,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -415,12 +415,12 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 27.01 kA for 0.034 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 27.01 kA for 0.034 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Zs (hot) 29.224 mOhm: passes if the breaker disconnects within 5 s at Ia <= 7477 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 29.224 mOhm: passes if the breaker disconnects within 5 s at Ia <= 7477 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "name": "Regional minimum size",
@@ -642,7 +642,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -689,7 +689,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -849,7 +849,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -896,7 +896,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -1056,7 +1056,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -1103,7 +1103,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -1263,7 +1263,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -1310,7 +1310,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -1470,7 +1470,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -1517,7 +1517,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -1677,7 +1677,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -1724,7 +1724,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -1884,7 +1884,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -1931,7 +1931,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -2091,7 +2091,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -2138,7 +2138,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -2298,7 +2298,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -2345,7 +2345,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -2505,7 +2505,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -2552,7 +2552,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -2690,7 +2690,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -2737,12 +2737,12 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 1.846e+8 A²s, withstands 33.69 kA for 0.163 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 1.846e+8 A²s, withstands 33.69 kA for 0.163 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Zs (hot) 12.327 mOhm: passes if the breaker disconnects within 5 s at Ia <= 17726 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 12.327 mOhm: passes if the breaker disconnects within 5 s at Ia <= 17726 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "name": "Regional minimum size",
@@ -2835,7 +2835,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -2882,12 +2882,12 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 27.01 kA for 0.034 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 27.01 kA for 0.034 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Zs (hot) 29.224 mOhm: passes if the breaker disconnects within 5 s at Ia <= 7477 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 29.224 mOhm: passes if the breaker disconnects within 5 s at Ia <= 7477 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "name": "Regional minimum size",
@@ -3026,7 +3026,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -3073,7 +3073,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -3217,7 +3217,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -3264,7 +3264,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -3408,7 +3408,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -3455,7 +3455,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -3599,7 +3599,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -3646,7 +3646,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -3790,7 +3790,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -3837,7 +3837,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -3965,7 +3965,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -4012,7 +4012,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -4140,7 +4140,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -4187,7 +4187,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -4315,7 +4315,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -4362,7 +4362,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -4490,7 +4490,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -4537,7 +4537,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -4665,7 +4665,7 @@
           "device-data-required"
         ],
         "errors": [
-          "E2402"
+          "W2402"
         ],
         "sizedBy": "C6",
         "device": {
@@ -4712,7 +4712,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (E2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 26.10 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",

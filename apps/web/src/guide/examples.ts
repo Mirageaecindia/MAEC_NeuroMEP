@@ -697,8 +697,8 @@ function transformerLoading(): WorkedExample {
     source: source('CC-01', 'TX-1 1000 kVA'),
     method: [
       'Maximum demand in kVA = MD (kW) / power factor of the load it supplies.',
-      'Loaded = MD (kVA) / transformer rating x 100 %. Warning E2801 above rating x limit (100 %, or 80 % when "Limit to 80 %" is ticked).',
-      'The project MD over all transformers (each load once) is compared with the plot load allocation (E2802).',
+      'Loaded = MD (kVA) / transformer rating x 100 %. Warning W2801 above rating x limit (100 %, or 80 % when "Limit to 80 %" is ticked).',
+      'The project MD over all transformers (each load once) is compared with the plot load allocation (W2802).',
     ],
     inputs: [
       { label: 'MD', how: 'LV-1', value: s.maxDemandKw, unit: 'kW', digits: 2 },

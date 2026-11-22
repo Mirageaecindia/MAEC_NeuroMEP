@@ -742,7 +742,7 @@ function PfField(props: {
   );
 }
 
-/** Demand factor input: empty = TBC (OI-01, E1901); committed on blur for one audit entry. */
+/** Demand factor input: empty = TBC (OI-01, W1901); committed on blur for one audit entry. */
 function DfInput(
   props: CardProps & {
     label: string;

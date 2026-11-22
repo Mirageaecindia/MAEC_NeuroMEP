@@ -30,7 +30,7 @@ describe('#TASK-26 WBS 1.7.5 engineer cross-check pack', () => {
       expect(sourceConnected(p.model)).toBe(true); // Cable Size enabled (A-07)
       expect(completenessIssues(p.model, p.building.floors)).toEqual([]);
       expect(p.model.results.filter((r) => r.status === 'blocked')).toEqual([]);
-      expect(p.model.results.flatMap((r) => r.errors)).not.toContain('E1901');
+      expect(p.model.results.flatMap((r) => r.errors)).not.toContain('W1901');
       const blocks = checkBlocks(p, c.featured);
       expect(blocks.filter((b) => b.featured)).toHaveLength(c.featured.length);
     },

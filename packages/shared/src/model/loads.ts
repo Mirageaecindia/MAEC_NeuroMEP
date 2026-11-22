@@ -12,7 +12,7 @@ import type { Element, ElementKind, Equipment, LoadLine } from './elements.js';
  * Not the engine: no cable sizes, no fault levels. Updated on every model change.
  *
  * Demand factors are applied once at a board to its connected load (never multiplied down the
- * tree); a TBC factor counts as 1.0 (E1901). Two methods (`calculation.demandMethod`):
+ * tree); a TBC factor counts as 1.0 (W1901). Two methods (`calculation.demandMethod`):
  * - Dubai (manager's answer 3 Nov 2026): the demand-category factor of each category at the LV
  *   panel / MDB level only, the SMDB-level factor at SMDBs (1.0, Emaar 0.8), 100 % elsewhere.
  * - Manual (A-15): the load-type factor at every board, with panel overrides (D-03).
@@ -48,7 +48,7 @@ export interface LoadSummary {
   currentA: number | null;
   /** Connected load per demand category and phase (kW); loads without a category are 'none'. */
   byCategory: Partial<Record<DemandCategory | 'none', PhaseKw>>;
-  /** Load types (manual) or categories (Dubai) whose factor is TBC and counted as 1.0 (E1901). */
+  /** Load types (manual) or categories (Dubai) whose factor is TBC and counted as 1.0 (W1901). */
   tbcFactors: LoadTypeCode[];
   tbcCategories: DemandCategory[];
   /** Equipment at or below whose input load cannot be worked out (no efficiency, E2003). */

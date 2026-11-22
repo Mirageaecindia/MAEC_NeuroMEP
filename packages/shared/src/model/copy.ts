@@ -10,7 +10,7 @@ import { cableTag, nextWay, phasesFor } from './wiring.js';
  * target floor (DB-GF-01 copied to floor 5 = DB-5-01). Feeders between two copied components are
  * copied too, with new ways and tags; feeders to components outside the copy are not (a component
  * has one supply). Riser tap-off links and Cable Size results are never copied. Equipment linked
- * to an isolator outside the copy loses the link (E1803 until linked again).
+ * to an isolator outside the copy loses the link (W1803 until linked again).
  */
 export interface CopyResult {
   elements: Element[];

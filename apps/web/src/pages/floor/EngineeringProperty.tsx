@@ -195,7 +195,7 @@ export function EngineeringProperty(props: {
           props.systemV != null &&
           element.secondaryV !== props.systemV && (
             <p className="field-hint" role="note">
-              E2803 Secondary voltage {element.secondaryV} V differs from the {props.systemV} V
+              W2803 Secondary voltage {element.secondaryV} V differs from the {props.systemV} V
               system voltage: Cable Size calculates at {props.systemV} V (rule pack).
             </p>
           )}

@@ -100,7 +100,7 @@ describe('#TASK-12 / #TASK-13 network model schemas', () => {
           elementId: 'c1',
           status: 'provisional',
           provisionalReasons: ['demand-factors-tbc', 'unverified-ampacity-tables'],
-          errors: ['E1901'],
+          errors: ['W1901'],
           sizedBy: 'C2',
           checks: {
             C1: { state: 'pass' },

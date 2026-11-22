@@ -164,7 +164,7 @@ describe('#TASK-21 / #TASK-22 C1 and C2 across the network (10.2 steps 4-6)', ()
     expect(d.drop?.vcPct).toBeCloseTo((d.drop!.vcV / 230) * 100, 9);
   });
 
-  it('reports a suspected table error found while checking (E2103)', () => {
+  it('reports a suspected table error found while checking (W2103)', () => {
     const p = network();
     p.model.cables[1]!.construction = {
       ...TRAY,
@@ -175,7 +175,7 @@ describe('#TASK-21 / #TASK-22 C1 and C2 across the network (10.2 steps 4-6)', ()
     };
     p.model.cables[1]!.locks = { sizeMm2: 300, runs: 1, eccMm2: null };
     const d = toDb(p);
-    expect(d.errors).toContain('E2103');
+    expect(d.errors).toContain('W2103');
     expect(d.warnings[0]).toMatch(/suspected table error/);
   });
 
