@@ -40,6 +40,12 @@ export function EngineeringProperty(props: {
   calculated?: readonly string[];
   /** The system voltage the calculations use (rule pack, 400 V). */
   systemV?: number | null;
+  /**
+   * Nothing feeds it yet (22 Nov 2026): the components of every floor it can be fed from, and
+   * what to do when one is chosen (a feeder is drawn; from another floor its length is asked).
+   */
+  feedSources?: readonly { id: string; tag: string; floor: string }[];
+  onFeedFrom?: (sourceId: string) => void;
 }) {
   const { element } = props;
   // Section 3 guidance (A-20): never a restriction.
@@ -155,7 +161,31 @@ export function EngineeringProperty(props: {
         {element.kind !== 'equipment' && element.kind !== 'meter' && (
           <>
             <dt>Fed From :</dt>
-            <dd>{props.fedFrom ?? '-'}</dd>
+            <dd>
+              {props.fedFrom ??
+                (props.editable && props.onFeedFrom && props.feedSources?.length ? (
+                  <select
+                    aria-label={`Fed from - connect ${element.tag} by a feeder`}
+                    value=""
+                    onChange={(e) => e.target.value && props.onFeedFrom!(e.target.value)}
+                  >
+                    <option value="">- connect a feeder from… -</option>
+                    {[...new Set(props.feedSources.map((s) => s.floor))].map((floor) => (
+                      <optgroup key={floor} label={floor}>
+                        {props
+                          .feedSources!.filter((s) => s.floor === floor)
+                          .map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.tag}
+                            </option>
+                          ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                ) : (
+                  '-'
+                ))}
+            </dd>
           </>
         )}
         {loadsKey && (

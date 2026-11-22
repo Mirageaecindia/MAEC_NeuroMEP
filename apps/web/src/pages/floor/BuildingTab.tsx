@@ -4,9 +4,13 @@ import {
   scenarioSupply,
   suppliedIn,
   supplyBreaks,
-  fireRatedFlags,
   type Scenario,
   riserOf,
+  addRiser,
+  removeRiser,
+  riserConnected,
+  distributionOf,
+  type Distribution,
   riserRows,
   riserSources,
   setBoardRiser,
@@ -18,6 +22,7 @@ import {
   itemOfElement,
   usuallyFeeds,
   KIND_LABELS,
+  isWarningCode,
   hiddenInBuildingTab,
   floorStatus,
   type Element,
@@ -42,6 +47,7 @@ import { StatusMark } from '../../layout/icons';
 import { useNotice } from '../../layout/Shell';
 import { DemandFactorsDialog } from './DemandFactorsDialog';
 import { STATUS_ICON } from './FloorStatusDialog';
+import type { PanelIssue } from './issues';
 import {
   boardGap,
   connections,
@@ -54,7 +60,8 @@ import {
 /** Height between floors in the riser diagram (doubled 8 Nov 2026: 70 was congested). */
 const ROW = 140;
 const TOP = 40;
-const RISER_X = [330, 352, 374];
+/** x of the n-th busbar riser (any number since 22 Nov 2026, added with "Add busbar riser"). */
+const riserX = (i: number) => 330 + i * 22;
 const BOARD_X = 760;
 const SOURCE_X = 16;
 const SOURCE_W = 78;
@@ -93,7 +100,8 @@ export function BuildingTab(props: {
   model: Project['model'];
   zoom: number;
   readOnly: boolean;
-  onRisers: (risers: Riser[]) => void;
+  /** Risers changed; with `distribution` when the Connection Type changes (22 Nov 2026). */
+  onRisers: (risers: Riser[], distribution?: Distribution) => void;
   /** Rename a floor (Technical Lead; user request 7 Nov 2026); absent = names read-only. */
   onRename?: (floorId: string, name: string) => void;
   onSave: () => void;
@@ -115,12 +123,72 @@ export function BuildingTab(props: {
    * Cancel (user request 18 Nov 2026) - the same cards as the Floor Setup right panel.
    */
   properties?: (id: string) => ReactNode;
+  /**
+   * Warnings of feeders between floors (22 Nov 2026: the plan's own warnings stay in Floor Setup,
+   * the ones across floors are shown here only).
+   */
+  issues?: PanelIssue[];
 }) {
   const notice = useNotice();
   const { model } = props;
   /** Building Summary width, dragged by its left edge (18 Nov 2026). */
   const side = usePanelWidth('building-summary', 240);
   const risers = riserRows(model.risers);
+  /** Busbar risers or feeders between floors (Connection Type, 22 Nov 2026). */
+  const riserMode = distributionOf(model) === 'busbar-riser';
+  /** Last line of the floor rows: right of the last riser (at least three slots wide). */
+  const lastRiserX = riserX(Math.max(3, risers.length) - 1);
+  /** A deletion that cuts supplies, waiting for the engineer to confirm (22 Nov 2026). */
+  const [confirm, setConfirm] = useState<{
+    title: string;
+    lines: string[];
+    action: string;
+    run: () => void;
+  } | null>(null);
+  /** What a riser connects, in words: its source and the boards on its tap-offs. */
+  const riserLinks = (r: Riser, n: number) =>
+    `Riser ${n}: ${r.fedFromId ? `fed from ${model.elements.find((e) => e.id === r.fedFromId)?.tag ?? '?'}` : 'no source'}${
+      r.feeds.length
+        ? `; tap-offs to ${r.feeds.map((id) => model.elements.find((e) => e.id === id)?.tag ?? '?').join(', ')}`
+        : ''
+    }`;
+  /** Deletes a riser; asks first when it is connected to components. */
+  function deleteRiser(r: Riser) {
+    const n = risers.findIndex((x) => x.id === r.id) + 1;
+    const run = () => {
+      change(removeRiser(model.risers, r.id));
+      setSelected(null);
+      notice(`Riser ${n} deleted.`);
+    };
+    if (!riserConnected(r)) return run();
+    setConfirm({
+      title: `Delete Riser ${n}?`,
+      lines: [riserLinks(r, n)],
+      action: 'Delete busbar riser',
+      run,
+    });
+  }
+  /** Connection Type: switching to feeders deletes the risers - asked first when connected. */
+  function chooseDistribution(next: Distribution) {
+    if (next === 'busbar-riser') {
+      props.onRisers(risers.length ? risers : addRiser([]), 'busbar-riser');
+      setSized(false);
+      return;
+    }
+    const run = () => {
+      props.onRisers([], 'feeder');
+      setSized(false);
+      setSelected(null);
+    };
+    const linked = risers.flatMap((r, i) => (riserConnected(r) ? [riserLinks(r, i + 1)] : []));
+    if (linked.length === 0) return run();
+    setConfirm({
+      title: 'Use feeders instead of busbar risers?',
+      lines: linked,
+      action: `Delete ${risers.length === 1 ? 'the busbar riser' : `${risers.length} busbar risers`}`,
+      run,
+    });
+  }
   /** Risers as they were when the tab opened (Cancel). */
   const [opened] = useState(model.risers);
   const [sized, setSized] = useState(false);
@@ -135,6 +203,20 @@ export function BuildingTab(props: {
   const [picking, setPicking] = useState<string | null>(null);
   /** The component or feeder clicked: its properties are shown in the Building Summary. */
   const [selected, setSelected] = useState<string | null>(null);
+  /** An item shown from the warnings (flashes for a moment). */
+  const [flash, setFlash] = useState<string | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => clearTimeout(flashTimer.current ?? undefined), []);
+  /** A warning clicked: select its item, bring it into view and flash it (22 Nov 2026). */
+  function locate(id: string) {
+    setSelected(id);
+    setFlash(id);
+    clearTimeout(flashTimer.current ?? undefined);
+    flashTimer.current = setTimeout(() => setFlash(null), 2600);
+    svgRef.current
+      ?.querySelector(`[data-id="${CSS.escape(id)}"]`)
+      ?.scrollIntoView?.({ block: 'center', inline: 'center', behavior: 'smooth' });
+  }
   useEffect(() => {
     if (!picking) return;
     const onKey = (e: globalThis.KeyboardEvent) => e.key === 'Escape' && setPicking(null);
@@ -268,21 +350,13 @@ export function BuildingTab(props: {
    */
   function chooseSource(r: Riser, n: number) {
     if (props.readOnly) return;
-    if (picking === r.id) {
-      setPicking(null);
-      if (r.fedFromId) {
-        change(setRiser(model.risers, r.id, { fedFromId: null }));
-        notice(`Riser ${n} is not fed.`);
-      }
-      return;
-    }
     if (riserSources(model).length === 0) {
       notice('Place a transformer or an LV panel / MDB in Floor Setup to feed the risers.');
       return;
     }
     setPicking(r.id);
     notice(
-      `Click the component that feeds Riser ${n} - usually the transformer, an LV panel or an MDB - on any floor. Click the riser again to remove its source.`,
+      `Click the component that feeds Riser ${n} - usually the transformer, an LV panel or an MDB - on any floor. Escape cancels.`,
     );
   }
 
@@ -304,6 +378,8 @@ export function BuildingTab(props: {
     model.elements.find((e) => e.id === selected) ??
     model.cables.find((c) => c.id === selected) ??
     null;
+  /** A busbar riser clicked: its properties, source, tap-offs and Delete (22 Nov 2026). */
+  const selectedRiser = risers.find((r) => r.id === selected) ?? null;
   /** Risers with a length: the tap-offs a board can be put on. */
   const usableRisers = risers.flatMap((r, i) => (r.lengthM ? [{ id: r.id, n: i + 1 }] : []));
 
@@ -408,7 +484,7 @@ export function BuildingTab(props: {
 
   /** Filter button beside the floor name, clear of the first component on the floor. */
   const filterX = (f: Floor) =>
-    Math.min((RISER_X[2]! + BOARD_X) / 2 + f.name.length * 2.9 + 8, BOARD_X - FILTER_W - 22);
+    Math.min((lastRiserX + BOARD_X) / 2 + f.name.length * 2.9 + 8, BOARD_X - FILTER_W - 22);
 
   return (
     <div className="building-tab" style={{ ['--side-w' as string]: `${side.width}px` }}>
@@ -424,6 +500,8 @@ export function BuildingTab(props: {
           floors={props.floors}
           scenario={scenario}
           onScenario={setScenario}
+          issues={props.issues ?? []}
+          onLocate={locate}
         />
         {anyGreyed && (
           <p className="building-greyed">
@@ -486,7 +564,8 @@ export function BuildingTab(props: {
             return (
               <g
                 key={c.id}
-                className={`building-feeder${faded ? ' greyed' : ''}${selected === c.id ? ' selected' : ''}`}
+                className={`building-feeder${faded ? ' greyed' : ''}${selected === c.id ? ' selected' : ''}${flash === c.id ? ' flash' : ''}`}
+                data-id={c.id}
                 role="button"
                 aria-label={`Feeder ${c.tag}, ${c.manualLengthM ?? '?'} m`}
                 aria-pressed={selected === c.id}
@@ -525,12 +604,12 @@ export function BuildingTab(props: {
             const onFloor = boards[i]!;
             return (
               <g key={f.id}>
-                <line x1={RISER_X[2]! + 24} y1={y} x2={BOARD_X} y2={y} className="floor-line" />
+                <line x1={lastRiserX + 24} y1={y} x2={BOARD_X} y2={y} className="floor-line" />
                 {renaming?.id === f.id ? (
                   <foreignObject
-                    x={RISER_X[2]! + 30}
+                    x={lastRiserX + 30}
                     y={y - 24}
-                    width={BOARD_X - RISER_X[2]! - 36}
+                    width={BOARD_X - lastRiserX - 36}
                     height={22}
                   >
                     <input
@@ -548,7 +627,7 @@ export function BuildingTab(props: {
                   </foreignObject>
                 ) : (
                   <text
-                    x={(RISER_X[2]! + BOARD_X) / 2}
+                    x={(lastRiserX + BOARD_X) / 2}
                     y={y - 5}
                     className={`floor-label${props.onRename ? ' editable' : ''}`}
                     {...(props.onRename && {
@@ -618,6 +697,7 @@ export function BuildingTab(props: {
                       greyed(b) ? 'greyed' : '',
                       fixedGrey(b) ? 'fixed-grey' : '',
                       selected === b.id ? 'selected' : '',
+                      flash === b.id ? 'flash' : '',
                     ]
                       .filter(Boolean)
                       .join(' ');
@@ -626,13 +706,14 @@ export function BuildingTab(props: {
                         {riser >= 0 && (
                           <path
                             className={`riser-link${greyed(b) ? ' greyed' : ''}`}
-                            d={`M ${RISER_X[riser]! + 6} ${y - 28} H ${x + 16} V ${y - 8}`}
+                            d={`M ${riserX(riser) + 6} ${y - 28} H ${x + 16} V ${y - 8}`}
                           />
                         )}
                         <g
                           className={`floor-board ${kind}`}
                           role="button"
                           aria-label={`${b.tag} board`}
+                          data-id={b.id}
                           aria-disabled={fixedGrey(b) || undefined}
                           aria-pressed={selected === b.id}
                           data-greyed={greyed(b) || undefined}
@@ -692,19 +773,24 @@ export function BuildingTab(props: {
             r.lengthM ? (
               <rect
                 key={r.id}
-                className={`riser${picking === r.id ? ' picking' : ''}`}
+                className={`riser${picking === r.id ? ' picking' : ''}${selected === r.id ? ' selected' : ''}${flash === r.id ? ' flash' : ''}`}
                 role="button"
-                x={RISER_X[idx]}
+                data-id={r.id}
+                x={riserX(idx)}
                 y={riserTop(r)}
                 width="9"
                 height={bottomY - riserTop(r)}
                 aria-label={`Riser ${idx + 1}`}
-                onClick={() => chooseSource(r, idx + 1)}
+                aria-pressed={selected === r.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!drawing) setSelected(r.id);
+                }}
               >
                 <title>
                   {r.fedFromId
-                    ? `Riser ${idx + 1}: fed from ${tag(r.fedFromId)} (click, then click its new source)`
-                    : `Riser ${idx + 1}: no source - click it, then click what feeds it`}
+                    ? `Riser ${idx + 1}: fed from ${tag(r.fedFromId)} - click for its properties`
+                    : `Riser ${idx + 1}: no source - click it to choose what feeds it`}
                 </title>
               </rect>
             ) : null,
@@ -713,7 +799,7 @@ export function BuildingTab(props: {
             r.lengthM ? (
               <text
                 key={`label-${r.id}`}
-                x={RISER_X[idx]! + 4.5}
+                x={riserX(idx) + 4.5}
                 y={riserTop(r) - 4}
                 className={`riser-label${r.fedFromId ? '' : ' unfed'}`}
               >
@@ -733,7 +819,7 @@ export function BuildingTab(props: {
                   <path
                     key={i}
                     className={`source-link${dead ? ' dead' : ''}`}
-                    d={`M ${x + SOURCE_W / 2} ${bottomY + 16} V ${bottomY + 24 + k * 6} H ${RISER_X[i]! + 4.5} V ${bottomY}`}
+                    d={`M ${x + SOURCE_W / 2} ${bottomY + 16} V ${bottomY + 24 + k * 6} H ${riserX(i) + 4.5} V ${bottomY}`}
                   />
                 ))}
                 <rect
@@ -897,40 +983,83 @@ export function BuildingTab(props: {
           </tbody>
         </table>
         <hr />
-        <h3>Busbar Riser Design</h3>
-        <table className="riser-design">
-          <thead>
-            <tr>
-              <th />
-              <th>Length (m)</th>
-              <th>Width (m)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {risers.map((r, i) => (
-              <tr key={r.id}>
-                <th scope="row">Riser {i + 1}</th>
-                {(['lengthM', 'widthM'] as const).map((k) => (
-                  <td key={k}>
-                    <NumberInput
-                      className="riser-input"
-                      ariaLabel={`Riser ${i + 1} ${k === 'lengthM' ? 'length' : 'width'}`}
-                      value={r[k]}
-                      disabled={props.readOnly}
-                      onChange={(v) => {
-                        if (v !== null && v <= 0) {
-                          notice('Riser length and width are more than 0 m.');
-                          return;
-                        }
-                        change(setRiser(model.risers, r.id, { [k]: v }));
-                      }}
-                    />
-                  </td>
+        <h3>Connection Type</h3>
+        <div className="connection-type" role="radiogroup" aria-label="Power between floors">
+          {(
+            [
+              ['busbar-riser', 'Busbar riser'],
+              ['feeder', 'Feeder'],
+            ] as const
+          ).map(([value, label]) => (
+            <label key={value}>
+              <input
+                type="radio"
+                name="distribution"
+                checked={(riserMode ? 'busbar-riser' : 'feeder') === value}
+                disabled={props.readOnly}
+                onChange={() => chooseDistribution(value)}
+              />{' '}
+              {label}
+            </label>
+          ))}
+        </div>
+        {riserMode ? (
+          <>
+            <h3>Busbar Riser Design</h3>
+            <table className="riser-design">
+              <thead>
+                <tr>
+                  <th />
+                  <th>Length (m)</th>
+                  <th>Width (m)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {risers.map((r, i) => (
+                  <tr key={r.id}>
+                    <th scope="row">Riser {i + 1}</th>
+                    {(['lengthM', 'widthM'] as const).map((k) => (
+                      <td key={k}>
+                        <NumberInput
+                          className="riser-input"
+                          ariaLabel={`Riser ${i + 1} ${k === 'lengthM' ? 'length' : 'width'}`}
+                          value={r[k]}
+                          disabled={props.readOnly}
+                          onChange={(v) => {
+                            if (v !== null && v <= 0) {
+                              notice('Riser length and width are more than 0 m.');
+                              return;
+                            }
+                            change(setRiser(model.risers, r.id, { [k]: v }));
+                          }}
+                        />
+                      </td>
+                    ))}
+                  </tr>
                 ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+              </tbody>
+            </table>
+            {risers.length === 0 && <p className="summary-hint">No busbar risers yet.</p>}
+            {!props.readOnly && (
+              <button
+                type="button"
+                className="summary-btn add-riser"
+                onClick={() => {
+                  const next = addRiser(model.risers);
+                  change(next);
+                  setSelected(next.at(-1)!.id);
+                }}
+              >
+                + Add busbar riser
+              </button>
+            )}
+          </>
+        ) : (
+          <p className="summary-hint">
+            Floors are connected by feeders: draw them here with Feeder, or choose Fed from on a
+            component.
+          </p>
+        )}
         <button
           className={`summary-btn${connected ? ' ready' : ''}`}
           disabled={!connected || props.readOnly || running}
@@ -997,6 +1126,77 @@ export function BuildingTab(props: {
             Demand Factors
           </button>
         )}
+        {selectedRiser &&
+          (() => {
+            const n = risers.findIndex((r) => r.id === selectedRiser.id) + 1;
+            return (
+              <section className="building-selection" aria-label="Selected in the Building tab">
+                <div className="building-selection-head">
+                  <strong>Riser {n}</strong>
+                  <button
+                    type="button"
+                    className="link-btn"
+                    aria-label="Close the properties"
+                    onClick={() => setSelected(null)}
+                  >
+                    ×
+                  </button>
+                </div>
+                <dl className="riser-props">
+                  <dt>Length :</dt>
+                  <dd>{selectedRiser.lengthM === null ? '-' : `${selectedRiser.lengthM} m`}</dd>
+                  <dt>Width :</dt>
+                  <dd>{selectedRiser.widthM === null ? '-' : `${selectedRiser.widthM} m`}</dd>
+                  <dt>Tap-offs :</dt>
+                  <dd>
+                    {selectedRiser.feeds.length
+                      ? selectedRiser.feeds.map((id) => tag(id) ?? '?').join(', ')
+                      : 'None - select a board and choose this riser'}
+                  </dd>
+                </dl>
+                <label className="feeder-length">
+                  Fed from
+                  <select
+                    aria-label={`Source of Riser ${n}`}
+                    disabled={props.readOnly}
+                    value={selectedRiser.fedFromId ?? ''}
+                    onChange={(e) =>
+                      change(
+                        setRiser(model.risers, selectedRiser.id, {
+                          fedFromId: e.target.value || null,
+                        }),
+                      )
+                    }
+                  >
+                    <option value="">None</option>
+                    {riserSources(model).map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.tag}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {!props.readOnly && (
+                  <div className="summary-actions">
+                    <button
+                      type="button"
+                      className="summary-btn"
+                      onClick={() => chooseSource(selectedRiser, n)}
+                    >
+                      Pick on the diagram
+                    </button>
+                    <button
+                      type="button"
+                      className="summary-btn danger"
+                      onClick={() => deleteRiser(selectedRiser)}
+                    >
+                      Delete busbar riser
+                    </button>
+                  </div>
+                )}
+              </section>
+            );
+          })()}
         {selectedItem && (
           <section className="building-selection" aria-label="Selected in the Building tab">
             <div className="building-selection-head">
@@ -1073,6 +1273,39 @@ export function BuildingTab(props: {
             {props.properties?.(selectedItem.id)}
           </section>
         )}
+        {confirm && (
+          <Modal
+            title={confirm.title}
+            onClose={() => setConfirm(null)}
+            actions={
+              <>
+                <button className="btn" onClick={() => setConfirm(null)}>
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-danger-outline"
+                  onClick={() => {
+                    confirm.run();
+                    setConfirm(null);
+                  }}
+                >
+                  {confirm.action}
+                </button>
+              </>
+            }
+          >
+            <p>This busbar riser is connected to components:</p>
+            <ul>
+              {confirm.lines.map((l) => (
+                <li key={l}>{l}</li>
+              ))}
+            </ul>
+            <p className="muted">
+              Deleting it leaves those boards without this supply (W1801) until you connect them by
+              feeders or another riser.
+            </p>
+          </Modal>
+        )}
         {askLength && (
           <Modal
             title="Feeder length"
@@ -1141,15 +1374,20 @@ function NetworkCheck(props: {
   floors: Floor[];
   scenario: Scenario;
   onScenario: (s: Scenario) => void;
+  /** Warnings of feeders between floors (fire-rated, blocked, failing checks). */
+  issues: PanelIssue[];
+  /** A warning clicked: show its component, riser or feeder. */
+  onLocate: (id: string) => void;
 }) {
-  // W1802 per floor; W1801 grouped by where the supply chain breaks, with the fix.
+  // The building's own warnings (22 Nov 2026): where the supply chain breaks (W1801), floors with
+  // boards but no tap-off (W1802), feeders between floors. A plan's warnings stay in Floor Setup.
   const floorIssues = completenessIssues(props.model, props.floors).filter(
-    (i) => i.code === 'W1802' || i.code === 'W1803',
+    (i) => i.code === 'W1802',
   );
   const breaks = supplyBreaks(props.model);
-  const fire = fireRatedFlags(props.model);
-  const count = floorIssues.length + breaks.length + fire.length;
+  const count = floorIssues.length + breaks.length + props.issues.length;
   const standby = scenarioSupply(props.model, 'standby');
+  const riserIds = props.model.risers.map((r) => r.id);
   return (
     <section className="network-check" aria-label="Network check">
       <div className="scenario-switch" role="radiogroup" aria-label="Scenario">
@@ -1171,29 +1409,61 @@ function NetworkCheck(props: {
             Every component has a path to a source; fire-rated feeders are where needed.
           </p>
         ) : (
-          <ul className="network-issues" aria-label="Network warnings">
-            {breaks.map((b) => (
-              <li key={b.at.kind === 'riser' ? `riser-${b.at.index}` : b.at.id}>
-                <strong>W1801</strong> {b.message}
-                {b.cutOff.length > 0 &&
-                  ` - ${b.cutOff.length} component${b.cutOff.length === 1 ? '' : 's'} below it ${b.cutOff.length === 1 ? 'has' : 'have'} no supply: ${b.cutOff.join(', ')}`}
-                .<span className="issue-fix"> {b.fix}</span>
-              </li>
-            ))}
-            {fire.map((f) => (
-              <li key={f.cableId}>
-                <strong>{f.code}</strong> {f.message}.<span className="issue-fix"> {f.fix}</span>
+          <ul className="issue-list network-issues" aria-label="Network warnings">
+            {breaks.map((b) => {
+              const id = b.at.kind === 'riser' ? riserIds[b.at.index - 1] : b.at.id;
+              const label = b.at.kind === 'riser' ? `Riser ${b.at.index}` : b.at.tag;
+              const below = b.cutOff.length;
+              const full = `${b.message}${below ? ` - ${below} component${below === 1 ? '' : 's'} below it ${below === 1 ? 'has' : 'have'} no supply: ${b.cutOff.join(', ')}` : ''}. ${b.fix}`;
+              return (
+                <li key={b.at.kind === 'riser' ? `riser-${b.at.index}` : b.at.id}>
+                  <button
+                    type="button"
+                    className="issue warning"
+                    title={`${full}\n\nClick to show it.`}
+                    aria-label={`W1801 ${label}: ${full}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (id) props.onLocate(id);
+                    }}
+                  >
+                    <span className="issue-code">W1801</span>
+                    <span className="issue-label">{label}</span>
+                    <span className="issue-text">
+                      {b.at.kind === 'riser' ? 'no source' : 'no incoming feeder'}
+                      {below > 0 && ` - ${below} below without supply`}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+            {props.issues.map((i) => (
+              <li key={i.key}>
+                <button
+                  type="button"
+                  className={`issue ${isWarningCode(i.code) || /^C\d/.test(i.code) ? 'warning' : 'error'}`}
+                  title={`${i.detail}\n\nClick to show it.`}
+                  aria-label={`${i.code} ${i.label}: ${i.text}. Show it`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    props.onLocate(i.targetId);
+                  }}
+                >
+                  <span className="issue-code">{i.code}</span>
+                  <span className="issue-label">{i.label}</span>
+                  <span className="issue-text">{i.text}</span>
+                </button>
               </li>
             ))}
             {floorIssues.map((i) => (
-              <li key={`${i.code}-${i.elementId ?? i.floorId}`}>
-                <strong>{i.code}</strong> {i.message}
-                {i.code === 'W1802' && (
-                  <span className="issue-fix">
-                    {' '}
-                    Click a board on that floor in this diagram to put it on a riser tap-off.
-                  </span>
-                )}
+              <li key={`${i.code}-${i.floorId}`}>
+                <span
+                  className="issue warning static"
+                  title={`${i.message} Select a board on that floor and choose its riser tap-off.`}
+                >
+                  <span className="issue-code">{i.code}</span>
+                  <span className="issue-text">{i.message}</span>
+                </span>
               </li>
             ))}
           </ul>

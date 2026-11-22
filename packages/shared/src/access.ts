@@ -118,7 +118,11 @@ export function outsideEditRights(
   if (!layers.has('electrical') && changed(before.model.cables, after.model.cables).length > 0) {
     return 'cables (electrical)';
   }
-  if (!layers.has('electrical') && changed(before.model.risers, after.model.risers).length > 0) {
+  if (
+    !layers.has('electrical') &&
+    (changed(before.model.risers, after.model.risers).length > 0 ||
+      before.model.distribution !== after.model.distribution)
+  ) {
     return 'risers (electrical)';
   }
   if (!layers.has('electrical') && stable(before.model.results) !== stable(after.model.results)) {

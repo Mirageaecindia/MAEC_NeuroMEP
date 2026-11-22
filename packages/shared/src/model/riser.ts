@@ -20,16 +20,41 @@ export const RiserSchema = z.object({
 });
 export type Riser = z.infer<typeof RiserSchema>;
 
-/** Rows of the Riser Design table (Figma 3.5 - 3.8). */
-export const RISER_ROWS = 3;
-
-/** The Riser Design rows: the stored risers, padded with empty ones up to RISER_ROWS. */
+/**
+ * The Busbar Riser Design rows: the stored risers as they are (22 Nov 2026: risers are added with
+ * "Add busbar riser" and deleted from their properties; the three fixed rows are gone).
+ */
 export function riserRows(risers: readonly Riser[]): Riser[] {
-  const rows = [...risers];
-  for (let i = rows.length; i < RISER_ROWS; i++) {
-    rows.push({ id: `riser-${i + 1}`, lengthM: null, widthM: null, fedFromId: null, feeds: [] });
-  }
-  return rows;
+  return [...risers];
+}
+
+/** A new, empty busbar riser after the others (its id is never one used before in the list). */
+export function addRiser(risers: readonly Riser[]): Riser[] {
+  const used = risers.map((r) => Number(/^riser-(\d+)$/.exec(r.id)?.[1] ?? 0));
+  const n = Math.max(0, ...used) + 1;
+  return [...risers, { id: `riser-${n}`, lengthM: null, widthM: null, fedFromId: null, feeds: [] }];
+}
+
+/** Deletes a busbar riser: its source and the boards on its tap-offs are left unfed. */
+export const removeRiser = (risers: readonly Riser[], id: string): Riser[] =>
+  risers.filter((r) => r.id !== id);
+
+/** A riser that connects something: a source or boards on its tap-offs. */
+export const riserConnected = (r: Riser) => r.fedFromId !== null || r.feeds.length > 0;
+
+/** A riser in use: typed length, a source or boards on its tap-offs. */
+export const riserInUse = (r: Riser) => r.lengthM !== null || riserConnected(r);
+
+/**
+ * How power goes between floors (Building tab radio, user request 22 Nov 2026): through busbar
+ * risers, or by feeders only. Stored once chosen; before that, busbar risers when one is in use.
+ */
+export type Distribution = 'busbar-riser' | 'feeder';
+export function distributionOf(m: {
+  risers: readonly Riser[];
+  distribution?: Distribution | undefined;
+}): Distribution {
+  return m.distribution ?? (m.risers.some(riserInUse) ? 'busbar-riser' : 'feeder');
 }
 
 interface Network {
@@ -66,13 +91,19 @@ export function riserBoards(m: Pick<Network, 'elements'>, floorId: string): Elem
 export const riserOf = (risers: readonly Riser[], boardId: string) =>
   risers.find((r) => r.feeds.includes(boardId));
 
-/** Changes the fields of one riser row. */
+/** The risers, with `id` added (empty) when it is not there yet. */
+function withRiser(risers: readonly Riser[], id: string | null): Riser[] {
+  if (!id || risers.some((r) => r.id === id)) return [...risers];
+  return [...risers, { id, lengthM: null, widthM: null, fedFromId: null, feeds: [] }];
+}
+
+/** Changes the fields of one riser (added when it is not there yet). */
 export function setRiser(
   risers: readonly Riser[],
   id: string,
   patch: Partial<Pick<Riser, 'lengthM' | 'widthM' | 'fedFromId'>>,
 ): Riser[] {
-  return riserRows(risers).map((r) => (r.id === id ? { ...r, ...patch } : r));
+  return withRiser(risers, id).map((r) => (r.id === id ? { ...r, ...patch } : r));
 }
 
 /** Feeds a board from a riser (null = from none); a board is on one riser only. */
@@ -81,7 +112,7 @@ export function setBoardRiser(
   boardId: string,
   riserId: string | null,
 ): Riser[] {
-  return riserRows(risers).map((r) => {
+  return withRiser(risers, riserId).map((r) => {
     const feeds = r.feeds.filter((id) => id !== boardId);
     return { ...r, feeds: r.id === riserId ? [...feeds, boardId] : feeds };
   });

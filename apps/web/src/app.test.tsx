@@ -720,24 +720,105 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(screen.getByRole('button', { name: /^Cable Size( |$)/ })).toBeDisabled();
   });
 
-  it('shows every component on its floor; click a riser then its source, the riser again to remove it (7 Nov 2026)', async () => {
+  it('Connection Type: add a busbar riser, pick its source, delete it after a warning (22 Nov 2026)', async () => {
     renderAt('/projects/p-1/floor', new FakeAuth(LEAD), fakeApi(buildingProject()));
     await userEvent.click(await screenTool('Building'));
     const summary = screen.getByRole('complementary', { name: 'Building Summary' });
+    // Feeders by default: no Busbar Riser Design until busbar risers are chosen.
+    expect(within(summary).getByRole('radio', { name: 'Feeder' })).toBeChecked();
+    expect(within(summary).queryByRole('heading', { name: 'Busbar Riser Design' })).toBeNull();
+    await userEvent.click(within(summary).getByRole('radio', { name: 'Busbar riser' }));
     await userEvent.type(within(summary).getByLabelText('Riser 1 length'), '26');
     // The transformer is drawn on its floor, highlighted as a usual riser source.
     const txBoard = screen.getByRole('button', { name: 'TX-1 board' });
     expect(txBoard).toHaveClass('main');
+    // A click on the riser shows its properties; its source is picked on the diagram.
     await userEvent.click(screen.getByRole('button', { name: 'Riser 1' }));
+    let panel = screen.getByRole('region', { name: 'Selected in the Building tab' });
+    await userEvent.click(within(panel).getByRole('button', { name: 'Pick on the diagram' }));
     expect(
       await screen.findByText(/^Click the component that feeds Riser 1/, { selector: '.notice' }),
     ).toBeInTheDocument();
     await userEvent.click(txBoard);
     expect(await screen.findByText('Riser 1 is fed from TX-1.')).toBeVisible();
     expect(screen.getByRole('button', { name: 'TX-1 board' })).toHaveClass('riser-source');
+    // Another riser.
+    await userEvent.click(within(summary).getByRole('button', { name: '+ Add busbar riser' }));
+    expect(within(summary).getByLabelText('Riser 2 length')).toBeInTheDocument();
+    // Switching to feeders deletes the risers: asked first, Riser 1 being connected.
+    await userEvent.click(within(summary).getByRole('radio', { name: 'Feeder' }));
+    let dialog = screen.getByRole('dialog', { name: 'Use feeders instead of busbar risers?' });
+    expect(dialog).toHaveTextContent('Riser 1: fed from TX-1');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(within(summary).getByRole('radio', { name: 'Busbar riser' })).toBeChecked();
+    // Delete Riser 1 from its properties: a warning first.
     await userEvent.click(screen.getByRole('button', { name: 'Riser 1' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Riser 1' }));
-    expect(await screen.findByText('Riser 1 is not fed.')).toBeVisible();
+    panel = screen.getByRole('region', { name: 'Selected in the Building tab' });
+    await userEvent.click(within(panel).getByRole('button', { name: 'Delete busbar riser' }));
+    dialog = screen.getByRole('dialog', { name: 'Delete Riser 1?' });
+    expect(dialog).toHaveTextContent('Riser 1: fed from TX-1');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Delete busbar riser' }));
+    expect(await screen.findByText('Riser 1 deleted.')).toBeVisible();
+    // The riser left connects nothing: feeders are chosen without a question.
+    await userEvent.click(within(summary).getByRole('radio', { name: 'Feeder' }));
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(within(summary).queryByRole('heading', { name: 'Busbar Riser Design' })).toBeNull();
+  });
+
+  it('Fed from on a component with no supply draws its feeder: same floor at once, another floor with a length (22 Nov 2026)', async () => {
+    const project = buildingProject();
+    const first = project.building.floors.find((f) => f.code === '1')!;
+    const smdb = placeElement(libraryItem('smdb') as Parameters<typeof placeElement>[0], {
+      id: 'smdb-1f',
+      floorId: first.id,
+      floorCode: '1',
+      position: { x: 3, y: 3 },
+      taken: [],
+    });
+    project.model.elements.push(smdb);
+    const api = fakeApi(project);
+    renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), api);
+    const summary = await screen.findByRole('complementary', { name: 'Building Summary' });
+    // DB-db-1 on the Ground Floor, like the transformer: drawn at once.
+    await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
+    let fed = within(summary).getByLabelText('Fed from - connect DB-db-1 by a feeder');
+    await userEvent.selectOptions(fed, 'TX-1');
+    // The first feeder asks its cable construction.
+    const c = await screen.findByRole('dialog', { name: 'Cable construction' });
+    for (const [label, value] of [
+      ['Cores', '4C'],
+      ['Conductor', 'Cu'],
+      ['Insulation', 'XLPE'],
+      ['Armour', 'SWA'],
+      ['Sheath', 'PVC'],
+      ['Voltage grade', '600/1000 V'],
+      ['Installation method', 'B'],
+    ]) {
+      await userEvent.selectOptions(within(c).getByLabelText(label!), value!);
+    }
+    await userEvent.click(within(c).getByRole('button', { name: 'Use this construction' }));
+    expect(
+      await screen.findByText(/^Feeder \S+ from TX-1 to DB-db-1, drawn straight/),
+    ).toBeVisible();
+    expect(within(summary).queryByLabelText('Fed from - connect DB-db-1 by a feeder')).toBeNull();
+    // The SMDB on the First Floor: the length between floors is asked.
+    await userEvent.click(screen.getByRole('button', { name: `${smdb.tag} board` }));
+    fed = within(summary).getByLabelText(`Fed from - connect ${smdb.tag} by a feeder`);
+    await userEvent.selectOptions(fed, 'TX-1');
+    const ask = screen.getByRole('dialog', { name: 'Feeder length' });
+    await userEvent.type(within(ask).getByLabelText('Feeder length (m)'), '30');
+    await userEvent.click(within(ask).getByRole('button', { name: 'Connect' }));
+    expect(await screen.findByRole('button', { name: /^Feeder FGF-\S+, 30 m$/ })).toBeVisible();
+    await userEvent.click(tool('Save'));
+    await waitFor(async () => {
+      const cables = (await api.getProject('p-1')).project.model.cables;
+      expect(cables.map((x) => [x.to.elementId, x.manualLengthM])).toEqual([
+        ['db-1', undefined],
+        ['smdb-1f', 30],
+      ]);
+    });
+    // The construction chosen here is remembered for the project: forget it for the next tests.
+    localStorage.removeItem('neuromep.construction.p-1');
   });
 
   it('connects components on two floors with a Feeder and a typed length (8 Nov 2026)', async () => {
@@ -840,9 +921,11 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(
       within(summary).getByText('Enter a riser length in Busbar Riser Design first.'),
     ).toBeVisible();
+    await userEvent.click(within(summary).getByRole('radio', { name: 'Busbar riser' }));
     await userEvent.type(within(summary).getByLabelText('Riser 1 length'), '26');
-    // Click the riser, then its source - the transformer is drawn on its floor (7 Nov 2026).
+    // Click the riser, then Pick on the diagram and its source (22 Nov 2026).
     await userEvent.click(screen.getByRole('button', { name: 'Riser 1' }));
+    await userEvent.click(within(summary).getByRole('button', { name: 'Pick on the diagram' }));
     await userEvent.click(screen.getByRole('button', { name: 'TX-1 board' }));
     expect(await screen.findByText('Riser 1 is fed from TX-1.')).toBeVisible();
     expect(calc).toBeEnabled();
@@ -869,12 +952,8 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     expect(within(summary).getByLabelText('Cost breakdown')).toHaveTextContent(
       'Busbar risers: 1760 AED (1) · Feeders: 0 AED (0)',
     );
-    // The riser is sized; the two feeders of the sample plan have no load yet.
-    expect(
-      screen.getByText(
-        'Cable Size ran on the whole project: 1 sized, 2 waiting for load - select an item to see why in the right panel.',
-      ),
-    ).toBeVisible();
+    // Everything in scope is sized (no empty riser rows since 22 Nov 2026).
+    expect(screen.getByText('Cable Size ran on the whole project.')).toBeVisible();
     await userEvent.click(within(summary).getByRole('button', { name: 'Save' }));
     await waitFor(async () =>
       expect((await api.getProject('p-1')).project.model.risers[0]?.feeds).toEqual(['db-1']),
@@ -886,6 +965,8 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     const api = fakeApi(completeProject());
     renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), api);
     let summary = await screen.findByRole('complementary', { name: 'Building Summary' });
+    await userEvent.click(within(summary).getByRole('radio', { name: 'Busbar riser' }));
+    await userEvent.click(within(summary).getByRole('button', { name: '+ Add busbar riser' }));
     await userEvent.type(within(summary).getByLabelText('Riser 2 length'), '15');
     await userEvent.type(within(summary).getByLabelText('Riser 2 width'), '0');
     expect(await screen.findByText('Riser length and width are more than 0 m.')).toBeVisible();
@@ -907,13 +988,18 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(completeProject()));
     const summary = await screen.findByRole('complementary', { name: 'Building Summary' });
     expect(tool('Undo')).toBeDisabled();
-    await userEvent.type(within(summary).getByLabelText('Riser 2 length'), '7');
+    await userEvent.click(within(summary).getByRole('radio', { name: 'Busbar riser' }));
+    await userEvent.type(within(summary).getByLabelText('Riser 1 length'), '7');
     await userEvent.click(tool('Undo'));
-    expect(within(summary).getByLabelText('Riser 2 length')).toHaveValue('');
-    expect(tool('Undo')).toBeDisabled();
+    expect(within(summary).getByLabelText('Riser 1 length')).toHaveValue('');
     await userEvent.click(tool('Redo'));
-    expect(within(summary).getByLabelText('Riser 2 length')).toHaveValue('7');
+    expect(within(summary).getByLabelText('Riser 1 length')).toHaveValue('7');
     expect(tool('Redo')).toBeDisabled();
+    // Undo twice: back to no busbar riser.
+    await userEvent.click(tool('Undo'));
+    await userEvent.click(tool('Undo'));
+    expect(tool('Undo')).toBeDisabled();
+    expect(within(summary).queryByLabelText('Riser 1 length')).toBeNull();
   });
 
   it('underlines only the active tab; the guide button reads Help', async () => {
@@ -967,13 +1053,15 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     const check = await screen.findByRole('region', { name: 'Network check' });
     const warnings = within(check).getByRole('list', { name: 'Network warnings' });
     expect(warnings).toHaveTextContent(
-      'W1802 Ground Floor has boards but no tap-off from a riser.',
+      /W1802\s*Ground Floor has boards but no tap-off from a riser/,
     );
-    // Where the chain breaks, and what to do about it.
-    expect(warnings).toHaveTextContent(
-      'W1801 DB-db-1 has no incoming feeder. In Floor Setup, draw a feeder to DB-db-1 from a panel above it, or select it in this diagram and choose its riser tap-off in the Building Summary.',
-    );
-    await userEvent.click(screen.getByRole('button', { name: 'DB-db-1 board' }));
+    // Where the chain breaks, short; the full text and the fix on hover; a click shows it.
+    const issue = within(warnings).getByRole('button', {
+      name: 'W1801 DB-db-1: DB-db-1 has no incoming feeder. In Floor Setup, draw a feeder to DB-db-1 from a panel above it, or select it in this diagram and choose its riser tap-off in the Building Summary.',
+    });
+    expect(issue).toHaveTextContent('W1801DB-db-1no incoming feeder');
+    await userEvent.click(issue);
+    expect(screen.getByRole('button', { name: 'DB-db-1 board' })).toHaveClass('selected');
     await userEvent.selectOptions(screen.getByLabelText('Riser tap-off of DB-db-1'), 'Riser 1');
     expect(within(check).getByText(/^Every component has a path to a source;/)).toBeVisible();
     await userEvent.click(within(check).getByRole('radio', { name: 'Standby' }));
@@ -1113,9 +1201,11 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(project));
     const check = await screen.findByRole('region', { name: 'Network check' });
     const warnings = within(check).getByRole('list', { name: 'Network warnings' });
-    expect(warnings).toHaveTextContent(
-      'W1801 MDB-GF-01 has no incoming feeder - 1 component below it has no supply: DB-db-1. In Floor Setup, draw a feeder to MDB-GF-01 from the transformer (or from the generator through an ATS).',
-    );
+    expect(
+      within(warnings).getByRole('button', {
+        name: 'W1801 MDB-GF-01: MDB-GF-01 has no incoming feeder - 1 component below it has no supply: DB-db-1. In Floor Setup, draw a feeder to MDB-GF-01 from the transformer (or from the generator through an ATS).',
+      }),
+    ).toHaveTextContent('W1801MDB-GF-01no incoming feeder - 1 below without supply');
     // A source box per riser source, labelled with its own tag; the MDB is marked "no supply".
     const diagram = screen.getByRole('img', { name: 'Riser diagram' });
     expect(within(diagram).getByLabelText('Source TX-1')).toBeInTheDocument();
@@ -1153,9 +1243,9 @@ describe('#TASK-06 / #TASK-17 / #TASK-18 Floor Setup and Building tab (Figma 3.1
     project.model.cables = [{ ...testCable(tx, db), floorId: tx.floorId }];
     renderAt('/projects/p-1/floor?tab=building', new FakeAuth(LEAD), fakeApi(project));
     const summary = await screen.findByRole('complementary', { name: 'Building Summary' });
-    expect(
-      within(summary).getByRole('heading', { name: 'Busbar Riser Design' }),
-    ).toBeInTheDocument();
+    // Feeders between floors: the Busbar Riser Design is not shown (22 Nov 2026).
+    expect(within(summary).getByRole('radio', { name: 'Feeder' })).toBeChecked();
+    expect(within(summary).queryByRole('heading', { name: 'Busbar Riser Design' })).toBeNull();
     const calc = within(summary).getByRole('button', { name: 'Cable Size Calculator' });
     expect(calc).toBeEnabled();
     expect(screen.queryByText(/no tap-off from a riser/)).not.toBeInTheDocument();

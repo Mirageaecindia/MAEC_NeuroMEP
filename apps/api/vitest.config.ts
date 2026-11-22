@@ -3,5 +3,5 @@ import { sourceConditions } from '../../vitest.shared.js';
 
 export default defineConfig({
   ...sourceConditions,
-  test: { name: 'api', include: ['src/**/*.test.ts'] },
+  test: { name: 'api', fsModuleCache: false, cache: false, include: ['src/**/*.test.ts'] },
 });

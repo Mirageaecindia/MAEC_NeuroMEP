@@ -644,23 +644,39 @@ export const SECTIONS: GuideSection[] = [
           but Fed From, the schematic, schedules and Cable Size all include it.
         </p>
         <p>
+          A component with no supply yet can also be connected from its Engineering Property: its{' '}
+          <Term>Fed from</Term> is then a list of the components of every floor. On the same floor
+          the feeder is drawn at once as a straight line on the plan; from another floor its length
+          is asked, as here.
+        </p>
+        <p>
           Click a component to see its Engineering Property and result there too; click an empty
           part of the diagram to close them. The library items after the Feeder (Lighting, UPS,
           isolators, connection unit, PFC bank, meter, mechanical and PHE equipment) are not offered
           in the Building tab and are drawn greyed, with no actions.
         </p>
+        <h3>Connection Type: busbar risers or feeders</h3>
+        <p>
+          <Term>Connection Type</Term> in the Building Summary says how power goes between floors:
+          <Term>Feeder</Term> (feeders between floors only - no riser design is shown) or{' '}
+          <Term>Busbar riser</Term>. Switching back to Feeder deletes the risers; when a riser still
+          has a source or boards on its tap-offs, you are asked first, with what it connects.
+        </p>
         <h3>Placing a riser</h3>
         <ol>
           <li>
-            In <Term>Busbar Riser Design</Term> type the riser&apos;s length (m) - and width - for
-            Riser 1 (up to three risers). The riser appears in the diagram.
+            Choose <Term>Busbar riser</Term>: Riser 1 is added. <Term>+ Add busbar riser</Term> adds
+            more. In <Term>Busbar Riser Design</Term> type each riser&apos;s length (m) and width;
+            the riser appears in the diagram.
           </li>
           <li>
-            Click the riser, then click the component that feeds it on any floor - usually the
-            transformer, an LV panel or an MDB. Every component is drawn on its floor: main panels
-            and transformers in blue, hover a board for what feeds it, a riser source outlined in
-            red. Click the riser twice to remove its source; Escape cancels. The source box is drawn
-            under the riser; &quot;no supply&quot; when that source has no feeder itself.
+            Click the riser: its properties show in the Building Summary - length, width, tap-offs,
+            and <Term>Fed from</Term>. Choose the source there, or press{' '}
+            <Term>Pick on the diagram</Term> and click the component that feeds it on any floor -
+            usually the transformer, an LV panel or an MDB (Escape cancels). Main panels and
+            transformers are drawn in blue, a riser source outlined in red; the source box is drawn
+            under the riser, &quot;no supply&quot; when that source has no feeder itself.{' '}
+            <Term>Delete busbar riser</Term> removes it, after a warning when it is connected.
           </li>
           <li>
             Click a board (usually an SMDB, MCC or DB) and choose its <Term>Riser tap-off</Term> in

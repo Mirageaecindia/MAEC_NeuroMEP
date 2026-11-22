@@ -4,6 +4,11 @@ import { ProjectSchema } from '../project/schema.js';
 import { FIXED_NOW, testCable, testElement } from '../testing.js';
 import type { Element } from './elements.js';
 import {
+  addRiser,
+  distributionOf,
+  removeRiser,
+  riserConnected,
+  riserInUse,
   riserBoards,
   riserOf,
   riserRows,
@@ -31,11 +36,26 @@ const network = (risers = riserRows([])) => ({
 });
 
 describe('#TASK-17 Riser Design (FR-20, A-05)', () => {
-  it('shows three rows, keeping the stored risers', () => {
-    expect(riserRows([]).map((r) => r.id)).toEqual(['riser-1', 'riser-2', 'riser-3']);
-    const rows = setRiser([], 'riser-1', { lengthM: 26, widthM: 0.4 });
+  it('adds and deletes busbar risers; rows are the stored risers (22 Nov 2026)', () => {
+    expect(riserRows([])).toEqual([]);
+    let rows = addRiser(addRiser([]));
+    expect(rows.map((r) => r.id)).toEqual(['riser-1', 'riser-2']);
+    rows = setRiser(rows, 'riser-1', { lengthM: 26, widthM: 0.4 });
     expect(rows[0]).toMatchObject({ id: 'riser-1', lengthM: 26, widthM: 0.4 });
-    expect(rows).toHaveLength(3);
+    rows = removeRiser(rows, 'riser-1');
+    expect(rows.map((r) => r.id)).toEqual(['riser-2']);
+    // A new riser never takes an id still in use.
+    expect(addRiser(rows).map((r) => r.id)).toEqual(['riser-2', 'riser-3']);
+  });
+
+  it('tells a riser in use and the way power goes between floors', () => {
+    const empty = addRiser([])[0]!;
+    expect(riserInUse(empty)).toBe(false);
+    expect(riserConnected({ ...empty, lengthM: 9 })).toBe(false);
+    expect(riserConnected({ ...empty, feeds: ['DB-1'] })).toBe(true);
+    expect(distributionOf({ risers: [empty] })).toBe('feeder');
+    expect(distributionOf({ risers: [{ ...empty, lengthM: 9 }] })).toBe('busbar-riser');
+    expect(distributionOf({ risers: [], distribution: 'busbar-riser' })).toBe('busbar-riser');
   });
 
   it('loads projects stored before risers existed, or without their connections', () => {
@@ -54,7 +74,7 @@ describe('#TASK-17 Riser Design (FR-20, A-05)', () => {
 
   it('refuses a length of 0 or less', () => {
     const p = createEmptyProject({ id: 'p', userId: 'u', now: FIXED_NOW });
-    p.model.risers = riserRows([]).map((r) => ({ ...r, lengthM: 0 }));
+    p.model.risers = addRiser([]).map((r) => ({ ...r, lengthM: 0 }));
     expect(ProjectSchema.safeParse(p).success).toBe(false);
   });
 });
@@ -74,7 +94,7 @@ describe('#TASK-18 riser connections (FR-20, Section 3)', () => {
   });
 
   it('shows the riser as Fed From; a feeder as well is allowed (A-20)', () => {
-    const m = network(setBoardRiser([], 'SMDB-1', 'riser-2'));
+    const m = network(setBoardRiser(addRiser(addRiser([])), 'SMDB-1', 'riser-2'));
     expect(fedFrom(smdb1, m)).toBe('Riser 2');
     expect(topologyCheck(m, mdb, smdb1, 'in')).toEqual({ ok: true });
   });

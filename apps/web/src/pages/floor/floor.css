@@ -926,3 +926,69 @@ svg.drawing-feeder {
   min-width: 0;
   box-sizing: border-box;
 }
+
+/* Connection Type and busbar risers (22 Nov 2026). */
+.connection-type {
+  display: flex;
+  gap: 14px;
+  margin: 4px 0 8px;
+  font-size: 10px;
+}
+.connection-type label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.summary-btn.add-riser {
+  margin: 4px 0 8px;
+}
+.summary-btn.danger {
+  border-color: #dc2626;
+  color: #b91c1c;
+}
+.riser-props {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 6px;
+  margin: 0 0 6px;
+}
+.riser-props dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.riser.selected {
+  stroke: #f97316;
+  stroke-width: 2;
+}
+/* An item shown from the warnings: flashes orange for a moment. */
+.riser.flash,
+.floor-board.flash rect.board-frame,
+.building-feeder.flash path:not(.building-feeder-hit) {
+  animation: building-flash 0.65s ease-in-out 4;
+}
+.floor-board.flash rect.board-frame {
+  stroke: #f97316;
+  stroke-width: 3;
+}
+@keyframes building-flash {
+  50% {
+    stroke-opacity: 0.15;
+    opacity: 0.5;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .riser.flash,
+  .floor-board.flash rect.board-frame,
+  .building-feeder.flash path:not(.building-feeder-hit) {
+    animation: none;
+  }
+}
+/* Building-tab warnings: the network check lists them like the right panel. */
+.network-issues.issue-list {
+  max-height: 120px;
+  padding-left: 0;
+}
+.issue.static {
+  cursor: default;
+}

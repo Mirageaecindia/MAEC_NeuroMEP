@@ -11,6 +11,9 @@ export default defineConfig({
   },
   test: {
     name: 'web',
+    // No on-disk module cache: it kept stale transforms between runs (see vitest.config.ts).
+    fsModuleCache: false,
+    cache: false,
     environment: 'jsdom',
     include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['./src/test-setup.ts'],

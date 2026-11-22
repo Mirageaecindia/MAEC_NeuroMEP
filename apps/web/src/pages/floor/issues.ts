@@ -137,6 +137,9 @@ export function issuesInScope(
   issues: PanelIssue[],
   scope: { selectedId: string | null; floorId: string | null },
 ): PanelIssue[] {
+  // Floor Setup shows what is drawn on its plan; feeders between floors are the Building tab's
+  // (22 Nov 2026).
+  issues = issues.filter((i) => i.floorId !== null);
   if (scope.selectedId) {
     // A component: its own issues and those of its incoming feeder.
     const incoming = p.model.cables
@@ -144,5 +147,5 @@ export function issuesInScope(
       .map((c) => c.id);
     return issues.filter((i) => i.targetId === scope.selectedId || incoming.includes(i.targetId));
   }
-  return issues.filter((i) => scope.floorId !== null && i.onFloors.includes(scope.floorId));
+  return issues.filter((i) => i.floorId === scope.floorId);
 }

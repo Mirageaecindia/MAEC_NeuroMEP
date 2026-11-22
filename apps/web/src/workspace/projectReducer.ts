@@ -136,7 +136,7 @@ export type ProjectAction =
     }
   | { type: 'removeCables'; ids: string[] }
   /** Building tab risers (FR-20): Riser Design and connections, edited with the shared helpers. */
-  | { type: 'risers'; risers: Riser[] }
+  | { type: 'risers'; risers: Riser[]; distribution?: 'busbar-riser' | 'feeder' }
   /** Generator Load Analysis: the engineer's factors / remark of one load (OI-11). */
   | {
       type: 'generatorFactor';
@@ -408,7 +408,14 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
       return { ...p, model: { ...p.model, cables: p.model.cables.filter((c) => !gone.has(c.id)) } };
     }
     case 'risers':
-      return { ...p, model: { ...p.model, risers: a.risers } };
+      return {
+        ...p,
+        model: {
+          ...p.model,
+          risers: a.risers,
+          ...(a.distribution ? { distribution: a.distribution } : {}),
+        },
+      };
     case 'cableSize':
       return { ...p, model: { ...p.model, results: mergeRun(p, a.scope, a.results, a.run) } };
     case 'generatorFactor':

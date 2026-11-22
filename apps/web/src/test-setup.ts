@@ -1,6 +1,13 @@
+// Types of the jest-dom matchers (toBeInTheDocument ...) for Vitest's expect.
 import '@testing-library/jest-dom/vitest';
+import * as domMatchers from '@testing-library/jest-dom/matchers';
 import { cleanup, configure } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, expect } from 'vitest';
+
+// Register the matchers on the very expect the tests import (23 Nov 2026): jest-dom's own
+// registration sometimes reached another Vitest instance, and whole screen suites then failed
+// with "Invalid Chai property: toBeInTheDocument".
+expect.extend(domMatchers);
 
 afterEach(cleanup);
 

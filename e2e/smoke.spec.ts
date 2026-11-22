@@ -53,8 +53,11 @@ test('#TASK-16 login, Import File, Floor Setup, Building tab and Cable Size', as
   const summary = page.getByRole('complementary', { name: 'Building Summary' });
   const calculator = summary.getByRole('button', { name: 'Cable Size Calculator' });
   await expect(calculator).toBeDisabled();
+  // Connection Type: busbar risers (22 Nov 2026) - the first riser is added; its source is picked.
+  await summary.getByRole('radio', { name: 'Busbar riser' }).check();
   await summary.getByLabel('Riser 1 length').fill('26');
   await page.getByRole('button', { name: 'Riser 1', exact: true }).click();
+  await summary.getByRole('button', { name: 'Pick on the diagram' }).click();
   await page.getByRole('button', { name: 'TX-1 board' }).click();
   await expect(page.getByText('Riser 1 is fed from TX-1.')).toBeVisible();
   // Select the DB, then choose its riser tap-off in the Building Summary (18 Nov 2026).

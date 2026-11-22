@@ -241,6 +241,11 @@ export const ProjectSchema = z.object({
     cables: z.array(CableSchema),
     /** Building tab Riser Design (FR-20, A-05); empty in projects stored before WBS 1.4.1. */
     risers: z.array(RiserSchema).default([]),
+    /**
+     * Power between floors through busbar risers or by feeders only (Building tab radio, 22 Nov
+     * 2026). Absent: busbar risers when one is in use (`distributionOf`). Drawing choice only.
+     */
+    distribution: z.enum(['busbar-riser', 'feeder']).optional(),
     /** Floors flagged done per discipline, locked until the Lead reopens them (A-08). */
     floorFlags: z.array(FloorFlagSchema).default([]),
     /** Last Cable Size result per component and feeder (FR-18, FR-21). */

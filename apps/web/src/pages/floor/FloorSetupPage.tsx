@@ -8,6 +8,7 @@ import {
   capacitySummary,
   loadCategoryOf,
   EQUIPMENT_FEEDERS,
+  type Element,
   isWarningCode,
   BUILDING_TAB_HIDDEN,
   loadSummaries,
@@ -168,6 +169,16 @@ export function FloorSetupPage() {
   const [armed, setArmed] = useState<string | null>(null);
   /** Right panel width, dragged by its left edge (18 Nov 2026). */
   const rightPanel = usePanelWidth('floor-right', 232);
+  /**
+   * "Fed from" chosen on a component with no supply (22 Nov 2026): the feeder waiting for its
+   * cable construction (first feeder of the session) or, between floors, for its length.
+   */
+  const [connecting, setConnecting] = useState<{
+    from: Element;
+    to: Element;
+    step: 'construction' | 'length';
+  } | null>(null);
+  const [connectLength, setConnectLength] = useState('');
   /** A component or feeder to show on the plan (an issue clicked; `n` counts the requests). */
   const [focus, setFocus] = useState<{ id: string; n: number } | null>(null);
   /** Selected components (several with Shift / Ctrl + click or a box), or one feeder. */
@@ -570,6 +581,27 @@ export function FloorSetupPage() {
               : undefined
           }
           calculated={el.kind === 'pfc-bank' ? pfcLines(el.id) : undefined}
+          feedSources={
+            el.kind === 'equipment' || el.kind === 'meter'
+              ? undefined
+              : project.building.floors.flatMap((f) =>
+                  project.model.elements
+                    .filter(
+                      (x) =>
+                        x.floorId === f.id &&
+                        x.id !== el.id &&
+                        x.discipline === 'electrical' &&
+                        x.kind !== 'meter' &&
+                        portsOf(x).some(isOutput),
+                    )
+                    .sort((a, b) => a.tag.localeCompare(b.tag, undefined, { numeric: true }))
+                    .map((x) => ({ id: x.id, tag: x.tag, floor: f.name })),
+                )
+          }
+          onFeedFrom={(sourceId) => {
+            const from = project.model.elements.find((x) => x.id === sourceId);
+            if (from) connectFeeder(from, el);
+          }}
           systemV={calcDefault(project, 'supplyVoltageLineV')}
           onDelete={() => {
             editor.dispatch({ type: 'removeElements', ids: [el.id] });
@@ -577,6 +609,69 @@ export function FloorSetupPage() {
           }}
         />
       )
+    );
+  }
+
+  /** The free incoming port of a component (an ATS: normal first, then standby). */
+  function freeInput(target: Element) {
+    const inputs = portsOf(target).filter((p) => !isOutput(p));
+    const fed = new Set(
+      project.model.cables.filter((c) => c.to.elementId === target.id).map((c) => c.to.port),
+    );
+    return inputs.find((p) => !fed.has(p)) ?? inputs[0];
+  }
+  /**
+   * A feeder from "Fed from": on the same floor a straight line on the plan (its length measured
+   * like any feeder), between floors a feeder of the Building tab with the typed length (A-21).
+   */
+  function connectFeeder(
+    from: Element,
+    to: Element,
+    c: CableConstruction | null = construction,
+    lengthM?: number,
+  ) {
+    if (!c) return setConnecting({ from, to, step: 'construction' });
+    const topology = topologyCheck(project.model, from, to);
+    if (!topology.ok) return notice(`${topology.message} (${topology.code})`);
+    const sourceFloor = project.building.floors.find((f) => f.id === from.floorId);
+    if (from.floorId !== to.floorId) {
+      if (lengthM === undefined) {
+        setConnectLength('');
+        return setConnecting({ from, to, step: 'length' });
+      }
+      const cable = drawBuildingFeeder({
+        id: crypto.randomUUID(),
+        cables: project.model.cables,
+        from,
+        to,
+        lengthM,
+        floorCode: sourceFloor?.code ?? '',
+        construction: c,
+      });
+      editor.dispatch({ type: 'addCable', cable });
+      setConnecting(null);
+      return notice(
+        `Feeder ${cable.tag} from ${from.tag} (${sourceFloor?.name ?? ''}) to ${to.tag}, ${lengthM} m - drawn in the Building tab.`,
+      );
+    }
+    const port = freeInput(to);
+    const problem = port
+      ? connectionProblem({ element: from, port: 'out' }, { element: to, port })
+      : `${to.tag} has no incoming port.`;
+    if (problem || !port) return notice(problem ?? '');
+    const cable = drawCable({
+      id: crypto.randomUUID(),
+      cables: project.model.cables,
+      from: { element: from, port: 'out' },
+      to: { element: to, port },
+      route: [from.position, to.position],
+      floorCode: sourceFloor?.code ?? '',
+      construction: c,
+    });
+    editor.dispatch({ type: 'addCable', cable });
+    setConnecting(null);
+    notice(
+      `Feeder ${cable.tag} from ${from.tag} to ${to.tag}, drawn straight on the plan: select it to see its length, or draw it again along its route.`,
     );
   }
 
@@ -751,7 +846,10 @@ export function FloorSetupPage() {
           model={project.model}
           zoom={zoom}
           readOnly={!editor.layers.includes('electrical')}
-          onRisers={(risers) => editor.dispatch({ type: 'risers', risers })}
+          onRisers={(risers, distribution) =>
+            editor.dispatch({ type: 'risers', risers, distribution })
+          }
+          issues={panelIssues(project).filter((i) => i.floorId === null)}
           onRename={
             editor.readOnly
               ? undefined
@@ -939,6 +1037,64 @@ export function FloorSetupPage() {
           e.target.value = '';
         }}
       />
+      {connecting?.step === 'construction' && (
+        <ConstructionDialog
+          title="Cable construction"
+          initial={construction}
+          onCancel={() => setConnecting(null)}
+          onConfirm={(c) => {
+            setConstruction(c);
+            saveConstruction(project.id, c);
+            connectFeeder(connecting.from, connecting.to, c);
+          }}
+        />
+      )}
+      {connecting?.step === 'length' &&
+        (() => {
+          const typed = Number(connectLength);
+          const ok = connectLength.trim() !== '' && Number.isFinite(typed) && typed > 0;
+          const floorName = (e: Element) =>
+            project.building.floors.find((f) => f.id === e.floorId)?.name ?? '';
+          const done = () =>
+            ok && connectFeeder(connecting.from, connecting.to, construction, typed);
+          return (
+            <Modal
+              title="Feeder length"
+              onClose={() => setConnecting(null)}
+              actions={
+                <>
+                  <button className="btn" onClick={() => setConnecting(null)}>
+                    Cancel
+                  </button>
+                  <button className="btn btn-primary" disabled={!ok} onClick={done}>
+                    Connect
+                  </button>
+                </>
+              }
+            >
+              <p>
+                {connecting.from.tag} ({floorName(connecting.from)}) to {connecting.to.tag} (
+                {floorName(connecting.to)}).
+              </p>
+              <label className="feeder-length">
+                Total length (m) - horizontal runs and the rise between floors
+                <input
+                  type="number"
+                  min={0}
+                  step="any"
+                  value={connectLength}
+                  autoFocus
+                  aria-label="Feeder length (m)"
+                  onChange={(e) => setConnectLength(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && done()}
+                />
+              </label>
+              <p className="muted">
+                Nothing can be measured between floors, so Cable Size uses this length as it is.
+              </p>
+            </Modal>
+          );
+        })()}
       {constructionFor && (
         <ConstructionDialog
           title={constructionFor === 'tool' ? 'Cable construction' : 'Change cable construction'}
