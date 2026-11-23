@@ -1294,15 +1294,19 @@ export function BuildingTab(props: {
               </>
             }
           >
-            <p>This busbar riser is connected to components:</p>
+            <p>
+              {confirm.lines.length === 1
+                ? 'This busbar riser is connected to components:'
+                : 'These busbar risers are connected to components:'}
+            </p>
             <ul>
               {confirm.lines.map((l) => (
                 <li key={l}>{l}</li>
               ))}
             </ul>
             <p className="muted">
-              Deleting it leaves those boards without this supply (W1801) until you connect them by
-              feeders or another riser.
+              Deleting {confirm.lines.length === 1 ? 'it' : 'them'} leaves those boards without this
+              supply (W1801) until you connect them by feeders or another riser.
             </p>
           </Modal>
         )}

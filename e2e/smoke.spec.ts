@@ -63,6 +63,22 @@ test('#TASK-16 login, Import File, Floor Setup, Building tab and Cable Size', as
   // Select the DB, then choose its riser tap-off in the Building Summary (18 Nov 2026).
   await page.getByRole('button', { name: 'DB-db-1 board' }).click();
   await summary.getByLabel('Riser tap-off of DB-db-1').selectOption({ label: 'Riser 1' });
+  // Switching to feeders asks first; the dialog has the page's own font and text size (23 Nov 2026).
+  await summary.getByRole('radio', { name: 'Feeder' }).click();
+  const ask = page.getByRole('dialog', { name: 'Use feeders instead of busbar risers?' });
+  await expect(ask).toBeVisible();
+  const [dialogFont, bodyFont] = await ask.evaluate((el) => [
+    getComputedStyle(el).fontFamily,
+    getComputedStyle(document.body).fontFamily,
+  ]);
+  expect(dialogFont).toBe(bodyFont);
+  expect(
+    await ask
+      .getByRole('listitem')
+      .first()
+      .evaluate((el) => getComputedStyle(el).fontSize),
+  ).toBe('13px');
+  await ask.getByRole('button', { name: 'Cancel' }).click();
   // The properties fit the panel: no sideways scroll bar (18 Nov 2026); a click elsewhere closes them.
   const selection = summary.getByRole('region', { name: 'Selected in the Building tab' });
   await expect(selection).toBeVisible();
