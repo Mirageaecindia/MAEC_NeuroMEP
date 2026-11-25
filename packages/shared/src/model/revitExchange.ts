@@ -51,6 +51,12 @@ export interface RevitExchangeOptions {
   alignment?: Record<string, RevitReferencePoint[]>;
   /** /Rotate of each floor's PDF page (degrees clockwise), when known (not stored by the app). */
   pageRotationDeg?: Record<string, number>;
+  /**
+   * Only these floors (Output > Revit Exchange, user request 25 Nov 2026): their components and
+   * plan feeders, the feeders between floors with an end on them, and the risers serving them.
+   * Absent = the whole project.
+   */
+  floorIds?: readonly string[];
 }
 
 /** Drawing / identity fields of an element: everything else is an engineering property. */
@@ -148,9 +154,20 @@ const loadOut = (s: LoadSummary | undefined) =>
 
 /** The exchange package of a project (from its model and stored results; nothing recalculated). */
 export function revitExchange(p: Project, o: RevitExchangeOptions) {
-  const { elements, cables, risers } = p.model;
+  const { risers } = p.model;
+  const only = o.floorIds ? new Set(o.floorIds) : null;
+  const inScope = (floorId: string | null | undefined) =>
+    !only || (floorId !== null && floorId !== undefined && only.has(floorId));
+  const floorOfElement = new Map(p.model.elements.map((e) => [e.id, e.floorId]));
+  const elements = p.model.elements.filter((e) => inScope(e.floorId));
+  const cables = p.model.cables.filter((c) =>
+    c.manualLengthM !== undefined
+      ? inScope(floorOfElement.get(c.from.elementId)) || inScope(floorOfElement.get(c.to.elementId))
+      : inScope(c.floorId),
+  );
   const key = inputsKey(p);
-  const byId = new Map(elements.map((e) => [e.id, e]));
+  // Tags and floors of every component (a feeder's other end may be on a floor not exported).
+  const byId = new Map(p.model.elements.map((e) => [e.id, e]));
   const tagOf = (id: string | null | undefined) => (id ? (byId.get(id)?.tag ?? null) : null);
   const floorOf = new Map(p.building.floors.map((f) => [f.id, f]));
   const mpp = (floorId: string) => {
@@ -162,35 +179,37 @@ export function revitExchange(p: Project, o: RevitExchangeOptions) {
     return k ? { x: r(m.x / k, 2)!, y: r(m.y / k, 2)! } : null;
   };
 
-  const floors = p.building.floors.map((f, order) => {
-    const plan = f.plan?.kind === 'pdf' ? f.plan : null;
-    const cal = plan?.calibration ?? null;
-    return {
-      id: f.id,
-      code: f.code,
-      name: f.name,
-      order,
-      plan: plan
-        ? {
-            fileName: plan.fileName,
-            pageWidthPt: plan.page.widthPt,
-            pageHeightPt: plan.page.heightPt,
-            /** The sheet is shown turned by this angle; coordinates stay unrotated (PDF space). */
-            pageRotationDeg: o.pageRotationDeg?.[f.id] ?? null,
-            calibration: cal
-              ? {
-                  method: cal.method,
-                  metresPerPoint: cal.metresPerUnit,
-                  ...(cal.method === 'two-point'
-                    ? { pointA: cal.pointA, pointB: cal.pointB, realDistanceM: cal.realDistanceM }
-                    : { scaleDenominator: cal.scaleDenominator, sheetSize: cal.sheetSize }),
-                }
-              : null,
-          }
-        : null,
-      alignment: { referencePoints: o.alignment?.[f.id] ?? [] },
-    };
-  });
+  const floors = p.building.floors
+    .flatMap((f, order) => (inScope(f.id) ? [{ f, order }] : []))
+    .map(({ f, order }) => {
+      const plan = f.plan?.kind === 'pdf' ? f.plan : null;
+      const cal = plan?.calibration ?? null;
+      return {
+        id: f.id,
+        code: f.code,
+        name: f.name,
+        order,
+        plan: plan
+          ? {
+              fileName: plan.fileName,
+              pageWidthPt: plan.page.widthPt,
+              pageHeightPt: plan.page.heightPt,
+              /** The sheet is shown turned by this angle; coordinates stay unrotated (PDF space). */
+              pageRotationDeg: o.pageRotationDeg?.[f.id] ?? null,
+              calibration: cal
+                ? {
+                    method: cal.method,
+                    metresPerPoint: cal.metresPerUnit,
+                    ...(cal.method === 'two-point'
+                      ? { pointA: cal.pointA, pointB: cal.pointB, realDistanceM: cal.realDistanceM }
+                      : { scaleDenominator: cal.scaleDenominator, sheetSize: cal.sheetSize }),
+                  }
+                : null,
+            }
+          : null,
+        alignment: { referencePoints: o.alignment?.[f.id] ?? [] },
+      };
+    });
 
   const components = elements.map((e) => {
     const item = itemOfElement(e);
@@ -300,6 +319,12 @@ export function revitExchange(p: Project, o: RevitExchangeOptions) {
 
   const riserOut = risers
     .filter((x) => x.lengthM || x.fedFromId || x.feeds.length)
+    .filter(
+      (x) =>
+        !only ||
+        inScope(floorOfElement.get(x.fedFromId ?? '')) ||
+        x.feeds.some((id) => inScope(floorOfElement.get(id))),
+    )
     .map((x) => ({
       neuromepId: x.id,
       name: `Riser ${risers.indexOf(x) + 1}`,

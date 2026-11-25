@@ -766,6 +766,16 @@ export const SECTIONS: GuideSection[] = [
             <Term>Generator Load Analysis</Term> - the one editable report: demand factors per load
             for the three cases (see <a href="#calc-generator">Generator</a>).
           </li>
+          <li>
+            <Term>Revit Exchange (JSON)</Term> - the input of the Revit plug-in. Tick it, then tick
+            the floors you want (all are ticked to start with). Download saves one JSON file per
+            ticked floor, <code>&lt;project&gt;_&lt;floor&gt;_RevitExchange_v&lt;n&gt;.json</code>:
+            every component of the floor with its position on the plan (metres and PDF points), all
+            its engineering properties, its load and its last Cable Size result; the floor&apos;s
+            feeders, the feeders between floors that reach it, and the risers serving it; the
+            plan&apos;s calibration and page rotation. The format is a draft until the Revit team
+            confirms families and parameters (OI-35).
+          </li>
         </ul>
         <p>
           Choose the <Term>Format</Term> (Excel or PDF) and press <Term>Download</Term>. NeuroMEP

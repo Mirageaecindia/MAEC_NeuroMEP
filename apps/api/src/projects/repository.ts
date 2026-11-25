@@ -43,6 +43,8 @@ export const EXPORT_KINDS = [
   'calc-sheet-pdf',
   'generator-analysis',
   'generator-analysis-pdf',
+  // Revit exchange JSON, one file per floor of a download (user request 25 Nov 2026).
+  'revit-exchange',
 ] as const;
 export type ExportKind = (typeof EXPORT_KINDS)[number];
 

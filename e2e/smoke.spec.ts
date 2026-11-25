@@ -124,6 +124,22 @@ test('#TASK-16 login, Import File, Floor Setup, Building tab and Cable Size', as
     const head = (await readFile((await file.path())!)).subarray(0, 5).toString();
     expect(head).toBe('%PDF-');
   }
+
+  // Output > Revit Exchange (JSON): the ticked floor alone, as a JSON file (25 Nov 2026).
+  await tool(page, 'Next').click();
+  await expect(page).toHaveURL(/\/output$/);
+  await page.getByRole('checkbox', { name: 'Revit Exchange (JSON)' }).check();
+  const picker = page.getByRole('region', { name: 'Revit exchange floors' });
+  await picker.getByRole('button', { name: 'Untick all' }).click();
+  await picker.getByLabel('Revit exchange: Ground Floor').check();
+  const json = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Download' }).click();
+  const file = await json;
+  expect(file.suggestedFilename()).toMatch(/_GF_RevitExchange_v1\.json$/);
+  const exchange = JSON.parse(await readFile((await file.path())!, 'utf8'));
+  expect(exchange.format).toBe('neuromep-revit-exchange');
+  expect(exchange.floors.map((f: { code: string }) => f.code)).toEqual(['GF']);
+  expect(exchange.components.map((c: { tag: string }) => c.tag)).toContain('DB-db-1');
 });
 
 test('#TASK-32 user guide: opens at a section and verifies a calculation with the engine', async ({

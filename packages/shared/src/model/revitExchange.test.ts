@@ -49,6 +49,40 @@ const options = (p: ReturnType<typeof project>['p']) => ({
 });
 
 describe('#TASK-33 NeuroMEP -> Revit exchange (Section 16, user request 12 Nov 2026)', () => {
+  it('exports only the chosen floors: their components, plan feeders, feeders between floors and risers (25 Nov 2026)', () => {
+    const { p, gf } = project();
+    const first = p.building.floors.find((f) => f.code === '1')!.id;
+    const smdb = { ...testElement('smdb', 'smdb', first), tag: 'SMDB-1' } as Element;
+    const db2 = { ...testElement('db', 'db2', first), tag: 'DB-2' } as Element;
+    p.model.elements.push(smdb, db2);
+    const mdb = p.model.elements.find((e) => e.id === 'mdb')!;
+    p.model.cables.push(
+      // Between floors: typed length, no plan.
+      { ...testCable(mdb, smdb), id: 'between', floorId: gf, manualLengthM: 30 },
+      {
+        ...testCable(smdb, db2),
+        id: 'on-first',
+        floorId: first,
+        route: [smdb.position, db2.position],
+      },
+    );
+    p.model.risers = [{ id: 'r1', lengthM: 20, widthM: null, fedFromId: 'mdb', feeds: ['db2'] }];
+    const x = revitExchange(p, { ...options(p), floorIds: [first] });
+    expect(x.floors.map((f) => f.id)).toEqual([first]);
+    expect(x.components.map((c) => c.tag)).toEqual(['SMDB-1', 'DB-2']);
+    // The plan feeder of the floor and the feeder arriving from the Ground Floor.
+    expect(x.feeders.map((f) => f.neuromepId).sort()).toEqual(['between', 'on-first']);
+    expect(x.feeders.find((f) => f.neuromepId === 'between')!.from.tag).toBe('MDB-1');
+    // The riser with a tap-off on the floor.
+    expect(x.risers.map((r) => r.neuromepId)).toEqual(['r1']);
+    expect(x.summary).toMatchObject({ components: 2, feeders: 2, risers: 1 });
+    // The Ground Floor alone: no First Floor component, its feeders and the same riser (its source).
+    const g = revitExchange(p, { ...options(p), floorIds: [gf] });
+    expect(g.components.map((c) => c.tag)).not.toContain('SMDB-1');
+    expect(g.feeders.map((f) => f.neuromepId)).toContain('between');
+    expect(g.feeders.map((f) => f.neuromepId)).not.toContain('on-first');
+  });
+
   it('gives every component its plan position in metres and in PDF points, with its links', () => {
     const { p, gf } = project();
     const x = revitExchange(p, options(p));

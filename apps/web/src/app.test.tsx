@@ -1733,3 +1733,67 @@ async function screenTool(name: string) {
   await screen.findByRole('toolbar', { name: 'Tools' });
   return tool(name);
 }
+
+describe('#TASK-33 Output > Revit Exchange (JSON), one file per ticked floor (25 Nov 2026)', () => {
+  it('runs Cable Size, then saves a JSON file for each ticked floor with placements and properties', async () => {
+    const blobs: Blob[] = [];
+    const names: string[] = [];
+    vi.spyOn(URL, 'createObjectURL').mockImplementation((b) => {
+      blobs.push(b as Blob);
+      return 'blob:x';
+    });
+    vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      names.push(this.download);
+    });
+    const project = buildingProject();
+    project.meta.reachedPage = 'simulation-report';
+    const tx = project.model.elements.find((e) => e.id === 'tx')!;
+    const db = project.model.elements.find((e) => e.id === 'db-1')!;
+    Object.assign(tx, { kva: 1000, ukPct: 6, urPct: 1 });
+    Object.assign(db, { loads: [{ method: 'kw', loadType: '2', kwL1: 20, kwL2: 20, kwL3: 20 }] });
+    const cable = testCable(tx, db);
+    cable.construction = { ...cable.construction, groupedCircuits: 1 };
+    project.model.cables.push({ ...cable, tag: 'F0-1' });
+    const floors = project.building.floors;
+    const gf = floors.find((f) => f.id === tx.floorId)!;
+    const other = floors.find((f) => f.id !== gf.id)!;
+    const api = fakeApi(project);
+    renderAt('/projects/p-1/output', new FakeAuth(LEAD), api);
+    await userEvent.click(await screen.findByRole('checkbox', { name: 'Revit Exchange (JSON)' }));
+    const picker = screen.getByRole('region', { name: 'Revit exchange floors' });
+    // Every floor is listed and ticked to start with.
+    expect(within(picker).getAllByRole('checkbox')).toHaveLength(floors.length);
+    expect(picker).toHaveTextContent(`${floors.length} of ${floors.length} floors ticked`);
+    await userEvent.click(within(picker).getByRole('button', { name: 'Untick all' }));
+    expect(screen.getByRole('button', { name: 'Download' })).toBeDisabled();
+    await userEvent.click(within(picker).getByLabelText(`Revit exchange: ${gf.name}`));
+    await userEvent.click(within(picker).getByLabelText(`Revit exchange: ${other.name}`));
+    await userEvent.click(screen.getByRole('button', { name: 'Download' }));
+    expect(
+      await screen.findByText(
+        /^Downloaded 2 Revit exchange files \(.*, v1\)\.$/,
+        {},
+        { timeout: 10_000 },
+      ),
+    ).toBeVisible();
+    expect(api.nextExportVersion).toHaveBeenCalledWith('p-1', 'revit-exchange');
+    // Only the ticked floors, one file each, in building order.
+    expect(names).toHaveLength(2);
+    const ground = names.findIndex((n) => n.endsWith(`_${gf.code}_RevitExchange_v1.json`));
+    expect(ground).toBeGreaterThanOrEqual(0);
+    const x = JSON.parse(await blobs[ground]!.text());
+    expect(x.format).toBe('neuromep-revit-exchange');
+    expect(x.floors.map((f: { code: string }) => f.code)).toEqual([gf.code]);
+    const dbOut = x.components.find((c: { tag: string }) => c.tag === 'DB-db-1');
+    // The placement, every engineering property, the load and the result of this Cable Size run.
+    expect(dbOut.placement.model).toEqual(db.position);
+    expect(dbOut.properties.loads).toHaveLength(1);
+    expect(dbOut.load.totalConnectedKw).toBe(60);
+    expect(dbOut.result.device.ratingA).toBeGreaterThan(0);
+    expect(x.feeders.map((f: { tag: string }) => f.tag)).toEqual(['F0-1']);
+    vi.restoreAllMocks();
+  });
+});

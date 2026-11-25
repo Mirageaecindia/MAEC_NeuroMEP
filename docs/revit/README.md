@@ -2,7 +2,9 @@
 
 For the Revit team building the "Import from NeuroMEP" add-in (design doc Section 16, stage 2; #TASK-33).
 
-NeuroMEP writes one JSON package per project. It holds every component the engineer placed on the floor plans, every feeder with its route, the risers, and the last Cable Size results. The add-in reads it to place the company's electrical families at the right level and position, and to fill their parameters.
+NeuroMEP writes one JSON package per floor (or per project). It holds every component the engineer placed on the floor plans with all its engineering properties, every feeder with its route, the risers, and the last Cable Size results. The add-in reads it to place the company's electrical families at the right level and position, and to fill their parameters.
+
+**From the app (25 Nov 2026):** Output > Report Library > **Revit Exchange (JSON)**, tick the floors, Download. Cable Size runs first; one file per ticked floor is saved, `<project>_<floor code>_RevitExchange_v<n>.json` (numbered, never overwritten). A floor's file holds its components, the feeders drawn on its plan, the feeders between floors with an end on it (`betweenFloors: true`, the other end's tag and floor given) and the risers with a source or tap-off on it. The page rotation is read from the floor's plan PDF. The floor-plan PDF itself is not in the download: use the floor's plan (`floors[].plan.fileName`).
 
 **Draft.** Families, shared parameters and Revit versions are still open (OI-35). Expect changes once you confirm what you need.
 

@@ -33,6 +33,7 @@ import { calcSheetPdf, calcSheetWorkbook } from './calcSheetFiles';
 import { scheduleWorkbook } from './scheduleExcel';
 import { schedulePdf } from './schedulePdf';
 import { emptyMeters, ScheduleSheet, type BoardMeters } from './ScheduleSheet';
+import { planRotations, revitFiles } from './revitFiles';
 import '../schematic/schematic.css';
 
 /**
@@ -41,7 +42,7 @@ import '../schematic/schematic.css';
  * Level Schedule, kept in brackets). `holds` is shown under the name.
  */
 const REPORTS: {
-  key: ScheduleLevel | 'completed' | 'calc' | 'generator';
+  key: ScheduleLevel | 'completed' | 'calc' | 'generator' | 'revit';
   label: string;
   holds?: string;
 }[] = [
@@ -61,6 +62,12 @@ const REPORTS: {
     holds: 'SMDB, ESMDB, MCC, EMCC',
   },
   { key: 'floor', label: 'DB Schedules (Floor Level)', holds: 'Distribution boards on each floor' },
+  // Not in Figma: the Revit plug-in's input, one JSON file per floor (user request 25 Nov 2026).
+  {
+    key: 'revit',
+    label: 'Revit Exchange (JSON)',
+    holds: 'For the Revit plug-in: one file per ticked floor',
+  },
   // Not in Figma: Section 14 "Cable schedule", WBS 1.7.3 (user decision 5 Nov 2026).
   { key: 'calc', label: 'Calculation Sheet' },
   { key: 'generator', label: 'Generator Load Analysis' },
@@ -125,6 +132,11 @@ export function OutputPage() {
   const [completionDate, setCompletionDate] = useState('');
   const [meters, setMeters] = useState<Record<string, BoardMeters>>({});
   const [genTitle, setGenTitle] = useState<GenTitle>(emptyGenTitle);
+  /** Floors ticked for the Revit exchange (all to start with). */
+  const [revitFloors, setRevitFloors] = useState<Set<string>>(
+    () => new Set(project.building.floors.map((f) => f.id)),
+  );
+  const revit = reports.has('revit') && revitFloors.size > 0;
   const toolbar = useProjectToolbar('output', {
     status: () => notice('Floor status (A-08) is shown on Floor Setup.'),
   });
@@ -187,7 +199,7 @@ export function OutputPage() {
       : []),
   ];
   const canDownload =
-    (schedules.length > 0 || calc !== null || generators.length > 0) &&
+    (schedules.length > 0 || calc !== null || generators.length > 0 || revit) &&
     missing.length === 0 &&
     !busy;
 
@@ -250,6 +262,28 @@ export function OutputPage() {
         const name = `${base}_GeneratorLoadAnalysis_v${version}.${format}`;
         saveBlob(new Blob([data], { type: f.mime }), name);
         saved.push(`${name} (${gens.length} generator${gens.length === 1 ? '' : 's'})`);
+      }
+      // Revit exchange: one JSON file per ticked floor, from the results of this run (#TASK-33).
+      if (revit) {
+        const floors = run.project.building.floors.filter((f) => revitFloors.has(f.id));
+        const { version } = await api.nextExportVersion(project.id, 'revit-exchange');
+        const pageRotationDeg = await planRotations(floors, (fileId) =>
+          api.downloadPlan(project.id, fileId),
+        );
+        const files = revitFiles(run.project, revitFloors, {
+          version,
+          generatedAt: new Date().toISOString(),
+          ...(run.reply.engineVersion ? { engineVersion: run.reply.engineVersion } : {}),
+          pageRotationDeg,
+        });
+        for (const [i, f] of files.entries()) {
+          // A moment between files: browsers keep several downloads from one click in order.
+          if (i > 0) await new Promise((r) => setTimeout(r, 250));
+          saveBlob(new Blob([f.json], { type: 'application/json' }), f.name);
+        }
+        saved.push(
+          `${files.length} Revit exchange file${files.length === 1 ? '' : 's'} (${files.map((f) => f.floor.code).join(', ')}, v${version})`,
+        );
       }
       notice(`Downloaded ${saved.join(' and ')}.`);
     } catch (err) {
@@ -441,6 +475,9 @@ export function OutputPage() {
             ))}
           </form>
         )}
+        {reports.has('revit') && (
+          <RevitFloorPicker project={project} chosen={revitFloors} onChange={setRevitFloors} />
+        )}
         {generators.map((g) => (
           <GeneratorAnalysisSheet
             key={g.generatorId}
@@ -454,5 +491,73 @@ export function OutputPage() {
         ))}
       </section>
     </Shell>
+  );
+}
+
+/**
+ * Output > Revit Exchange (JSON) (user request 25 Nov 2026): the floors of the project, ticked for
+ * the download - one JSON file per ticked floor for the Revit plug-in.
+ */
+function RevitFloorPicker(props: {
+  project: Project;
+  chosen: ReadonlySet<string>;
+  onChange: (next: Set<string>) => void;
+}) {
+  const { floors } = props.project.building;
+  const count = (id: string) => props.project.model.elements.filter((e) => e.floorId === id).length;
+  // Top floor first, basements last, as in the Building tab.
+  const rows = [...floors].reverse();
+  return (
+    <section className="revit-export" aria-label="Revit exchange floors">
+      <h3>Revit Exchange (JSON)</h3>
+      <p className="muted">
+        One JSON file per ticked floor for the Revit plug-in: every component with its placement on
+        the plan and all its engineering properties, its load and the last Cable Size result; the
+        floor&apos;s feeders, the feeders between floors that reach it, and the risers serving it.
+        Download runs Cable Size first. Format: neuromep-revit-exchange 0.1.0 (draft).
+      </p>
+      <div className="revit-export-all">
+        <button
+          type="button"
+          className="btn btn-sm"
+          onClick={() => props.onChange(new Set(floors.map((f) => f.id)))}
+        >
+          Tick all
+        </button>
+        <button type="button" className="btn btn-sm" onClick={() => props.onChange(new Set())}>
+          Untick all
+        </button>
+        <span className="muted" role="status">
+          {props.chosen.size} of {floors.length} floor{floors.length === 1 ? '' : 's'} ticked
+        </span>
+      </div>
+      <ul className="revit-floors">
+        {rows.map((f) => {
+          const n = count(f.id);
+          return (
+            <li key={f.id}>
+              <label>
+                <input
+                  type="checkbox"
+                  aria-label={`Revit exchange: ${f.name}`}
+                  checked={props.chosen.has(f.id)}
+                  onChange={() => {
+                    const next = new Set(props.chosen);
+                    if (next.has(f.id)) next.delete(f.id);
+                    else next.add(f.id);
+                    props.onChange(next);
+                  }}
+                />
+                <span>{f.name}</span>
+                <small className="muted">
+                  {n} component{n === 1 ? '' : 's'}
+                  {f.plan ? '' : ' - no plan (positions in metres only)'}
+                </small>
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }

@@ -134,7 +134,8 @@ export class ApiClient {
       | 'calc-sheet'
       | 'calc-sheet-pdf'
       | 'generator-analysis'
-      | 'generator-analysis-pdf',
+      | 'generator-analysis-pdf'
+      | 'revit-exchange',
   ) {
     return this.request<{ version: number }>(
       `/api/projects/${encodeURIComponent(projectId)}/exports`,
