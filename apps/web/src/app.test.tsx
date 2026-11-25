@@ -385,6 +385,42 @@ describe('#TASK-02 All Projects (WBS 1.2.3)', () => {
     expect(screen.queryByRole('button', { name: /^Delete project/ })).not.toBeInTheDocument();
   });
 
+  it('the Technical Lead duplicates a project from its card: everything, plans included (25 Nov 2026)', async () => {
+    const saved = completeProject();
+    saved.details.name = 'AMR - EW09';
+    const summaries = [SUMMARY];
+    const api = fakeApi(saved, summaries);
+    // The API names the copy and copies the plans (tested on the API side).
+    vi.mocked(api.createProject).mockImplementation(async (p) => {
+      const copy = {
+        ...p!,
+        id: 'p-copy',
+        details: { ...p!.details, name: 'AMR - EW09_duplicated' },
+      };
+      summaries.unshift({ ...SUMMARY, id: 'p-copy', name: copy.details.name });
+      return { project: copy, plansToUpload: 0 };
+    });
+    renderAt('/projects', new FakeAuth(LEAD), api);
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Duplicate project AMR - EW09' }),
+    );
+    // The project as saved, sent with the id its plans are copied from; the original is untouched.
+    expect(api.createProject).toHaveBeenCalledWith(saved, 'p-1');
+    expect(
+      await screen.findByText('"AMR - EW09" duplicated as "AMR - EW09_duplicated".'),
+    ).toBeVisible();
+    expect(
+      await screen.findByRole('button', { name: /^Project Name : AMR - EW09_duplicated/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^Project Name : AMR - EW09Client/ }),
+    ).toBeInTheDocument();
+    cleanup();
+    renderAt('/projects', new FakeAuth(ELEC), fakeApi(undefined, [SUMMARY]));
+    await screen.findByRole('button', { name: /^Project Name : AMR - EW09/ });
+    expect(screen.queryByRole('button', { name: /^Duplicate project/ })).not.toBeInTheDocument();
+  });
+
   it('tells an engineer with no projects how they get one', async () => {
     renderAt('/projects', new FakeAuth(ELEC), fakeApi(undefined, []));
     expect(await screen.findByText(/No projects are assigned to you yet/)).toBeInTheDocument();

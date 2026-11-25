@@ -40,7 +40,31 @@
   position: relative;
 }
 .project-card-wrap .project-card {
-  padding-right: 52px;
+  /* Room for the duplicate and delete icons (25 Nov 2026). */
+  padding-right: 88px;
+}
+/* Duplicate icon (Technical Lead, 25 Nov 2026): left of the delete icon. */
+.project-duplicate {
+  position: absolute;
+  top: 50%;
+  right: 46px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--primary, #2563eb);
+  cursor: pointer;
+}
+.project-duplicate:hover:not(:disabled) {
+  background: rgb(37 99 235 / 0.12);
+}
+.project-duplicate:disabled {
+  opacity: 0.4;
+  cursor: wait;
 }
 .project-delete {
   position: absolute;

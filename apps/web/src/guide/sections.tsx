@@ -286,8 +286,15 @@ export const SECTIONS: GuideSection[] = [
           The Technical Lead deletes a project with the bin icon on its card and confirms by typing
           the project&apos;s name. Deleting removes it for everyone - floors, plans, components,
           feeders, risers and results - and cannot be undone, so download it first if it may be
-          needed again. A copy (a project file imported again, or Save as new project) never takes
-          an existing name: it becomes name_duplicated, then name_duplicated_2, with its own id.
+          needed again.
+        </p>
+        <p>
+          The <Term>Duplicate</Term> icon (two sheets, beside the bin; Technical Lead) copies the
+          project as last saved - set-up, floors with their plan PDFs and calibration, components,
+          feeders, risers, demand factors and results - into a new project. The original is not
+          changed. A copy (Duplicate, a project file imported again, or Save as new project) never
+          takes an existing name: it becomes name_duplicated, then name_duplicated_2, with its own
+          id; its exported files are numbered from v1 again.
         </p>
       </>
     ),
