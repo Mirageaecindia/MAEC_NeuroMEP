@@ -3,6 +3,7 @@ import { busbarChoices } from '@neuromep/engine';
 import { getRulePack } from '@neuromep/rulepacks';
 import {
   cableLength,
+  categoryDemand,
   capacitySummary,
   generatorAnalyses,
   inputsKey,
@@ -586,8 +587,13 @@ function riser(): WorkedExample {
   const stored = resultOf(p, riserRow.id, inputsKey(p))?.result;
   const summaries = summariesOf(p);
   const subs = riserRow.feeds.map((id) => summaries.get(id)!);
-  const P = subs.reduce((t, s) => t + s.maxDemandKw, 0);
-  const Q = subs.reduce((t, s) => t + s.maxDemandKw * Math.tan(Math.acos(s.pf!)), 0);
+  // Each board's connected load per demand category x the category factor (A-30, briefing p.10).
+  const kwOf = (s: (typeof subs)[number]) => {
+    const d = categoryDemand(p, s);
+    return d.L1 + d.L2 + d.L3;
+  };
+  const P = subs.reduce((t, s) => t + kwOf(s), 0);
+  const Q = subs.reduce((t, s) => t + kwOf(s) * Math.tan(Math.acos(s.pf!)), 0);
   const pf = P / Math.hypot(P, Q);
   const ib = (P * 1000) / (SQRT3 * 400 * pf);
   const inA = nextRating(p, ib)!;
@@ -604,14 +610,19 @@ function riser(): WorkedExample {
     title: 'Busbar riser - rating and voltage drop',
     source: source('CC-01', `Riser 1 (${maker}, ${L} m) feeding ${n} SMDBs through tap-off boxes`),
     method: [
-      'The riser carries the demand of the boards on its tap-offs (the LV-panel category factor is not applied to the riser itself).',
+      'Busbar Riser criterion (Import File > Breaker / Cable Sizing Criteria), Demand - Calculated by default: the connected load of the boards on its tap-offs, each demand category x its factor (as at the LV panel; briefing page 10). Connected = no factor; User-defined = connected x the factor entered.',
       "Ib as for a three-phase load; In = the lowest standard rating >= Ib; busbar = the smallest rating of the project's manufacturer >= In.",
       'R at 95 °C: R95 = R20 x (1 + 0.00393 x 75). Load spread along the riser: k = (n + 1) / 2n for n tap-offs.',
       'Vd = k x sqrt3 x (R95 cos(phi) + X sin(phi)) x Ib x L / 1000 volts, % of 400 V; limit "Busduct" 2 %.',
       'Each tap-off box gets a breaker = the lowest standard rating >= the Ib of the board it feeds.',
     ],
     inputs: [
-      { label: 'Demand on the tap-offs', how: `${n} x ${f(P / n, 1)} kW`, value: P, unit: 'kW' },
+      {
+        label: 'Demand on the tap-offs',
+        how: `${n} boards, category factors applied`,
+        value: P,
+        unit: 'kW',
+      },
       { label: 'Power factor', how: 'combined from the boards', value: pf, digits: 3 },
       {
         label: `${maker} ${bus.ratingA} A`,

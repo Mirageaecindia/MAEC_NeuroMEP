@@ -1,4 +1,12 @@
-import { cableLength, loadSummaries, type ElementKind, type Project } from '@neuromep/shared';
+import {
+  cableLength,
+  categoryDemand,
+  loadSummaries,
+  sizingLevelOf,
+  sizingLoad,
+  type ElementKind,
+  type Project,
+} from '@neuromep/shared';
 import { dewaMinimum, getRulePack, loadPowerFactors, standardRating } from '@neuromep/rulepacks';
 import { busbarChoices, busbarDropPct, distributionFactor, type BusbarChoice } from './busbar.js';
 import { cableRating, voltageDrop, type Blocked, type Drop, type Rating } from './capacity.js';
@@ -184,18 +192,36 @@ export function checkNetworkFeeders(
     // Tap-off box per board: In = standard rating >= the board's Ib (10.4, 10.5).
     result.tapOffs = r.feeds.map((boardId) => {
       const s = summaryOf(boardId);
-      const ib = s ? phaseCurrent(s.demand, s.pf ?? pfDefault) : null;
+      const kind = elements.get(boardId)?.kind;
+      const level = kind ? sizingLevelOf(kind) : null;
+      const load = s && level ? sizingLoad(project, level, s.connected, s.demand) : null;
+      const kw = load ? (load.ok ? load.kw : null) : (s?.demand ?? null);
+      const ib = s && kw ? phaseCurrent(kw, s.pf ?? pfDefault) : null;
       return { boardId, ibA: ib, inA: ib === null ? null : standardRating(pack.devices, ib) };
     });
-    // Current: the demand of the boards on its tap-offs, largest phase (10.4).
+    // Current (10.4, A-30): the boards on its tap-offs, largest phase, on the riser criterion -
+    // calculated = each category's load x its factor (briefing p.10: busbar and LV panel level).
     const subs = r.feeds.map((id) => summaryOf(id)).filter((x) => !!x);
-    const d = subs.reduce(
-      (t, x) => ({ L1: t.L1 + x.demand.L1, L2: t.L2 + x.demand.L2, L3: t.L3 + x.demand.L3 }),
-      { L1: 0, L2: 0, L3: 0 },
+    const loads = subs.map((x) =>
+      sizingLoad(project, 'riser', x.connected, categoryDemand(project, x)),
     );
+    const bad = loads.find((l) => !l.ok);
+    if (bad && !bad.ok) {
+      missing.unshift(bad.detail);
+      result.notes.push(...missing);
+      return result;
+    }
+    const kws = loads.map((l) => (l.ok ? l.kw : { L1: 0, L2: 0, L3: 0 }));
+    const d = kws.reduce((t, v) => ({ L1: t.L1 + v.L1, L2: t.L2 + v.L2, L3: t.L3 + v.L3 }), {
+      L1: 0,
+      L2: 0,
+      L3: 0,
+    });
     const p = d.L1 + d.L2 + d.L3;
-    const q = subs.reduce((t, x) => t + (x.pf ? x.maxDemandKw * Math.tan(Math.acos(x.pf)) : 0), 0);
-    // A loaded board without a power factor gives the riser none either - never assumed (V-14).
+    const q = subs.reduce((t, x, i) => {
+      const kw = kws[i]!.L1 + kws[i]!.L2 + kws[i]!.L3;
+      return t + (x.pf ? kw * Math.tan(Math.acos(x.pf)) : 0);
+    }, 0);
     const pfMissing = subs.some((x) => x.maxDemandKw > 0 && !x.pf);
     const pf = pfMissing ? null : p > 0 ? p / Math.hypot(p, q) : pfDefault;
     const ib = pf ? phaseCurrent(d, pf) : null;

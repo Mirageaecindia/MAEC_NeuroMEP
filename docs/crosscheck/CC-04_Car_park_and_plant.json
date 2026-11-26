@@ -131,6 +131,7 @@
       }
     },
     "demandMethod": "manual",
+    "sizingCriteria": {},
     "busbarMaker": "gersan",
     "defaultOverrides": {}
   },
@@ -1004,7 +1005,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "c-mdb-1-smdb-cp",
@@ -1157,7 +1158,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "c-smdb-cp-db-cp1",
@@ -1306,7 +1307,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "c-smdb-cp-db-cp2",
@@ -1455,7 +1456,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "c-mdb-1-smdb-ch",
@@ -1608,7 +1609,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "c-smdb-ch-db-ch",
@@ -1757,7 +1758,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "mdb-1",
@@ -1914,7 +1915,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "smdb-cp",
@@ -2067,7 +2068,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "db-cp1",
@@ -2216,7 +2217,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "db-cp2",
@@ -2365,7 +2366,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "smdb-ch",
@@ -2518,7 +2519,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "db-ch",
@@ -2667,7 +2668,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "riser-1",
@@ -2729,7 +2730,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "db-1f",
@@ -2788,7 +2789,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "db-2f",
@@ -2847,7 +2848,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "db-3f",
@@ -2906,7 +2907,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       },
       {
         "elementId": "db-4f",
@@ -2965,7 +2966,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1at1bot427l"
+        "inputsKey": "24fzevmj2lb"
       }
     ],
     "generatorFactors": []

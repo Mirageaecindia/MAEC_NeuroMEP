@@ -3325,8 +3325,8 @@
         "sizedBy": null,
         "device": null,
         "cable": null,
-        "designCurrentA": 90.35,
-        "ratedCurrentA": 100,
+        "designCurrentA": 72.28,
+        "ratedCurrentA": 80,
         "capacityA": 800,
         "voltageDropPct": {
           "feeder": 0.01,
@@ -3341,7 +3341,7 @@
           "C1": {
             "name": "Current-carrying capacity",
             "state": "pass",
-            "detail": "800 A busbar vs In 100 A"
+            "detail": "800 A busbar vs In 80 A"
           },
           "C2": {
             "name": "Voltage drop",

@@ -20,6 +20,12 @@ import {
   BusbarMakerSchema,
   DEMAND_METHOD_LABELS,
   DemandMethodSchema,
+  criterionOf,
+  SIZING_CALCULATED_HINT,
+  SIZING_LEVEL_LABELS,
+  SIZING_LEVELS,
+  type SizingCriterion,
+  type SizingLevel,
 } from '@neuromep/shared';
 import {
   demandFactorsFor,
@@ -591,6 +597,7 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
         </div>
 
         {pack && <LoadPowerFactorGrid {...props} pack={pack} />}
+        <SizingCriteriaGrid {...props} />
 
         <div
           className="disciplines"
@@ -711,6 +718,121 @@ function LoadPowerFactorGrid(props: CardProps & { pack: RulePack }) {
         })}
       </div>
     </div>
+  );
+}
+
+/**
+ * Breaker / Cable Sizing Criteria (manager's list, A-30): per level, the incomer is sized on the
+ * Demand load (Calculated by the demand method, or a user-defined factor x connected load) or the
+ * Connected load. Changing it after modelling asks first (Section 9) and marks sizes out of date.
+ */
+function SizingCriteriaGrid(props: CardProps) {
+  const { project, dispatch } = props;
+  const set = (level: SizingLevel, value: SizingCriterion) =>
+    dispatch({ type: 'sizingCriterion', level, value });
+  return (
+    <div className="sizing-criteria" aria-label="Breaker / Cable Sizing Criteria">
+      <h3>Breaker / Cable Sizing Criteria</h3>
+      <table>
+        <tbody>
+          {SIZING_LEVELS.map((level) => {
+            const c = criterionOf(project, level);
+            const name = SIZING_LEVEL_LABELS[level];
+            return (
+              <tr key={level}>
+                <th scope="row">{name}</th>
+                <td>
+                  <label>
+                    <input
+                      type="radio"
+                      name={`basis-${level}`}
+                      aria-label={`${name}: Demand load`}
+                      checked={c.basis === 'demand'}
+                      disabled={props.readOnly}
+                      onChange={() => set(level, { ...c, basis: 'demand' })}
+                    />{' '}
+                    Demand
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name={`basis-${level}`}
+                      aria-label={`${name}: Connected load`}
+                      checked={c.basis === 'connected'}
+                      disabled={props.readOnly}
+                      onChange={() => set(level, { ...c, basis: 'connected' })}
+                    />{' '}
+                    Connected
+                  </label>
+                </td>
+                <td className={c.basis === 'demand' ? undefined : 'muted'}>
+                  <label title={SIZING_CALCULATED_HINT[level]}>
+                    <input
+                      type="radio"
+                      name={`mode-${level}`}
+                      aria-label={`${name}: Calculated`}
+                      checked={c.mode === 'calculated'}
+                      disabled={props.readOnly || c.basis !== 'demand'}
+                      onChange={() => set(level, { ...c, mode: 'calculated' })}
+                    />{' '}
+                    Calculated
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name={`mode-${level}`}
+                      aria-label={`${name}: User-defined`}
+                      checked={c.mode === 'user'}
+                      disabled={props.readOnly || c.basis !== 'demand'}
+                      onChange={() => set(level, { ...c, mode: 'user' })}
+                    />{' '}
+                    User-defined
+                  </label>
+                  {c.basis === 'demand' && c.mode === 'user' && (
+                    <FactorField
+                      label={`${name}: demand factor`}
+                      value={c.factor}
+                      disabled={props.readOnly}
+                      onCommit={(factor) => set(level, { ...c, factor })}
+                    />
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p className="muted">
+        Demand - Calculated follows the Demand Method (hover it for each level). Connected sizes on
+        the total connected load; User-defined on the connected load x the factor (0 - 1).
+      </p>
+    </div>
+  );
+}
+
+/** A demand factor above 0 and at most 1; empty or outside is shown red and not kept. */
+function FactorField(props: {
+  label: string;
+  value: number | null;
+  disabled: boolean;
+  onCommit: (v: number | null) => void;
+}) {
+  const [bad, setBad] = useState(props.value === null);
+  return (
+    <NumberInput
+      ariaLabel={props.label}
+      className="pill-input df-input"
+      value={props.value}
+      placeholder="DF"
+      commit="blur"
+      disabled={props.disabled}
+      invalid={bad}
+      onChange={(v) => {
+        const ok = v !== null && v > 0 && v <= 1;
+        setBad(!ok);
+        if (ok) props.onCommit(v);
+      }}
+    />
   );
 }
 

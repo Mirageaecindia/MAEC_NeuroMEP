@@ -33,6 +33,8 @@ import {
   type ElementKind,
   type GeneratorFactor,
   type RegistryChange,
+  type SizingCriterion,
+  type SizingLevel,
 } from '@neuromep/shared';
 import { applyRulePackDefaults, rulePackForRegion } from '@neuromep/rulepacks';
 
@@ -75,6 +77,8 @@ export type ProjectAction =
     }
   | { type: 'secondLevelFactor'; value: number | null; audit: AuditMeta }
   | { type: 'busbarMaker'; maker: Project['calculation']['busbarMaker'] }
+  /** Breaker / Cable Sizing Criteria of one level (A-30). */
+  | { type: 'sizingCriterion'; level: SizingLevel; value: SizingCriterion }
   | {
       type: 'defaultOverride';
       key: string;
@@ -245,6 +249,14 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
       };
     case 'busbarMaker':
       return { ...p, calculation: { ...p.calculation, busbarMaker: a.maker } };
+    case 'sizingCriterion':
+      return {
+        ...p,
+        calculation: {
+          ...p.calculation,
+          sizingCriteria: { ...p.calculation.sizingCriteria, [a.level]: a.value },
+        },
+      };
     case 'demandFactor': {
       const table = p.calculation.demandFactors[a.table] as Record<
         string,

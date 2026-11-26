@@ -131,6 +131,7 @@
       }
     },
     "demandMethod": "dubai-non-emaar",
+    "sizingCriteria": {},
     "busbarMaker": "schneider",
     "defaultOverrides": {}
   },
@@ -991,7 +992,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "c-mdb-1-ats-1",
@@ -1140,7 +1141,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "c-g-1-ats-1",
@@ -1281,7 +1282,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "c-ats-1-esmdb-1",
@@ -1434,7 +1435,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "c-esmdb-1-iso-fp",
@@ -1583,7 +1584,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "c-esmdb-1-db-el",
@@ -1732,7 +1733,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "c-esmdb-1-db-ll",
@@ -1881,7 +1882,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "mdb-1",
@@ -2038,7 +2039,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "ats-1",
@@ -2187,7 +2188,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "esmdb-1",
@@ -2340,7 +2341,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "iso-fp",
@@ -2489,7 +2490,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "db-el",
@@ -2638,7 +2639,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "db-ll",
@@ -2787,7 +2788,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "riser-1",
@@ -2798,22 +2799,22 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "800 A busbar vs In 125 A"
+            "detail": "800 A busbar vs In 80 A"
           },
           "C2": {
             "state": "pass",
-            "detail": "800 A schneider busbar, 20 m, k 0.750 (2 tap-offs): Vd 0.07 %, total 0.45 % vs 2 %"
+            "detail": "800 A schneider busbar, 20 m, k 0.750 (2 tap-offs): Vd 0.04 %, total 0.43 % vs 2 %"
           }
         },
         "size": null,
         "device": null,
         "load": null,
         "values": {
-          "ibA": 105.84754935143141,
-          "inA": 125,
+          "ibA": 68.80090707843043,
+          "inA": 80,
           "izA": 800,
-          "vdOwnPct": 0.06587620027710527,
-          "vdTotalPct": 0.4499536534101272,
+          "vdOwnPct": 0.042819530180118436,
+          "vdTotalPct": 0.42689698331314035,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -2842,14 +2843,14 @@
         "trace": [
           {
             "step": "Riser",
-            "detail": "800 A schneider busbar, 20 m, k 0.750 (2 tap-offs): Vd 0.07 %, total 0.45 % vs 2 %"
+            "detail": "800 A schneider busbar, 20 m, k 0.750 (2 tap-offs): Vd 0.04 %, total 0.43 % vs 2 %"
           }
         ],
         "runId": "cross-check-CC-02",
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "db-1f",
@@ -2860,7 +2861,7 @@
         "checks": {
           "C2": {
             "state": "pass",
-            "detail": "800 A schneider busbar, 20 m, k 0.750 (2 tap-offs): Vd 0.07 %, total 0.45 % vs 2 %"
+            "detail": "800 A schneider busbar, 20 m, k 0.750 (2 tap-offs): Vd 0.04 %, total 0.43 % vs 2 %"
           },
           "C3": {
             "state": "not-calculated",
@@ -2888,7 +2889,7 @@
           "inA": 63,
           "izA": null,
           "vdOwnPct": null,
-          "vdTotalPct": 0.4499536534101272,
+          "vdTotalPct": 0.42689698331314035,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -2897,7 +2898,7 @@
         "trace": [
           {
             "step": "Riser",
-            "detail": "800 A schneider busbar, 20 m, k 0.750 (2 tap-offs): Vd 0.07 %, total 0.45 % vs 2 %"
+            "detail": "800 A schneider busbar, 20 m, k 0.750 (2 tap-offs): Vd 0.04 %, total 0.43 % vs 2 %"
           },
           {
             "step": "Tap-off",
@@ -2908,7 +2909,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       },
       {
         "elementId": "db-2f",
@@ -2919,7 +2920,7 @@
         "checks": {
           "C2": {
             "state": "pass",
-            "detail": "800 A schneider busbar, 20 m, k 0.750 (2 tap-offs): Vd 0.07 %, total 0.45 % vs 2 %"
+            "detail": "800 A schneider busbar, 20 m, k 0.750 (2 tap-offs): Vd 0.04 %, total 0.43 % vs 2 %"
           },
           "C3": {
             "state": "not-calculated",
@@ -2947,7 +2948,7 @@
           "inA": 63,
           "izA": null,
           "vdOwnPct": null,
-          "vdTotalPct": 0.4499536534101272,
+          "vdTotalPct": 0.42689698331314035,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -2956,7 +2957,7 @@
         "trace": [
           {
             "step": "Riser",
-            "detail": "800 A schneider busbar, 20 m, k 0.750 (2 tap-offs): Vd 0.07 %, total 0.45 % vs 2 %"
+            "detail": "800 A schneider busbar, 20 m, k 0.750 (2 tap-offs): Vd 0.04 %, total 0.43 % vs 2 %"
           },
           {
             "step": "Tap-off",
@@ -2967,7 +2968,7 @@
         "ranAt": "2026-11-06T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "sc8eihpaiq"
+        "inputsKey": "uw0idwrxev"
       }
     ],
     "generatorFactors": []

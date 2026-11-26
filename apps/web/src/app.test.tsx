@@ -523,6 +523,29 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
     );
   });
 
+  it('Breaker / Cable Sizing Criteria per level below Load Power Factor (A-30, 26 Nov 2026)', async () => {
+    const api = fakeApi(completeProject());
+    renderAt('/projects/p-1/import', new FakeAuth(LEAD), api);
+    const grid = await screen.findByRole('generic', { name: 'Breaker / Cable Sizing Criteria' });
+    expect(within(grid).getByLabelText('Incomer to LV Panel / MDB: Demand load')).toBeChecked();
+    expect(within(grid).getByLabelText('Incomer to LV Panel / MDB: Calculated')).toBeChecked();
+    await userEvent.click(within(grid).getByLabelText('Busbar risers: Connected load'));
+    expect(within(grid).getByLabelText('Busbar risers: Calculated')).toBeDisabled();
+    await userEvent.click(within(grid).getByLabelText('Incomer to SMDB: User-defined'));
+    const df = within(grid).getByLabelText('Incomer to SMDB: demand factor');
+    await userEvent.type(df, '1.2{Enter}');
+    expect(df).toHaveAttribute('aria-invalid', 'true');
+    await userEvent.clear(df);
+    await userEvent.type(df, '0.8{Enter}');
+    await userEvent.click(tool('Save'));
+    await waitFor(async () =>
+      expect((await api.getProject('p-1')).project.calculation.sizingCriteria).toMatchObject({
+        riser: { basis: 'connected' },
+        smdb: { basis: 'demand', mode: 'user', factor: 0.8 },
+      }),
+    );
+  });
+
   it('Next on an incomplete project shows inline errors and keeps Floor Setup closed', async () => {
     const empty = {
       ...createEmptyProject({ id: 'p-2', userId: 'u-lead', now: FIXED_NOW }),

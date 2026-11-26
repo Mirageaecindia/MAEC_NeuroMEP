@@ -72,7 +72,9 @@ export interface LoadPowerFactors {
 
 /** Main boards: the Dubai category factors apply here (LV panel / MDB level). */
 export const MAIN_BOARDS = new Set<ElementKind>(['lv-panel', 'mdb', 'emdb', 'acb-panel']);
-export const SECOND_BOARDS = new Set<ElementKind>(['smdb', 'esmdb']);
+// MCC / EMCC take the SMDB-level factor too (user decision 26 Nov 2026, A-30: not named in the
+// briefing; non-Emaar 1.0, so only Emaar projects change).
+export const SECOND_BOARDS = new Set<ElementKind>(['smdb', 'esmdb', 'mcc', 'emcc']);
 
 /** Demand category of a load: its DB's or load point's own category; none for panel lines. */
 export const categoryOf = (e: Element): DemandCategory | 'none' =>

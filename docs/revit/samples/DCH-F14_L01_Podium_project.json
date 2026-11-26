@@ -131,6 +131,7 @@
       }
     },
     "demandMethod": "dubai-non-emaar",
+    "sizingCriteria": {},
     "busbarMaker": "gersan",
     "defaultOverrides": {}
   },
@@ -1197,6 +1198,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 1.0148159344816114,
+          "vdrMvAm": 1.15,
+          "vdxMvAm": 0.135,
+          "rkMohm": 5.757714285714286,
+          "xkMohm": 1.1,
           "vdOwnV": 0.9972392407792245,
           "vdUpstreamPct": 0,
           "vdLimitPct": 2,
@@ -1258,7 +1263,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "c-lv-gf-01-pfc-gf-01",
@@ -1350,6 +1355,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 4,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 16.488,
+          "xkMohm": 0.9,
           "vdOwnV": 1.5088566286845018,
           "vdUpstreamPct": 0.24930981019480616,
           "vdLimitPct": 4,
@@ -1407,7 +1416,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "c-lv-gf-01-ats-gf-01",
@@ -1499,6 +1508,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 10,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 68.7,
+          "xkMohm": 1.5,
           "vdOwnV": 2.558039638728278,
           "vdUpstreamPct": 0.24930981019480616,
           "vdLimitPct": 4,
@@ -1552,7 +1565,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "c-gen-gf-01-ats-gf-01",
@@ -1644,6 +1657,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 10,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 50.38,
+          "xkMohm": 1.1,
           "vdOwnV": 1.875895735067404,
           "vdUpstreamPct": 0,
           "vdLimitPct": 4,
@@ -1693,7 +1710,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "c-ats-gf-01-emdb-gf-01",
@@ -1785,6 +1802,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 10,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 50.38,
+          "xkMohm": 1.1,
           "vdOwnV": 1.875895735067404,
           "vdUpstreamPct": 0.8888197198768757,
           "vdLimitPct": 2,
@@ -1846,7 +1867,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "c-smdb-l1-ll-01-lcp-l1-ll-01",
@@ -1923,7 +1944,7 @@
           "inA": 16,
           "izA": 28.864,
           "vdOwnPct": 0.16150263230356104,
-          "vdTotalPct": 0.42394784337025415,
+          "vdTotalPct": 0.42132076319587675,
           "ikMaxKa": 21.394099329975155,
           "ikMinKa": 3.9819551071586,
           "ipKa": 32.66417305092943,
@@ -1938,8 +1959,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 10,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 29.039783120000003,
+          "xkMohm": 0.6340564000000001,
           "vdOwnV": 0.6460105292142442,
-          "vdUpstreamPct": 0.2624452110666931,
+          "vdUpstreamPct": 0.2598181308923157,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 6.3405640000000005,
@@ -1991,7 +2016,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "c-smdb-l1-ll-01-db-l1-ll-01",
@@ -2068,7 +2093,7 @@
           "inA": 32,
           "izA": 36.736,
           "vdOwnPct": 0.3297851461006273,
-          "vdTotalPct": 0.5922303571673204,
+          "vdTotalPct": 0.589603276992943,
           "ikMaxKa": 21.394099329975155,
           "ikMinKa": 4.89759539845447,
           "ipKa": 32.66417305092943,
@@ -2083,8 +2108,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 22.160458240000008,
+          "xkMohm": 0.7257792000000003,
           "vdOwnV": 1.3191405844025093,
-          "vdUpstreamPct": 0.2624452110666931,
+          "vdUpstreamPct": 0.2598181308923157,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 7.257792000000002,
@@ -2136,7 +2165,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "c-smdb-l1-ll-01-db-l1-gym",
@@ -2213,7 +2242,7 @@
           "inA": 63,
           "izA": 64.944,
           "vdOwnPct": 0.8424312662671183,
-          "vdTotalPct": 1.1048764773338113,
+          "vdTotalPct": 1.102249397159434,
           "ikMaxKa": 21.394099329975155,
           "ikMinKa": 3.9791657690357196,
           "ipKa": 32.66417305092943,
@@ -2228,8 +2257,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 2.5,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 28.87036663000001,
+          "xkMohm": 2.521429400000001,
           "vdOwnV": 3.369725065068473,
-          "vdUpstreamPct": 0.2624452110666931,
+          "vdUpstreamPct": 0.2598181308923157,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 25.21429400000001,
@@ -2281,7 +2314,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "c-emdb-gf-01-elcp-l1-ll-01",
@@ -2373,6 +2406,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 10,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 82.44,
+          "xkMohm": 1.8,
           "vdOwnV": 0.9169680745952882,
           "vdUpstreamPct": 1.3577936536437267,
           "vdLimitPct": 2.5,
@@ -2430,7 +2467,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "c-emdb-gf-01-edb-l1-ll-01",
@@ -2522,6 +2559,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 10,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 82.44,
+          "xkMohm": 1.8,
           "vdOwnV": 2.9228357377724796,
           "vdUpstreamPct": 1.3577936536437267,
           "vdLimitPct": 2.5,
@@ -2579,7 +2620,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "lv-gf-01",
@@ -2671,6 +2712,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 1.0148159344816114,
+          "vdrMvAm": 1.15,
+          "vdxMvAm": 0.135,
+          "rkMohm": 5.757714285714286,
+          "xkMohm": 1.1,
           "vdOwnV": 0.9972392407792245,
           "vdUpstreamPct": 0,
           "vdLimitPct": 2,
@@ -2732,7 +2777,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "pfc-gf-01",
@@ -2824,6 +2869,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 4,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 16.488,
+          "xkMohm": 0.9,
           "vdOwnV": 1.5088566286845018,
           "vdUpstreamPct": 0.24930981019480616,
           "vdLimitPct": 4,
@@ -2881,7 +2930,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "ats-gf-01",
@@ -2973,6 +3022,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 10,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 68.7,
+          "xkMohm": 1.5,
           "vdOwnV": 2.558039638728278,
           "vdUpstreamPct": 0.24930981019480616,
           "vdLimitPct": 4,
@@ -3026,7 +3079,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "emdb-gf-01",
@@ -3118,6 +3171,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 10,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 50.38,
+          "xkMohm": 1.1,
           "vdOwnV": 1.875895735067404,
           "vdUpstreamPct": 0.8888197198768757,
           "vdLimitPct": 2,
@@ -3179,7 +3236,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "lcp-l1-ll-01",
@@ -3256,7 +3313,7 @@
           "inA": 16,
           "izA": 28.864,
           "vdOwnPct": 0.16150263230356104,
-          "vdTotalPct": 0.42394784337025415,
+          "vdTotalPct": 0.42132076319587675,
           "ikMaxKa": 21.394099329975155,
           "ikMinKa": 3.9819551071586,
           "ipKa": 32.66417305092943,
@@ -3271,8 +3328,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 10,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 29.039783120000003,
+          "xkMohm": 0.6340564000000001,
           "vdOwnV": 0.6460105292142442,
-          "vdUpstreamPct": 0.2624452110666931,
+          "vdUpstreamPct": 0.2598181308923157,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 6.3405640000000005,
@@ -3324,7 +3385,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "db-l1-ll-01",
@@ -3401,7 +3462,7 @@
           "inA": 32,
           "izA": 36.736,
           "vdOwnPct": 0.3297851461006273,
-          "vdTotalPct": 0.5922303571673204,
+          "vdTotalPct": 0.589603276992943,
           "ikMaxKa": 21.394099329975155,
           "ikMinKa": 4.89759539845447,
           "ipKa": 32.66417305092943,
@@ -3416,8 +3477,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 22.160458240000008,
+          "xkMohm": 0.7257792000000003,
           "vdOwnV": 1.3191405844025093,
-          "vdUpstreamPct": 0.2624452110666931,
+          "vdUpstreamPct": 0.2598181308923157,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 7.257792000000002,
@@ -3469,7 +3534,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "elcp-l1-ll-01",
@@ -3561,6 +3626,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 10,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 82.44,
+          "xkMohm": 1.8,
           "vdOwnV": 0.9169680745952882,
           "vdUpstreamPct": 1.3577936536437267,
           "vdLimitPct": 2.5,
@@ -3618,7 +3687,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "edb-l1-ll-01",
@@ -3710,6 +3779,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 10,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 82.44,
+          "xkMohm": 1.8,
           "vdOwnV": 2.9228357377724796,
           "vdUpstreamPct": 1.3577936536437267,
           "vdLimitPct": 2.5,
@@ -3767,7 +3840,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "db-l1-gym",
@@ -3844,7 +3917,7 @@
           "inA": 63,
           "izA": 64.944,
           "vdOwnPct": 0.8424312662671183,
-          "vdTotalPct": 1.1048764773338113,
+          "vdTotalPct": 1.102249397159434,
           "ikMaxKa": 21.394099329975155,
           "ikMinKa": 3.9791657690357196,
           "ipKa": 32.66417305092943,
@@ -3859,8 +3932,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 2.5,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 28.87036663000001,
+          "xkMohm": 2.521429400000001,
           "vdOwnV": 3.369725065068473,
-          "vdUpstreamPct": 0.2624452110666931,
+          "vdUpstreamPct": 0.2598181308923157,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 25.21429400000001,
@@ -3912,7 +3989,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "riser-1",
@@ -3923,7 +4000,7 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "800 A busbar vs In 100 A"
+            "detail": "800 A busbar vs In 80 A"
           },
           "C2": {
             "state": "pass",
@@ -3934,11 +4011,11 @@
         "device": null,
         "load": null,
         "values": {
-          "ibA": 90.3513004797987,
-          "inA": 100,
+          "ibA": 72.28104038383898,
+          "inA": 80,
           "izA": 800,
-          "vdOwnPct": 0.013135400871886919,
-          "vdTotalPct": 0.2624452110666931,
+          "vdOwnPct": 0.010508320697509538,
+          "vdTotalPct": 0.2598181308923157,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -3953,8 +4030,12 @@
           "kr": null,
           "k3": null,
           "vuMvAm": null,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": null,
+          "xkMohm": null,
           "vdOwnV": null,
-          "vdUpstreamPct": 0.2493098101948062,
+          "vdUpstreamPct": 0.24930981019480616,
           "vdLimitPct": 2,
           "busbarA": 800,
           "lengthM": 6,
@@ -3970,7 +4051,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       },
       {
         "elementId": "smdb-l1-ll-01",
@@ -4009,7 +4090,7 @@
           "inA": 100,
           "izA": null,
           "vdOwnPct": null,
-          "vdTotalPct": 0.2624452110666931,
+          "vdTotalPct": 0.2598181308923157,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -4029,7 +4110,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "28oltn3ybxs"
+        "inputsKey": "xzag3j3x9u"
       }
     ],
     "generatorFactors": []

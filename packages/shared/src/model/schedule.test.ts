@@ -54,6 +54,39 @@ describe('#TASK-30 / #TASK-31 schematic tree and panel schedules (Section 14)', 
     expect(s.get('tx')!.connectedKw).toBe(6);
   });
 
+  it('MD column: each row is its connected load x its category factor, the rows add up (A-30)', () => {
+    const p = modelledProject();
+    const f = p.building.floors.find((x) => x.code === 'GF')!.id;
+    p.calculation.demandMethod = 'dubai-non-emaar';
+    p.calculation.demandFactors.byCategory.residential = { value: 0.65, source: 'user' };
+    p.calculation.demandFactors.byCategory.landlord = { value: 0.8, source: 'user' };
+    const tx = { ...testElement('transformer', 'tx', f), tag: 'TX-1' };
+    const mdb = { ...testElement('mdb', 'mdb', f), tag: 'MDB-1' };
+    const kw = (n: number) => [
+      { method: 'kw' as const, loadType: '1' as const, kwL1: n, kwL2: n, kwL3: n },
+    ];
+    const apt = {
+      ...sampleDb(f, 'apt'),
+      tag: 'DB-APT',
+      demandCategory: 'residential' as const,
+      loads: kw(10),
+    };
+    const pool = {
+      ...sampleDb(f, 'pool'),
+      tag: 'DB-POOL',
+      demandCategory: 'landlord' as const,
+      loads: kw(5),
+    };
+    p.model.elements = [tx, mdb, apt, pool];
+    p.model.cables = [testCable(tx, mdb), testCable(mdb, apt), testCable(mdb, pool)];
+    p.model.risers = [];
+    const s = boardSchedule(p, 'mdb', loadSummaries(p, 0.9), { allowancePct: 0, additionM: 5 })!;
+    const way = (tag: string) => s.ways.find((w) => w.feeder === tag)!;
+    expect(way('DB-APT')).toMatchObject({ tclKw: 30, mdKw: 19.5 });
+    expect(way('DB-POOL')).toMatchObject({ tclKw: 15, mdKw: 12 });
+    expect(s.totals).toMatchObject({ tclKw: 45, mdKw: 31.5 });
+  });
+
   it('fills a schedule from the model; sizes wait for Cable Size', () => {
     const p = network();
     const s = boardSchedule(p, 'smdb', loadSummaries(p, 0.9), { allowancePct: 0, additionM: 5 })!;

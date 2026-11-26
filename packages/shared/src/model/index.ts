@@ -10,6 +10,7 @@ export * from './copy.js';
 export * from './changeKind.js';
 export * from './results.js';
 export * from './riser.js';
+export * from './sizingCriteria.js';
 export * from './network.js';
 export * from './floorFlags.js';
 export * from './sizing.js';

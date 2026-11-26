@@ -6,6 +6,9 @@ import {
   type ElementKind,
   type Project,
   type ProvisionalReason,
+  criterionOf,
+  sizingLevelOf,
+  sizingLoad,
 } from '@neuromep/shared';
 import {
   breakerTypeFor,
@@ -118,7 +121,34 @@ export function designFeeders(project: Project): FeederDesign[] {
         detail: `TBC factors counted as 1.0: ${[...s.tbcFactors, ...s.tbcCategories].join(', ')}`,
       });
     }
-    const d = s.demand;
+    // Breaker / Cable Sizing Criteria (A-30): demand (calculated / user factor) or connected load.
+    const level = sizingLevelOf(to.kind);
+    const sized = level ? sizingLoad(project, level, s.connected, s.demand) : null;
+    if (sized && !sized.ok) {
+      errors.unshift('E2003');
+      trace.push({ step: 'Load', detail: sized.detail });
+      return [
+        {
+          cableId: cable.id,
+          toId: to.id,
+          demandKw: s.demand,
+          pf: s.pf,
+          provisionalReasons: reasons,
+          errors,
+          trace,
+          ibA: null,
+          ibCase: null,
+          neutralA: null,
+          device: null,
+          status: 'blocked',
+        },
+      ];
+    }
+    const crit = level ? criterionOf(project, level) : null;
+    if (sized?.ok && crit && (crit.basis === 'connected' || crit.mode === 'user')) {
+      trace.push({ step: 'Load', detail: sized.detail });
+    }
+    const d = sized?.ok ? sized.kw : s.demand;
     const phases = [d.L1, d.L2, d.L3].filter((p) => p > 0).length;
     const base = {
       cableId: cable.id,

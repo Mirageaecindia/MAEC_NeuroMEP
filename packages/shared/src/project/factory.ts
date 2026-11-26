@@ -48,6 +48,7 @@ export function createEmptyProject(args: { id: string; userId: string; now: stri
         secondLevel: untouched(),
       },
       demandMethod: 'dubai-non-emaar',
+      sizingCriteria: {},
       busbarMaker: null,
       defaultOverrides: {},
     },

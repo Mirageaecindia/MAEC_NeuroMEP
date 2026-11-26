@@ -3,6 +3,7 @@ import type { Cable } from './cable.js';
 import type { Element, ElementKind } from './elements.js';
 import type { LoadSummary } from './loads.js';
 import { inputsKey, resultOf, type StoredResult } from './sizing.js';
+import { categoryDemand } from './sizingCriteria.js';
 import { cableLength, type LengthRule } from './wiring.js';
 
 /**
@@ -220,14 +221,21 @@ function tapOffColumns(p: Project, boardId: string, key: string) {
   return { cols, pending, problem };
 }
 
-const loadColumns = (s: LoadSummary | undefined) => ({
+/**
+ * Load columns of a row. MD = the row's share of the maximum demand: each demand category's
+ * connected load x its factor, as the manager's schedules (briefing pp. 2-4: 116.71 -> 75.86 at
+ * 0.65), so the rows add up to the total (A-30, 26 Nov 2026). Sizing follows the Breaker / Cable
+ * Sizing Criteria instead (engine).
+ */
+const totalKw = (k: { L1: number; L2: number; L3: number }) => k.L1 + k.L2 + k.L3;
+const loadColumns = (p: Pick<Project, 'calculation'>, s: LoadSummary | undefined) => ({
   kw: {
     R: round2(s?.connected.L1 ?? 0),
     Y: round2(s?.connected.L2 ?? 0),
     B: round2(s?.connected.L3 ?? 0),
   },
   tclKw: round2(s?.connectedKw ?? 0),
-  mdKw: round2(s?.maxDemandKw ?? 0),
+  mdKw: round2(s ? totalKw(categoryDemand(p, s)) : 0),
 });
 
 const polesOf = (e: Element | undefined): 'SP' | 'TP' =>
@@ -289,7 +297,7 @@ export function boardSchedule(
       wayNo: '-',
       poles: polesOf(board),
       ...cols,
-      ...loadColumns(s),
+      ...loadColumns(p, s),
       remarks: c.to.port === 'standby' ? `Standby from ${tagOf(c.from.elementId) ?? '?'}` : '',
       meters: metersOn(elements, board.id),
       childId: null,
@@ -312,7 +320,7 @@ export function boardSchedule(
         eccMm2: null,
         lengthM: null,
       }),
-      ...loadColumns(s),
+      ...loadColumns(p, s),
       remarks: riser >= 0 ? `Tap-off from Riser ${riser + 1}` : '',
       meters: metersOn(elements, board.id),
       childId: null,
@@ -332,14 +340,14 @@ export function boardSchedule(
         wayNo: c.circuitRef,
         poles: polesOf(child),
         ...cols,
-        ...loadColumns(summaries.get(c.to.elementId)),
+        ...loadColumns(p, summaries.get(c.to.elementId)),
         remarks: remarksOf(child),
         meters: metersOn(elements, child?.id),
         childId: child?.id ?? null,
       };
     });
 
-  const totals = loadColumns(s);
+  const totals = loadColumns(p, s);
   return {
     id: board.id,
     tag: board.tag,
@@ -392,7 +400,7 @@ export function busbarSchedule(
       wayNo: `T${k + 1}`,
       poles: polesOf(b),
       ...cols,
-      ...loadColumns(summaries.get(b.id)),
+      ...loadColumns(p, summaries.get(b.id)),
       remarks: remarksOf(b),
       meters: metersOn(elements, b.id),
       childId: b.id,

@@ -529,7 +529,7 @@
         "capacityA": null,
         "voltageDropPct": {
           "feeder": null,
-          "total": 0.25
+          "total": 0.23
         },
         "faultLevelKa": {
           "max": null,
@@ -540,7 +540,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.06 %, total 0.25 % vs 2 %"
+            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.04 %, total 0.23 % vs 2 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -663,7 +663,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 2.08,
-          "total": 2.33
+          "total": 2.31
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -679,7 +679,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.33 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.31 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -870,7 +870,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 1.31,
-          "total": 1.56
+          "total": 1.54
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -886,7 +886,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.56 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.54 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -1077,7 +1077,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 1.1,
-          "total": 1.35
+          "total": 1.33
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -1093,7 +1093,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.35 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.33 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -1284,7 +1284,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 1.38,
-          "total": 1.63
+          "total": 1.61
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -1300,7 +1300,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.63 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.61 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -1491,7 +1491,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 2.17,
-          "total": 2.42
+          "total": 2.4
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -1507,7 +1507,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.42 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.40 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -1698,7 +1698,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 0.99,
-          "total": 1.24
+          "total": 1.22
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -1714,7 +1714,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.24 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.22 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -1905,7 +1905,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 0.58,
-          "total": 0.83
+          "total": 0.81
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -1921,7 +1921,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.83 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.81 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -2112,7 +2112,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 0.64,
-          "total": 0.89
+          "total": 0.87
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -2128,7 +2128,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.89 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.87 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -2319,7 +2319,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 0.92,
-          "total": 1.17
+          "total": 1.15
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -2335,7 +2335,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.17 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.15 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -2526,7 +2526,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 1.47,
-          "total": 1.72
+          "total": 1.7
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -2542,7 +2542,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.72 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.70 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -3047,7 +3047,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 2.08,
-          "total": 2.33
+          "total": 2.31
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -3063,7 +3063,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.33 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.31 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -3238,7 +3238,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 1.31,
-          "total": 1.56
+          "total": 1.54
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -3254,7 +3254,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.56 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.54 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -3429,7 +3429,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 1.1,
-          "total": 1.35
+          "total": 1.33
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -3445,7 +3445,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.35 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.33 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -3620,7 +3620,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 1.38,
-          "total": 1.63
+          "total": 1.61
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -3636,7 +3636,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.63 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.61 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -3811,7 +3811,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 2.17,
-          "total": 2.42
+          "total": 2.4
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -3827,7 +3827,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.42 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.40 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -3986,7 +3986,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 0.99,
-          "total": 1.24
+          "total": 1.22
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -4002,7 +4002,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.24 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.22 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -4161,7 +4161,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 0.58,
-          "total": 0.83
+          "total": 0.81
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -4177,7 +4177,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.83 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.81 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -4336,7 +4336,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 0.64,
-          "total": 0.89
+          "total": 0.87
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -4352,7 +4352,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.89 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.87 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -4511,7 +4511,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 0.92,
-          "total": 1.17
+          "total": 1.15
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -4527,7 +4527,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.17 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.15 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -4686,7 +4686,7 @@
         "capacityA": 34.44,
         "voltageDropPct": {
           "feeder": 1.47,
-          "total": 1.72
+          "total": 1.7
         },
         "faultLevelKa": {
           "max": 26.1,
@@ -4702,7 +4702,7 @@
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.72 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.70 % vs 2.5 %"
           },
           "C3": {
             "name": "Breaking / making capacity",
@@ -4777,7 +4777,7 @@
             "capacityA": null,
             "voltageDropPct": {
               "feeder": null,
-              "total": 0.25
+              "total": 0.23
             },
             "faultLevelKa": {
               "max": null,
@@ -4788,7 +4788,7 @@
               "C2": {
                 "name": "Voltage drop",
                 "state": "pass",
-                "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.06 %, total 0.25 % vs 2 %"
+                "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.04 %, total 0.23 % vs 2 %"
               },
               "C3": {
                 "name": "Breaking / making capacity",
@@ -4809,12 +4809,12 @@
         "sizedBy": null,
         "device": null,
         "cable": null,
-        "designCurrentA": 251.36,
-        "ratedCurrentA": 300,
+        "designCurrentA": 163.39,
+        "ratedCurrentA": 200,
         "capacityA": 800,
         "voltageDropPct": {
-          "feeder": 0.06,
-          "total": 0.25
+          "feeder": 0.04,
+          "total": 0.23
         },
         "faultLevelKa": {
           "max": null,
@@ -4825,12 +4825,12 @@
           "C1": {
             "name": "Current-carrying capacity",
             "state": "pass",
-            "detail": "800 A busbar vs In 300 A"
+            "detail": "800 A busbar vs In 200 A"
           },
           "C2": {
             "name": "Voltage drop",
             "state": "pass",
-            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.06 %, total 0.25 % vs 2 %"
+            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.04 %, total 0.23 % vs 2 %"
           }
         }
       }

@@ -5,6 +5,7 @@ import { StoredResultSchema } from '../model/sizing.js';
 import { FloorFlagSchema } from '../model/floorFlags.js';
 import { GeneratorFactorSchema } from '../model/generator.js';
 import { RiserSchema } from '../model/riser.js';
+import { SizingCriteriaSchema } from '../model/sizingCriteria.js';
 import {
   BusbarMakerSchema,
   DemandCategorySchema,
@@ -197,6 +198,8 @@ export const ProjectSchema = z.object({
       /** Dubai method: factor at the SMDB level (1.0 non-Emaar, 0.8 Emaar). */
       secondLevel: DefaultableNumberSchema.default({ value: null, source: 'rulepack' }),
     }),
+    /** Breaker / Cable Sizing Criteria per level (A-30): missing = Demand, Calculated. */
+    sizingCriteria: SizingCriteriaSchema,
     /** Busbar data used for busbar feeders and risers; null until chosen. */
     busbarMaker: BusbarMakerSchema.nullable().default(null),
     /** Technical Lead overrides of rule-pack calculation defaults (12.2), keyed by default key. */

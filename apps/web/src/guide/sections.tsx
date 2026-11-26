@@ -348,6 +348,17 @@ export const SECTIONS: GuideSection[] = [
             the Lead may change them).
           </li>
           <li>
+            <Term>Breaker / Cable Sizing Criteria</Term> - for each level (incomer to LV Panel /
+            MDB, busbar risers, incomer to SMDB, to MCC, to DBs / control panels / isolators): size
+            the breaker and cable on the <em>Demand</em> load or the <em>Connected</em> load (TCL).
+            Under Demand, <em>Calculated</em> follows the Demand Method - category factors at the LV
+            panel and busbar risers (0.65 residential, 0.8 landlord / office / retail; Emaar 0.6 /
+            0.75 / 0.8), the SMDB factor at SMDBs and MCCs (1.0; Emaar 0.8), 100 % below - and{' '}
+            <em>User-defined</em> uses the connected load x the factor you enter (a missing factor
+            blocks the feeder, E2003). The schedules&apos; MD column always shows each row&apos;s
+            connected load x its category factor, so the rows add up to the total.
+          </li>
+          <li>
             <Term>Demand factors</Term> - per load type and per demand category (Manual method), and
             the SMDB level factor.
           </li>

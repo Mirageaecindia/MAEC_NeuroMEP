@@ -131,6 +131,7 @@
       }
     },
     "demandMethod": "dubai-non-emaar",
+    "sizingCriteria": {},
     "busbarMaker": "gersan",
     "defaultOverrides": {}
   },
@@ -1792,6 +1793,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 0.42358049860325686,
+          "vdrMvAm": 0.43,
+          "vdxMvAm": 0.13,
+          "rkMohm": 2.1212631578947367,
+          "xkMohm": 1.1,
           "vdOwnV": 0.7612788894579251,
           "vdUpstreamPct": 0,
           "vdLimitPct": 2,
@@ -1853,7 +1858,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "c-lv-gf-01-pfc-gf-01",
@@ -1945,6 +1950,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 1.048615662831756,
+          "vdrMvAm": 1.15,
+          "vdxMvAm": 0.135,
+          "rkMohm": 4.710857142857143,
+          "xkMohm": 0.9,
           "vdOwnV": 0.7555279894086081,
           "vdUpstreamPct": 0.19031972236448128,
           "vdLimitPct": 4,
@@ -2002,7 +2011,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "c-smdb-t-l2-ap-db-201",
@@ -2021,7 +2030,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.33 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.31 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -2079,7 +2088,7 @@
           "inA": 32,
           "izA": 34.44,
           "vdOwnPct": 2.078040182534799,
-          "vdTotalPct": 2.328842188439095,
+          "vdTotalPct": 2.30767338920016,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.150505669749943,
           "ipKa": 45.87123956590738,
@@ -2094,8 +2103,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 121.90404112933332,
+          "xkMohm": 3.9924904299999997,
           "vdOwnV": 8.312160730139196,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 39.924904299999994,
@@ -2120,7 +2133,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.33 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.31 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -2147,7 +2160,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "c-smdb-t-l2-ap-db-202",
@@ -2166,7 +2179,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.56 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.54 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -2224,7 +2237,7 @@
           "inA": 25,
           "izA": 34.44,
           "vdOwnPct": 1.313425881578106,
-          "vdTotalPct": 1.5642278874824018,
+          "vdTotalPct": 1.5430590882434667,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.2731566823755216,
           "ipKa": 45.87123956590738,
@@ -2239,8 +2252,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 109.81047449066665,
+          "xkMohm": 3.5964129199999997,
           "vdOwnV": 5.253703526312424,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 35.964129199999995,
@@ -2265,7 +2282,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.56 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.54 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -2292,7 +2309,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "c-smdb-t-l2-ap-db-203",
@@ -2311,7 +2328,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.35 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.33 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -2369,7 +2386,7 @@
           "inA": 25,
           "izA": 34.44,
           "vdOwnPct": 1.0978092963934245,
-          "vdTotalPct": 1.3486113022977204,
+          "vdTotalPct": 1.3274425030587853,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.5136205781549907,
           "ipKa": 45.87123956590738,
@@ -2384,8 +2401,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 91.78360303999996,
+          "xkMohm": 3.0060131999999986,
           "vdOwnV": 4.391237185573698,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 30.060131999999985,
@@ -2410,7 +2431,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.35 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.33 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -2437,7 +2458,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "c-smdb-t-l2-ap-db-204",
@@ -2456,7 +2477,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.63 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.61 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -2514,7 +2535,7 @@
           "inA": 25,
           "izA": 34.44,
           "vdOwnPct": 1.376249418988031,
-          "vdTotalPct": 1.627051424892327,
+          "vdTotalPct": 1.6058826256533918,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.2168196843028711,
           "ipKa": 45.87123956590738,
@@ -2529,8 +2550,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 115.06290825866665,
+          "xkMohm": 3.76843586,
           "vdOwnV": 5.504997675952124,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 37.684358599999996,
@@ -2555,7 +2580,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.63 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.61 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -2582,7 +2607,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "c-smdb-t-l2-ap-db-205",
@@ -2601,7 +2626,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.42 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.40 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -2659,7 +2684,7 @@
           "inA": 32,
           "izA": 34.44,
           "vdOwnPct": 2.167023231921631,
-          "vdTotalPct": 2.417825237825927,
+          "vdTotalPct": 2.396656438586992,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.1045702082439608,
           "ipKa": 45.87123956590738,
@@ -2674,8 +2699,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 127.12405246666664,
+          "xkMohm": 4.1634515,
           "vdOwnV": 8.668092927686525,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 41.63451499999999,
@@ -2700,7 +2729,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.42 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.40 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -2727,7 +2756,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "c-smdb-t-l2-ap-db-206",
@@ -2746,7 +2775,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.24 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.22 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -2804,7 +2833,7 @@
           "inA": 32,
           "izA": 34.44,
           "vdOwnPct": 0.9886886897307868,
-          "vdTotalPct": 1.2394906956350829,
+          "vdTotalPct": 1.2183218963961477,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 2.341745914091288,
           "ipKa": 45.87123956590738,
@@ -2819,8 +2848,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 57.999430285333354,
+          "xkMohm": 1.899544660000001,
           "vdOwnV": 3.954754758923147,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 18.995446600000008,
@@ -2845,7 +2878,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.24 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.22 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -2872,7 +2905,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "c-smdb-t-l2-ap-db-207",
@@ -2891,7 +2924,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.83 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.81 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -2949,7 +2982,7 @@
           "inA": 25,
           "izA": 34.44,
           "vdOwnPct": 0.5835870087047796,
-          "vdTotalPct": 0.8343890146090756,
+          "vdTotalPct": 0.8132202153701404,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 2.7513329477821937,
           "ipKa": 45.87123956590738,
@@ -2964,8 +2997,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 48.791459976,
+          "xkMohm": 1.5979735800000001,
           "vdOwnV": 2.3343480348191186,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 15.9797358,
@@ -2990,7 +3027,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.83 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.81 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -3017,7 +3054,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "c-smdb-t-l2-ap-db-208",
@@ -3036,7 +3073,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.89 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.87 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -3094,7 +3131,7 @@
           "inA": 25,
           "izA": 34.44,
           "vdOwnPct": 0.6402057522964404,
-          "vdTotalPct": 0.8910077582007363,
+          "vdTotalPct": 0.8698389589618012,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 2.5244118149515216,
           "ipKa": 45.87123956590738,
@@ -3109,8 +3146,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 53.52513485333333,
+          "xkMohm": 1.7530066,
           "vdOwnV": 2.5608230091857616,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 17.530065999999998,
@@ -3135,7 +3176,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.89 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.87 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -3162,7 +3203,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "c-smdb-t-l2-ap-db-209",
@@ -3181,7 +3222,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.17 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.15 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -3239,7 +3280,7 @@
           "inA": 25,
           "izA": 34.44,
           "vdOwnPct": 0.9186458748910464,
-          "vdTotalPct": 1.1694478807953423,
+          "vdTotalPct": 1.1482790815564072,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.7952381465402716,
           "ipKa": 45.87123956590738,
@@ -3254,8 +3295,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 76.804440072,
+          "xkMohm": 2.5154292600000003,
           "vdOwnV": 3.6745834995641857,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 25.1542926,
@@ -3280,7 +3325,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.17 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.15 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -3307,7 +3352,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "c-smdb-t-l2-ap-db-210",
@@ -3326,7 +3371,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.72 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.70 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -3384,7 +3429,7 @@
           "inA": 32,
           "izA": 34.44,
           "vdOwnPct": 1.4667653215296044,
-          "vdTotalPct": 1.7175673274339003,
+          "vdTotalPct": 1.6963985281949652,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.6104212610380801,
           "ipKa": 45.87123956590738,
@@ -3399,8 +3444,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 86.04483281199998,
+          "xkMohm": 2.8180622099999995,
           "vdOwnV": 5.8670612861184175,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 28.180622099999994,
@@ -3425,7 +3474,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.72 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.70 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -3452,7 +3501,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "lv-gf-01",
@@ -3544,6 +3593,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 0.42358049860325686,
+          "vdrMvAm": 0.43,
+          "vdxMvAm": 0.13,
+          "rkMohm": 2.1212631578947367,
+          "xkMohm": 1.1,
           "vdOwnV": 0.7612788894579251,
           "vdUpstreamPct": 0,
           "vdLimitPct": 2,
@@ -3605,7 +3658,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "pfc-gf-01",
@@ -3697,6 +3750,10 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 1.048615662831756,
+          "vdrMvAm": 1.15,
+          "vdxMvAm": 0.135,
+          "rkMohm": 4.710857142857143,
+          "xkMohm": 0.9,
           "vdOwnV": 0.7555279894086081,
           "vdUpstreamPct": 0.19031972236448128,
           "vdLimitPct": 4,
@@ -3754,7 +3811,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "db-201",
@@ -3773,7 +3830,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.33 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.31 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -3831,7 +3888,7 @@
           "inA": 32,
           "izA": 34.44,
           "vdOwnPct": 2.078040182534799,
-          "vdTotalPct": 2.328842188439095,
+          "vdTotalPct": 2.30767338920016,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.150505669749943,
           "ipKa": 45.87123956590738,
@@ -3846,8 +3903,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 121.90404112933332,
+          "xkMohm": 3.9924904299999997,
           "vdOwnV": 8.312160730139196,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 39.924904299999994,
@@ -3872,7 +3933,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.33 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 39.9 m: Vc 2.08 %, total 2.31 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -3899,7 +3960,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "db-202",
@@ -3918,7 +3979,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.56 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.54 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -3976,7 +4037,7 @@
           "inA": 25,
           "izA": 34.44,
           "vdOwnPct": 1.313425881578106,
-          "vdTotalPct": 1.5642278874824018,
+          "vdTotalPct": 1.5430590882434667,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.2731566823755216,
           "ipKa": 45.87123956590738,
@@ -3991,8 +4052,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 109.81047449066665,
+          "xkMohm": 3.5964129199999997,
           "vdOwnV": 5.253703526312424,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 35.964129199999995,
@@ -4017,7 +4082,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.56 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 36.0 m: Vc 1.31 %, total 1.54 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -4044,7 +4109,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "db-203",
@@ -4063,7 +4128,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.35 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.33 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -4121,7 +4186,7 @@
           "inA": 25,
           "izA": 34.44,
           "vdOwnPct": 1.0978092963934245,
-          "vdTotalPct": 1.3486113022977204,
+          "vdTotalPct": 1.3274425030587853,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.5136205781549907,
           "ipKa": 45.87123956590738,
@@ -4136,8 +4201,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 91.78360303999996,
+          "xkMohm": 3.0060131999999986,
           "vdOwnV": 4.391237185573698,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 30.060131999999985,
@@ -4162,7 +4231,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.35 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 30.1 m: Vc 1.10 %, total 1.33 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -4189,7 +4258,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "db-204",
@@ -4208,7 +4277,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.63 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.61 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -4266,7 +4335,7 @@
           "inA": 25,
           "izA": 34.44,
           "vdOwnPct": 1.376249418988031,
-          "vdTotalPct": 1.627051424892327,
+          "vdTotalPct": 1.6058826256533918,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.2168196843028711,
           "ipKa": 45.87123956590738,
@@ -4281,8 +4350,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 115.06290825866665,
+          "xkMohm": 3.76843586,
           "vdOwnV": 5.504997675952124,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 37.684358599999996,
@@ -4307,7 +4380,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.63 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 37.7 m: Vc 1.38 %, total 1.61 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -4334,7 +4407,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "db-205",
@@ -4353,7 +4426,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.42 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.40 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -4411,7 +4484,7 @@
           "inA": 32,
           "izA": 34.44,
           "vdOwnPct": 2.167023231921631,
-          "vdTotalPct": 2.417825237825927,
+          "vdTotalPct": 2.396656438586992,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.1045702082439608,
           "ipKa": 45.87123956590738,
@@ -4426,8 +4499,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 127.12405246666664,
+          "xkMohm": 4.1634515,
           "vdOwnV": 8.668092927686525,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 41.63451499999999,
@@ -4452,7 +4529,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.42 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 41.6 m: Vc 2.17 %, total 2.40 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -4479,7 +4556,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "db-206",
@@ -4498,7 +4575,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.24 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.22 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -4556,7 +4633,7 @@
           "inA": 32,
           "izA": 34.44,
           "vdOwnPct": 0.9886886897307868,
-          "vdTotalPct": 1.2394906956350829,
+          "vdTotalPct": 1.2183218963961477,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 2.341745914091288,
           "ipKa": 45.87123956590738,
@@ -4571,8 +4648,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 57.999430285333354,
+          "xkMohm": 1.899544660000001,
           "vdOwnV": 3.954754758923147,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 18.995446600000008,
@@ -4597,7 +4678,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.24 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 19.0 m: Vc 0.99 %, total 1.22 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -4624,7 +4705,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "db-207",
@@ -4643,7 +4724,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.83 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.81 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -4701,7 +4782,7 @@
           "inA": 25,
           "izA": 34.44,
           "vdOwnPct": 0.5835870087047796,
-          "vdTotalPct": 0.8343890146090756,
+          "vdTotalPct": 0.8132202153701404,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 2.7513329477821937,
           "ipKa": 45.87123956590738,
@@ -4716,8 +4797,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 48.791459976,
+          "xkMohm": 1.5979735800000001,
           "vdOwnV": 2.3343480348191186,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 15.9797358,
@@ -4742,7 +4827,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.83 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 16.0 m: Vc 0.58 %, total 0.81 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -4769,7 +4854,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "db-208",
@@ -4788,7 +4873,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.89 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.87 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -4846,7 +4931,7 @@
           "inA": 25,
           "izA": 34.44,
           "vdOwnPct": 0.6402057522964404,
-          "vdTotalPct": 0.8910077582007363,
+          "vdTotalPct": 0.8698389589618012,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 2.5244118149515216,
           "ipKa": 45.87123956590738,
@@ -4861,8 +4946,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 53.52513485333333,
+          "xkMohm": 1.7530066,
           "vdOwnV": 2.5608230091857616,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 17.530065999999998,
@@ -4887,7 +4976,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.89 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 17.5 m: Vc 0.64 %, total 0.87 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -4914,7 +5003,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "db-209",
@@ -4933,7 +5022,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.17 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.15 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -4991,7 +5080,7 @@
           "inA": 25,
           "izA": 34.44,
           "vdOwnPct": 0.9186458748910464,
-          "vdTotalPct": 1.1694478807953423,
+          "vdTotalPct": 1.1482790815564072,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.7952381465402716,
           "ipKa": 45.87123956590738,
@@ -5006,8 +5095,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 76.804440072,
+          "xkMohm": 2.5154292600000003,
           "vdOwnV": 3.6745834995641857,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 25.1542926,
@@ -5032,7 +5125,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.17 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 25.2 m: Vc 0.92 %, total 1.15 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -5059,7 +5152,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "db-210",
@@ -5078,7 +5171,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.72 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.70 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -5136,7 +5229,7 @@
           "inA": 32,
           "izA": 34.44,
           "vdOwnPct": 1.4667653215296044,
-          "vdTotalPct": 1.7175673274339003,
+          "vdTotalPct": 1.6963985281949652,
           "ikMaxKa": 26.096361920466844,
           "ikMinKa": 1.6104212610380801,
           "ipKa": 45.87123956590738,
@@ -5151,8 +5244,12 @@
           "kr": 1,
           "k3": 1,
           "vuMvAm": 6.8,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 86.04483281199998,
+          "xkMohm": 2.8180622099999995,
           "vdOwnV": 5.8670612861184175,
-          "vdUpstreamPct": 0.25080200590429597,
+          "vdUpstreamPct": 0.22963320666536083,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 28.180622099999994,
@@ -5177,7 +5274,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.72 % vs 2.5 %"
+            "detail": "Vu 6.800 mV/A/m, 28.2 m: Vc 1.47 %, total 1.70 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -5204,7 +5301,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "riser-1",
@@ -5215,22 +5312,22 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "800 A busbar vs In 300 A"
+            "detail": "800 A busbar vs In 200 A"
           },
           "C2": {
             "state": "pass",
-            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.06 %, total 0.25 % vs 2 %"
+            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.04 %, total 0.23 % vs 2 %"
           }
         },
         "size": null,
         "device": null,
         "load": null,
         "values": {
-          "ibA": 251.363252801409,
-          "inA": 300,
+          "ibA": 163.38611432091588,
+          "inA": 200,
           "izA": 800,
-          "vdOwnPct": 0.060482283539814705,
-          "vdTotalPct": 0.25080200590429597,
+          "vdOwnPct": 0.03931348430087956,
+          "vdTotalPct": 0.22963320666536083,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -5245,8 +5342,12 @@
           "kr": null,
           "k3": null,
           "vuMvAm": null,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": null,
+          "xkMohm": null,
           "vdOwnV": null,
-          "vdUpstreamPct": 0.19031972236448125,
+          "vdUpstreamPct": 0.19031972236448128,
           "vdLimitPct": 2,
           "busbarA": 800,
           "lengthM": 10,
@@ -5255,14 +5356,14 @@
         "trace": [
           {
             "step": "Riser",
-            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.06 %, total 0.25 % vs 2 %"
+            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.04 %, total 0.23 % vs 2 %"
           }
         ],
         "runId": "revit-sample-revit-sample-L02",
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       },
       {
         "elementId": "smdb-t-l2-ap",
@@ -5273,7 +5374,7 @@
         "checks": {
           "C2": {
             "state": "pass",
-            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.06 %, total 0.25 % vs 2 %"
+            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.04 %, total 0.23 % vs 2 %"
           },
           "C3": {
             "state": "not-calculated",
@@ -5301,7 +5402,7 @@
           "inA": 300,
           "izA": null,
           "vdOwnPct": null,
-          "vdTotalPct": 0.25080200590429597,
+          "vdTotalPct": 0.22963320666536083,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -5310,7 +5411,7 @@
         "trace": [
           {
             "step": "Riser",
-            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.06 %, total 0.25 % vs 2 %"
+            "detail": "800 A gersan busbar, 10 m, k 1.000 (1 tap-offs): Vd 0.04 %, total 0.23 % vs 2 %"
           },
           {
             "step": "Tap-off",
@@ -5321,7 +5422,7 @@
         "ranAt": "2026-11-12T08:00:00.000Z",
         "engineVersion": "0.1.0",
         "rulePackVersion": "1.0.0",
-        "inputsKey": "1es0226vjbv"
+        "inputsKey": "1868c8hyd0s"
       }
     ],
     "generatorFactors": []

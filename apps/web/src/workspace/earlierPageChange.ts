@@ -1,4 +1,7 @@
 import {
+  criterionOf,
+  SIZING_LEVEL_LABELS,
+  type SizingCriterion,
   canOpenPage,
   hasModel,
   modelImpact,
@@ -17,6 +20,12 @@ export interface EarlierPageChange {
 }
 
 const onOff = (b: boolean) => (b ? 'ticked' : 'not ticked');
+const criterionText = (c: SizingCriterion) =>
+  c.basis === 'connected'
+    ? 'Connected load'
+    : c.mode === 'calculated'
+      ? 'Demand - Calculated'
+      : `Demand - User-defined ${c.factor ?? '(no factor)'}`;
 const floorsText = (c: { typicals: number | null; basements: number | null }) =>
   `${c.typicals ?? 0} floors, ${c.basements ?? 0} basements`;
 
@@ -65,6 +74,13 @@ export function describeChange(project: Project, action: ProjectAction): Earlier
         label: 'the checks calculated',
         from: onOff(project.calculation.checks[action.check]),
         to: onOff(action.enabled),
+      };
+    case 'sizingCriterion':
+      return {
+        key: `calculation.sizingCriteria.${action.level}`,
+        label: `the sizing criteria (${SIZING_LEVEL_LABELS[action.level]})`,
+        from: criterionText(criterionOf(project, action.level)),
+        to: criterionText(action.value),
       };
     case 'demandFactor':
       return {
