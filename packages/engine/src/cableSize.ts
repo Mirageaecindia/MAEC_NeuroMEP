@@ -63,6 +63,34 @@ export function cableSize(project: Project): CableSizeOutcome {
     e ? loadCategoryOf(e, project.model.elements) : null;
   const flsPath = flsPaths(project.model);
 
+  /**
+   * The feeder to enlarge when C2 is out of reach below (26 Nov 2026): the largest own drop on the
+   * worst path up to the source (at each board the incomer with the highest total drop).
+   */
+  const upstreamAdvice = (f: (typeof checks)[number]): string => {
+    const path: (typeof checks)[number][] = [];
+    const seen = new Set<string>();
+    let board = cables.get(f.cableId)!.from.elementId;
+    for (;;) {
+      const worst = checks
+        .filter((c) => c.toId === board && !seen.has(c.cableId))
+        .sort((a, b) => (b.vdTotalPct ?? -1) - (a.vdTotalPct ?? -1))[0];
+      if (!worst) break;
+      seen.add(worst.cableId);
+      path.push(worst);
+      board = cables.get(worst.cableId)!.from.elementId;
+    }
+    const top = path.filter((c) => c.drop).sort((a, b) => b.drop!.vcPct - a.drop!.vcPct)[0];
+    if (!top) return 'Reduce the drop upstream.';
+    const c = cables.get(top.cableId)!;
+    const route = `${c.tag} (${byId.get(c.from.elementId)?.tag ?? '?'} → ${byId.get(c.to.elementId)?.tag ?? '?'})`;
+    const why =
+      top.size?.from === 'locked'
+        ? ' It is locked: unlock it or change its size / runs.'
+        : ' Enlarge it, add a run or shorten its route.';
+    return `Largest drop above: ${route}, ${top.drop!.vcPct.toFixed(2)} %.${why}`;
+  };
+
   const feeders = checks.map((f): SizedFeeder => {
     const to = byId.get(f.toId);
     const cat = category(to);
@@ -113,7 +141,18 @@ export function cableSize(project: Project): CableSizeOutcome {
       const board = byId.get(cables.get(f.cableId)!.from.elementId)?.tag ?? 'the source board';
       result.trace.push({
         step: 'C2',
-        detail: `C2 cannot pass by sizing this cable: the drop up to ${board} is already ${result.vdUpstreamPct.toFixed(2)} % (limit ${result.vdLimitPct} %). Reduce the drop upstream.`,
+        detail: `C2 cannot pass by sizing this cable: the drop up to ${board} is already ${result.vdUpstreamPct.toFixed(2)} % (limit ${result.vdLimitPct} %). ${upstreamAdvice(f)}`,
+      });
+    }
+    const below = run.enlargedFor.get(f.cableId);
+    if (below) {
+      const c = cables.get(below);
+      const route = c
+        ? `${c.tag} (${byId.get(c.from.elementId)?.tag ?? '?'} → ${byId.get(c.to.elementId)?.tag ?? '?'})`
+        : 'a feeder below';
+      result.trace.push({
+        step: 'Sizing',
+        detail: `Enlarged for the voltage drop of ${route}: the drop up to it used up its limit, so this feeder (largest drop on the path) was sized up.`,
       });
     }
     if (result.sizedBy) {

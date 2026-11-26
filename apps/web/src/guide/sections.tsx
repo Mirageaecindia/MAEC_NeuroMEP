@@ -972,6 +972,16 @@ export const SECTIONS: GuideSection[] = [
             After 50 passes without a stable answer: E2601.
           </li>
           <li>
+            When the drop before a feeder already uses up its limit (for example 2.4 % reaching an
+            MCC with a 2.0 % limit), no size on that feeder can pass C2. Cable Size then follows the
+            worst supply path up and enlarges the unlocked feeder with the largest drop on it
+            (bigger size, at most one more run, only sizes with an earth conductor) until the feeder
+            below can pass; that feeder shows &quot;Sized by C2&quot; and &quot;Enlarged for the
+            voltage drop of ...&quot;. If that is not enough, or the feeder above is locked, nothing
+            changes and C2 names the feeder to enlarge. Only calculated sizes change, never
+            component values or locked cables.
+          </li>
+          <li>
             <a href="#calc-short-circuit">C3 short circuit</a> (a breaker failing it gets a higher
             breaking capacity, never a bigger cable), C4 / C5 protection, C6 minimum, C7 board
             withstand, C8 / C9 safety and <a href="#calc-ecc">the ECC</a>.

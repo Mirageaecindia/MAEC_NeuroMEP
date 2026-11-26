@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sizeCables } from './autosize.js';
+import { cableSize } from './cableSize.js';
 import { cableRating } from './capacity.js';
 import { checkFeeders } from './checks.js';
 import { building, TRAY } from './fixtures/network.js';
@@ -138,6 +139,59 @@ describe('#TASK-26 auto-sizing (10.13)', () => {
     const db = checkFeeders(b.project, run.sized).find((f) => f.toId === 'db')!;
     expect(db.c1).toBe('blocked');
     expect(db.errors).toContain('E2101');
+  });
+
+  /**
+   * TX > DB-1 (DB limit 2.5 %) > MCC (limit 2.0 %): the feeder into DB-1 passes its own limit
+   * at about 2.3 %, which leaves the MCC feeder no room - C2 cannot be met below.
+   */
+  function tightBelow() {
+    const b = building();
+    b.add('transformer', 'tx', { kva: 1000, ukPct: 5, urPct: 1.2 });
+    b.db('db1', [20, 20, 20]);
+    b.add('mcc', 'mcc', {
+      powerFactor: 0.85,
+      manualLoads: [{ method: 'kw', loadType: '2', kwL1: 5, kwL2: 5, kwL3: 5 }],
+    });
+    b.feed('tx', 'db1', 120);
+    b.feed('db1', 'mcc', 20);
+    return b.project;
+  }
+
+  it('enlarges the feeder above when the drop before a feeder uses up its limit (Option A, 26 Nov 2026)', () => {
+    const p = tightBelow();
+    // Without the upstream step the DB-1 feeder would stop at its own 2.5 % limit.
+    const before = checkFeeders(p, new Map()).find((f) => f.toId === 'db1')!;
+    expect(before.vdTotalPct!).toBeGreaterThan(2.0);
+    const run = sizeCables(p);
+    expect(run.converged).toBe(true);
+    const checks = checkFeeders(p, run.sized);
+    const up = checks.find((f) => f.toId === 'db1')!;
+    const mcc = checks.find((f) => f.toId === 'mcc')!;
+    expect(mcc.vdUpstreamPct!).toBeLessThan(2.0);
+    expect(mcc.c2).toBe('pass');
+    expect(up.c2).toBe('pass');
+    expect(run.enlargedFor.get(up.cableId)).toBe(mcc.cableId);
+    expect(run.sizedBy.get(up.cableId)).toBe('C2');
+    const traced = cableSize(p).feeders.find((f) => f.toId === 'db1')!;
+    expect(traced.trace.map((t) => t.detail).join(' ')).toMatch(
+      /Enlarged for the voltage drop of .*\(DB1 → MCC\)/,
+    );
+  });
+
+  it('never changes a locked feeder above: the feeder below keeps failing C2', () => {
+    const p = tightBelow();
+    const first = checkFeeders(p, new Map()).find((f) => f.toId === 'db1')!;
+    p.model.cables[0]!.locks = { sizeMm2: first.size!.sizeMm2, runs: 1, eccMm2: null };
+    const run = sizeCables(p);
+    const checks = checkFeeders(p, run.sized);
+    expect(checks.find((f) => f.toId === 'db1')!.size).toMatchObject({ from: 'locked', runs: 1 });
+    expect(checks.find((f) => f.toId === 'mcc')!.c2).toBe('fail');
+    expect(run.enlargedFor.size).toBe(0);
+    const mcc = cableSize(p).feeders.find((f) => f.toId === 'mcc')!;
+    expect(mcc.trace.map((t) => t.detail).join(' ')).toMatch(
+      /Largest drop above: .*\(TX → DB1\), 2\.\d\d %\. It is locked/,
+    );
   });
 
   it('validates a locked size without changing it', () => {
