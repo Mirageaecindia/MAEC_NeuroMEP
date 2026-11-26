@@ -59,6 +59,8 @@ export const CALC_COLUMNS: readonly CalcColumn[] = [
   { key: 'ktot', step: 'CURRENT CARRYING CAPACITY', label: 'Overall Ktot', unit: '', digits: 3 },
   { key: 'izA', step: 'CURRENT CARRYING CAPACITY', label: 'Corrected Iz', unit: 'A', digits: 1 },
   { key: 'eccMm2', step: 'ECC', label: 'ECC size', unit: 'mm²' },
+  // One earth conductor per run (decision 3 Nov 2026); own column, user request 26 Nov 2026.
+  { key: 'eccRuns', step: 'ECC', label: 'ECC runs', unit: '' },
   { key: 'vuMvAm', step: 'VOLTAGE DROP', label: 'Unit drop', unit: 'mV/A/m', digits: 3 },
   { key: 'loadFactorK', step: 'VOLTAGE DROP', label: 'Riser factor k', unit: '', digits: 3 },
   { key: 'vdOwnV', step: 'VOLTAGE DROP', label: 'Feeder drop', unit: 'V', digits: 2 },
@@ -196,6 +198,7 @@ function figures(found: ReturnType<typeof resultOf>): CalcRow {
     ktot,
     izA: c?.busbarA ? null : r.values.izA,
     eccMm2: r.size?.eccMm2 ?? null,
+    eccRuns: r.size?.eccMm2 ? (r.size.runs ?? null) : null,
     vuMvAm: c?.vuMvAm ?? null,
     loadFactorK: c?.loadFactorK ?? null,
     vdOwnV: c?.vdOwnV ?? null,
