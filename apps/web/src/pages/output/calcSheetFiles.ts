@@ -1,4 +1,10 @@
-import { CALC_COLUMNS, type CalcCell, type CalcColumn, type CalcSheet } from '@neuromep/shared';
+import {
+  CALC_COLUMNS,
+  CHECK_STATES,
+  type CalcCell,
+  type CalcColumn,
+  type CalcSheet,
+} from '@neuromep/shared';
 
 /** Title block of the calculation sheet: project, client, rule pack and the Cable Size run. */
 export interface CalcSheetInfo {
@@ -69,6 +75,10 @@ export async function calcSheetWorkbook(s: CalcSheet, info: CalcSheetInfo): Prom
   }
   ws.getRow(5).values = CALC_COLUMNS.map((c) => c.label);
   ws.getRow(6).values = CALC_COLUMNS.map((c) => c.unit);
+  // Check columns: what the check tests as a note on the header (hover in Excel, 26 Nov 2026).
+  CALC_COLUMNS.forEach((c, i) => {
+    if (c.hint) ws.getCell(5, i + 1).note = `${c.hint}\n\n${CHECK_STATES}`;
+  });
   s.rows.forEach((r, i) => {
     const row = ws.getRow(7 + i);
     CALC_COLUMNS.forEach((c, k) => {

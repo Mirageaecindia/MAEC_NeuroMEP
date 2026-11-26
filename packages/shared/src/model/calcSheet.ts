@@ -23,7 +23,29 @@ export interface CalcColumn {
   unit: string;
   /** Decimals of a number column (Vd to 2 decimals, FR-36). */
   digits?: number;
+  /** What the column means, shown on hover (check columns C1 - C9, 26 Nov 2026). */
+  hint?: string;
 }
+
+/**
+ * What each check tests, in plain words (user request 26 Nov 2026): the headers stay C1 - C9 and
+ * this is shown when the header or a cell of the column is hovered (Excel: a note on the header).
+ */
+export const CHECK_HINTS: Record<string, string> = {
+  C1: 'C1 Current-carrying capacity: the corrected cable rating Iz (It x K1 x K2 x Kr x K3, x runs) must be at least the breaker rating In.',
+  C2: 'C2 Voltage drop: the total drop from the source to the end of this feeder must be within the limit of the board it feeds.',
+  C3: 'C3 Breaking capacity: the breaker Icu must be at least Ik" max at its board, and its making capacity at least the peak ip.',
+  C4: 'C4 Thermal withstand (let-through energy): the cable must withstand the fault until the breaker clears it (k²S² >= I²t). Only when ticked on Page 1; needs breaker data.',
+  C5: 'C5 Earth-fault loop: Zs must be low enough for the breaker to disconnect in time (Zs <= 0.95 x 230 / Ia). Only when ticked on Page 1; not required behind an ELCB.',
+  C6: 'C6 Minimum size: size x runs must be at least the DEWA minimum cable for the breaker rating.',
+  C7: 'C7 Board / busbar withstand: the board or busbar fed must withstand the fault there (Icw >= Ik" max, Ipk >= ip).',
+  C8: 'C8 Safety category: essential and fire & life-safety loads need a generator on their supply path; critical loads also a UPS.',
+  C9: 'C9 Fire-rated path: feeders on a fire & life-safety path to the generator should be fire-rated (warning only).',
+};
+
+/** What the short results in the check columns mean. */
+export const CHECK_STATES =
+  'Pass / Fail / Warning; N.C. = not calculated (not ticked on Page 1 or data missing); N.R. = not required; Blocked = input missing; - = no result.';
 
 const CHECKS = CheckCodeSchema.options.slice(0, 9) as CheckCode[]; // C1 - C9 are calculated
 
@@ -77,7 +99,7 @@ export const CALC_COLUMNS: readonly CalcColumn[] = [
   { key: 'ikMaxKa', step: 'SHORT CIRCUIT', label: 'Ik" max', unit: 'kA', digits: 2 },
   { key: 'ikMinKa', step: 'SHORT CIRCUIT', label: 'Ik" min', unit: 'kA', digits: 2 },
   { key: 'zsMohm', step: 'SHORT CIRCUIT', label: 'Zs', unit: 'mOhm', digits: 1 },
-  ...CHECKS.map((c) => ({ key: c, step: 'CHECKS', label: c, unit: '' })),
+  ...CHECKS.map((c) => ({ key: c, step: 'CHECKS', label: c, unit: '', hint: CHECK_HINTS[c] })),
   { key: 'sizedBy', step: 'CHECKS', label: 'Sized by', unit: '' },
   { key: 'status', step: 'CHECKS', label: 'Status', unit: '' },
   { key: 'errors', step: 'CHECKS', label: 'Codes', unit: '' },
@@ -220,6 +242,8 @@ function figures(found: ReturnType<typeof resultOf>): CalcRow {
     ikMinKa: r.values.ikMinKa,
     zsMohm: r.values.zsMohm,
     ...Object.fromEntries(CHECKS.map((code) => [code, checkLabel(r.checks[code]?.state)])),
+    // The check's own detail (failing values, reason), shown on hover - not a column.
+    ...Object.fromEntries(CHECKS.map((code) => [`${code}:detail`, r.checks[code]?.detail ?? null])),
     sizedBy: r.sizedBy,
     status: found.outOfDate ? 'Out of date' : STATUS[r.status],
     errors: r.errors.join(', ') || null,

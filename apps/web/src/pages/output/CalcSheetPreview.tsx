@@ -1,4 +1,4 @@
-import { CALC_COLUMNS, type CalcSheet } from '@neuromep/shared';
+import { CALC_COLUMNS, CHECK_STATES, type CalcSheet } from '@neuromep/shared';
 import { calcSteps, calcText } from './calcSheetFiles';
 
 /** Read-only preview of the calculation sheet (WBS 1.7.3): a row per cable, busbar feeder, riser. */
@@ -21,7 +21,7 @@ export function CalcSheetPreview({ sheet }: { sheet: CalcSheet }) {
             </tr>
             <tr>
               {CALC_COLUMNS.map((c) => (
-                <th key={c.key}>
+                <th key={c.key} title={c.hint}>
                   {c.label}
                   {c.unit && <span className="calc-unit"> ({c.unit})</span>}
                 </th>
@@ -41,6 +41,11 @@ export function CalcSheetPreview({ sheet }: { sheet: CalcSheet }) {
                   return (
                     <td
                       key={c.key}
+                      title={
+                        c.hint
+                          ? `${c.hint}\nResult: ${text}${r[`${c.key}:detail`] ? ` - ${String(r[`${c.key}:detail`])}` : ''}\n${CHECK_STATES}`
+                          : undefined
+                      }
                       className={
                         /^C\d$/.test(c.key)
                           ? `calc-${text}`
