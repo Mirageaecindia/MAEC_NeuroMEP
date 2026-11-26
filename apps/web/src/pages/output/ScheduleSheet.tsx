@@ -16,7 +16,16 @@ export interface BoardMeters {
   type: '' | 'upto-60a-1ph' | 'upto-125a-3ph' | 'lv-ct';
   ctRatio: string;
   ways: Record<string, WayMeters>;
+  /**
+   * Remarks typed in the preview (user request 26 Nov 2026), by row: `in:<n>` for incomer n, the
+   * way number for a way. A row not here keeps the system remark (ELCB, starter, tap-off ...).
+   */
+  remarks?: Record<string, string>;
 }
+
+/** The remark of a row: what the engineer typed, else the system remark. */
+export const remarkOf = (m: BoardMeters | undefined, key: string, system: string) =>
+  m?.remarks?.[key] ?? system;
 
 export const METER_TYPES: { value: Exclude<BoardMeters['type'], ''>; label: string }[] = [
   { value: 'upto-60a-1ph', label: 'Up to 60 A (1 phase)' },
@@ -99,6 +108,8 @@ export function ScheduleSheet(props: {
       <td className={strong ? 'strong' : undefined}>{kw(r.mdKw)}</td>
     </>
   );
+  const setRemark = (key: string, text: string) =>
+    props.onMeters({ ...m, remarks: { ...m.remarks, [key]: text } });
   const setWay = (way: string, patch: Partial<WayMeters>) =>
     props.onMeters({
       ...m,
@@ -149,7 +160,7 @@ export function ScheduleSheet(props: {
           <td>LV/HV</td>
           <td colSpan={2}>REMARKS</td>
         </tr>
-        {s.incomers.map((r) => (
+        {s.incomers.map((r, i) => (
           <tr key={r.feeder} className="strong">
             <td className="left">{r.feeder}</td>
             <td>-</td>
@@ -160,7 +171,11 @@ export function ScheduleSheet(props: {
               </td>
             ))}
             <td colSpan={2} className="left">
-              {r.remarks}
+              <RemarkInput
+                label={`${r.feeder} remarks`}
+                value={remarkOf(m, `in:${i}`, r.remarks)}
+                onChange={(t) => setRemark(`in:${i}`, t)}
+              />
             </td>
           </tr>
         ))}
@@ -226,7 +241,11 @@ export function ScheduleSheet(props: {
                 </>
               )}
               <td colSpan={2} className="left">
-                {w.remarks}
+                <RemarkInput
+                  label={`${w.wayNo} remarks`}
+                  value={remarkOf(m, w.wayNo, w.remarks)}
+                  onChange={(t) => setRemark(w.wayNo, t)}
+                />
               </td>
             </tr>
           );
@@ -294,5 +313,18 @@ export function ScheduleSheet(props: {
         </tr>
       </tbody>
     </table>
+  );
+}
+
+/** Remarks of a row, editable (26 Nov 2026): starts with the system remark; goes into the files. */
+function RemarkInput(props: { label: string; value: string; onChange: (t: string) => void }) {
+  return (
+    <input
+      className="remark-input"
+      aria-label={props.label}
+      value={props.value}
+      placeholder="Remarks"
+      onChange={(e) => props.onChange(e.target.value)}
+    />
   );
 }

@@ -4,6 +4,7 @@ Record every change to the design document, CLAUDE.md decisions or reference dat
 
 | Date | Version | Change | Affects |
 |---|---|---|---|
+| 2026-11-26 | Code (user request) | Schedules: REMARKS editable in the Output preview for every incomer and way, pre-filled with the system remark (ELCB, starter, tap-off, standby); what is typed goes into the Excel and PDF files (kept on the page like the meter inputs, not stored). | web |
 | 2026-11-26 | Code (user request) | Schedules: the footer TOTAL now shows the 1-PH / 3-PH / LV/HV meter totals (incomer + every way); a way feeding a board with meters shows that board's total, accumulated down the chain (read-only), in the preview, Excel and PDF (`meterTotals`, `ScheduleRow.childId`; built from every board, ticked or not). | shared, web |
 | 2026-11-26 | Code (user request) | Calculation sheet: new 'ECC runs' column after 'ECC size' (one earth conductor per run, = phase runs; blank when there is no ECC). ECC sizing logic unchanged. | shared |
 | 2026-11-26 | Code (user decision) | Cable construction dialog follows the components sheet "6. Installation Method/Condition": No. of trays = dropdown 1 / 2 / 3 shown for tray (J) only; Depth of laying = dropdown 0.6 / 0.8 / 1.0 / 1.25 / 1.5 / 1.75 / 2.0 / 2.5 m for buried / duct (shared `TRAY_COUNTS`, `LAYING_DEPTHS_M`; older stored values still shown). Ground ambient stays 40 deg C (manager 3 Nov, confirmed). | shared, web, guide |

@@ -1,6 +1,6 @@
 import type { BoardSchedule, ScheduleRow } from '@neuromep/shared';
 import type { BoardMeterTotals } from './meterTotals';
-import { meterCells, METER_TYPES, type BoardMeters } from './ScheduleSheet';
+import { meterCells, METER_TYPES, remarkOf, type BoardMeters } from './ScheduleSheet';
 
 /** The inputs asked at every download (decision 2 Nov 2026), shared by the Excel and PDF files. */
 export interface ScheduleInputs {
@@ -92,19 +92,19 @@ export function scheduleLayout(s: BoardSchedule, inputs: ScheduleInputs): Schedu
     heading: 'DETAILS OF CONNECTED LOAD, MAX. DEMAND & kWHR METERING',
     client: inputs.client,
     location: `LOCATION OF ${s.tag}: ${s.location || '-'}`,
-    incomers: s.incomers.map((i) => [
+    incomers: s.incomers.map((i, n) => [
       i.feeder,
       '-',
       ...rowValues(i),
       ...meterCells(i, undefined),
-      i.remarks,
+      remarkOf(m, `in:${n}`, i.remarks),
     ]),
     ways: s.ways.map((w) => [
       w.feeder,
       w.wayNo,
       ...rowValues(w),
       ...(mt?.accumulated[w.wayNo]?.cells ?? meterCells(w, m?.ways[w.wayNo])),
-      w.remarks,
+      remarkOf(m, w.wayNo, w.remarks),
     ]),
     emptyWays: s.ways.length === 0 ? `No outgoing feeders from ${s.tag}.` : null,
     connectedTo: `${s.tag} CONNECTED TO: ${s.connectedTo ?? '-'}\nTRANSFORMER: ${s.transformer ?? '-'}`,

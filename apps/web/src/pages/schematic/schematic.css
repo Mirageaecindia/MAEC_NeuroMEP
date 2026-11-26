@@ -326,3 +326,16 @@
   gap: 6px;
   cursor: pointer;
 }
+
+/* Schedule remarks, editable in the preview (26 Nov 2026). */
+.remark-input {
+  width: 100%;
+  min-width: 120px;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font: inherit;
+  background: var(--surface);
+  color: inherit;
+}
