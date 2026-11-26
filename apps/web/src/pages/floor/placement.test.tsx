@@ -271,7 +271,7 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     expect(screen.queryByRole('img', { name: /^Cable / })).not.toBeInTheDocument();
   });
 
-  it('takes the optional installation details; depth only for buried cables (12.3)', async () => {
+  it('takes the optional installation details as dropdowns from the components sheet: trays on trays, depth buried (12.3)', async () => {
     open(LEAD);
     await planReady();
     await userEvent.click(chip('Feeder'));
@@ -284,27 +284,44 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
       ['Armour', 'SWA'],
       ['Sheath', 'PVC'],
       ['Voltage grade', '600/1000 V'],
-      ['Installation method', 'D-direct'],
+      ['Installation method', 'J'],
     ]) {
       await userEvent.selectOptions(within(dialog).getByLabelText(label!), value!);
     }
     const use = within(dialog).getByRole('button', { name: 'Use this construction' });
     expect(use).toBeEnabled(); // installation details may stay TBC
-    await userEvent.type(within(dialog).getByLabelText('Trays'), '0');
-    expect(within(dialog).getByRole('alert')).toHaveTextContent(
-      'Trays: must be a whole number of at least 1.',
-    );
-    expect(use).toBeDisabled();
-    await userEvent.clear(within(dialog).getByLabelText('Trays'));
-    await userEvent.type(within(dialog).getByLabelText('Trays'), '2');
-    await userEvent.type(within(dialog).getByLabelText('Depth of laying (m)'), '0.8');
+    const trays = within(dialog).getByLabelText('No. of trays');
+    expect([...trays.querySelectorAll('option')].map((o) => o.textContent)).toEqual([
+      'TBC',
+      '1',
+      '2',
+      '3',
+    ]);
+    await userEvent.selectOptions(trays, '2');
+    expect(within(dialog).queryByLabelText('Depth of laying (m)')).not.toBeInTheDocument();
+    // Buried: no trays, depth from the sheet's list.
+    await userEvent.selectOptions(within(dialog).getByLabelText('Installation method'), 'D-direct');
+    expect(within(dialog).queryByLabelText('No. of trays')).not.toBeInTheDocument();
+    const depth = within(dialog).getByLabelText('Depth of laying (m)');
+    expect([...depth.querySelectorAll('option')].map((o) => o.textContent)).toEqual([
+      'TBC',
+      '0.6',
+      '0.8',
+      '1.0',
+      '1.25',
+      '1.5',
+      '1.75',
+      '2.0',
+      '2.5',
+    ]);
+    await userEvent.selectOptions(depth, '0.8');
     await userEvent.selectOptions(within(dialog).getByLabelText('Separation'), '0.30');
     await userEvent.click(use);
     expect(chip('Feeder')).toHaveAttribute('aria-pressed', 'true');
     const remembered = JSON.parse(localStorage.getItem('neuromep.construction.p-1')!);
     expect(remembered).toMatchObject({
       method: 'D-direct',
-      trays: 2,
+      trays: null,
       depthM: 0.8,
       separation: '0.30',
       groupedCircuits: null,

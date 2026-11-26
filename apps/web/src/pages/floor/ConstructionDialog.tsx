@@ -1,4 +1,10 @@
-import { CableConstructionSchema, SEPARATIONS, type CableConstruction } from '@neuromep/shared';
+import {
+  CableConstructionSchema,
+  LAYING_DEPTHS_M,
+  SEPARATIONS,
+  TRAY_COUNTS,
+  type CableConstruction,
+} from '@neuromep/shared';
 import { useState } from 'react';
 import { Modal, NumberInput } from '../../components/fields';
 
@@ -43,12 +49,14 @@ export function ConstructionDialog(props: {
     groupedCircuits: props.initial?.groupedCircuits ?? null,
   }));
   const buried = draft.method === 'D-direct' || draft.method === 'D-duct';
+  const onTray = draft.method === 'J';
   const separations = draft.method ? SEPARATIONS[draft.method as CableConstruction['method']] : [];
   const parsed = CableConstructionSchema.safeParse({
     ...props.initial,
     ...draft,
     ...install,
-    // Depth of laying applies to buried cables only.
+    // Trays apply to tray (J) only, depth of laying to buried and duct cables only.
+    trays: onTray ? install.trays : null,
     depthM: buried ? install.depthM : null,
     // A separation from another method does not apply.
     separation: separations.includes(install.separation ?? '') ? install.separation : null,
@@ -101,14 +109,17 @@ export function ConstructionDialog(props: {
       </div>
       <h3 className="construction-subhead">Installation (optional - empty = TBC)</h3>
       <div className="construction-grid">
-        <label className="construction-row">
-          <span>Trays</span>
-          <NumberInput
-            value={install.trays}
-            onChange={(trays) => setInstall((i) => ({ ...i, trays }))}
-            placeholder="TBC"
-          />
-        </label>
+        {onTray && (
+          <label className="construction-row">
+            <span>No. of trays</span>
+            <OptionSelect
+              value={install.trays}
+              options={TRAY_COUNTS}
+              format={String}
+              onChange={(trays) => setInstall((i) => ({ ...i, trays }))}
+            />
+          </label>
+        )}
         <label className="construction-row">
           <span>Grouped circuits</span>
           <NumberInput
@@ -137,10 +148,11 @@ export function ConstructionDialog(props: {
         {buried && (
           <label className="construction-row">
             <span>Depth of laying (m)</span>
-            <NumberInput
+            <OptionSelect
               value={install.depthM}
+              options={LAYING_DEPTHS_M}
+              format={(d) => d.toFixed(2).replace(/0$/, '')}
               onChange={(depthM) => setInstall((i) => ({ ...i, depthM }))}
-              placeholder="TBC"
             />
           </label>
         )}
@@ -167,4 +179,34 @@ function describeIssue(issue: { path: PropertyKey[]; message: string; code: stri
   return issue.code === 'invalid_type'
     ? `${field}: enter a whole number.`
     : `${field}: must be ${field === 'Depth of laying' ? 'greater than 0 m' : 'a whole number of at least 1'}.`;
+}
+
+/**
+ * A dropdown of fixed numbers with TBC first (components sheet: trays 1-3, depth 0.6-2.5 m). A
+ * value stored earlier that is not in the list is still shown, so it is not lost silently.
+ */
+function OptionSelect(props: {
+  value: number | null;
+  options: readonly number[];
+  format: (n: number) => string;
+  onChange: (n: number | null) => void;
+}) {
+  const list =
+    props.value !== null && !props.options.includes(props.value)
+      ? [...props.options, props.value].sort((a, b) => a - b)
+      : props.options;
+  return (
+    <select
+      className="select"
+      value={props.value === null ? '' : String(props.value)}
+      onChange={(e) => props.onChange(e.target.value === '' ? null : Number(e.target.value))}
+    >
+      <option value="">TBC</option>
+      {list.map((n) => (
+        <option key={n} value={String(n)}>
+          {props.format(n)}
+        </option>
+      ))}
+    </select>
+  );
 }

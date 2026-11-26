@@ -913,9 +913,11 @@ export const SECTIONS: GuideSection[] = [
             <Term>D direct</Term> buried in the ground, <Term>D duct</Term> buried in a duct.
           </li>
           <li>
-            Grouping: number of circuits run together, trays, spacing (touching, one or two cable
-            diameters on trays; metres when buried) and depth when buried. These set the derating
-            factors; a missing value blocks the cable (E2102) - NeuroMEP never guesses.
+            Grouping: number of circuits run together (a whole number), number of trays (1, 2 or 3,
+            trays only), spacing (touching, one or two cable diameters on trays; metres when buried)
+            and depth of laying when buried or in duct (0.6, 0.8, 1.0, 1.25, 1.5, 1.75, 2.0 or 2.5
+            m), as in the components sheet. These set the derating factors; a missing value blocks
+            the cable (E2102) - NeuroMEP never guesses.
           </li>
         </ul>
         <h3>Busbar feeder</h3>

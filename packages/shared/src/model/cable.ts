@@ -47,6 +47,14 @@ export const SEPARATIONS: Record<CableConstruction['method'], readonly string[]>
   'D-duct': ['touching', '0.45', '0.60'],
 };
 
+/**
+ * Installation choices as dropdowns, exactly as the components sheet "6. Installation
+ * Method/Condition" (user decision 26 Nov 2026): number of trays 1-3 (tray, method J; the GROUPJ
+ * table's rows) and depth of laying in metres for buried and duct cables (DLAY table steps).
+ */
+export const TRAY_COUNTS: readonly number[] = [1, 2, 3];
+export const LAYING_DEPTHS_M: readonly number[] = [0.6, 0.8, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5];
+
 /** Engineer locks (D-04): a locked value is validated only, never re-sized. */
 export const CableLocksSchema = z.object({
   sizeMm2: z.number().positive().nullable(),
