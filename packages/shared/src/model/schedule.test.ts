@@ -87,6 +87,47 @@ describe('#TASK-30 / #TASK-31 schematic tree and panel schedules (Section 14)', 
     expect(s.totals).toMatchObject({ tclKw: 45, mdKw: 31.5 });
   });
 
+  it('an SMDB total MD (itself + downstream) is the same figure on its row in the LV panel', () => {
+    const p = modelledProject();
+    const f = p.building.floors.find((x) => x.code === 'GF')!.id;
+    p.calculation.demandMethod = 'dubai-non-emaar';
+    p.calculation.demandFactors.byCategory.residential = { value: 0.65, source: 'user' };
+    const tx = { ...testElement('transformer', 'tx', f), tag: 'TX-1' };
+    const lv = { ...testElement('lv-panel', 'lv', f), tag: 'LV-1' };
+    const smdb = { ...testElement('smdb', 'smdb', f), tag: 'SMDB-1' };
+    const kw = (n: number) => [
+      { method: 'kw' as const, loadType: '1' as const, kwL1: n, kwL2: n, kwL3: n },
+    ];
+    const db1 = {
+      ...sampleDb(f, 'db1'),
+      tag: 'DB-1',
+      demandCategory: 'residential' as const,
+      loads: kw(4.51),
+    };
+    const db2 = {
+      ...sampleDb(f, 'db2'),
+      tag: 'DB-2',
+      demandCategory: 'residential' as const,
+      loads: kw(3.3),
+    };
+    p.model.elements = [tx, lv, smdb, db1, db2];
+    p.model.cables = [
+      testCable(tx, lv),
+      testCable(lv, smdb),
+      testCable(smdb, db1),
+      testCable(smdb, db2),
+    ];
+    p.model.risers = [];
+    const sums = loadSummaries(p, 0.9);
+    const len = { allowancePct: 0, additionM: 5 };
+    const own = boardSchedule(p, 'smdb', sums, len)!;
+    const row = boardSchedule(p, 'lv', sums, len)!.ways.find((w) => w.feeder === 'SMDB-1')!;
+    expect(own.totals.mdKw).toBe(row.mdKw);
+    expect(own.totals.tclKw).toBe(row.tclKw);
+    expect(own.incomers[0]!.mdKw).toBe(row.mdKw);
+    expect(row.mdKw).toBeCloseTo((4.51 + 3.3) * 3 * 0.65, 2);
+  });
+
   it('fills a schedule from the model; sizes wait for Cable Size', () => {
     const p = network();
     const s = boardSchedule(p, 'smdb', loadSummaries(p, 0.9), { allowancePct: 0, additionM: 5 })!;
