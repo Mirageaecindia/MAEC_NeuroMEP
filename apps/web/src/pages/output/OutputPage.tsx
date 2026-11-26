@@ -32,6 +32,7 @@ import {
 import { calcSheetPdf, calcSheetWorkbook } from './calcSheetFiles';
 import { scheduleWorkbook } from './scheduleExcel';
 import { schedulePdf } from './schedulePdf';
+import { meterTotals, type BoardMeterTotals } from './meterTotals';
 import { emptyMeters, ScheduleSheet, type BoardMeters } from './ScheduleSheet';
 import { planRotations, revitFiles } from './revitFiles';
 import '../schematic/schematic.css';
@@ -175,6 +176,25 @@ export function OutputPage() {
     ];
   }
   const schedules = schedulesOf(project);
+  /**
+   * Meter totals accumulate through every board below, ticked or not (26 Nov 2026): built from the
+   * schedules of all boards and risers.
+   */
+  function meterTotalsOf(p: Project) {
+    if (!electrical) return new Map<string, BoardMeterTotals>();
+    const summaries = loadSummaries(p, powerFactors(p));
+    const length = lengthRule(p) ?? { allowancePct: 0, additionM: null };
+    const all = [
+      ...p.model.elements
+        .filter((e) => scheduleLevelOf(e.kind))
+        .map((b) => boardSchedule(p, b.id, summaries, length)!),
+      ...p.model.risers.map((r) => busbarSchedule(p, r.id, summaries)!),
+    ].filter(Boolean);
+    return meterTotals(all, meters);
+  }
+  const shownTotals = schedules.length
+    ? meterTotalsOf(project)
+    : new Map<string, BoardMeterTotals>();
   const calcOf = (p: Project) =>
     electrical && reports.has('calc')
       ? calculationSheet(p, loadSummaries(p, powerFactors(p)))
@@ -229,6 +249,7 @@ export function OutputPage() {
           completionDate,
           client: project.details.clientName,
           meters,
+          meterTotals: meterTotalsOf(run.project),
         });
         const name = `${base}_Schedules_v${version}.${format}`;
         saveBlob(new Blob([data], { type: f.mime }), name);
@@ -435,6 +456,7 @@ export function OutputPage() {
                   key={s.id}
                   schedule={s}
                   meters={meters[s.id] ?? emptyMeters()}
+                  totals={shownTotals.get(s.id)}
                   onMeters={(m) => setMeters((all) => ({ ...all, [s.id]: m }))}
                   logo={logo}
                   completionDate={completionDate}

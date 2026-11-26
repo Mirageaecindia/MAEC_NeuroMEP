@@ -100,8 +100,9 @@ export async function scheduleWorkbook(
     ws.mergeCells(r, 6, r, 10);
     ws.getCell(r, 6).value = 'TOTAL CONNECTED LOAD PER PHASE';
     l.totals.forEach((v, k) => (ws.getCell(r, 11 + k).value = v));
-    ws.mergeCells(r, 16, r, LAST);
-    ws.getCell(r, 16).value = 'TOTAL';
+    l.meterTotals.forEach((v, k) => (ws.getCell(r, 16 + k).value = v));
+    ws.mergeCells(r, 19, r, LAST);
+    ws.getCell(r, 19).value = 'TOTAL';
     ws.getRow(r).font = { bold: true };
     ws.getRow(r).height = 28;
     r++;

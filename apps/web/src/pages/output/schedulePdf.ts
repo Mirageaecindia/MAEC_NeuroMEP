@@ -129,7 +129,8 @@ class Sheet {
     this.box(1, 5, this.y, h, l.connectedTo, true);
     this.box(6, 10, this.y, h, 'TOTAL CONNECTED LOAD PER PHASE', true);
     l.totals.forEach((v, k) => this.box(11 + k, 11 + k, this.y, h, v, true));
-    this.box(16, LAST, this.y, h, 'TOTAL', true);
+    l.meterTotals.forEach((v, k) => this.box(16 + k, 16 + k, this.y, h, v, true));
+    this.box(19, LAST, this.y, h, 'TOTAL', true);
     this.y += h;
     this.box(1, 10, this.y, ROW_H, l.demand, true);
     this.box(11, LAST, this.y, ROW_H, l.tcl, true);

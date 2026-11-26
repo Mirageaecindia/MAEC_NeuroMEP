@@ -110,6 +110,11 @@ export interface ScheduleRow {
    * (the engineer may type the numbers in the preview, optional).
    */
   meters: MeterCounts | null;
+  /**
+   * The component an outgoing way feeds (null on incomers): the schedule adds that board's meter
+   * total to the way (accumulated meters, user request 26 Nov 2026).
+   */
+  childId: string | null;
 }
 
 /** Meters of a schedule row by type (components workbook: 1-Ph / 3-Ph / LV/HV). */
@@ -287,6 +292,7 @@ export function boardSchedule(
       ...loadColumns(s),
       remarks: c.to.port === 'standby' ? `Standby from ${tagOf(c.from.elementId) ?? '?'}` : '',
       meters: metersOn(elements, board.id),
+      childId: null,
     };
   });
   if (incomers.length === 0) {
@@ -309,6 +315,7 @@ export function boardSchedule(
       ...loadColumns(s),
       remarks: riser >= 0 ? `Tap-off from Riser ${riser + 1}` : '',
       meters: metersOn(elements, board.id),
+      childId: null,
     });
   }
 
@@ -328,6 +335,7 @@ export function boardSchedule(
         ...loadColumns(summaries.get(c.to.elementId)),
         remarks: remarksOf(child),
         meters: metersOn(elements, child?.id),
+        childId: child?.id ?? null,
       };
     });
 
@@ -387,6 +395,7 @@ export function busbarSchedule(
       ...loadColumns(summaries.get(b.id)),
       remarks: remarksOf(b),
       meters: metersOn(elements, b.id),
+      childId: b.id,
     };
   });
   const add = (f: (r: ScheduleRow) => number) => round2(ways.reduce((t, w) => t + f(w), 0));
@@ -421,6 +430,7 @@ export function busbarSchedule(
         remarks: source ? `From ${source.tag}` : 'Not fed',
         problem: own.problem,
         meters: null,
+        childId: null,
       },
     ],
     ways,

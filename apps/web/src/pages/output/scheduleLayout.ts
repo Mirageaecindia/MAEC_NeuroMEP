@@ -1,4 +1,5 @@
 import type { BoardSchedule, ScheduleRow } from '@neuromep/shared';
+import type { BoardMeterTotals } from './meterTotals';
 import { meterCells, METER_TYPES, type BoardMeters } from './ScheduleSheet';
 
 /** The inputs asked at every download (decision 2 Nov 2026), shared by the Excel and PDF files. */
@@ -8,6 +9,8 @@ export interface ScheduleInputs {
   completionDate: string;
   client: string;
   meters: Record<string, BoardMeters>;
+  /** Meter totals per schedule, accumulated from the boards below (26 Nov 2026). */
+  meterTotals?: Map<string, BoardMeterTotals>;
 }
 
 /** Column heads and Excel widths (characters) of the company format (Figma screen 5). */
@@ -52,6 +55,8 @@ export interface ScheduleLayout {
   connectedTo: string;
   /** R, Y, B, TCL, MD. */
   totals: number[];
+  /** 1-Ph, 3-Ph, LV/HV meters: incomer + every way, boards below included. */
+  meterTotals: number[];
   demand: string;
   tcl: string;
   meter: string;
@@ -79,6 +84,7 @@ function rowValues(r: ScheduleRow): Cell[] {
 
 export function scheduleLayout(s: BoardSchedule, inputs: ScheduleInputs): ScheduleLayout {
   const m = inputs.meters[s.id];
+  const mt = inputs.meterTotals?.get(s.id);
   const t = s.totals;
   const meter = METER_TYPES.find((x) => x.value === m?.type)?.label ?? '-';
   return {
@@ -97,12 +103,13 @@ export function scheduleLayout(s: BoardSchedule, inputs: ScheduleInputs): Schedu
       w.feeder,
       w.wayNo,
       ...rowValues(w),
-      ...meterCells(w, m?.ways[w.wayNo]),
+      ...(mt?.accumulated[w.wayNo]?.cells ?? meterCells(w, m?.ways[w.wayNo])),
       w.remarks,
     ]),
     emptyWays: s.ways.length === 0 ? `No outgoing feeders from ${s.tag}.` : null,
     connectedTo: `${s.tag} CONNECTED TO: ${s.connectedTo ?? '-'}\nTRANSFORMER: ${s.transformer ?? '-'}`,
     totals: [t.kw.R, t.kw.Y, t.kw.B, t.tclKw, t.mdKw],
+    meterTotals: mt?.total ?? [0, 0, 0],
     demand: `DEMAND FACTOR: ${s.demandFactor === null ? '-' : s.demandFactor.toFixed(2)} - MAX. DEMAND: ${t.mdKw.toFixed(2)} kW`,
     tcl: `* OVERALL TOTAL CONNECTED / INSTALLED LOAD (TCL): ${t.tclKw.toFixed(2)} kW`,
     meter: `Type of Meter (rating of incomer): ${meter}${m?.type === 'lv-ct' ? ` - CT ratio ${m.ctRatio}` : ''}`,

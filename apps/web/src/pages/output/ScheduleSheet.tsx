@@ -1,4 +1,5 @@
 import type { BoardSchedule, MeterCounts, ScheduleRow } from '@neuromep/shared';
+import type { BoardMeterTotals } from './meterTotals';
 
 /**
  * kWh meters of an outgoing way (1-Ph / 3-Ph / LV/HV) typed in the preview: optional, for ways
@@ -77,6 +78,8 @@ export function ScheduleSheet(props: {
   logo: string | null;
   completionDate: string;
   client: string;
+  /** Meter totals of this board (accumulated from the boards below, 26 Nov 2026). */
+  totals?: BoardMeterTotals;
 }) {
   const { schedule: s, meters: m } = props;
   const row = (r: ScheduleRow, strong = false) => (
@@ -175,12 +178,23 @@ export function ScheduleSheet(props: {
         )}
         {s.ways.map((w) => {
           const v = m.ways[w.wayNo] ?? NO_METERS;
+          const acc = props.totals?.accumulated[w.wayNo];
           return (
             <tr key={w.wayNo}>
               <td className="left">{w.feeder}</td>
               <td>{w.wayNo}</td>
               {row(w)}
-              {w.meters ? (
+              {acc ? (
+                acc.cells.map((n, k) => (
+                  <td
+                    key={k}
+                    className="meter-placed"
+                    title={`Total meters of ${acc.board} and the boards it feeds`}
+                  >
+                    {n}
+                  </td>
+                ))
+              ) : w.meters ? (
                 meterCells(w, undefined).map((v, k) => (
                   <td key={k} className="meter-placed" title={placed(w.meters!)}>
                     {v}
@@ -229,7 +243,12 @@ export function ScheduleSheet(props: {
           <td>{kw(s.totals.kw.B)}</td>
           <td>{kw(s.totals.tclKw)}</td>
           <td>{kw(s.totals.mdKw)}</td>
-          <td colSpan={5}>TOTAL</td>
+          {(props.totals?.total ?? [0, 0, 0]).map((n, k) => (
+            <td key={k} title="Meters on the incomer and every way, boards below included">
+              {n}
+            </td>
+          ))}
+          <td colSpan={2}>TOTAL</td>
         </tr>
         <tr>
           <td colSpan={10} className="left strong">
