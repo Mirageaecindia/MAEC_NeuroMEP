@@ -145,6 +145,12 @@ export function cableRating(
 export interface Drop {
   /** Unit voltage drop, mV/A/m. */
   vuMvAm: number;
+  /**
+   * Resistive and reactive unit drops VDr / VDx (mV/A/m) as used in Vu = VDr cos + VDx sin
+   * (CableSizer manual 3.2); null below 25 mm², where the tables give the unit drop only.
+   */
+  vdrMvAm: number | null;
+  vdxMvAm: number | null;
   /** Circuit voltage drop (V) and as % of the nominal voltage. */
   vcV: number;
   vcPct: number;
@@ -168,6 +174,8 @@ export function voltageDrop(
   if (isBlocked(ins)) return ins;
   const notes: string[] = [];
   let vu: number;
+  let vdr: number | null = null;
+  let vdx: number | null = null;
   if (sizeMm2 < 25) {
     const v = tableValue('VU', { CAB: sizeMm2, TYP: ins, PHASES: phases });
     if (!v.found) return blocked(v.detail);
@@ -183,14 +191,18 @@ export function voltageDrop(
     if (!r.found) return blocked(r.detail);
     if (!x.found) return blocked(x.detail);
     notes.push(...r.notes, ...x.notes);
-    const vu3 = r.value * pf + x.value * Math.sin(Math.acos(pf));
-    vu = phases === 1 ? (2 / SQRT3) * vu3 : vu3;
+    const k = phases === 1 ? 2 / SQRT3 : 1;
+    vdr = k * r.value;
+    vdx = k * x.value;
+    vu = vdr * pf + vdx * Math.sin(Math.acos(pf));
     if (c.cores === '1C') notes.push('Single-core r / x taken from multicore values (V-15).');
   }
   const vcV = (ibA * lengthM * vu) / (1000 * runs);
   return {
     ok: true,
     vuMvAm: vu,
+    vdrMvAm: vdr,
+    vdxMvAm: vdx,
     vcV,
     vcPct: (vcV / (phases === 1 ? 230 : 400)) * 100,
     notes,

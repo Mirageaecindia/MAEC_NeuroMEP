@@ -2,6 +2,7 @@ import { loadSummaries, type CheckCode, type ElementResult, type Project } from 
 import { breakerTypeFor, getRulePack, loadPowerFactors } from '@neuromep/rulepacks';
 import type { CableSizeOutcome, SizedFeeder } from './cableSize.js';
 import type { RiserCheck } from './checks.js';
+import { cableZ } from './shortCircuit.js';
 
 /**
  * A Cable Size run as the results the project stores (FR-18, WBS 1.7.1): one per feeder, and one
@@ -106,6 +107,9 @@ function feederResult(
       kr: f.rating?.kr ?? null,
       k3: f.rating?.k3 ?? null,
       vuMvAm: f.drop?.vuMvAm ?? null,
+      vdrMvAm: f.drop?.vdrMvAm ?? null,
+      vdxMvAm: f.drop?.vdxMvAm ?? null,
+      ...cableRx(project, f),
       vdOwnV: f.drop?.vcV ?? null,
       vdUpstreamPct: f.vdUpstreamPct,
       vdLimitPct: f.vdLimitPct,
@@ -199,6 +203,10 @@ function riserResults(
       kr: null,
       k3: null,
       vuMvAm: null,
+      vdrMvAm: null,
+      vdxMvAm: null,
+      rkMohm: null,
+      xkMohm: null,
       vdOwnV: null,
       vdUpstreamPct: r.vdTotalPct !== null && r.vdPct !== null ? r.vdTotalPct - r.vdPct : null,
       vdLimitPct: r.vdLimitPct,
@@ -353,4 +361,21 @@ export function riserCosts(
     // No busbar riser in use: nothing to cost, 0 AED (busbar risers are optional, 8 Nov 2026).
     totalAed: known.length === rows.length ? known.reduce((t, r) => t + r.costAed!, 0) : null,
   };
+}
+
+/**
+ * Rk / Xk of a feeder's cable (mOhm, CableSizer cal sheet): R = rho L / (A N) cold (20 deg C, as
+ * for Ik" max), X = 0.1 or 0.09 x L / N - the figures the short-circuit totals add up. Null for a
+ * busbar feeder or a cable with no size.
+ */
+function cableRx(
+  project: Project,
+  f: SizedFeeder,
+): { rkMohm: number | null; xkMohm: number | null } {
+  const cable = project.model.cables.find((c) => c.id === f.cableId);
+  if (!cable || cable.feederType === 'busbar' || !f.size || f.busbar) {
+    return { rkMohm: null, xkMohm: null };
+  }
+  const z = cableZ(cable, { sizeMm2: f.size.sizeMm2, runs: f.size.runs }, f.lengthM, false);
+  return { rkMohm: z.r, xkMohm: z.x };
 }

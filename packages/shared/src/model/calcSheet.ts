@@ -61,6 +61,9 @@ export const CALC_COLUMNS: readonly CalcColumn[] = [
   { key: 'eccMm2', step: 'ECC', label: 'ECC size', unit: 'mm²' },
   // One earth conductor per run (decision 3 Nov 2026); own column, user request 26 Nov 2026.
   { key: 'eccRuns', step: 'ECC', label: 'ECC runs', unit: '' },
+  // VDr / VDx, Vu = VDr cos + VDx sin (CableSizer manual 3.2; 26 Nov 2026): '-' below 25 mm².
+  { key: 'vdrMvAm', step: 'VOLTAGE DROP', label: 'VDr', unit: 'mV/A/m', digits: 3 },
+  { key: 'vdxMvAm', step: 'VOLTAGE DROP', label: 'VDx', unit: 'mV/A/m', digits: 3 },
   { key: 'vuMvAm', step: 'VOLTAGE DROP', label: 'Unit drop', unit: 'mV/A/m', digits: 3 },
   { key: 'loadFactorK', step: 'VOLTAGE DROP', label: 'Riser factor k', unit: '', digits: 3 },
   { key: 'vdOwnV', step: 'VOLTAGE DROP', label: 'Feeder drop', unit: 'V', digits: 2 },
@@ -68,6 +71,9 @@ export const CALC_COLUMNS: readonly CalcColumn[] = [
   { key: 'vdUpstreamPct', step: 'VOLTAGE DROP', label: 'Upstream drop', unit: '%', digits: 2 },
   { key: 'vdTotalPct', step: 'VOLTAGE DROP', label: 'Total drop', unit: '%', digits: 2 },
   { key: 'vdLimitPct', step: 'VOLTAGE DROP', label: 'Limit', unit: '%', digits: 2 },
+  // This cable's R / X (cold), as the CableSizer cal sheet Rk / Xk (26 Nov 2026).
+  { key: 'rkMohm', step: 'SHORT CIRCUIT', label: 'Rk', unit: 'mOhm', digits: 3 },
+  { key: 'xkMohm', step: 'SHORT CIRCUIT', label: 'Xk', unit: 'mOhm', digits: 3 },
   { key: 'ikMaxKa', step: 'SHORT CIRCUIT', label: 'Ik" max', unit: 'kA', digits: 2 },
   { key: 'ikMinKa', step: 'SHORT CIRCUIT', label: 'Ik" min', unit: 'kA', digits: 2 },
   { key: 'zsMohm', step: 'SHORT CIRCUIT', label: 'Zs', unit: 'mOhm', digits: 1 },
@@ -199,7 +205,11 @@ function figures(found: ReturnType<typeof resultOf>): CalcRow {
     izA: c?.busbarA ? null : r.values.izA,
     eccMm2: r.size?.eccMm2 ?? null,
     eccRuns: r.size?.eccMm2 ? (r.size.runs ?? null) : null,
+    vdrMvAm: c?.vdrMvAm ?? null,
+    vdxMvAm: c?.vdxMvAm ?? null,
     vuMvAm: c?.vuMvAm ?? null,
+    rkMohm: c?.rkMohm ?? null,
+    xkMohm: c?.xkMohm ?? null,
     loadFactorK: c?.loadFactorK ?? null,
     vdOwnV: c?.vdOwnV ?? null,
     vdOwnPct: r.values.vdOwnPct,

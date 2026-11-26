@@ -50,7 +50,7 @@ const ik = (c: number, z: Z) => (c * VN) / (SQRT3 * Math.hypot(z.r, z.x));
 const kappa = (z: Z) => 1.02 + 0.98 * Math.exp((-3 * z.r) / z.x);
 
 /** Cable impedance (mOhm), cold for maximum or at fault temperature for minimum currents. */
-function cableZ(cable: Cable, s: Sizes, lengthM: number, hot: boolean): Z {
+export function cableZ(cable: Cable, s: Sizes, lengthM: number, hot: boolean): Z {
   const c = cable.construction;
   const r = (RHO[c.conductor] * lengthM) / (s.sizeMm2 * s.runs);
   const x = ((s.sizeMm2 < 120 ? 0.1 : 0.09) * lengthM) / s.runs;

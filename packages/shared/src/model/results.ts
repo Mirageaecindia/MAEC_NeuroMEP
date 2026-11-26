@@ -135,6 +135,12 @@ export const ElementResultSchema = z.object({
       k3: z.number().nullable(),
       /** Unit voltage drop and the feeder's own drop in volts (C2). */
       vuMvAm: z.number().nullable(),
+      /** VDr / VDx (mV/A/m), null below 25 mm² (unit drop from the table); added 26 Nov 2026. */
+      vdrMvAm: z.number().nullable().optional(),
+      vdxMvAm: z.number().nullable().optional(),
+      /** This cable's Rk / Xk (mOhm, cold) for the short circuit; added 26 Nov 2026. */
+      rkMohm: z.number().nullable().optional(),
+      xkMohm: z.number().nullable().optional(),
       vdOwnV: z.number().nullable(),
       vdUpstreamPct: z.number().nullable(),
       vdLimitPct: z.number().nullable(),

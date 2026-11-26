@@ -302,6 +302,8 @@ export function checkNetworkFeeders(
       result.c1 = 'pass';
       result.drop = {
         vuMvAm: vu,
+        vdrMvAm: null,
+        vdxMvAm: null,
         vcV: (vu * d.ibA * result.lengthM) / 1000,
         vcPct: pct(pick),
       };
