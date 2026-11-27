@@ -24,6 +24,10 @@ const WIDTH: Record<string, number> = {
   status: 11,
   errors: 11,
   note: 34,
+  // The worked formulas (27 Nov 2026): wide, wrapped.
+  vuFormula: 46,
+  vdFormula: 46,
+  scFormula: 70,
 };
 const widthOf = (c: CalcColumn) => WIDTH[c.key] ?? (/^C\d$/.test(c.key) ? 7 : 9);
 

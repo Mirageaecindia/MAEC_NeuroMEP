@@ -68,7 +68,8 @@ export function boardWithstand(board: Element, ikMaxKa: number, ipKa: number): W
 
 export interface DutyCheck extends FeederCheck {
   /** Highest maximum fault at the breaker (its source board) over both scenarios. */
-  faultAtBreaker: { ikMaxKa: number; ipKa: number } | null;
+  /** Also the R / X totals (mOhm) from the source to the breaker, of the scenario giving Ik"max. */
+  faultAtBreaker: { ikMaxKa: number; ipKa: number; rMax: number; xMax: number } | null;
   /** Minimum fault at the far end (protection checks C4 / C5), lowest over both scenarios. */
   ikMinFarKa: number | null;
   duty: BreakerDuty | null;
@@ -127,6 +128,8 @@ export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes
         ? {
             ikMaxKa: Math.max(...at.map((x) => x.ikMaxKa)),
             ipKa: Math.max(...at.map((x) => x.ipKa)),
+            rMax: at.reduce((a, x) => (x.ikMaxKa > a.ikMaxKa ? x : a)).rMax,
+            xMax: at.reduce((a, x) => (x.ikMaxKa > a.ikMaxKa ? x : a)).xMax,
           }
         : null,
       ikMinFarKa: far.some((x) => x.ikMinKa === null)

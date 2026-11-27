@@ -143,6 +143,9 @@ export const ElementResultSchema = z.object({
       /** This cable's Rk / Xk (mOhm, cold) for the short circuit; added 26 Nov 2026. */
       rkMohm: z.number().nullable().optional(),
       xkMohm: z.number().nullable().optional(),
+      /** R / X totals from the source to the breaker (mOhm, max scenario): Ik"max; 27 Nov 2026. */
+      rktMohm: z.number().nullable().optional(),
+      xktMohm: z.number().nullable().optional(),
       vdOwnV: z.number().nullable(),
       vdUpstreamPct: z.number().nullable(),
       vdLimitPct: z.number().nullable(),

@@ -91,6 +91,51 @@ describe('#TASK-31 calculation sheet (WBS 1.7.3, Section 14 "Cable schedule")', 
     expect(sheet.rows[1]).toMatchObject({ lengthM: 20, construction: 'Busbar TPN+E (tap-off)' });
   });
 
+  it('shows the working: unit drop, feeder drop and short circuit with the row figures (27 Nov 2026)', () => {
+    const p = network();
+    const id = p.model.cables[0]!.id;
+    const run = { runId: 'run-1', at: '2026-11-27T08:00:00Z', engineVersion: 't' };
+    const small = result(id);
+    const big: ElementResult = {
+      ...small,
+      size: { ...small.size!, sizeMm2: 300, runs: 1, lengthM: 15 },
+      values: { ...small.values, ibA: 300, ikMaxKa: 22.56 },
+      calc: {
+        ...small.calc!,
+        pf: 0.85,
+        vdrMvAm: 0.14,
+        vdxMvAm: 0.12,
+        vuMvAm: 0.14 * 0.85 + 0.12 * Math.sin(Math.acos(0.85)),
+        vdOwnV: ((0.14 * 0.85 + 0.12 * Math.sin(Math.acos(0.85))) * 300 * 15) / 1000,
+        rkMohm: (18.32 * 15) / 300,
+        xkMohm: 0.09 * 15,
+        rktMohm: 1.664,
+        xktMohm: 10.103,
+      },
+    };
+    const rowOf = (r: ElementResult) => {
+      p.model.results = mergeRun(p, { kind: 'project' }, [r], { ...run, inputsKey: inputsKey(p) });
+      return calculationSheet(p, loadSummaries(p, 0.9)).rows.find((x) => x.cableId === id)!;
+    };
+    const row = rowOf(big);
+    expect(row.vuFormula).toBe(
+      'Vu = VDr x cos phi + VDx x sin phi = 0.140 x 0.850 + 0.120 x 0.527 = 0.182 mV/A/m',
+    );
+    expect(row.vdFormula).toBe(
+      'Vd = Vu x Ib x L / (1000 x N) = 0.182 x 300.00 x 15.00 / (1000 x 1) = 0.82 V = 0.20 % of 400 V',
+    );
+    expect(row.scFormula).toContain(
+      'Ik"max at the breaker = 400 / (1.732 x sqrt(Rkt² + Xkt²)) = 400 / (1.732 x sqrt(1.664² + 10.103²)) = 400 / (1.732 x 10.239) = 22.56 kA',
+    );
+    expect(row.scFormula).toContain(
+      'Rk = 18.32 x L / (A x N) = 18.32 x 15.00 / (300 x 1) = 0.916 mOhm; Xk = 0.09 x L / N = 0.09 x 15.00 / 1 = 1.350 mOhm',
+    );
+    // Below 25 mm² the unit drop comes from the table (no VDr / VDx).
+    expect(rowOf(small).vuFormula).toMatch(
+      /^Vu = 9\.500 mV\/A\/m from the VU table \(4 mm², 3-phase\)/,
+    );
+  });
+
   it('takes the figures of the last Cable Size run; checks as short labels', () => {
     const p = network();
     const run = { runId: 'run-1', at: '2026-11-05T08:00:00Z', engineVersion: 't' };

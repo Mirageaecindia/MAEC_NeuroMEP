@@ -346,3 +346,12 @@
   color: #c2410c;
   font-weight: 600;
 }
+
+/* Worked formulas in the calculation sheet (27 Nov 2026): wrapped, readable width. */
+.calc-sheet td.calc-formula {
+  white-space: normal;
+  min-width: 260px;
+  max-width: 420px;
+  text-align: left;
+  font-size: 0.95em;
+}

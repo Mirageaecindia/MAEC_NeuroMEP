@@ -3,7 +3,7 @@ import type { Project } from '../project/schema.js';
 import type { Cable, CableConstruction } from './cable.js';
 import type { Element } from './elements.js';
 import type { LoadSummary } from './loads.js';
-import { CheckCodeSchema, type CheckCode } from './results.js';
+import { CheckCodeSchema, type CheckCode, type ElementResult } from './results.js';
 import { sldTree, type SldNode } from './schedule.js';
 import { inputsKey, resultOf, type StoredResult } from './sizing.js';
 
@@ -87,8 +87,11 @@ export const CALC_COLUMNS: readonly CalcColumn[] = [
   { key: 'vdrMvAm', step: 'VOLTAGE DROP', label: 'VDr', unit: 'mV/A/m', digits: 3 },
   { key: 'vdxMvAm', step: 'VOLTAGE DROP', label: 'VDx', unit: 'mV/A/m', digits: 3 },
   { key: 'vuMvAm', step: 'VOLTAGE DROP', label: 'Unit drop', unit: 'mV/A/m', digits: 3 },
+  // How the figures were worked out, with the row's own numbers (user request 27 Nov 2026).
+  { key: 'vuFormula', step: 'VOLTAGE DROP', label: 'Unit drop formula', unit: '' },
   { key: 'loadFactorK', step: 'VOLTAGE DROP', label: 'Riser factor k', unit: '', digits: 3 },
   { key: 'vdOwnV', step: 'VOLTAGE DROP', label: 'Feeder drop', unit: 'V', digits: 2 },
+  { key: 'vdFormula', step: 'VOLTAGE DROP', label: 'Feeder drop formula', unit: '' },
   { key: 'vdOwnPct', step: 'VOLTAGE DROP', label: 'Feeder drop', unit: '%', digits: 2 },
   { key: 'vdUpstreamPct', step: 'VOLTAGE DROP', label: 'Upstream drop', unit: '%', digits: 2 },
   { key: 'vdTotalPct', step: 'VOLTAGE DROP', label: 'Total drop', unit: '%', digits: 2 },
@@ -97,6 +100,7 @@ export const CALC_COLUMNS: readonly CalcColumn[] = [
   { key: 'rkMohm', step: 'SHORT CIRCUIT', label: 'Rk', unit: 'mOhm', digits: 3 },
   { key: 'xkMohm', step: 'SHORT CIRCUIT', label: 'Xk', unit: 'mOhm', digits: 3 },
   { key: 'ikMaxKa', step: 'SHORT CIRCUIT', label: 'Ik" max', unit: 'kA', digits: 2 },
+  { key: 'scFormula', step: 'SHORT CIRCUIT', label: 'Short-circuit formula', unit: '' },
   { key: 'ikMinKa', step: 'SHORT CIRCUIT', label: 'Ik" min', unit: 'kA', digits: 2 },
   { key: 'zsMohm', step: 'SHORT CIRCUIT', label: 'Zs', unit: 'mOhm', digits: 1 },
   ...CHECKS.map((c) => ({ key: c, step: 'CHECKS', label: c, unit: '', hint: CHECK_HINTS[c] })),
@@ -295,6 +299,50 @@ function supplyOf(
   return n === 1 ? { voltageV: 230, phases: 1 } : { voltageV: 400, phases: 3 };
 }
 
+const n = (v: number, d: number) => v.toFixed(d);
+
+/**
+ * The working of a cable row's voltage drop and short circuit, with its own numbers (user request
+ * 27 Nov 2026): unit drop (Vu = VDr cos + VDx sin, or the VU table below 25 mm²), the feeder's drop
+ * and Ik"max at its breaker from the R / X totals, with this cable's Rk / Xk.
+ */
+function formulas(cable: Cable, r: ElementResult | undefined): CalcRow {
+  const c = r?.calc;
+  const size = r?.size;
+  const out: CalcRow = { vuFormula: null, vdFormula: null, scFormula: null };
+  if (!c || !size || cable.feederType === 'busbar') return out;
+  const phases = c.ibCase === 'single-phase' ? 1 : 3;
+  if (c.vuMvAm !== null && c.vuMvAm !== undefined) {
+    if (typeof c.vdrMvAm === 'number' && typeof c.vdxMvAm === 'number' && c.pf) {
+      const sin = Math.sin(Math.acos(c.pf));
+      out.vuFormula = `Vu = VDr x cos phi + VDx x sin phi = ${n(c.vdrMvAm, 3)} x ${n(c.pf, 3)} + ${n(c.vdxMvAm, 3)} x ${n(sin, 3)} = ${n(c.vuMvAm, 3)} mV/A/m`;
+    } else {
+      out.vuFormula = `Vu = ${n(c.vuMvAm, 3)} mV/A/m from the VU table (${size.sizeMm2} mm², ${phases}-phase): below 25 mm² the tables give no VDr / VDx (CableSizer)`;
+    }
+    const ib = r.values.ibA;
+    if (ib !== null && typeof c.vdOwnV === 'number') {
+      const v = phases === 1 ? 230 : 400;
+      out.vdFormula = `Vd = Vu x Ib x L / (1000 x N) = ${n(c.vuMvAm, 3)} x ${n(ib, 2)} x ${n(size.lengthM, 2)} / (1000 x ${size.runs}) = ${n(c.vdOwnV, 2)} V = ${n((c.vdOwnV / v) * 100, 2)} % of ${v} V`;
+    }
+  }
+  const parts: string[] = [];
+  if (typeof c.rktMohm === 'number' && typeof c.xktMohm === 'number' && r.values.ikMaxKa) {
+    const z = Math.hypot(c.rktMohm, c.xktMohm);
+    parts.push(
+      `Ik"max at the breaker = 400 / (1.732 x sqrt(Rkt² + Xkt²)) = 400 / (1.732 x sqrt(${n(c.rktMohm, 3)}² + ${n(c.xktMohm, 3)}²)) = 400 / (1.732 x ${n(z, 3)}) = ${n(r.values.ikMaxKa, 2)} kA (Rkt / Xkt = totals from the source, mOhm)`,
+    );
+  }
+  if (typeof c.rkMohm === 'number' && typeof c.xkMohm === 'number') {
+    const rho = cable.construction.conductor === 'Al' ? 30.34 : 18.32;
+    const xm = size.sizeMm2 < 120 ? 0.1 : 0.09;
+    parts.push(
+      `This cable (added for the boards below): Rk = ${rho} x L / (A x N) = ${rho} x ${n(size.lengthM, 2)} / (${size.sizeMm2} x ${size.runs}) = ${n(c.rkMohm, 3)} mOhm; Xk = ${xm} x L / N = ${xm} x ${n(size.lengthM, 2)} / ${size.runs} = ${n(c.xkMohm, 3)} mOhm`,
+    );
+  }
+  out.scFormula = parts.length ? parts.join('. ') : null;
+  return out;
+}
+
 function cableRow(
   p: Project,
   cable: Cable,
@@ -330,6 +378,7 @@ function cableRow(
     spacing: busbar ? null : k.separation,
     depthM: busbar ? null : k.depthM,
     lengthM: found?.result.size?.lengthM ?? found?.result.calc?.lengthM ?? null,
+    ...formulas(cable, found?.result),
   };
 }
 

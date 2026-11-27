@@ -107,7 +107,9 @@ export function CalcSheetPreview({
                           ? `calc-${text}`
                           : c.key === 'note'
                             ? 'calc-note'
-                            : undefined
+                            : c.key.endsWith('Formula')
+                              ? 'calc-formula'
+                              : undefined
                       }
                     >
                       {text}
