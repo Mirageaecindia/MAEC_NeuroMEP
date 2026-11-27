@@ -57,7 +57,7 @@ describe('#TASK-32 user guide', () => {
     await userEvent.click(first!);
     const region = await within(section).findByRole('region', { name: 'Calculation ib-three' });
     expect(
-      await within(region).findByText('Design current Ib - balanced three-phase load'),
+      await within(region).findByText('Design current Ib - three-phase load'),
     ).toBeInTheDocument();
     const verdicts = within(region).getAllByText(/agree|differ/);
     expect(verdicts.map((v) => v.textContent)).toEqual(['✓ agree']);

@@ -231,10 +231,8 @@ def check_building(b, t, pack, fail):
         total = sum(p)
         pf = total / math.hypot(total, q) if children.get(to["id"]) else to["powerFactor"]
         phases_on = sum(1 for x in p if x > 0)
-        if phases_on == 3 and p[0] == p[1] == p[2]:
-            ib = total * 1000 / (SQRT3 * VN * pf)
-        else:
-            ib = max(p) * 1000 / (VPH * pf)
+        # One formula for every load (A-32, 27 Nov 2026).
+        ib = total * 1000 / (SQRT3 * VN * pf)
         close(ib, r["ibA"], "Ib", cid)
         # In (10.5) and the DEWA minimum (C6).
         rated = pack.breaker(ib)

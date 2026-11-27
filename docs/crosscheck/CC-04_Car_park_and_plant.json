@@ -863,11 +863,11 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "2 x 185 mm²: It 456 A x K1 0.820 x K2 0.95 x Kr 1.000 x K3 1.000 = Iz 710.4 A vs In 630 A: pass"
+            "detail": "2 x 185 mm²: It 456 A x K1 0.820 x K2 0.95 x Kr 1.000 x K3 1.000 = Iz 710.4 A vs In 500 A: pass"
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 0.253 mV/A/m, 20.0 m: Vc 0.32 %, total 0.32 % vs 2 %"
+            "detail": "Vu 0.253 mV/A/m, 20.0 m: Vc 0.31 %, total 0.31 % vs 2 %"
           },
           "C3": {
             "state": "pass",
@@ -883,7 +883,7 @@
           },
           "C6": {
             "state": "pass",
-            "detail": "2 x 185 mm² vs DEWA minimum 2 x 185 mm² for 630 A"
+            "detail": "2 x 185 mm² vs DEWA minimum 2 x 185 mm² for 500 A (next table entry, interim)"
           },
           "C7": {
             "state": "not-calculated",
@@ -907,7 +907,7 @@
         },
         "device": {
           "type": "MCCB",
-          "ratingA": 630,
+          "ratingA": 500,
           "poles": "4P",
           "faultRatingKa": 25
         },
@@ -921,11 +921,11 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 502.3260875039303,
-          "inA": 630,
+          "ibA": 488.0668315601477,
+          "inA": 500,
           "izA": 710.4479999999999,
-          "vdOwnPct": 0.3175487450761869,
-          "vdTotalPct": 0.3175487450761869,
+          "vdOwnPct": 0.308534662504509,
+          "vdTotalPct": 0.308534662504509,
           "ikMaxKa": 22.967982260820644,
           "ikMinKa": 20.380686798336257,
           "ipKa": 50.63664938180877,
@@ -944,7 +944,7 @@
           "vdxMvAm": 0.125,
           "rkMohm": 0.9902702702702703,
           "xkMohm": 0.8999999999999999,
-          "vdOwnV": 1.2701949803047476,
+          "vdOwnV": 1.234138650018036,
           "vdUpstreamPct": 0,
           "vdLimitPct": 2,
           "busbarA": null,
@@ -958,15 +958,19 @@
           },
           {
             "step": "Ib",
-            "detail": "unbalanced: Ib = 502.3 A, neutral 18.4 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 287.7 x 1000 / (1.732 x 400 x 0.851) = 488.1 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "unbalanced: Ib = 488.1 A, neutral 18.4 A"
           },
           {
             "step": "Device",
-            "detail": "In = 630 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 500 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "2 x 185 mm²: It 456 A x K1 0.820 x K2 0.95 x Kr 1.000 x K3 1.000 = Iz 710.4 A vs In 630 A: pass"
+            "detail": "2 x 185 mm²: It 456 A x K1 0.820 x K2 0.95 x Kr 1.000 x K3 1.000 = Iz 710.4 A vs In 500 A: pass"
           },
           {
             "step": "C2",
@@ -974,7 +978,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 0.253 mV/A/m, 20.0 m: Vc 0.32 %, total 0.32 % vs 2 %"
+            "detail": "Vu 0.253 mV/A/m, 20.0 m: Vc 0.31 %, total 0.31 % vs 2 %"
           },
           {
             "step": "C3",
@@ -1024,11 +1028,11 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 25 mm²: It 131 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 85.9 A vs In 32 A: pass"
+            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 20 A: pass"
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 1.462 mV/A/m, 125.0 m: Vc 1.44 %, total 1.75 % vs 2 %"
+            "detail": "Vu 2.500 mV/A/m, 125.0 m: Vc 1.52 %, total 1.82 % vs 2 %"
           },
           "C3": {
             "state": "pass",
@@ -1036,15 +1040,15 @@
           },
           "C4": {
             "state": "warning",
-            "detail": "Phase: S1 = 20.69 kA x sqrt(0.05 s) / 143 = 32.4 mm² vs 1 x 25 mm²: fail. ECC: Ief = 230 V / Zs(20 deg C) 202.30 mOhm = 1.14 kA; S2 = 1.14 kA x sqrt(0.05 s) / 115 = 2.2 mm² vs 1 x 16 mm²: pass."
+            "detail": "Phase: S1 = 20.69 kA x sqrt(0.05 s) / 143 = 32.4 mm² vs 1 x 16 mm²: fail. ECC: Ief = 230 V / Zs(20 deg C) 260.47 mOhm = 0.88 kA; S2 = 0.88 kA x sqrt(0.05 s) / 115 = 1.7 mm² vs 1 x 16 mm²: pass."
           },
           "C5": {
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Zs (hot) 293.731 mOhm: passes if the breaker disconnects within 5 s at Ia <= 744 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 388.165 mOhm: passes if the breaker disconnects within 5 s at Ia <= 563 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 25 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
+            "detail": "1 x 16 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
           },
           "C7": {
             "state": "not-calculated",
@@ -1062,13 +1066,13 @@
         "size": {
           "runs": 1,
           "cores": "4C",
-          "sizeMm2": 25,
+          "sizeMm2": 16,
           "eccMm2": 16,
           "lengthM": 125
         },
         "device": {
           "type": "MCB",
-          "ratingA": 32,
+          "ratingA": 20,
           "poles": "3P",
           "faultRatingKa": 25
         },
@@ -1082,31 +1086,31 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 31.468729618581094,
-          "inA": 32,
-          "izA": 85.93599999999999,
-          "vdOwnPct": 1.437342057400777,
-          "vdTotalPct": 1.7548908024769638,
+          "ibA": 19.40134062638093,
+          "inA": 20,
+          "izA": 64.944,
+          "vdOwnPct": 1.5157297364360103,
+          "vdTotalPct": 1.8242643989405192,
           "ikMaxKa": 20.694570481957772,
-          "ikMinKa": 1.5203283165291257,
+          "ikMinKa": 0.9881466301595592,
           "ipKa": 42.433221981902946,
-          "zsMohm": 293.7309175711403
+          "zsMohm": 388.1652446857521
         },
         "calc": {
           "ibCase": "unbalanced",
           "pf": 0.8704293017171103,
-          "itA": 131,
+          "itA": 99,
           "k1": 0.82,
           "k2": 0.8,
           "kr": 1,
           "k3": 1,
-          "vuMvAm": 1.4616079642969313,
-          "vdrMvAm": 1.6,
-          "vdxMvAm": 0.14,
-          "rkMohm": 91.6,
+          "vuMvAm": 2.5,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 143.125,
           "xkMohm": 12.5,
-          "vdOwnV": 5.749368229603108,
-          "vdUpstreamPct": 0.3175487450761869,
+          "vdOwnV": 6.062918945744041,
+          "vdUpstreamPct": 0.308534662504509,
           "vdLimitPct": 2,
           "busbarA": null,
           "lengthM": 125,
@@ -1119,19 +1123,23 @@
           },
           {
             "step": "Ib",
-            "detail": "unbalanced: Ib = 31.5 A, neutral 18 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 11.7 x 1000 / (1.732 x 400 x 0.870) = 19.4 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "unbalanced: Ib = 19.4 A, neutral 18 A"
           },
           {
             "step": "Device",
-            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 20 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "1 x 25 mm²: It 131 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 85.9 A vs In 32 A: pass"
+            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 20 A: pass"
           },
           {
             "step": "C2",
-            "detail": "Vu 1.462 mV/A/m, 125.0 m: Vc 1.44 %, total 1.75 % vs 2 %"
+            "detail": "Vu 2.500 mV/A/m, 125.0 m: Vc 1.52 %, total 1.82 % vs 2 %"
           },
           {
             "step": "C3",
@@ -1151,11 +1159,11 @@
           },
           {
             "step": "ECC",
-            "detail": "1 x 16 mm² Cu/PVC (CPC table for 25 mm²)"
+            "detail": "1 x 16 mm² Cu/PVC (CPC table for 16 mm²)"
           },
           {
             "step": "C4",
-            "detail": "Phase: S1 = 20.69 kA x sqrt(0.05 s) / 143 = 32.4 mm² vs 1 x 25 mm²: fail. ECC: Ief = 230 V / Zs(20 deg C) 202.30 mOhm = 1.14 kA; S2 = 1.14 kA x sqrt(0.05 s) / 115 = 2.2 mm² vs 1 x 16 mm²: pass."
+            "detail": "Phase: S1 = 20.69 kA x sqrt(0.05 s) / 143 = 32.4 mm² vs 1 x 16 mm²: fail. ECC: Ief = 230 V / Zs(20 deg C) 260.47 mOhm = 0.88 kA; S2 = 0.88 kA x sqrt(0.05 s) / 115 = 1.7 mm² vs 1 x 16 mm²: pass."
           },
           {
             "step": "Sizing",
@@ -1185,19 +1193,19 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 1.434 mV/A/m, 95.0 m: Vc 0.47 %, total 2.22 % vs 2.5 %"
+            "detail": "Vu 1.434 mV/A/m, 95.0 m: Vc 0.47 %, total 2.29 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 2.37 kA, ip 3.42 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "pass",
-            "detail": "Phase: S1 = 2.37 kA x sqrt(0.05 s) / 143 = 3.7 mm² vs 1 x 25 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 347.03 mOhm = 0.66 kA; S2 = 0.66 kA x sqrt(0.05 s) / 115 = 1.3 mm² vs 1 x 16 mm²: pass."
+            "detail": "Phase: S1 = 1.56 kA x sqrt(0.05 s) / 143 = 2.4 mm² vs 1 x 25 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 405.20 mOhm = 0.57 kA; S2 = 0.57 kA x sqrt(0.05 s) / 115 = 1.1 mm² vs 1 x 16 mm²: pass."
           },
           "C5": {
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Zs (hot) 507.326 mOhm: passes if the breaker disconnects within 5 s at Ia <= 431 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 601.760 mOhm: passes if the breaker disconnects within 5 s at Ia <= 363 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "state": "pass",
@@ -1243,11 +1251,11 @@
           "inA": 16,
           "izA": 85.93599999999999,
           "vdOwnPct": 0.468362797118955,
-          "vdTotalPct": 2.223253599595919,
-          "ikMaxKa": 2.3716608607280527,
-          "ikMinKa": 0.8763009625692526,
-          "ipKa": 3.42113227099896,
-          "zsMohm": 507.3255441762401
+          "vdTotalPct": 2.292627196059474,
+          "ikMaxKa": 1.561238270279071,
+          "ikMinKa": 0.6684378192202557,
+          "ipKa": 2.252082836865449,
+          "zsMohm": 601.7598712908518
         },
         "calc": {
           "ibCase": "three-phase",
@@ -1263,7 +1271,7 @@
           "rkMohm": 69.616,
           "xkMohm": 9.5,
           "vdOwnV": 1.8734511884758198,
-          "vdUpstreamPct": 1.7548908024769638,
+          "vdUpstreamPct": 1.8242643989405192,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 95,
@@ -1273,6 +1281,10 @@
           {
             "step": "Load",
             "detail": "Demand 2.7 / 2.7 / 2.7 kW (L1 / L2 / L3), pf 0.85"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 8.1 x 1000 / (1.732 x 400 x 0.850) = 13.8 A"
           },
           {
             "step": "Ib",
@@ -1288,7 +1300,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 1.434 mV/A/m, 95.0 m: Vc 0.47 %, total 2.22 % vs 2.5 %"
+            "detail": "Vu 1.434 mV/A/m, 95.0 m: Vc 0.47 %, total 2.29 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -1300,7 +1312,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 2.37 kA, ip 3.42 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
@@ -1308,7 +1320,7 @@
           },
           {
             "step": "C4",
-            "detail": "Phase: S1 = 2.37 kA x sqrt(0.05 s) / 143 = 3.7 mm² vs 1 x 25 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 347.03 mOhm = 0.66 kA; S2 = 0.66 kA x sqrt(0.05 s) / 115 = 1.3 mm² vs 1 x 16 mm²: pass."
+            "detail": "Phase: S1 = 1.56 kA x sqrt(0.05 s) / 143 = 2.4 mm² vs 1 x 25 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 405.20 mOhm = 0.57 kA; S2 = 0.57 kA x sqrt(0.05 s) / 115 = 1.1 mm² vs 1 x 16 mm²: pass."
           },
           {
             "step": "Sizing",
@@ -1334,27 +1346,27 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 95 mm²: It 352 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 230.9 A vs In 20 A: pass"
+            "detail": "1 x 25 mm²: It 149 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 97.7 A vs In 6 A: pass"
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 0.512 mV/A/m, 155.0 m: Vc 0.60 %, total 2.36 % vs 2.5 %"
+            "detail": "Vu 1.733 mV/A/m, 155.0 m: Vc 0.67 %, total 2.50 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 2.37 kA, ip 3.42 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "pass",
-            "detail": "Phase: S1 = 2.37 kA x sqrt(0.05 s) / 143 = 3.7 mm² vs 1 x 95 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 291.52 mOhm = 0.79 kA; S2 = 0.79 kA x sqrt(0.05 s) / 115 = 1.5 mm² vs 1 x 50 mm²: pass."
+            "detail": "Phase: S1 = 1.56 kA x sqrt(0.05 s) / 143 = 2.4 mm² vs 1 x 25 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 499.80 mOhm = 0.46 kA; S2 = 0.46 kA x sqrt(0.05 s) / 115 = 0.9 mm² vs 1 x 16 mm²: pass."
           },
           "C5": {
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Zs (hot) 414.950 mOhm: passes if the breaker disconnects within 5 s at Ia <= 527 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 741.083 mOhm: passes if the breaker disconnects within 5 s at Ia <= 295 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 95 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
+            "detail": "1 x 25 mm² vs DEWA minimum 1 x 4 mm² for 6 A (next table entry, interim)"
           },
           "C7": {
             "state": "not-required",
@@ -1372,13 +1384,13 @@
         "size": {
           "runs": 1,
           "cores": "3C",
-          "sizeMm2": 95,
-          "eccMm2": 50,
+          "sizeMm2": 25,
+          "eccMm2": 16,
           "lengthM": 155
         },
         "device": {
           "type": "MCB",
-          "ratingA": 20,
+          "ratingA": 6,
           "poles": "1P",
           "faultRatingKa": 6
         },
@@ -1392,31 +1404,31 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 17.391304347826086,
-          "inA": 20,
-          "izA": 230.912,
-          "vdOwnPct": 0.6004284011548314,
-          "vdTotalPct": 2.355319203631795,
-          "ikMaxKa": 2.3716608607280527,
-          "ikMinKa": 1.145000864260606,
-          "ipKa": 3.42113227099896,
-          "zsMohm": 414.9503381290694
+          "ibA": 5.773502691896256,
+          "inA": 6,
+          "izA": 97.744,
+          "vdOwnPct": 0.6743733643695167,
+          "vdTotalPct": 2.498637763310036,
+          "ikMaxKa": 1.561238270279071,
+          "ikMinKa": 0.555019578943526,
+          "ipKa": 2.252082836865449,
+          "zsMohm": 741.0832189092474
         },
         "calc": {
           "ibCase": "single-phase",
           "pf": 0.9,
-          "itA": 352,
+          "itA": 149,
           "k1": 0.82,
           "k2": 0.8,
           "kr": 1,
           "k3": 1,
-          "vuMvAm": 0.5123010067917836,
-          "vdrMvAm": 0.4965212315030782,
-          "vdxMvAm": 0.15011106998930274,
-          "rkMohm": 29.890526315789472,
+          "vuMvAm": 1.733233896661983,
+          "vdrMvAm": 1.8475208614068028,
+          "vdxMvAm": 0.16165807537309526,
+          "rkMohm": 113.584,
           "xkMohm": 15.5,
-          "vdOwnV": 1.3809853226561122,
-          "vdUpstreamPct": 1.7548908024769638,
+          "vdOwnV": 1.5510587380498884,
+          "vdUpstreamPct": 1.8242643989405192,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 155,
@@ -1429,19 +1441,23 @@
           },
           {
             "step": "Ib",
-            "detail": "single-phase: Ib = 17.4 A, neutral 17.4 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 3.6 x 1000 / (1.732 x 400 x 0.900) = 5.8 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "single-phase: Ib = 5.8 A, neutral 17.4 A"
           },
           {
             "step": "Device",
-            "detail": "In = 20 A MCB 1P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 6 A MCB 1P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "1 x 95 mm²: It 352 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 230.9 A vs In 20 A: pass"
+            "detail": "1 x 25 mm²: It 149 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 97.7 A vs In 6 A: pass"
           },
           {
             "step": "C2",
-            "detail": "Vu 0.512 mV/A/m, 155.0 m: Vc 0.60 %, total 2.36 % vs 2.5 %"
+            "detail": "Vu 1.733 mV/A/m, 155.0 m: Vc 0.67 %, total 2.50 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -1453,15 +1469,15 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 2.37 kA, ip 3.42 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
-            "detail": "1 x 50 mm² Cu/PVC (CPC table for 95 mm²)"
+            "detail": "1 x 16 mm² Cu/PVC (CPC table for 25 mm²)"
           },
           {
             "step": "C4",
-            "detail": "Phase: S1 = 2.37 kA x sqrt(0.05 s) / 143 = 3.7 mm² vs 1 x 95 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 291.52 mOhm = 0.79 kA; S2 = 0.79 kA x sqrt(0.05 s) / 115 = 1.5 mm² vs 1 x 50 mm²: pass."
+            "detail": "Phase: S1 = 1.56 kA x sqrt(0.05 s) / 143 = 2.4 mm² vs 1 x 25 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 499.80 mOhm = 0.46 kA; S2 = 0.46 kA x sqrt(0.05 s) / 115 = 0.9 mm² vs 1 x 16 mm²: pass."
           },
           {
             "step": "Sizing",
@@ -1491,7 +1507,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 0.182 mV/A/m, 165.0 m: Vc 1.53 %, total 1.85 % vs 2 %"
+            "detail": "Vu 0.182 mV/A/m, 165.0 m: Vc 1.53 %, total 1.84 % vs 2 %"
           },
           "C3": {
             "state": "pass",
@@ -1549,7 +1565,7 @@
           "inA": 500,
           "izA": 1029.9199999999998,
           "vdOwnPct": 1.5316065388706066,
-          "vdTotalPct": 1.8491552839467935,
+          "vdTotalPct": 1.8401412013751157,
           "ikMaxKa": 20.694570481957772,
           "ikMinKa": 10.703427962145465,
           "ipKa": 42.433221981902946,
@@ -1569,7 +1585,7 @@
           "rkMohm": 5.038,
           "xkMohm": 7.425,
           "vdOwnV": 6.126426155482426,
-          "vdUpstreamPct": 0.3175487450761869,
+          "vdUpstreamPct": 0.308534662504509,
           "vdLimitPct": 2,
           "busbarA": null,
           "lengthM": 165,
@@ -1579,6 +1595,10 @@
           {
             "step": "Load",
             "detail": "Demand 80 / 80 / 80 kW (L1 / L2 / L3), pf 0.85"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 240 x 1000 / (1.732 x 400 x 0.850) = 407.5 A"
           },
           {
             "step": "Ib",
@@ -1594,7 +1614,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 0.182 mV/A/m, 165.0 m: Vc 1.53 %, total 1.85 % vs 2 %"
+            "detail": "Vu 0.182 mV/A/m, 165.0 m: Vc 1.53 %, total 1.84 % vs 2 %"
           },
           {
             "step": "C3",
@@ -1648,7 +1668,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 0.253 mV/A/m, 15.0 m: Vc 0.19 %, total 2.04 % vs 2.5 %"
+            "detail": "Vu 0.253 mV/A/m, 15.0 m: Vc 0.19 %, total 2.03 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -1706,7 +1726,7 @@
           "inA": 500,
           "izA": 759.3199999999999,
           "vdOwnPct": 0.1932111610846199,
-          "vdTotalPct": 2.0423664450314134,
+          "vdTotalPct": 2.033352362459736,
           "ikMaxKa": 11.625347926779824,
           "ikMinKa": 10.131788777937901,
           "ipKa": 21.079310780148482,
@@ -1726,7 +1746,7 @@
           "rkMohm": 0.7427027027027028,
           "xkMohm": 0.6749999999999999,
           "vdOwnV": 0.7728446443384795,
-          "vdUpstreamPct": 1.8491552839467935,
+          "vdUpstreamPct": 1.8401412013751157,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 15,
@@ -1736,6 +1756,10 @@
           {
             "step": "Load",
             "detail": "Demand 80 / 80 / 80 kW (L1 / L2 / L3), pf 0.85"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 240 x 1000 / (1.732 x 400 x 0.850) = 407.5 A"
           },
           {
             "step": "Ib",
@@ -1751,7 +1775,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 0.253 mV/A/m, 15.0 m: Vc 0.19 %, total 2.04 % vs 2.5 %"
+            "detail": "Vu 0.253 mV/A/m, 15.0 m: Vc 0.19 %, total 2.03 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -1797,11 +1821,11 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "2 x 185 mm²: It 456 A x K1 0.820 x K2 0.95 x Kr 1.000 x K3 1.000 = Iz 710.4 A vs In 630 A: pass"
+            "detail": "2 x 185 mm²: It 456 A x K1 0.820 x K2 0.95 x Kr 1.000 x K3 1.000 = Iz 710.4 A vs In 500 A: pass"
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 0.253 mV/A/m, 20.0 m: Vc 0.32 %, total 0.32 % vs 2 %"
+            "detail": "Vu 0.253 mV/A/m, 20.0 m: Vc 0.31 %, total 0.31 % vs 2 %"
           },
           "C3": {
             "state": "pass",
@@ -1817,7 +1841,7 @@
           },
           "C6": {
             "state": "pass",
-            "detail": "2 x 185 mm² vs DEWA minimum 2 x 185 mm² for 630 A"
+            "detail": "2 x 185 mm² vs DEWA minimum 2 x 185 mm² for 500 A (next table entry, interim)"
           },
           "C7": {
             "state": "not-calculated",
@@ -1841,7 +1865,7 @@
         },
         "device": {
           "type": "MCCB",
-          "ratingA": 630,
+          "ratingA": 500,
           "poles": "4P",
           "faultRatingKa": 25
         },
@@ -1855,11 +1879,11 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 502.3260875039303,
-          "inA": 630,
+          "ibA": 488.0668315601477,
+          "inA": 500,
           "izA": 710.4479999999999,
-          "vdOwnPct": 0.3175487450761869,
-          "vdTotalPct": 0.3175487450761869,
+          "vdOwnPct": 0.308534662504509,
+          "vdTotalPct": 0.308534662504509,
           "ikMaxKa": 22.967982260820644,
           "ikMinKa": 20.380686798336257,
           "ipKa": 50.63664938180877,
@@ -1878,7 +1902,7 @@
           "vdxMvAm": 0.125,
           "rkMohm": 0.9902702702702703,
           "xkMohm": 0.8999999999999999,
-          "vdOwnV": 1.2701949803047476,
+          "vdOwnV": 1.234138650018036,
           "vdUpstreamPct": 0,
           "vdLimitPct": 2,
           "busbarA": null,
@@ -1892,15 +1916,19 @@
           },
           {
             "step": "Ib",
-            "detail": "unbalanced: Ib = 502.3 A, neutral 18.4 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 287.7 x 1000 / (1.732 x 400 x 0.851) = 488.1 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "unbalanced: Ib = 488.1 A, neutral 18.4 A"
           },
           {
             "step": "Device",
-            "detail": "In = 630 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 500 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "2 x 185 mm²: It 456 A x K1 0.820 x K2 0.95 x Kr 1.000 x K3 1.000 = Iz 710.4 A vs In 630 A: pass"
+            "detail": "2 x 185 mm²: It 456 A x K1 0.820 x K2 0.95 x Kr 1.000 x K3 1.000 = Iz 710.4 A vs In 500 A: pass"
           },
           {
             "step": "C2",
@@ -1908,7 +1936,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 0.253 mV/A/m, 20.0 m: Vc 0.32 %, total 0.32 % vs 2 %"
+            "detail": "Vu 0.253 mV/A/m, 20.0 m: Vc 0.31 %, total 0.31 % vs 2 %"
           },
           {
             "step": "C3",
@@ -1958,11 +1986,11 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 25 mm²: It 131 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 85.9 A vs In 32 A: pass"
+            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 20 A: pass"
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 1.462 mV/A/m, 125.0 m: Vc 1.44 %, total 1.75 % vs 2 %"
+            "detail": "Vu 2.500 mV/A/m, 125.0 m: Vc 1.52 %, total 1.82 % vs 2 %"
           },
           "C3": {
             "state": "pass",
@@ -1970,15 +1998,15 @@
           },
           "C4": {
             "state": "warning",
-            "detail": "Phase: S1 = 20.69 kA x sqrt(0.05 s) / 143 = 32.4 mm² vs 1 x 25 mm²: fail. ECC: Ief = 230 V / Zs(20 deg C) 202.30 mOhm = 1.14 kA; S2 = 1.14 kA x sqrt(0.05 s) / 115 = 2.2 mm² vs 1 x 16 mm²: pass."
+            "detail": "Phase: S1 = 20.69 kA x sqrt(0.05 s) / 143 = 32.4 mm² vs 1 x 16 mm²: fail. ECC: Ief = 230 V / Zs(20 deg C) 260.47 mOhm = 0.88 kA; S2 = 0.88 kA x sqrt(0.05 s) / 115 = 1.7 mm² vs 1 x 16 mm²: pass."
           },
           "C5": {
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Zs (hot) 293.731 mOhm: passes if the breaker disconnects within 5 s at Ia <= 744 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 388.165 mOhm: passes if the breaker disconnects within 5 s at Ia <= 563 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 25 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
+            "detail": "1 x 16 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
           },
           "C7": {
             "state": "not-calculated",
@@ -1996,13 +2024,13 @@
         "size": {
           "runs": 1,
           "cores": "4C",
-          "sizeMm2": 25,
+          "sizeMm2": 16,
           "eccMm2": 16,
           "lengthM": 125
         },
         "device": {
           "type": "MCB",
-          "ratingA": 32,
+          "ratingA": 20,
           "poles": "3P",
           "faultRatingKa": 25
         },
@@ -2016,31 +2044,31 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 31.468729618581094,
-          "inA": 32,
-          "izA": 85.93599999999999,
-          "vdOwnPct": 1.437342057400777,
-          "vdTotalPct": 1.7548908024769638,
+          "ibA": 19.40134062638093,
+          "inA": 20,
+          "izA": 64.944,
+          "vdOwnPct": 1.5157297364360103,
+          "vdTotalPct": 1.8242643989405192,
           "ikMaxKa": 20.694570481957772,
-          "ikMinKa": 1.5203283165291257,
+          "ikMinKa": 0.9881466301595592,
           "ipKa": 42.433221981902946,
-          "zsMohm": 293.7309175711403
+          "zsMohm": 388.1652446857521
         },
         "calc": {
           "ibCase": "unbalanced",
           "pf": 0.8704293017171103,
-          "itA": 131,
+          "itA": 99,
           "k1": 0.82,
           "k2": 0.8,
           "kr": 1,
           "k3": 1,
-          "vuMvAm": 1.4616079642969313,
-          "vdrMvAm": 1.6,
-          "vdxMvAm": 0.14,
-          "rkMohm": 91.6,
+          "vuMvAm": 2.5,
+          "vdrMvAm": null,
+          "vdxMvAm": null,
+          "rkMohm": 143.125,
           "xkMohm": 12.5,
-          "vdOwnV": 5.749368229603108,
-          "vdUpstreamPct": 0.3175487450761869,
+          "vdOwnV": 6.062918945744041,
+          "vdUpstreamPct": 0.308534662504509,
           "vdLimitPct": 2,
           "busbarA": null,
           "lengthM": 125,
@@ -2053,19 +2081,23 @@
           },
           {
             "step": "Ib",
-            "detail": "unbalanced: Ib = 31.5 A, neutral 18 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 11.7 x 1000 / (1.732 x 400 x 0.870) = 19.4 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "unbalanced: Ib = 19.4 A, neutral 18 A"
           },
           {
             "step": "Device",
-            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 20 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "1 x 25 mm²: It 131 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 85.9 A vs In 32 A: pass"
+            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 20 A: pass"
           },
           {
             "step": "C2",
-            "detail": "Vu 1.462 mV/A/m, 125.0 m: Vc 1.44 %, total 1.75 % vs 2 %"
+            "detail": "Vu 2.500 mV/A/m, 125.0 m: Vc 1.52 %, total 1.82 % vs 2 %"
           },
           {
             "step": "C3",
@@ -2085,11 +2117,11 @@
           },
           {
             "step": "ECC",
-            "detail": "1 x 16 mm² Cu/PVC (CPC table for 25 mm²)"
+            "detail": "1 x 16 mm² Cu/PVC (CPC table for 16 mm²)"
           },
           {
             "step": "C4",
-            "detail": "Phase: S1 = 20.69 kA x sqrt(0.05 s) / 143 = 32.4 mm² vs 1 x 25 mm²: fail. ECC: Ief = 230 V / Zs(20 deg C) 202.30 mOhm = 1.14 kA; S2 = 1.14 kA x sqrt(0.05 s) / 115 = 2.2 mm² vs 1 x 16 mm²: pass."
+            "detail": "Phase: S1 = 20.69 kA x sqrt(0.05 s) / 143 = 32.4 mm² vs 1 x 16 mm²: fail. ECC: Ief = 230 V / Zs(20 deg C) 260.47 mOhm = 0.88 kA; S2 = 0.88 kA x sqrt(0.05 s) / 115 = 1.7 mm² vs 1 x 16 mm²: pass."
           },
           {
             "step": "Sizing",
@@ -2119,19 +2151,19 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 1.434 mV/A/m, 95.0 m: Vc 0.47 %, total 2.22 % vs 2.5 %"
+            "detail": "Vu 1.434 mV/A/m, 95.0 m: Vc 0.47 %, total 2.29 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 2.37 kA, ip 3.42 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "pass",
-            "detail": "Phase: S1 = 2.37 kA x sqrt(0.05 s) / 143 = 3.7 mm² vs 1 x 25 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 347.03 mOhm = 0.66 kA; S2 = 0.66 kA x sqrt(0.05 s) / 115 = 1.3 mm² vs 1 x 16 mm²: pass."
+            "detail": "Phase: S1 = 1.56 kA x sqrt(0.05 s) / 143 = 2.4 mm² vs 1 x 25 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 405.20 mOhm = 0.57 kA; S2 = 0.57 kA x sqrt(0.05 s) / 115 = 1.1 mm² vs 1 x 16 mm²: pass."
           },
           "C5": {
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Zs (hot) 507.326 mOhm: passes if the breaker disconnects within 5 s at Ia <= 431 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 601.760 mOhm: passes if the breaker disconnects within 5 s at Ia <= 363 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "state": "pass",
@@ -2177,11 +2209,11 @@
           "inA": 16,
           "izA": 85.93599999999999,
           "vdOwnPct": 0.468362797118955,
-          "vdTotalPct": 2.223253599595919,
-          "ikMaxKa": 2.3716608607280527,
-          "ikMinKa": 0.8763009625692526,
-          "ipKa": 3.42113227099896,
-          "zsMohm": 507.3255441762401
+          "vdTotalPct": 2.292627196059474,
+          "ikMaxKa": 1.561238270279071,
+          "ikMinKa": 0.6684378192202557,
+          "ipKa": 2.252082836865449,
+          "zsMohm": 601.7598712908518
         },
         "calc": {
           "ibCase": "three-phase",
@@ -2197,7 +2229,7 @@
           "rkMohm": 69.616,
           "xkMohm": 9.5,
           "vdOwnV": 1.8734511884758198,
-          "vdUpstreamPct": 1.7548908024769638,
+          "vdUpstreamPct": 1.8242643989405192,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 95,
@@ -2207,6 +2239,10 @@
           {
             "step": "Load",
             "detail": "Demand 2.7 / 2.7 / 2.7 kW (L1 / L2 / L3), pf 0.85"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 8.1 x 1000 / (1.732 x 400 x 0.850) = 13.8 A"
           },
           {
             "step": "Ib",
@@ -2222,7 +2258,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 1.434 mV/A/m, 95.0 m: Vc 0.47 %, total 2.22 % vs 2.5 %"
+            "detail": "Vu 1.434 mV/A/m, 95.0 m: Vc 0.47 %, total 2.29 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -2234,7 +2270,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 2.37 kA, ip 3.42 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
@@ -2242,7 +2278,7 @@
           },
           {
             "step": "C4",
-            "detail": "Phase: S1 = 2.37 kA x sqrt(0.05 s) / 143 = 3.7 mm² vs 1 x 25 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 347.03 mOhm = 0.66 kA; S2 = 0.66 kA x sqrt(0.05 s) / 115 = 1.3 mm² vs 1 x 16 mm²: pass."
+            "detail": "Phase: S1 = 1.56 kA x sqrt(0.05 s) / 143 = 2.4 mm² vs 1 x 25 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 405.20 mOhm = 0.57 kA; S2 = 0.57 kA x sqrt(0.05 s) / 115 = 1.1 mm² vs 1 x 16 mm²: pass."
           },
           {
             "step": "Sizing",
@@ -2268,27 +2304,27 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 95 mm²: It 352 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 230.9 A vs In 20 A: pass"
+            "detail": "1 x 25 mm²: It 149 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 97.7 A vs In 6 A: pass"
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 0.512 mV/A/m, 155.0 m: Vc 0.60 %, total 2.36 % vs 2.5 %"
+            "detail": "Vu 1.733 mV/A/m, 155.0 m: Vc 0.67 %, total 2.50 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 2.37 kA, ip 3.42 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "pass",
-            "detail": "Phase: S1 = 2.37 kA x sqrt(0.05 s) / 143 = 3.7 mm² vs 1 x 95 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 291.52 mOhm = 0.79 kA; S2 = 0.79 kA x sqrt(0.05 s) / 115 = 1.5 mm² vs 1 x 50 mm²: pass."
+            "detail": "Phase: S1 = 1.56 kA x sqrt(0.05 s) / 143 = 2.4 mm² vs 1 x 25 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 499.80 mOhm = 0.46 kA; S2 = 0.46 kA x sqrt(0.05 s) / 115 = 0.9 mm² vs 1 x 16 mm²: pass."
           },
           "C5": {
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Zs (hot) 414.950 mOhm: passes if the breaker disconnects within 5 s at Ia <= 527 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
+            "detail": "Device data required (W2402). Zs (hot) 741.083 mOhm: passes if the breaker disconnects within 5 s at Ia <= 295 A; Ia = 1.2 x Im needs the catalogue (OI-03)."
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 95 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
+            "detail": "1 x 25 mm² vs DEWA minimum 1 x 4 mm² for 6 A (next table entry, interim)"
           },
           "C7": {
             "state": "not-required",
@@ -2306,13 +2342,13 @@
         "size": {
           "runs": 1,
           "cores": "3C",
-          "sizeMm2": 95,
-          "eccMm2": 50,
+          "sizeMm2": 25,
+          "eccMm2": 16,
           "lengthM": 155
         },
         "device": {
           "type": "MCB",
-          "ratingA": 20,
+          "ratingA": 6,
           "poles": "1P",
           "faultRatingKa": 6
         },
@@ -2326,31 +2362,31 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 17.391304347826086,
-          "inA": 20,
-          "izA": 230.912,
-          "vdOwnPct": 0.6004284011548314,
-          "vdTotalPct": 2.355319203631795,
-          "ikMaxKa": 2.3716608607280527,
-          "ikMinKa": 1.145000864260606,
-          "ipKa": 3.42113227099896,
-          "zsMohm": 414.9503381290694
+          "ibA": 5.773502691896256,
+          "inA": 6,
+          "izA": 97.744,
+          "vdOwnPct": 0.6743733643695167,
+          "vdTotalPct": 2.498637763310036,
+          "ikMaxKa": 1.561238270279071,
+          "ikMinKa": 0.555019578943526,
+          "ipKa": 2.252082836865449,
+          "zsMohm": 741.0832189092474
         },
         "calc": {
           "ibCase": "single-phase",
           "pf": 0.9,
-          "itA": 352,
+          "itA": 149,
           "k1": 0.82,
           "k2": 0.8,
           "kr": 1,
           "k3": 1,
-          "vuMvAm": 0.5123010067917836,
-          "vdrMvAm": 0.4965212315030782,
-          "vdxMvAm": 0.15011106998930274,
-          "rkMohm": 29.890526315789472,
+          "vuMvAm": 1.733233896661983,
+          "vdrMvAm": 1.8475208614068028,
+          "vdxMvAm": 0.16165807537309526,
+          "rkMohm": 113.584,
           "xkMohm": 15.5,
-          "vdOwnV": 1.3809853226561122,
-          "vdUpstreamPct": 1.7548908024769638,
+          "vdOwnV": 1.5510587380498884,
+          "vdUpstreamPct": 1.8242643989405192,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 155,
@@ -2363,19 +2399,23 @@
           },
           {
             "step": "Ib",
-            "detail": "single-phase: Ib = 17.4 A, neutral 17.4 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 3.6 x 1000 / (1.732 x 400 x 0.900) = 5.8 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "single-phase: Ib = 5.8 A, neutral 17.4 A"
           },
           {
             "step": "Device",
-            "detail": "In = 20 A MCB 1P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 6 A MCB 1P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "1 x 95 mm²: It 352 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 230.9 A vs In 20 A: pass"
+            "detail": "1 x 25 mm²: It 149 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 97.7 A vs In 6 A: pass"
           },
           {
             "step": "C2",
-            "detail": "Vu 0.512 mV/A/m, 155.0 m: Vc 0.60 %, total 2.36 % vs 2.5 %"
+            "detail": "Vu 1.733 mV/A/m, 155.0 m: Vc 0.67 %, total 2.50 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -2387,15 +2427,15 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 2.37 kA, ip 3.42 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
-            "detail": "1 x 50 mm² Cu/PVC (CPC table for 95 mm²)"
+            "detail": "1 x 16 mm² Cu/PVC (CPC table for 25 mm²)"
           },
           {
             "step": "C4",
-            "detail": "Phase: S1 = 2.37 kA x sqrt(0.05 s) / 143 = 3.7 mm² vs 1 x 95 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 291.52 mOhm = 0.79 kA; S2 = 0.79 kA x sqrt(0.05 s) / 115 = 1.5 mm² vs 1 x 50 mm²: pass."
+            "detail": "Phase: S1 = 1.56 kA x sqrt(0.05 s) / 143 = 2.4 mm² vs 1 x 25 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 499.80 mOhm = 0.46 kA; S2 = 0.46 kA x sqrt(0.05 s) / 115 = 0.9 mm² vs 1 x 16 mm²: pass."
           },
           {
             "step": "Sizing",
@@ -2425,7 +2465,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 0.182 mV/A/m, 165.0 m: Vc 1.53 %, total 1.85 % vs 2 %"
+            "detail": "Vu 0.182 mV/A/m, 165.0 m: Vc 1.53 %, total 1.84 % vs 2 %"
           },
           "C3": {
             "state": "pass",
@@ -2483,7 +2523,7 @@
           "inA": 500,
           "izA": 1029.9199999999998,
           "vdOwnPct": 1.5316065388706066,
-          "vdTotalPct": 1.8491552839467935,
+          "vdTotalPct": 1.8401412013751157,
           "ikMaxKa": 20.694570481957772,
           "ikMinKa": 10.703427962145465,
           "ipKa": 42.433221981902946,
@@ -2503,7 +2543,7 @@
           "rkMohm": 5.038,
           "xkMohm": 7.425,
           "vdOwnV": 6.126426155482426,
-          "vdUpstreamPct": 0.3175487450761869,
+          "vdUpstreamPct": 0.308534662504509,
           "vdLimitPct": 2,
           "busbarA": null,
           "lengthM": 165,
@@ -2513,6 +2553,10 @@
           {
             "step": "Load",
             "detail": "Demand 80 / 80 / 80 kW (L1 / L2 / L3), pf 0.85"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 240 x 1000 / (1.732 x 400 x 0.850) = 407.5 A"
           },
           {
             "step": "Ib",
@@ -2528,7 +2572,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 0.182 mV/A/m, 165.0 m: Vc 1.53 %, total 1.85 % vs 2 %"
+            "detail": "Vu 0.182 mV/A/m, 165.0 m: Vc 1.53 %, total 1.84 % vs 2 %"
           },
           {
             "step": "C3",
@@ -2582,7 +2626,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 0.253 mV/A/m, 15.0 m: Vc 0.19 %, total 2.04 % vs 2.5 %"
+            "detail": "Vu 0.253 mV/A/m, 15.0 m: Vc 0.19 %, total 2.03 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -2640,7 +2684,7 @@
           "inA": 500,
           "izA": 759.3199999999999,
           "vdOwnPct": 0.1932111610846199,
-          "vdTotalPct": 2.0423664450314134,
+          "vdTotalPct": 2.033352362459736,
           "ikMaxKa": 11.625347926779824,
           "ikMinKa": 10.131788777937901,
           "ipKa": 21.079310780148482,
@@ -2660,7 +2704,7 @@
           "rkMohm": 0.7427027027027028,
           "xkMohm": 0.6749999999999999,
           "vdOwnV": 0.7728446443384795,
-          "vdUpstreamPct": 1.8491552839467935,
+          "vdUpstreamPct": 1.8401412013751157,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 15,
@@ -2670,6 +2714,10 @@
           {
             "step": "Load",
             "detail": "Demand 80 / 80 / 80 kW (L1 / L2 / L3), pf 0.85"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 240 x 1000 / (1.732 x 400 x 0.850) = 407.5 A"
           },
           {
             "step": "Ib",
@@ -2685,7 +2733,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 0.253 mV/A/m, 15.0 m: Vc 0.19 %, total 2.04 % vs 2.5 %"
+            "detail": "Vu 0.253 mV/A/m, 15.0 m: Vc 0.19 %, total 2.03 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -2731,7 +2779,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.36 % vs 2 %"
+            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.35 % vs 2 %"
           }
         },
         "size": null,
@@ -2742,7 +2790,7 @@
           "inA": 63,
           "izA": 800,
           "vdOwnPct": 0.038064621218869193,
-          "vdTotalPct": 0.35561336629505613,
+          "vdTotalPct": 0.3465992837233782,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -2762,7 +2810,7 @@
           "rkMohm": null,
           "xkMohm": null,
           "vdOwnV": null,
-          "vdUpstreamPct": 0.3175487450761869,
+          "vdUpstreamPct": 0.308534662504509,
           "vdLimitPct": 2,
           "busbarA": 800,
           "lengthM": 40,
@@ -2771,7 +2819,7 @@
         "trace": [
           {
             "step": "Riser",
-            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.36 % vs 2 %"
+            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.35 % vs 2 %"
           }
         ],
         "runId": "cross-check-CC-04",
@@ -2789,7 +2837,7 @@
         "checks": {
           "C2": {
             "state": "pass",
-            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.36 % vs 2 %"
+            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.35 % vs 2 %"
           },
           "C3": {
             "state": "not-calculated",
@@ -2817,7 +2865,7 @@
           "inA": 16,
           "izA": null,
           "vdOwnPct": null,
-          "vdTotalPct": 0.35561336629505613,
+          "vdTotalPct": 0.3465992837233782,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -2826,7 +2874,7 @@
         "trace": [
           {
             "step": "Riser",
-            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.36 % vs 2 %"
+            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.35 % vs 2 %"
           },
           {
             "step": "Tap-off",
@@ -2848,7 +2896,7 @@
         "checks": {
           "C2": {
             "state": "pass",
-            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.36 % vs 2 %"
+            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.35 % vs 2 %"
           },
           "C3": {
             "state": "not-calculated",
@@ -2876,7 +2924,7 @@
           "inA": 16,
           "izA": null,
           "vdOwnPct": null,
-          "vdTotalPct": 0.35561336629505613,
+          "vdTotalPct": 0.3465992837233782,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -2885,7 +2933,7 @@
         "trace": [
           {
             "step": "Riser",
-            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.36 % vs 2 %"
+            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.35 % vs 2 %"
           },
           {
             "step": "Tap-off",
@@ -2907,7 +2955,7 @@
         "checks": {
           "C2": {
             "state": "pass",
-            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.36 % vs 2 %"
+            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.35 % vs 2 %"
           },
           "C3": {
             "state": "not-calculated",
@@ -2935,7 +2983,7 @@
           "inA": 16,
           "izA": null,
           "vdOwnPct": null,
-          "vdTotalPct": 0.35561336629505613,
+          "vdTotalPct": 0.3465992837233782,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -2944,7 +2992,7 @@
         "trace": [
           {
             "step": "Riser",
-            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.36 % vs 2 %"
+            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.35 % vs 2 %"
           },
           {
             "step": "Tap-off",
@@ -2966,7 +3014,7 @@
         "checks": {
           "C2": {
             "state": "pass",
-            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.36 % vs 2 %"
+            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.35 % vs 2 %"
           },
           "C3": {
             "state": "not-calculated",
@@ -2994,7 +3042,7 @@
           "inA": 16,
           "izA": null,
           "vdOwnPct": null,
-          "vdTotalPct": 0.35561336629505613,
+          "vdTotalPct": 0.3465992837233782,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -3003,7 +3051,7 @@
         "trace": [
           {
             "step": "Riser",
-            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.36 % vs 2 %"
+            "detail": "800 A gersan busbar, 40 m, k 0.625 (4 tap-offs): Vd 0.04 %, total 0.35 % vs 2 %"
           },
           {
             "step": "Tap-off",

@@ -1099,17 +1099,14 @@ export const SECTIONS: GuideSection[] = [
       <>
         <ul>
           <li>
-            <Term>Balanced three-phase</Term> (same kW on L1, L2, L3): Ib = P x 1000 / (√3 x 400 x
-            pf).
+            <Term>Every load</Term> - single-phase or three-phase, balanced or unbalanced, motor or
+            not: <strong>Ib = MD x 1000 / (√3 x 400 x pf)</strong>, MD = the load the feeder is
+            sized on (see Breaker / Cable Sizing Criteria). One formula only (27 Nov 2026).
           </li>
           <li>
-            <Term>Single-phase or unbalanced</Term>: Ib = largest phase kW x 1000 / (230 x pf); the
-            neutral current is worked out too.
-          </li>
-          <li>
-            <Term>Motor-driven equipment</Term>: input kW = rated kW / efficiency, then as above.
-            The same applies to a motor typed on an isolator or connection unit: choose its Starter
-            and enter its Efficiency (required with a starter, E2003).
+            <Term>Motor-driven equipment</Term> (Mechanical / PHE equipment on an isolator): its
+            load is the input kW = rated kW / efficiency (efficiency required with a starter,
+            E2003); the efficiency is not used again in Ib.
           </li>
         </ul>
         <p>

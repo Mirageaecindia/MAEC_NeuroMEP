@@ -256,23 +256,23 @@ export function designFeeders(project: Project): FeederDesign[] {
     }
 
     const total = d.L1 + d.L2 + d.L3;
-    if (to.kind === 'motor') {
-      const eff = to.efficiency;
-      if (eff === null)
-        return [blocked('Motor efficiency missing; the default by motor class is open (OI-30).')];
-      ibCase = 'motor';
-      ibA =
-        phases === 1
-          ? (total * 1000) / (V_PHASE * s.pf * eff)
-          : (total * 1000) / (SQRT3 * V_LINE * s.pf * eff);
-    } else if (phases === 3 && d.L1 === d.L2 && d.L2 === d.L3) {
-      ibCase = 'three-phase';
-      ibA = (total * 1000) / (SQRT3 * V_LINE * s.pf);
-    } else {
-      // Single-phase, or unbalanced: the largest phase current (V-05).
-      ibCase = phases === 1 ? 'single-phase' : 'unbalanced';
-      ibA = (Math.max(d.L1, d.L2, d.L3) * 1000) / (V_PHASE * s.pf);
-    }
+    // One load-current formula for every load (user decision 27 Nov 2026, A-32; replaces the
+    // largest-phase / 230 V rule of V-05, the single-phase 230 V formula and the motor
+    // efficiency): Ib = MD x 1000 / (sqrt3 x 400 x pf). The connection type is still recorded
+    // (voltage drop, poles, neutral).
+    ibCase =
+      to.kind === 'motor'
+        ? 'motor'
+        : phases === 3 && d.L1 === d.L2 && d.L2 === d.L3
+          ? 'three-phase'
+          : phases === 1
+            ? 'single-phase'
+            : 'unbalanced';
+    ibA = (total * 1000) / (SQRT3 * V_LINE * s.pf);
+    trace.push({
+      step: 'Ib',
+      detail: `Ib = MD x 1000 / (sqrt3 x 400 x pf) = ${r1(total)} x 1000 / (1.732 x 400 x ${s.pf.toFixed(3)}) = ${r1(ibA)} A`,
+    });
     const phaseA = [d.L1, d.L2, d.L3].map((p) => (p * 1000) / (V_PHASE * s.pf!));
     neutralA = ibCase === 'motor' ? 0 : neutralCurrent(phaseA[0]!, phaseA[1]!, phaseA[2]!);
     trace.push({ step: 'Ib', detail: `${ibCase}: Ib = ${r1(ibA)} A, neutral ${r1(neutralA)} A` });

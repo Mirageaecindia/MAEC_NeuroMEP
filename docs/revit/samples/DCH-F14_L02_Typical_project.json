@@ -1811,6 +1811,10 @@
           },
           {
             "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 91.3 x 1000 / (1.732 x 400 x 0.806) = 163.4 A"
+          },
+          {
+            "step": "Ib",
             "detail": "three-phase: Ib = 163.4 A, neutral 0 A"
           },
           {
@@ -2125,6 +2129,10 @@
           },
           {
             "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 17.1 x 1000 / (1.732 x 400 x 0.806) = 30.6 A"
+          },
+          {
+            "step": "Ib",
             "detail": "three-phase: Ib = 30.6 A, neutral 0 A"
           },
           {
@@ -2271,6 +2279,10 @@
           {
             "step": "Load",
             "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12 x 1000 / (1.732 x 400 x 0.806) = 21.5 A"
           },
           {
             "step": "Ib",
@@ -2423,6 +2435,10 @@
           },
           {
             "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12 x 1000 / (1.732 x 400 x 0.806) = 21.5 A"
+          },
+          {
+            "step": "Ib",
             "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
           },
           {
@@ -2569,6 +2585,10 @@
           {
             "step": "Load",
             "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12 x 1000 / (1.732 x 400 x 0.806) = 21.5 A"
           },
           {
             "step": "Ib",
@@ -2721,6 +2741,10 @@
           },
           {
             "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 17.1 x 1000 / (1.732 x 400 x 0.806) = 30.6 A"
+          },
+          {
+            "step": "Ib",
             "detail": "three-phase: Ib = 30.6 A, neutral 0 A"
           },
           {
@@ -2867,6 +2891,10 @@
           {
             "step": "Load",
             "detail": "Demand 5.7 / 5.7 / 5.7 kW (L1 / L2 / L3), pf 0.8061472108831602"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 17.1 x 1000 / (1.732 x 400 x 0.806) = 30.6 A"
           },
           {
             "step": "Ib",
@@ -3019,6 +3047,10 @@
           },
           {
             "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12 x 1000 / (1.732 x 400 x 0.806) = 21.5 A"
+          },
+          {
+            "step": "Ib",
             "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
           },
           {
@@ -3165,6 +3197,10 @@
           {
             "step": "Load",
             "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12 x 1000 / (1.732 x 400 x 0.806) = 21.5 A"
           },
           {
             "step": "Ib",
@@ -3317,6 +3353,10 @@
           },
           {
             "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12 x 1000 / (1.732 x 400 x 0.806) = 21.5 A"
+          },
+          {
+            "step": "Ib",
             "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
           },
           {
@@ -3463,6 +3503,10 @@
           {
             "step": "Load",
             "detail": "Demand 5.7 / 5.7 / 5.7 kW (L1 / L2 / L3), pf 0.8061472108831602"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 17.1 x 1000 / (1.732 x 400 x 0.806) = 30.6 A"
           },
           {
             "step": "Ib",
@@ -3616,6 +3660,10 @@
           {
             "step": "Load",
             "detail": "Demand 30.4 / 30.4 / 30.4 kW (L1 / L2 / L3), pf 0.8062035409991427"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 91.3 x 1000 / (1.732 x 400 x 0.806) = 163.4 A"
           },
           {
             "step": "Ib",
@@ -3933,6 +3981,10 @@
           },
           {
             "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 17.1 x 1000 / (1.732 x 400 x 0.806) = 30.6 A"
+          },
+          {
+            "step": "Ib",
             "detail": "three-phase: Ib = 30.6 A, neutral 0 A"
           },
           {
@@ -4079,6 +4131,10 @@
           {
             "step": "Load",
             "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12 x 1000 / (1.732 x 400 x 0.806) = 21.5 A"
           },
           {
             "step": "Ib",
@@ -4231,6 +4287,10 @@
           },
           {
             "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12 x 1000 / (1.732 x 400 x 0.806) = 21.5 A"
+          },
+          {
+            "step": "Ib",
             "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
           },
           {
@@ -4377,6 +4437,10 @@
           {
             "step": "Load",
             "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12 x 1000 / (1.732 x 400 x 0.806) = 21.5 A"
           },
           {
             "step": "Ib",
@@ -4529,6 +4593,10 @@
           },
           {
             "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 17.1 x 1000 / (1.732 x 400 x 0.806) = 30.6 A"
+          },
+          {
+            "step": "Ib",
             "detail": "three-phase: Ib = 30.6 A, neutral 0 A"
           },
           {
@@ -4675,6 +4743,10 @@
           {
             "step": "Load",
             "detail": "Demand 5.7 / 5.7 / 5.7 kW (L1 / L2 / L3), pf 0.8061472108831602"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 17.1 x 1000 / (1.732 x 400 x 0.806) = 30.6 A"
           },
           {
             "step": "Ib",
@@ -4827,6 +4899,10 @@
           },
           {
             "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12 x 1000 / (1.732 x 400 x 0.806) = 21.5 A"
+          },
+          {
+            "step": "Ib",
             "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
           },
           {
@@ -4973,6 +5049,10 @@
           {
             "step": "Load",
             "detail": "Demand 4 / 4 / 4 kW (L1 / L2 / L3), pf 0.8062570551312385"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12 x 1000 / (1.732 x 400 x 0.806) = 21.5 A"
           },
           {
             "step": "Ib",
@@ -5125,6 +5205,10 @@
           },
           {
             "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12 x 1000 / (1.732 x 400 x 0.806) = 21.5 A"
+          },
+          {
+            "step": "Ib",
             "detail": "three-phase: Ib = 21.5 A, neutral 0 A"
           },
           {
@@ -5271,6 +5355,10 @@
           {
             "step": "Load",
             "detail": "Demand 5.7 / 5.7 / 5.7 kW (L1 / L2 / L3), pf 0.8061472108831602"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 17.1 x 1000 / (1.732 x 400 x 0.806) = 30.6 A"
           },
           {
             "step": "Ib",

@@ -116,14 +116,13 @@ describe('#TASK-26 engine against an independent hand calculation (office buildi
     for (const x of out.feeders) expect(x.status, x.cableId).toBe('final');
   });
 
-  it('design currents: Ib = P / (sqrt3 x 400 x pf) balanced, largest phase / (230 x pf) unbalanced', () => {
+  it('design currents: Ib = MD x 1000 / (sqrt3 x 400 x pf) for every load (A-32)', () => {
     expect(f('db1').ibA).toBeCloseTo((20 * 1000) / (SQRT3 * 400 * 0.85), 9);
-    expect(f('db2').ibA).toBeCloseTo((8 * 1000) / (230 * 0.85), 9);
+    expect(f('db2').ibA).toBeCloseTo((20 * 1000) / (SQRT3 * 400 * 0.85), 9);
     expect(f('db3').ibA).toBeCloseTo((30 * 1000) / (SQRT3 * 400 * 0.85), 9);
-    // SMDB: 20 + 20 + 30 kW = phases 21.67 / 19.67 / 18.67 kW; largest phase on 230 V.
-    expect(f('sm').ibA).toBeCloseTo(((20 / 3 + 8 + 10) * 1000) / (230 * 0.85), 9);
+    expect(f('sm').ibA).toBeCloseTo((70 * 1000) / (SQRT3 * 400 * 0.85), 9);
     expect(f('db1').device!.ratingA).toBe(40);
-    expect(f('db2').device!.ratingA).toBe(50);
+    expect(f('db2').device!.ratingA).toBe(40);
     expect(f('db3').device!.ratingA).toBe(63);
   });
 
@@ -270,6 +269,9 @@ describe('#TASK-26 engineering rules on random buildings', () => {
               g.size &&
               [f.c1, f.c2, g.c1, g.c2].every((c) => c !== 'blocked') &&
               g.ibA! >= f.ibA! - 1e-9 &&
+              // Same number of runs: the DEWA minimum can start at parallel runs for a larger
+              // breaker (e.g. 2 x 95 mm² for 200 A), less copper than one large cable sized by C1.
+              f.size.runs === g.size.runs &&
               (g.vdUpstreamPct ?? 0) >= (f.vdUpstreamPct ?? 0) - 1e-9 &&
               // C2 must be reachable at all: an upstream drop above the limit cannot be fixed here.
               (g.vdUpstreamPct ?? 0) < g.vdLimitPct!;

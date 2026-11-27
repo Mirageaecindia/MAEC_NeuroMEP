@@ -849,7 +849,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 0.431 mV/A/m, 15.0 m: Vc 0.31 %, total 0.31 % vs 2 %"
+            "detail": "Vu 0.431 mV/A/m, 15.0 m: Vc 0.29 %, total 0.29 % vs 2 %"
           },
           "C3": {
             "state": "pass",
@@ -903,11 +903,11 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 190.78303272194773,
+          "ibA": 180.3601541856393,
           "inA": 200,
           "izA": 232.14199999999997,
-          "vdOwnPct": 0.30854029401654154,
-          "vdTotalPct": 0.30854029401654154,
+          "vdOwnPct": 0.29168408850282473,
+          "vdTotalPct": 0.29168408850282473,
           "ikMaxKa": 35.77731562822064,
           "ikMinKa": 23.586680285478593,
           "ipKa": 79.09659968070488,
@@ -926,7 +926,7 @@
           "vdxMvAm": 0.13,
           "rkMohm": 2.8926315789473684,
           "xkMohm": 1.5,
-          "vdOwnV": 1.2341611760661662,
+          "vdOwnV": 1.166736354011299,
           "vdUpstreamPct": 0,
           "vdLimitPct": 2,
           "busbarA": null,
@@ -940,7 +940,11 @@
           },
           {
             "step": "Ib",
-            "detail": "unbalanced: Ib = 190.8 A, neutral 15 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 104.7 x 1000 / (1.732 x 400 x 0.838) = 180.4 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "unbalanced: Ib = 180.4 A, neutral 15 A"
           },
           {
             "step": "Device",
@@ -956,7 +960,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 0.431 mV/A/m, 15.0 m: Vc 0.31 %, total 0.31 % vs 2 %"
+            "detail": "Vu 0.431 mV/A/m, 15.0 m: Vc 0.29 %, total 0.29 % vs 2 %"
           },
           {
             "step": "C3",
@@ -1010,7 +1014,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 0.97 %, total 1.28 % vs 2 %"
+            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 0.97 %, total 1.27 % vs 2 %"
           },
           "C3": {
             "state": "pass",
@@ -1068,7 +1072,7 @@
           "inA": 40,
           "izA": 42.75402264,
           "vdOwnPct": 0.9748979981791355,
-          "vdTotalPct": 1.283438292195677,
+          "vdTotalPct": 1.2665820866819602,
           "ikMaxKa": 26.0670998797161,
           "ikMinKa": 2.885547222233428,
           "ipKa": 45.00776494798687,
@@ -1088,7 +1092,7 @@
           "rkMohm": 45.8,
           "xkMohm": 4,
           "vdOwnV": 3.8995919927165414,
-          "vdUpstreamPct": 0.30854029401654154,
+          "vdUpstreamPct": 0.29168408850282473,
           "vdLimitPct": 2,
           "busbarA": null,
           "lengthM": 40,
@@ -1098,6 +1102,10 @@
           {
             "step": "Load",
             "detail": "Demand 7.7 / 7.7 / 7.7 kW (L1 / L2 / L3), pf 0.8499999999999999"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 23 x 1000 / (1.732 x 400 x 0.850) = 39 A"
           },
           {
             "step": "Ib",
@@ -1113,7 +1121,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 0.97 %, total 1.28 % vs 2 %"
+            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 0.97 %, total 1.27 % vs 2 %"
           },
           {
             "step": "C3",
@@ -1159,7 +1167,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 3.800 mV/A/m, 20.0 m: Vc 0.39 %, total 1.68 % vs 4 %"
+            "detail": "Vu 3.800 mV/A/m, 20.0 m: Vc 0.39 %, total 1.66 % vs 4 %"
           },
           "C3": {
             "state": "pass",
@@ -1217,7 +1225,7 @@
           "inA": 25,
           "izA": 25.560000000000002,
           "vdOwnPct": 0.3943340073876856,
-          "vdTotalPct": 1.6777722995833626,
+          "vdTotalPct": 1.6609160940696457,
           "ikMaxKa": 4.499909821787075,
           "ikMinKa": 1.7703009941246313,
           "ipKa": 6.491129973558127,
@@ -1237,7 +1245,7 @@
           "rkMohm": 36.64,
           "xkMohm": 2,
           "vdOwnV": 1.5773360295507424,
-          "vdUpstreamPct": 1.283438292195677,
+          "vdUpstreamPct": 1.2665820866819602,
           "vdLimitPct": 4,
           "busbarA": null,
           "lengthM": 20,
@@ -1247,6 +1255,10 @@
           {
             "step": "Load",
             "detail": "Demand 4.1 / 4.1 / 4.1 kW (L1 / L2 / L3), pf 0.8499999999999999"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12.2 x 1000 / (1.732 x 400 x 0.850) = 20.8 A"
           },
           {
             "step": "Ib",
@@ -1262,7 +1274,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 3.800 mV/A/m, 20.0 m: Vc 0.39 %, total 1.68 % vs 4 %"
+            "detail": "Vu 3.800 mV/A/m, 20.0 m: Vc 0.39 %, total 1.66 % vs 4 %"
           },
           {
             "step": "C3",
@@ -1308,7 +1320,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 2.400 mV/A/m, 25.0 m: Vc 0.42 %, total 1.70 % vs 4 %"
+            "detail": "Vu 2.400 mV/A/m, 25.0 m: Vc 0.42 %, total 1.69 % vs 4 %"
           },
           "C3": {
             "state": "pass",
@@ -1366,7 +1378,7 @@
           "inA": 32,
           "izA": 34.647999999999996,
           "vdOwnPct": 0.4198571770124945,
-          "vdTotalPct": 1.7032954692081717,
+          "vdTotalPct": 1.6864392636944547,
           "ikMaxKa": 4.499909821787075,
           "ikMinKa": 1.9322490560808365,
           "ipKa": 6.491129973558127,
@@ -1386,7 +1398,7 @@
           "rkMohm": 28.625,
           "xkMohm": 2.5,
           "vdOwnV": 1.679428708049978,
-          "vdUpstreamPct": 1.283438292195677,
+          "vdUpstreamPct": 1.2665820866819602,
           "vdLimitPct": 4,
           "busbarA": null,
           "lengthM": 25,
@@ -1396,6 +1408,10 @@
           {
             "step": "Load",
             "detail": "Demand 5.5 / 5.5 / 5.5 kW (L1 / L2 / L3), pf 0.85"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 16.5 x 1000 / (1.732 x 400 x 0.850) = 28 A"
           },
           {
             "step": "Ib",
@@ -1411,7 +1427,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 2.400 mV/A/m, 25.0 m: Vc 0.42 %, total 1.70 % vs 4 %"
+            "detail": "Vu 2.400 mV/A/m, 25.0 m: Vc 0.42 %, total 1.69 % vs 4 %"
           },
           {
             "step": "C3",
@@ -1461,7 +1477,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 0.581 mV/A/m, 55.0 m: Vc 0.78 %, total 1.09 % vs 2 %"
+            "detail": "Vu 0.581 mV/A/m, 55.0 m: Vc 0.71 %, total 1.00 % vs 2 %"
           },
           "C3": {
             "state": "pass",
@@ -1515,11 +1531,11 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 98.20971867007674,
+          "ibA": 88.30062940547218,
           "inA": 100,
           "izA": 115.487757,
-          "vdOwnPct": 0.7845717456293797,
-          "vdTotalPct": 1.0931120396459213,
+          "vdOwnPct": 0.7054106242331843,
+          "vdTotalPct": 0.997094712736009,
           "ikMaxKa": 26.0670998797161,
           "ikMinKa": 9.440191387489827,
           "ipKa": 45.00776494798687,
@@ -1538,8 +1554,8 @@
           "vdxMvAm": 0.28,
           "rkMohm": 10.606315789473685,
           "xkMohm": 5.5,
-          "vdOwnV": 3.1382869825175184,
-          "vdUpstreamPct": 0.30854029401654154,
+          "vdOwnV": 2.8216424969327374,
+          "vdUpstreamPct": 0.29168408850282473,
           "vdLimitPct": 2,
           "busbarA": null,
           "lengthM": 55,
@@ -1552,7 +1568,11 @@
           },
           {
             "step": "Ib",
-            "detail": "unbalanced: Ib = 98.2 A, neutral 14.8 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 52 x 1000 / (1.732 x 400 x 0.850) = 88.3 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "unbalanced: Ib = 88.3 A, neutral 14.8 A"
           },
           {
             "step": "Device",
@@ -1564,7 +1584,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 0.581 mV/A/m, 55.0 m: Vc 0.78 %, total 1.09 % vs 2 %"
+            "detail": "Vu 0.581 mV/A/m, 55.0 m: Vc 0.71 %, total 1.00 % vs 2 %"
           },
           {
             "step": "C3",
@@ -1618,7 +1638,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 1.434 mV/A/m, 35.0 m: Vc 0.90 %, total 1.99 % vs 2.5 %"
+            "detail": "Vu 1.434 mV/A/m, 35.0 m: Vc 0.85 %, total 1.85 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -1672,11 +1692,11 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 71.61125319693095,
+          "ibA": 67.92356108113245,
           "inA": 80,
           "izA": 85.93599999999999,
-          "vdOwnPct": 0.8983852843635356,
-          "vdTotalPct": 1.991497324009457,
+          "vdOwnPct": 0.8521220480396839,
+          "vdTotalPct": 1.8492167607756929,
           "ikMaxKa": 11.61715149359508,
           "ikMinKa": 3.619310572919518,
           "ipKa": 17.341298311340903,
@@ -1695,8 +1715,8 @@
           "vdxMvAm": 0.14,
           "rkMohm": 25.648000000000003,
           "xkMohm": 3.5,
-          "vdOwnV": 3.593541137454143,
-          "vdUpstreamPct": 1.0931120396459213,
+          "vdOwnV": 3.4084881921587358,
+          "vdUpstreamPct": 0.997094712736009,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 35,
@@ -1709,7 +1729,11 @@
           },
           {
             "step": "Ib",
-            "detail": "unbalanced: Ib = 71.6 A, neutral 5.1 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 40 x 1000 / (1.732 x 400 x 0.850) = 67.9 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "unbalanced: Ib = 67.9 A, neutral 5.1 A"
           },
           {
             "step": "Device",
@@ -1721,7 +1745,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 1.434 mV/A/m, 35.0 m: Vc 0.90 %, total 1.99 % vs 2.5 %"
+            "detail": "Vu 1.434 mV/A/m, 35.0 m: Vc 0.85 %, total 1.85 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -1763,15 +1787,15 @@
         "errors": [
           "W2402"
         ],
-        "sizedBy": "C6",
+        "sizedBy": "C2",
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 63 A: pass"
+            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 50 A: pass"
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 1.28 %, total 2.37 % vs 2.5 %"
+            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 1.06 %, total 2.06 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -1787,7 +1811,7 @@
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 16 mm² vs DEWA minimum 1 x 16 mm² for 63 A"
+            "detail": "1 x 16 mm² vs DEWA minimum 1 x 10 mm² for 50 A"
           },
           "C7": {
             "state": "not-required",
@@ -1811,7 +1835,7 @@
         },
         "device": {
           "type": "MCB",
-          "ratingA": 63,
+          "ratingA": 50,
           "poles": "3P",
           "faultRatingKa": 16
         },
@@ -1825,11 +1849,11 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 51.150895140664964,
-          "inA": 63,
+          "ibA": 42.45222567570778,
+          "inA": 50,
           "izA": 64.944,
-          "vdOwnPct": 1.278772378516624,
-          "vdTotalPct": 2.371884418162545,
+          "vdOwnPct": 1.0613056418926945,
+          "vdTotalPct": 2.0584003546287035,
           "ikMaxKa": 11.61715149359508,
           "ikMinKa": 2.4212964773155643,
           "ipKa": 17.341298311340903,
@@ -1848,8 +1872,8 @@
           "vdxMvAm": null,
           "rkMohm": 45.8,
           "xkMohm": 4,
-          "vdOwnV": 5.115089514066496,
-          "vdUpstreamPct": 1.0931120396459213,
+          "vdOwnV": 4.245222567570778,
+          "vdUpstreamPct": 0.997094712736009,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 40,
@@ -1862,19 +1886,23 @@
           },
           {
             "step": "Ib",
-            "detail": "unbalanced: Ib = 51.2 A, neutral 13.5 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 25 x 1000 / (1.732 x 400 x 0.850) = 42.5 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "unbalanced: Ib = 42.5 A, neutral 13.5 A"
           },
           {
             "step": "Device",
-            "detail": "In = 63 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 50 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 63 A: pass"
+            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 50 A: pass"
           },
           {
             "step": "C2",
-            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 1.28 %, total 2.37 % vs 2.5 %"
+            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 1.06 %, total 2.06 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -1898,7 +1926,7 @@
           },
           {
             "step": "Sizing",
-            "detail": "Sized by C6."
+            "detail": "Sized by C2."
           }
         ],
         "runId": "cross-check-CC-03",
@@ -1924,7 +1952,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 0.431 mV/A/m, 15.0 m: Vc 0.31 %, total 0.31 % vs 2 %"
+            "detail": "Vu 0.431 mV/A/m, 15.0 m: Vc 0.29 %, total 0.29 % vs 2 %"
           },
           "C3": {
             "state": "pass",
@@ -1978,11 +2006,11 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 190.78303272194773,
+          "ibA": 180.3601541856393,
           "inA": 200,
           "izA": 232.14199999999997,
-          "vdOwnPct": 0.30854029401654154,
-          "vdTotalPct": 0.30854029401654154,
+          "vdOwnPct": 0.29168408850282473,
+          "vdTotalPct": 0.29168408850282473,
           "ikMaxKa": 35.77731562822064,
           "ikMinKa": 23.586680285478593,
           "ipKa": 79.09659968070488,
@@ -2001,7 +2029,7 @@
           "vdxMvAm": 0.13,
           "rkMohm": 2.8926315789473684,
           "xkMohm": 1.5,
-          "vdOwnV": 1.2341611760661662,
+          "vdOwnV": 1.166736354011299,
           "vdUpstreamPct": 0,
           "vdLimitPct": 2,
           "busbarA": null,
@@ -2015,7 +2043,11 @@
           },
           {
             "step": "Ib",
-            "detail": "unbalanced: Ib = 190.8 A, neutral 15 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 104.7 x 1000 / (1.732 x 400 x 0.838) = 180.4 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "unbalanced: Ib = 180.4 A, neutral 15 A"
           },
           {
             "step": "Device",
@@ -2031,7 +2063,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 0.431 mV/A/m, 15.0 m: Vc 0.31 %, total 0.31 % vs 2 %"
+            "detail": "Vu 0.431 mV/A/m, 15.0 m: Vc 0.29 %, total 0.29 % vs 2 %"
           },
           {
             "step": "C3",
@@ -2085,7 +2117,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 0.97 %, total 1.28 % vs 2 %"
+            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 0.97 %, total 1.27 % vs 2 %"
           },
           "C3": {
             "state": "pass",
@@ -2143,7 +2175,7 @@
           "inA": 40,
           "izA": 42.75402264,
           "vdOwnPct": 0.9748979981791355,
-          "vdTotalPct": 1.283438292195677,
+          "vdTotalPct": 1.2665820866819602,
           "ikMaxKa": 26.0670998797161,
           "ikMinKa": 2.885547222233428,
           "ipKa": 45.00776494798687,
@@ -2163,7 +2195,7 @@
           "rkMohm": 45.8,
           "xkMohm": 4,
           "vdOwnV": 3.8995919927165414,
-          "vdUpstreamPct": 0.30854029401654154,
+          "vdUpstreamPct": 0.29168408850282473,
           "vdLimitPct": 2,
           "busbarA": null,
           "lengthM": 40,
@@ -2173,6 +2205,10 @@
           {
             "step": "Load",
             "detail": "Demand 7.7 / 7.7 / 7.7 kW (L1 / L2 / L3), pf 0.8499999999999999"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 23 x 1000 / (1.732 x 400 x 0.850) = 39 A"
           },
           {
             "step": "Ib",
@@ -2188,7 +2224,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 0.97 %, total 1.28 % vs 2 %"
+            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 0.97 %, total 1.27 % vs 2 %"
           },
           {
             "step": "C3",
@@ -2234,7 +2270,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 3.800 mV/A/m, 20.0 m: Vc 0.39 %, total 1.68 % vs 4 %"
+            "detail": "Vu 3.800 mV/A/m, 20.0 m: Vc 0.39 %, total 1.66 % vs 4 %"
           },
           "C3": {
             "state": "pass",
@@ -2292,7 +2328,7 @@
           "inA": 25,
           "izA": 25.560000000000002,
           "vdOwnPct": 0.3943340073876856,
-          "vdTotalPct": 1.6777722995833626,
+          "vdTotalPct": 1.6609160940696457,
           "ikMaxKa": 4.499909821787075,
           "ikMinKa": 1.7703009941246313,
           "ipKa": 6.491129973558127,
@@ -2312,7 +2348,7 @@
           "rkMohm": 36.64,
           "xkMohm": 2,
           "vdOwnV": 1.5773360295507424,
-          "vdUpstreamPct": 1.283438292195677,
+          "vdUpstreamPct": 1.2665820866819602,
           "vdLimitPct": 4,
           "busbarA": null,
           "lengthM": 20,
@@ -2322,6 +2358,10 @@
           {
             "step": "Load",
             "detail": "Demand 4.1 / 4.1 / 4.1 kW (L1 / L2 / L3), pf 0.8499999999999999"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 12.2 x 1000 / (1.732 x 400 x 0.850) = 20.8 A"
           },
           {
             "step": "Ib",
@@ -2337,7 +2377,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 3.800 mV/A/m, 20.0 m: Vc 0.39 %, total 1.68 % vs 4 %"
+            "detail": "Vu 3.800 mV/A/m, 20.0 m: Vc 0.39 %, total 1.66 % vs 4 %"
           },
           {
             "step": "C3",
@@ -2383,7 +2423,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 2.400 mV/A/m, 25.0 m: Vc 0.42 %, total 1.70 % vs 4 %"
+            "detail": "Vu 2.400 mV/A/m, 25.0 m: Vc 0.42 %, total 1.69 % vs 4 %"
           },
           "C3": {
             "state": "pass",
@@ -2441,7 +2481,7 @@
           "inA": 32,
           "izA": 34.647999999999996,
           "vdOwnPct": 0.4198571770124945,
-          "vdTotalPct": 1.7032954692081717,
+          "vdTotalPct": 1.6864392636944547,
           "ikMaxKa": 4.499909821787075,
           "ikMinKa": 1.9322490560808365,
           "ipKa": 6.491129973558127,
@@ -2461,7 +2501,7 @@
           "rkMohm": 28.625,
           "xkMohm": 2.5,
           "vdOwnV": 1.679428708049978,
-          "vdUpstreamPct": 1.283438292195677,
+          "vdUpstreamPct": 1.2665820866819602,
           "vdLimitPct": 4,
           "busbarA": null,
           "lengthM": 25,
@@ -2471,6 +2511,10 @@
           {
             "step": "Load",
             "detail": "Demand 5.5 / 5.5 / 5.5 kW (L1 / L2 / L3), pf 0.85"
+          },
+          {
+            "step": "Ib",
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 16.5 x 1000 / (1.732 x 400 x 0.850) = 28 A"
           },
           {
             "step": "Ib",
@@ -2486,7 +2530,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 2.400 mV/A/m, 25.0 m: Vc 0.42 %, total 1.70 % vs 4 %"
+            "detail": "Vu 2.400 mV/A/m, 25.0 m: Vc 0.42 %, total 1.69 % vs 4 %"
           },
           {
             "step": "C3",
@@ -2536,7 +2580,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 0.581 mV/A/m, 55.0 m: Vc 0.78 %, total 1.09 % vs 2 %"
+            "detail": "Vu 0.581 mV/A/m, 55.0 m: Vc 0.71 %, total 1.00 % vs 2 %"
           },
           "C3": {
             "state": "pass",
@@ -2590,11 +2634,11 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 98.20971867007674,
+          "ibA": 88.30062940547218,
           "inA": 100,
           "izA": 115.487757,
-          "vdOwnPct": 0.7845717456293797,
-          "vdTotalPct": 1.0931120396459213,
+          "vdOwnPct": 0.7054106242331843,
+          "vdTotalPct": 0.997094712736009,
           "ikMaxKa": 26.0670998797161,
           "ikMinKa": 9.440191387489827,
           "ipKa": 45.00776494798687,
@@ -2613,8 +2657,8 @@
           "vdxMvAm": 0.28,
           "rkMohm": 10.606315789473685,
           "xkMohm": 5.5,
-          "vdOwnV": 3.1382869825175184,
-          "vdUpstreamPct": 0.30854029401654154,
+          "vdOwnV": 2.8216424969327374,
+          "vdUpstreamPct": 0.29168408850282473,
           "vdLimitPct": 2,
           "busbarA": null,
           "lengthM": 55,
@@ -2627,7 +2671,11 @@
           },
           {
             "step": "Ib",
-            "detail": "unbalanced: Ib = 98.2 A, neutral 14.8 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 52 x 1000 / (1.732 x 400 x 0.850) = 88.3 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "unbalanced: Ib = 88.3 A, neutral 14.8 A"
           },
           {
             "step": "Device",
@@ -2639,7 +2687,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 0.581 mV/A/m, 55.0 m: Vc 0.78 %, total 1.09 % vs 2 %"
+            "detail": "Vu 0.581 mV/A/m, 55.0 m: Vc 0.71 %, total 1.00 % vs 2 %"
           },
           {
             "step": "C3",
@@ -2693,7 +2741,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 1.434 mV/A/m, 35.0 m: Vc 0.90 %, total 1.99 % vs 2.5 %"
+            "detail": "Vu 1.434 mV/A/m, 35.0 m: Vc 0.85 %, total 1.85 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -2747,11 +2795,11 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 71.61125319693095,
+          "ibA": 67.92356108113245,
           "inA": 80,
           "izA": 85.93599999999999,
-          "vdOwnPct": 0.8983852843635356,
-          "vdTotalPct": 1.991497324009457,
+          "vdOwnPct": 0.8521220480396839,
+          "vdTotalPct": 1.8492167607756929,
           "ikMaxKa": 11.61715149359508,
           "ikMinKa": 3.619310572919518,
           "ipKa": 17.341298311340903,
@@ -2770,8 +2818,8 @@
           "vdxMvAm": 0.14,
           "rkMohm": 25.648000000000003,
           "xkMohm": 3.5,
-          "vdOwnV": 3.593541137454143,
-          "vdUpstreamPct": 1.0931120396459213,
+          "vdOwnV": 3.4084881921587358,
+          "vdUpstreamPct": 0.997094712736009,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 35,
@@ -2784,7 +2832,11 @@
           },
           {
             "step": "Ib",
-            "detail": "unbalanced: Ib = 71.6 A, neutral 5.1 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 40 x 1000 / (1.732 x 400 x 0.850) = 67.9 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "unbalanced: Ib = 67.9 A, neutral 5.1 A"
           },
           {
             "step": "Device",
@@ -2796,7 +2848,7 @@
           },
           {
             "step": "C2",
-            "detail": "Vu 1.434 mV/A/m, 35.0 m: Vc 0.90 %, total 1.99 % vs 2.5 %"
+            "detail": "Vu 1.434 mV/A/m, 35.0 m: Vc 0.85 %, total 1.85 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -2838,15 +2890,15 @@
         "errors": [
           "W2402"
         ],
-        "sizedBy": "C6",
+        "sizedBy": "C2",
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 63 A: pass"
+            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 50 A: pass"
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 1.28 %, total 2.37 % vs 2.5 %"
+            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 1.06 %, total 2.06 % vs 2.5 %"
           },
           "C3": {
             "state": "pass",
@@ -2862,7 +2914,7 @@
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 16 mm² vs DEWA minimum 1 x 16 mm² for 63 A"
+            "detail": "1 x 16 mm² vs DEWA minimum 1 x 10 mm² for 50 A"
           },
           "C7": {
             "state": "not-required",
@@ -2886,7 +2938,7 @@
         },
         "device": {
           "type": "MCB",
-          "ratingA": 63,
+          "ratingA": 50,
           "poles": "3P",
           "faultRatingKa": 16
         },
@@ -2900,11 +2952,11 @@
           "standbyKw": null
         },
         "values": {
-          "ibA": 51.150895140664964,
-          "inA": 63,
+          "ibA": 42.45222567570778,
+          "inA": 50,
           "izA": 64.944,
-          "vdOwnPct": 1.278772378516624,
-          "vdTotalPct": 2.371884418162545,
+          "vdOwnPct": 1.0613056418926945,
+          "vdTotalPct": 2.0584003546287035,
           "ikMaxKa": 11.61715149359508,
           "ikMinKa": 2.4212964773155643,
           "ipKa": 17.341298311340903,
@@ -2923,8 +2975,8 @@
           "vdxMvAm": null,
           "rkMohm": 45.8,
           "xkMohm": 4,
-          "vdOwnV": 5.115089514066496,
-          "vdUpstreamPct": 1.0931120396459213,
+          "vdOwnV": 4.245222567570778,
+          "vdUpstreamPct": 0.997094712736009,
           "vdLimitPct": 2.5,
           "busbarA": null,
           "lengthM": 40,
@@ -2937,19 +2989,23 @@
           },
           {
             "step": "Ib",
-            "detail": "unbalanced: Ib = 51.2 A, neutral 13.5 A"
+            "detail": "Ib = MD x 1000 / (sqrt3 x 400 x pf) = 25 x 1000 / (1.732 x 400 x 0.850) = 42.5 A"
+          },
+          {
+            "step": "Ib",
+            "detail": "unbalanced: Ib = 42.5 A, neutral 13.5 A"
           },
           {
             "step": "Device",
-            "detail": "In = 63 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 50 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 63 A: pass"
+            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 50 A: pass"
           },
           {
             "step": "C2",
-            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 1.28 %, total 2.37 % vs 2.5 %"
+            "detail": "Vu 2.500 mV/A/m, 40.0 m: Vc 1.06 %, total 2.06 % vs 2.5 %"
           },
           {
             "step": "C3",
@@ -2973,7 +3029,7 @@
           },
           {
             "step": "Sizing",
-            "detail": "Sized by C6."
+            "detail": "Sized by C2."
           }
         ],
         "runId": "cross-check-CC-03",
@@ -2995,7 +3051,7 @@
           },
           "C2": {
             "state": "pass",
-            "detail": "800 A powerbar busbar, 25 m, k 1.000 (1 tap-offs): Vd 0.05 %, total 0.36 % vs 2 %"
+            "detail": "800 A powerbar busbar, 25 m, k 1.000 (1 tap-offs): Vd 0.05 %, total 0.34 % vs 2 %"
           }
         },
         "size": null,
@@ -3006,7 +3062,7 @@
           "inA": 50,
           "izA": 800,
           "vdOwnPct": 0.05027015625,
-          "vdTotalPct": 0.35881045026654157,
+          "vdTotalPct": 0.34195424475282477,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -3026,7 +3082,7 @@
           "rkMohm": null,
           "xkMohm": null,
           "vdOwnV": null,
-          "vdUpstreamPct": 0.3085402940165416,
+          "vdUpstreamPct": 0.2916840885028248,
           "vdLimitPct": 2,
           "busbarA": 800,
           "lengthM": 25,
@@ -3035,7 +3091,7 @@
         "trace": [
           {
             "step": "Riser",
-            "detail": "800 A powerbar busbar, 25 m, k 1.000 (1 tap-offs): Vd 0.05 %, total 0.36 % vs 2 %"
+            "detail": "800 A powerbar busbar, 25 m, k 1.000 (1 tap-offs): Vd 0.05 %, total 0.34 % vs 2 %"
           }
         ],
         "runId": "cross-check-CC-03",
@@ -3053,7 +3109,7 @@
         "checks": {
           "C2": {
             "state": "pass",
-            "detail": "800 A powerbar busbar, 25 m, k 1.000 (1 tap-offs): Vd 0.05 %, total 0.36 % vs 2 %"
+            "detail": "800 A powerbar busbar, 25 m, k 1.000 (1 tap-offs): Vd 0.05 %, total 0.34 % vs 2 %"
           },
           "C3": {
             "state": "not-calculated",
@@ -3081,7 +3137,7 @@
           "inA": 63,
           "izA": null,
           "vdOwnPct": null,
-          "vdTotalPct": 0.35881045026654157,
+          "vdTotalPct": 0.34195424475282477,
           "ikMaxKa": null,
           "ikMinKa": null,
           "ipKa": null,
@@ -3090,7 +3146,7 @@
         "trace": [
           {
             "step": "Riser",
-            "detail": "800 A powerbar busbar, 25 m, k 1.000 (1 tap-offs): Vd 0.05 %, total 0.36 % vs 2 %"
+            "detail": "800 A powerbar busbar, 25 m, k 1.000 (1 tap-offs): Vd 0.05 %, total 0.34 % vs 2 %"
           },
           {
             "step": "Tap-off",

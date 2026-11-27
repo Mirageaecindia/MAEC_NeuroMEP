@@ -35,18 +35,18 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
     expect(d.errors).toEqual([]);
   });
 
-  it('Appendix C example 2, unbalanced 8 / 6 / 6 kW: largest phase Ib 40.9 A, In 50 A', () => {
+  it('unbalanced 8 / 6 / 6 kW: Ib = MD x 1000 / (sqrt3 x 400 x pf) = 34.0 A, In 40 A (A-32)', () => {
     const d = feederTo(network([8, 6, 6]), 'db');
     expect(d.ibCase).toBe('unbalanced');
-    expect(d.ibA).toBeCloseTo(40.9, 1);
+    expect(d.ibA).toBeCloseTo((20 * 1000) / (Math.sqrt(3) * 400 * 0.85), 9);
     expect(d.neutralA).toBeCloseTo((2 * 1000) / (230 * 0.85), 6);
-    expect(d.device?.ratingA).toBe(50);
+    expect(d.device?.ratingA).toBe(40);
   });
 
-  it('single-phase load: Ib on 230 V, 1P device', () => {
+  it('single-phase load: the same formula (A-32), 1P device', () => {
     const d = feederTo(network([4.6, 0, 0]), 'db');
     expect(d.ibCase).toBe('single-phase');
-    expect(d.ibA).toBeCloseTo((4.6 * 1000) / (230 * 0.85), 6);
+    expect(d.ibA).toBeCloseTo((4.6 * 1000) / (Math.sqrt(3) * 400 * 0.85), 9);
     expect(d.device?.poles).toBe('1P');
   });
 
@@ -85,7 +85,7 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
     expect(() => designFeeders({ ...network([5, 5, 5]), rulePackId: null })).toThrow(/rule pack/);
   });
 
-  it('blocks a motor without efficiency (E2003)', () => {
+  it('a motor without efficiency is still sized: efficiency is not in Ib (A-32)', () => {
     const p = network([5, 5, 5]);
     const f = p.building.floors[0]!.id;
     const mcc = testElement('mcc', 'mcc', f);
@@ -104,8 +104,8 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
     p.model.elements.push(mcc, motor);
     p.model.cables.push(testCable(p.model.elements[1]!, mcc), testCable(mcc, motor));
     const m = feederTo(p, 'm');
-    expect(m).toMatchObject({ status: 'blocked', ibA: null });
-    expect(m.errors[0]).toBe('E2003');
+    expect(m.status).toBe('provisional');
+    expect(m.ibA).toBeCloseTo((15 * 1000) / (Math.sqrt(3) * 400 * m.pf!), 9);
   });
 
   it('#TASK-28 sizes the feeder to a PFC bank from the kVAr of the panel it is fed from (10.15, V-08)', () => {
@@ -140,7 +140,7 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
     expect(feederTo(p, 'pfc').status).toBe('awaiting-load');
   });
 
-  it('works out a motor current with its efficiency (10.4, V-06)', () => {
+  it('a motor current uses the same formula, without its efficiency (A-32)', () => {
     const p = network([5, 5, 5]);
     const f = p.building.floors[0]!.id;
     const mcc = testElement('mcc', 'mcc', f);
@@ -160,10 +160,10 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
     p.model.cables.push(testCable(p.model.elements[1]!, mcc), testCable(mcc, motor));
     const m = feederTo(p, 'm');
     expect(m.ibCase).toBe('motor');
-    expect(m.ibA).toBeCloseTo((15 * 1000) / (Math.sqrt(3) * 400 * m.pf! * 0.9), 6);
+    expect(m.ibA).toBeCloseTo((15 * 1000) / (Math.sqrt(3) * 400 * m.pf!), 9);
   });
 
-  it('works out a single-phase motor on 230 V', () => {
+  it('a single-phase motor: the same formula (A-32)', () => {
     const p = network([5, 5, 5]);
     const f = p.building.floors[0]!.id;
     const mcc = testElement('mcc', 'mcc', f);
@@ -182,7 +182,7 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
     p.model.elements.push(mcc, motor);
     p.model.cables.push(testCable(p.model.elements[1]!, mcc), testCable(mcc, motor));
     const m = feederTo(p, 'm');
-    expect(m.ibA).toBeCloseTo((2 * 1000) / (230 * m.pf! * 0.8), 6);
+    expect(m.ibA).toBeCloseTo((2 * 1000) / (Math.sqrt(3) * 400 * m.pf!), 9);
     expect(m.device?.poles).toBe('1P');
   });
 

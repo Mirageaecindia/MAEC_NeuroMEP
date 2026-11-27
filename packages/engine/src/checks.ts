@@ -65,13 +65,11 @@ export interface RiserCheck {
 
 const SOURCES = new Set<ElementKind>(['transformer', 'generator', 'ups']);
 
-/** Ib of a demand (10.4): balanced three-phase on 400 V, else the largest phase on 230 V. */
+/** Ib of a demand: MD x 1000 / (sqrt3 x 400 x pf) for every load (A-32, 27 Nov 2026). */
 function phaseCurrent(d: { L1: number; L2: number; L3: number }, pf: number | null): number | null {
   const p = d.L1 + d.L2 + d.L3;
   if (!pf || p <= 0) return null;
-  return d.L1 === d.L2 && d.L2 === d.L3
-    ? (p * 1000) / (Math.sqrt(3) * 400 * pf)
-    : (Math.max(d.L1, d.L2, d.L3) * 1000) / (230 * pf);
+  return (p * 1000) / (Math.sqrt(3) * 400 * pf);
 }
 
 /** Rule-pack limit key for the board a feeder supplies (10.7, Ti sheet). */

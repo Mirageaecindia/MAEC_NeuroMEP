@@ -190,10 +190,10 @@ function ibThreePhase(): WorkedExample {
   const ib = (P * 1000) / (SQRT3 * 400 * pf);
   return {
     id: 'ib-three',
-    title: 'Design current Ib - balanced three-phase load',
+    title: 'Design current Ib - three-phase load',
     source: source('CC-01', `feeder ${cable.tag} SMDB-1F > DB-1F-P (8 + 8 + 8 kW)`),
     method: [
-      'The same kW on L1, L2 and L3: Ib = P x 1000 / (sqrt3 x 400 V x pf).',
+      'Every load, single-phase or three-phase, balanced or not: Ib = MD x 1000 / (sqrt3 x 400 V x pf) (A-32, 27 Nov 2026).',
       'P is the demand the cable carries (after demand factors); pf is the power factor of that load.',
     ],
     inputs: [
@@ -218,14 +218,14 @@ function ibSinglePhase(): WorkedExample {
   const { cable, r } = feeder(p, 'SMDB-CP > DB-CP2');
   const P = r.load!.maxDemandKw;
   const pf = r.calc!.pf!;
-  const ib = (P * 1000) / (230 * pf);
+  const ib = (P * 1000) / (SQRT3 * 400 * pf);
   const factor = p.calculation.demandFactors.byLoadType['2'].value!;
   return {
     id: 'ib-single',
-    title: 'Design current Ib - single-phase load (and unbalanced boards)',
+    title: 'Design current Ib - single-phase load (same formula)',
     source: source('CC-04', `feeder ${cable.tag} SMDB-CP > DB-CP2 (6 kW Power on L1)`),
     method: [
-      'Single-phase, or unequal kW on the three phases: Ib = largest phase kW x 1000 / (230 V x pf).',
+      'A single-phase or unbalanced load uses the same formula as every load: Ib = MD x 1000 / (sqrt3 x 400 V x pf) (A-32, 27 Nov 2026).',
       'Manual demand method: the Power factor typed on Import File applies to the DB load.',
     ],
     inputs: [
@@ -235,7 +235,13 @@ function ibSinglePhase(): WorkedExample {
     ],
     steps: [
       { label: 'Demand P', how: `6 x ${factor}`, value: 6 * factor, unit: 'kW', digits: 2 },
-      { label: 'Ib', how: `${f(P)} x 1000 / (230 x ${pf})`, value: ib, unit: 'A', digits: 2 },
+      {
+        label: 'Ib',
+        how: `${f(P)} x 1000 / (1.732 x 400 x ${pf})`,
+        value: ib,
+        unit: 'A',
+        digits: 2,
+      },
     ],
     compare: [cmp('Demand', 6 * factor, P, 'kW', 2), cmp('Ib', ib, r.values.ibA, 'A', 2)],
   };

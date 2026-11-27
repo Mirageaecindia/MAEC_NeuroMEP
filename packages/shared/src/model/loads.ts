@@ -274,7 +274,9 @@ export function loadSummaries(
           ? p / Math.hypot(p, q)
           : (entered ?? defaultPf);
     const maxPhase = Math.max(demand.L1, demand.L2, demand.L3);
-    const currentA = pf && maxPhase > 0 ? (maxPhase * 1000) / (230 * pf) : pf ? 0 : null;
+    // Load current: MD x 1000 / (sqrt3 x 400 x pf) for every load (A-32, 27 Nov 2026).
+    const md = total(demand);
+    const currentA = pf && maxPhase > 0 ? (md * 1000) / (Math.sqrt(3) * 400 * pf) : pf ? 0 : null;
 
     const acquired = sub.map((s) => s.standbyKw).filter((v): v is number => v !== null);
     const standbyKw =

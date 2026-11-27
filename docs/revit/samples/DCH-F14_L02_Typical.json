@@ -145,7 +145,7 @@
         "maxDemandKw": 91.26,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 164.05
+        "currentA": 163.39
       },
       "pfc": null,
       "result": null,
@@ -208,7 +208,7 @@
         "maxDemandKw": 91.26,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 164.05
+        "currentA": 163.39
       },
       "pfc": null,
       "result": {
@@ -506,7 +506,7 @@
         "maxDemandKw": 140.4,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 252.39
+        "currentA": 251.36
       },
       "pfc": null,
       "result": {
@@ -630,7 +630,7 @@
         "maxDemandKw": 17.1,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 30.74
+        "currentA": 30.62
       },
       "pfc": null,
       "result": {
@@ -833,7 +833,7 @@
         "maxDemandKw": 12,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 21.57
+        "currentA": 21.48
       },
       "pfc": null,
       "result": {
@@ -1036,7 +1036,7 @@
         "maxDemandKw": 12,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 21.57
+        "currentA": 21.48
       },
       "pfc": null,
       "result": {
@@ -1239,7 +1239,7 @@
         "maxDemandKw": 12,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 21.57
+        "currentA": 21.48
       },
       "pfc": null,
       "result": {
@@ -1442,7 +1442,7 @@
         "maxDemandKw": 17.1,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 30.74
+        "currentA": 30.62
       },
       "pfc": null,
       "result": {
@@ -1645,7 +1645,7 @@
         "maxDemandKw": 17.1,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 30.74
+        "currentA": 30.62
       },
       "pfc": null,
       "result": {
@@ -1848,7 +1848,7 @@
         "maxDemandKw": 12,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 21.57
+        "currentA": 21.48
       },
       "pfc": null,
       "result": {
@@ -2051,7 +2051,7 @@
         "maxDemandKw": 12,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 21.57
+        "currentA": 21.48
       },
       "pfc": null,
       "result": {
@@ -2254,7 +2254,7 @@
         "maxDemandKw": 12,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 21.57
+        "currentA": 21.48
       },
       "pfc": null,
       "result": {
@@ -2457,7 +2457,7 @@
         "maxDemandKw": 17.1,
         "standbyKw": null,
         "powerFactor": 0.806,
-        "currentA": 30.74
+        "currentA": 30.62
       },
       "pfc": null,
       "result": {

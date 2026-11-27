@@ -12,30 +12,30 @@ const SQRT3 = Math.sqrt(3);
  * circuits spaced D, 50 deg C, pf 0.85) with the MDB feeder length set so that the drop up to the
  * MDB is exactly 1.0 % (10 mm², 4.0 mV/A/m), as in the example.
  */
-function example2(kw: [number, number, number]) {
+function example2(kw: [number, number, number], dbLengthM = 40) {
   const b = building();
   b.add('transformer', 'tx', { kva: 1000, ukPct: 5, urPct: 1.2 });
   b.add('mdb', 'mdb');
   b.db('db', kw);
-  const ib =
-    Math.max(...kw) === Math.min(...kw)
-      ? (kw[0] * 3 * 1000) / (SQRT3 * 400 * 0.85)
-      : (Math.max(...kw) * 1000) / (230 * 0.85);
+  // One load-current formula (A-32): Ib = MD x 1000 / (sqrt3 x 400 x pf).
+  const ib = ((kw[0] + kw[1] + kw[2]) * 1000) / (SQRT3 * 400 * 0.85);
   const lengthFor1Pct = (1.0 * 400 * 1000) / (100 * ib * 4.0);
   b.feed('tx', 'mdb', lengthFor1Pct);
-  b.feed('mdb', 'db', 40);
+  b.feed('mdb', 'db', dbLengthM);
   return b.project;
 }
 
 describe('#TASK-26 auto-sizing (10.13)', () => {
-  it('Appendix C example 2 unbalanced 8 / 6 / 6 kW: 10 mm² fails C2 (2.64 %), 16 mm² selected, sized by C2', () => {
-    const p = example2([8, 6, 6]);
+  it('20 kW, 8 / 6 / 6 kW over 50 m: 10 mm² fails C2, 16 mm² selected, sized by C2', () => {
+    const p = example2([8, 6, 6], 50);
     const run = sizeCables(p);
     expect(run.converged).toBe(true);
     const db = checkFeeders(p, run.sized).find((f) => f.toId === 'db')!;
     expect(db.vdUpstreamPct).toBeCloseTo(1.0, 6);
     expect(db.size).toMatchObject({ sizeMm2: 16, runs: 1, from: 'sized' });
-    expect(db.vdTotalPct).toBeCloseTo(2.02, 2);
+    // Ib 34.0 A; 16 mm² (2.5 mV/A/m) over 50 + 5 m = 55 m.
+    const ib = (20 * 1000) / (SQRT3 * 400 * 0.85);
+    expect(db.vdTotalPct).toBeCloseTo(1 + ((ib * db.lengthM * 2.5) / 1000 / 400) * 100, 6);
     expect(db.c1).toBe('pass');
     expect(db.c2).toBe('pass');
     expect(run.sizedBy.get(db.cableId)).toBe('C2');
@@ -195,7 +195,7 @@ describe('#TASK-26 auto-sizing (10.13)', () => {
   });
 
   it('validates a locked size without changing it', () => {
-    const p = example2([8, 6, 6]);
+    const p = example2([8, 6, 6], 50);
     p.model.cables[1]!.locks = { sizeMm2: 10, runs: 1, eccMm2: null };
     const run = sizeCables(p);
     const db = checkFeeders(p, run.sized).find((f) => f.toId === 'db')!;
@@ -205,7 +205,7 @@ describe('#TASK-26 auto-sizing (10.13)', () => {
   });
 
   it('restarts from the minimum on every run: a smaller load gives a smaller cable again', () => {
-    const p = example2([8, 6, 6]);
+    const p = example2([8, 6, 6], 50);
     expect(sizeCables(p).sized.size).toBeGreaterThan(0);
     const db = p.model.elements.find((e) => e.id === 'db') as Extract<
       (typeof p.model.elements)[number],

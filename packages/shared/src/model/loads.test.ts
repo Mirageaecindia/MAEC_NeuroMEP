@@ -110,7 +110,8 @@ describe('#TASK-16 load aggregation for the live load table (10.3, 10.2 step 2)'
     expect(d1.demand.L1).toBeCloseTo(1.6 + 3, 9);
     expect(d1.maxDemandKw).toBeCloseTo(4.8 + 3, 9);
     expect(d1.tbcFactors).toEqual(['2']);
-    expect(d1.currentA).toBeCloseTo((4.6 * 1000) / (230 * 0.9), 9);
+    // One load-current formula (A-32): MD x 1000 / (sqrt3 x 400 x pf).
+    expect(d1.currentA).toBeCloseTo((d1.maxDemandKw * 1000) / (Math.sqrt(3) * 400 * 0.9), 9);
     expect(d1.standbyKw).toBe(2);
 
     // SMDB: lighting 6 + 3 = 9 kW, power 3 + 3 = 6 kW, factors applied once to the connected load.

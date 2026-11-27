@@ -153,7 +153,7 @@ describe('#TASK-22 / #TASK-23 risers as busbars (k = (n + 1) / 2n)', () => {
 });
 
 describe('#TASK-22 riser and busbar edge cases', () => {
-  it('unbalanced tap-off loads: the largest phase current on 230 V', () => {
+  it('unbalanced tap-off loads: Ib = MD x 1000 / (sqrt3 x 400 x pf) (A-32)', () => {
     const b = riserBuilding();
     const db = b.project.model.elements.find((e) => e.id === 'db') as Extract<
       (typeof b.project.model.elements)[number],
@@ -162,7 +162,7 @@ describe('#TASK-22 riser and busbar edge cases', () => {
     db.loads = [{ method: 'kw', loadType: '2', kwL1: 90, kwL2: 60, kwL3: 30 }];
     const r = checkNetworkFeeders(b.project).risers[0]!;
     // Phases 290 / 260 / 230 kW at pf 0.85.
-    expect(r.ibA).toBeCloseTo((290 * 1000) / (230 * 0.85), 6);
+    expect(r.ibA).toBeCloseTo(((290 + 260 + 230) * 1000) / (Math.sqrt(3) * 400 * 0.85), 6);
   });
 
   it('a riser with no load, no length, or more current than any busbar says so', () => {
