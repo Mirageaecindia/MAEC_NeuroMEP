@@ -182,7 +182,12 @@ export function designFeeders(project: Project): FeederDesign[] {
         trace.push({ step: 'Device', detail: `No standard rating at or above ${r1(ibA)} A.` });
         return { ...base, ibA, ibCase, neutralA, device: null, status: 'blocked' };
       }
-      const type = breakerTypeFor(pack.devices, ratingA)!;
+      // A PFC bank is always fed through an MCCB, whatever its rating (user decision 27 Nov 2026).
+      const type =
+        to!.kind === 'pfc-bank'
+          ? (pack.devices.breakerTypes.find((t) => t.type === 'MCCB') ??
+            breakerTypeFor(pack.devices, ratingA)!)
+          : breakerTypeFor(pack.devices, ratingA)!;
       const device: DeviceSelection = {
         ratingA,
         type: type.type,

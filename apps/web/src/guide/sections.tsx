@@ -1127,9 +1127,11 @@ export const SECTIONS: GuideSection[] = [
     body: (
       <>
         <p>
-          In = the lowest standard rating at or above Ib. MCB up to 63 A, MCCB up to 630 A, ACB from
-          800 A (interim limits until the breaker catalogue, OI-03). The breaking capacity (Icu) is
-          the lowest of the type that withstands the fault level (C3).
+          In = the lowest standard rating at or above Ib, and never below 20 A (a 6 A or 13 A load
+          still gets 20 A). No MCBs: MCCB below 800 A, ACB from 800 A; a PFC bank is always fed
+          through an MCCB, whatever its rating (decisions of 27 Nov 2026). The breaking capacity
+          (Icu) is the lowest of the type that withstands the fault level (C3; MCCB 25 - 65 kA, ACB
+          50 - 85 kA).
         </p>
         <CalcButton example="breaker" />
       </>
@@ -1537,7 +1539,7 @@ export const SECTIONS: GuideSection[] = [
           [
             [
               'ACB / MCCB / MCB',
-              'Air / moulded-case / miniature circuit breaker - by size, largest to smallest.',
+              'Air / moulded-case / miniature circuit breaker - by size, largest to smallest. NeuroMEP uses MCCB below 800 A and ACB from 800 A (no MCB).',
             ],
             [
               'ATS',

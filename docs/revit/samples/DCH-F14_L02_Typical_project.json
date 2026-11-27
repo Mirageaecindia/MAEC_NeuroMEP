@@ -1819,7 +1819,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 200 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 200 A MCCB 4P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -1984,7 +1984,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 100 A MCCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 100 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2137,7 +2137,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 32 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2290,7 +2290,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 25 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2443,7 +2443,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 25 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2596,7 +2596,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 25 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2749,7 +2749,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 32 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2902,7 +2902,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 32 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -3055,7 +3055,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 25 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -3208,7 +3208,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 25 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -3361,7 +3361,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 25 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -3514,7 +3514,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 32 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -3671,7 +3671,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 200 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 200 A MCCB 4P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -3836,7 +3836,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 100 A MCCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 100 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -3989,7 +3989,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 32 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -4142,7 +4142,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 25 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -4295,7 +4295,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 25 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -4448,7 +4448,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 25 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -4601,7 +4601,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 32 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -4754,7 +4754,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 32 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -4907,7 +4907,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 25 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -5060,7 +5060,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 25 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -5213,7 +5213,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 25 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 25 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -5366,7 +5366,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 32 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",

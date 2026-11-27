@@ -953,7 +953,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 160 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 160 A MCCB 4P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -1118,7 +1118,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 100 A MCCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 100 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -1271,7 +1271,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 100 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 100 A MCCB 4P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -1416,7 +1416,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 100 A MCCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 100 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -1478,7 +1478,7 @@
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "not-calculated",
@@ -1513,10 +1513,10 @@
           "lengthM": 25
         },
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 63,
           "poles": "3P",
-          "faultRatingKa": 10
+          "faultRatingKa": 25
         },
         "load": {
           "connectedKw": {
@@ -1573,7 +1573,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 63 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 63 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -1593,7 +1593,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
@@ -1623,7 +1623,7 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 36.7 A vs In 16 A: pass"
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 36.7 A vs In 20 A: pass"
           },
           "C2": {
             "state": "pass",
@@ -1631,7 +1631,7 @@
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "warning",
@@ -1643,7 +1643,7 @@
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 6 mm² vs DEWA minimum 1 x 4 mm² for 16 A"
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
           },
           "C7": {
             "state": "not-required",
@@ -1666,10 +1666,10 @@
           "lengthM": 30
         },
         "device": {
-          "type": "MCB",
-          "ratingA": 16,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "3P",
-          "faultRatingKa": 10
+          "faultRatingKa": 25
         },
         "load": {
           "connectedKw": {
@@ -1682,7 +1682,7 @@
         },
         "values": {
           "ibA": 15.2828012432548,
-          "inA": 16,
+          "inA": 20,
           "izA": 36.736,
           "vdOwnPct": 0.7794228634059948,
           "vdTotalPct": 2.2410208846687025,
@@ -1726,11 +1726,11 @@
           },
           {
             "step": "Device",
-            "detail": "In = 16 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 20 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 36.7 A vs In 16 A: pass"
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 36.7 A vs In 20 A: pass"
           },
           {
             "step": "C2",
@@ -1746,7 +1746,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
@@ -1784,7 +1784,7 @@
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "warning",
@@ -1819,10 +1819,10 @@
           "lengthM": 25
         },
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 32,
           "poles": "3P",
-          "faultRatingKa": 10
+          "faultRatingKa": 25
         },
         "load": {
           "connectedKw": {
@@ -1879,7 +1879,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 32 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -1899,7 +1899,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
@@ -2036,7 +2036,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 160 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 160 A MCCB 4P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2201,7 +2201,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 100 A MCCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 100 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2354,7 +2354,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 100 A MCCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 100 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2416,7 +2416,7 @@
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "not-calculated",
@@ -2451,10 +2451,10 @@
           "lengthM": 25
         },
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 63,
           "poles": "3P",
-          "faultRatingKa": 10
+          "faultRatingKa": 25
         },
         "load": {
           "connectedKw": {
@@ -2511,7 +2511,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 63 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 63 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2531,7 +2531,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
@@ -2561,7 +2561,7 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 36.7 A vs In 16 A: pass"
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 36.7 A vs In 20 A: pass"
           },
           "C2": {
             "state": "pass",
@@ -2569,7 +2569,7 @@
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "warning",
@@ -2581,7 +2581,7 @@
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 6 mm² vs DEWA minimum 1 x 4 mm² for 16 A"
+            "detail": "1 x 6 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
           },
           "C7": {
             "state": "not-required",
@@ -2604,10 +2604,10 @@
           "lengthM": 30
         },
         "device": {
-          "type": "MCB",
-          "ratingA": 16,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "3P",
-          "faultRatingKa": 10
+          "faultRatingKa": 25
         },
         "load": {
           "connectedKw": {
@@ -2620,7 +2620,7 @@
         },
         "values": {
           "ibA": 15.2828012432548,
-          "inA": 16,
+          "inA": 20,
           "izA": 36.736,
           "vdOwnPct": 0.7794228634059948,
           "vdTotalPct": 2.2410208846687025,
@@ -2664,11 +2664,11 @@
           },
           {
             "step": "Device",
-            "detail": "In = 16 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 20 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 36.7 A vs In 16 A: pass"
+            "detail": "1 x 6 mm²: It 56 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 36.7 A vs In 20 A: pass"
           },
           {
             "step": "C2",
@@ -2684,7 +2684,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
@@ -2722,7 +2722,7 @@
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "warning",
@@ -2757,10 +2757,10 @@
           "lengthM": 25
         },
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 32,
           "poles": "3P",
-          "faultRatingKa": 10
+          "faultRatingKa": 25
         },
         "load": {
           "connectedKw": {
@@ -2817,7 +2817,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 32 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 32 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2837,7 +2837,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
@@ -2938,7 +2938,7 @@
         },
         "size": null,
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 63,
           "poles": "3P",
           "faultRatingKa": null
@@ -2997,7 +2997,7 @@
         },
         "size": null,
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 63,
           "poles": "3P",
           "faultRatingKa": null

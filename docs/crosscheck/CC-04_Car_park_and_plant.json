@@ -966,7 +966,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 500 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 500 A MCCB 4P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -1036,7 +1036,7 @@
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 20.69 kA, ip 42.43 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 20.69 kA, ip 42.43 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "warning",
@@ -1071,7 +1071,7 @@
           "lengthM": 125
         },
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 20,
           "poles": "3P",
           "faultRatingKa": 25
@@ -1131,7 +1131,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 20 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 20 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -1151,7 +1151,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 20.69 kA, ip 42.43 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 20.69 kA, ip 42.43 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "C7",
@@ -1189,7 +1189,7 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 25 mm²: It 131 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 85.9 A vs In 16 A: pass"
+            "detail": "1 x 25 mm²: It 131 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 85.9 A vs In 20 A: pass"
           },
           "C2": {
             "state": "pass",
@@ -1197,7 +1197,7 @@
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "pass",
@@ -1209,7 +1209,7 @@
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 25 mm² vs DEWA minimum 1 x 4 mm² for 16 A"
+            "detail": "1 x 25 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
           },
           "C7": {
             "state": "not-required",
@@ -1232,10 +1232,10 @@
           "lengthM": 95
         },
         "device": {
-          "type": "MCB",
-          "ratingA": 16,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "3P",
-          "faultRatingKa": 6
+          "faultRatingKa": 25
         },
         "load": {
           "connectedKw": {
@@ -1248,7 +1248,7 @@
         },
         "values": {
           "ibA": 13.754521118929324,
-          "inA": 16,
+          "inA": 20,
           "izA": 85.93599999999999,
           "vdOwnPct": 0.468362797118955,
           "vdTotalPct": 2.292627196059474,
@@ -1292,11 +1292,11 @@
           },
           {
             "step": "Device",
-            "detail": "In = 16 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 20 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "1 x 25 mm²: It 131 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 85.9 A vs In 16 A: pass"
+            "detail": "1 x 25 mm²: It 131 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 85.9 A vs In 20 A: pass"
           },
           {
             "step": "C2",
@@ -1312,7 +1312,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
@@ -1346,7 +1346,7 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 25 mm²: It 149 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 97.7 A vs In 6 A: pass"
+            "detail": "1 x 25 mm²: It 149 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 97.7 A vs In 20 A: pass"
           },
           "C2": {
             "state": "pass",
@@ -1354,7 +1354,7 @@
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "pass",
@@ -1366,7 +1366,7 @@
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 25 mm² vs DEWA minimum 1 x 4 mm² for 6 A (next table entry, interim)"
+            "detail": "1 x 25 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
           },
           "C7": {
             "state": "not-required",
@@ -1389,10 +1389,10 @@
           "lengthM": 155
         },
         "device": {
-          "type": "MCB",
-          "ratingA": 6,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "1P",
-          "faultRatingKa": 6
+          "faultRatingKa": 25
         },
         "load": {
           "connectedKw": {
@@ -1405,7 +1405,7 @@
         },
         "values": {
           "ibA": 5.773502691896256,
-          "inA": 6,
+          "inA": 20,
           "izA": 97.744,
           "vdOwnPct": 0.6743733643695167,
           "vdTotalPct": 2.498637763310036,
@@ -1449,11 +1449,11 @@
           },
           {
             "step": "Device",
-            "detail": "In = 6 A MCB 1P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 20 A MCCB 1P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "1 x 25 mm²: It 149 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 97.7 A vs In 6 A: pass"
+            "detail": "1 x 25 mm²: It 149 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 97.7 A vs In 20 A: pass"
           },
           {
             "step": "C2",
@@ -1469,7 +1469,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
@@ -1606,7 +1606,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 500 A MCCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 500 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -1767,7 +1767,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 500 A MCCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 500 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -1924,7 +1924,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 500 A MCCB 4P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 500 A MCCB 4P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -1994,7 +1994,7 @@
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 20.69 kA, ip 42.43 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 20.69 kA, ip 42.43 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "warning",
@@ -2029,7 +2029,7 @@
           "lengthM": 125
         },
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 20,
           "poles": "3P",
           "faultRatingKa": 25
@@ -2089,7 +2089,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 20 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 20 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2109,7 +2109,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 20.69 kA, ip 42.43 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 20.69 kA, ip 42.43 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "C7",
@@ -2147,7 +2147,7 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 25 mm²: It 131 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 85.9 A vs In 16 A: pass"
+            "detail": "1 x 25 mm²: It 131 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 85.9 A vs In 20 A: pass"
           },
           "C2": {
             "state": "pass",
@@ -2155,7 +2155,7 @@
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "pass",
@@ -2167,7 +2167,7 @@
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 25 mm² vs DEWA minimum 1 x 4 mm² for 16 A"
+            "detail": "1 x 25 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
           },
           "C7": {
             "state": "not-required",
@@ -2190,10 +2190,10 @@
           "lengthM": 95
         },
         "device": {
-          "type": "MCB",
-          "ratingA": 16,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "3P",
-          "faultRatingKa": 6
+          "faultRatingKa": 25
         },
         "load": {
           "connectedKw": {
@@ -2206,7 +2206,7 @@
         },
         "values": {
           "ibA": 13.754521118929324,
-          "inA": 16,
+          "inA": 20,
           "izA": 85.93599999999999,
           "vdOwnPct": 0.468362797118955,
           "vdTotalPct": 2.292627196059474,
@@ -2250,11 +2250,11 @@
           },
           {
             "step": "Device",
-            "detail": "In = 16 A MCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 20 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "1 x 25 mm²: It 131 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 85.9 A vs In 16 A: pass"
+            "detail": "1 x 25 mm²: It 131 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 85.9 A vs In 20 A: pass"
           },
           {
             "step": "C2",
@@ -2270,7 +2270,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
@@ -2304,7 +2304,7 @@
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 25 mm²: It 149 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 97.7 A vs In 6 A: pass"
+            "detail": "1 x 25 mm²: It 149 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 97.7 A vs In 20 A: pass"
           },
           "C2": {
             "state": "pass",
@@ -2312,7 +2312,7 @@
           },
           "C3": {
             "state": "pass",
-            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "state": "pass",
@@ -2324,7 +2324,7 @@
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 25 mm² vs DEWA minimum 1 x 4 mm² for 6 A (next table entry, interim)"
+            "detail": "1 x 25 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
           },
           "C7": {
             "state": "not-required",
@@ -2347,10 +2347,10 @@
           "lengthM": 155
         },
         "device": {
-          "type": "MCB",
-          "ratingA": 6,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "1P",
-          "faultRatingKa": 6
+          "faultRatingKa": 25
         },
         "load": {
           "connectedKw": {
@@ -2363,7 +2363,7 @@
         },
         "values": {
           "ibA": 5.773502691896256,
-          "inA": 6,
+          "inA": 20,
           "izA": 97.744,
           "vdOwnPct": 0.6743733643695167,
           "vdTotalPct": 2.498637763310036,
@@ -2407,11 +2407,11 @@
           },
           {
             "step": "Device",
-            "detail": "In = 6 A MCB 1P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 20 A MCCB 1P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
-            "detail": "1 x 25 mm²: It 149 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 97.7 A vs In 6 A: pass"
+            "detail": "1 x 25 mm²: It 149 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 97.7 A vs In 20 A: pass"
           },
           {
             "step": "C2",
@@ -2427,7 +2427,7 @@
           },
           {
             "step": "C3",
-            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.56 kA, ip 2.25 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           {
             "step": "ECC",
@@ -2564,7 +2564,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 500 A MCCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 500 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2725,7 +2725,7 @@
           },
           {
             "step": "Device",
-            "detail": "In = 500 A MCCB 3P (type limit interim, OI-03); Im / Ia need the breaker catalogue (OI-03)"
+            "detail": "In = 500 A MCCB 3P; Im / Ia need the breaker catalogue (OI-03)"
           },
           {
             "step": "C1",
@@ -2846,8 +2846,8 @@
         },
         "size": null,
         "device": {
-          "type": "MCB",
-          "ratingA": 16,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "3P",
           "faultRatingKa": null
         },
@@ -2862,7 +2862,7 @@
         },
         "values": {
           "ibA": 15.2828012432548,
-          "inA": 16,
+          "inA": 20,
           "izA": null,
           "vdOwnPct": null,
           "vdTotalPct": 0.3465992837233782,
@@ -2878,7 +2878,7 @@
           },
           {
             "step": "Tap-off",
-            "detail": "Tap-off box on Riser 1: Ib 15.3 A, breaker 16 A."
+            "detail": "Tap-off box on Riser 1: Ib 15.3 A, breaker 20 A."
           }
         ],
         "runId": "cross-check-CC-04",
@@ -2905,8 +2905,8 @@
         },
         "size": null,
         "device": {
-          "type": "MCB",
-          "ratingA": 16,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "3P",
           "faultRatingKa": null
         },
@@ -2921,7 +2921,7 @@
         },
         "values": {
           "ibA": 15.2828012432548,
-          "inA": 16,
+          "inA": 20,
           "izA": null,
           "vdOwnPct": null,
           "vdTotalPct": 0.3465992837233782,
@@ -2937,7 +2937,7 @@
           },
           {
             "step": "Tap-off",
-            "detail": "Tap-off box on Riser 1: Ib 15.3 A, breaker 16 A."
+            "detail": "Tap-off box on Riser 1: Ib 15.3 A, breaker 20 A."
           }
         ],
         "runId": "cross-check-CC-04",
@@ -2964,8 +2964,8 @@
         },
         "size": null,
         "device": {
-          "type": "MCB",
-          "ratingA": 16,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "3P",
           "faultRatingKa": null
         },
@@ -2980,7 +2980,7 @@
         },
         "values": {
           "ibA": 15.2828012432548,
-          "inA": 16,
+          "inA": 20,
           "izA": null,
           "vdOwnPct": null,
           "vdTotalPct": 0.3465992837233782,
@@ -2996,7 +2996,7 @@
           },
           {
             "step": "Tap-off",
-            "detail": "Tap-off box on Riser 1: Ib 15.3 A, breaker 16 A."
+            "detail": "Tap-off box on Riser 1: Ib 15.3 A, breaker 20 A."
           }
         ],
         "runId": "cross-check-CC-04",
@@ -3023,8 +3023,8 @@
         },
         "size": null,
         "device": {
-          "type": "MCB",
-          "ratingA": 16,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "3P",
           "faultRatingKa": null
         },
@@ -3039,7 +3039,7 @@
         },
         "values": {
           "ibA": 15.2828012432548,
-          "inA": 16,
+          "inA": 20,
           "izA": null,
           "vdOwnPct": null,
           "vdTotalPct": 0.3465992837233782,
@@ -3055,7 +3055,7 @@
           },
           {
             "step": "Tap-off",
-            "detail": "Tap-off box on Riser 1: Ib 15.3 A, breaker 16 A."
+            "detail": "Tap-off box on Riser 1: Ib 15.3 A, breaker 20 A."
           }
         ],
         "runId": "cross-check-CC-04",

@@ -180,7 +180,7 @@ describe('Building tab Cost: busbar rating x 2.2 AED per riser (manager 3 Nov 20
     );
     expect(of('sm')).toMatchObject({ status: 'blocked', errors: ['E2102'] });
     expect(of('idle')).toMatchObject({ status: 'awaiting-load', device: null, errors: [] });
-    expect(of('spn').device).toMatchObject({ poles: '1P', type: 'MCB' });
+    expect(of('spn').device).toMatchObject({ poles: '1P', type: 'MCCB' });
   });
 
   it('has no total while a riser has no busbar rating (no maker chosen)', () => {

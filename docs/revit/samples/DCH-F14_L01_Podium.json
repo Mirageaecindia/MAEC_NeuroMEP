@@ -364,7 +364,7 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 50,
           "poles": "3P",
           "breakingCapacityKa": 25
@@ -402,7 +402,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 21.88 kA, ip 33.57 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 21.88 kA, ip 33.57 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -547,7 +547,7 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 20,
           "poles": "3P",
           "breakingCapacityKa": 25
@@ -585,7 +585,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 21.88 kA, ip 33.57 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 21.88 kA, ip 33.57 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -690,10 +690,10 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 20,
           "poles": "4P",
-          "breakingCapacityKa": 6
+          "breakingCapacityKa": 25
         },
         "cable": {
           "runs": 1,
@@ -728,7 +728,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 3.13 kA, ip 4.66 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 3.13 kA, ip 4.66 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -946,8 +946,8 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
-          "ratingA": 16,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "3P",
           "breakingCapacityKa": 25
         },
@@ -959,7 +959,7 @@
           "lengthM": 6.34
         },
         "designCurrentA": 10.19,
-        "ratedCurrentA": 16,
+        "ratedCurrentA": 20,
         "capacityA": 28.86,
         "voltageDropPct": {
           "feeder": 0.16,
@@ -974,7 +974,7 @@
           "C1": {
             "name": "Current-carrying capacity",
             "state": "pass",
-            "detail": "1 x 4 mm²: It 44 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 28.9 A vs In 16 A: pass"
+            "detail": "1 x 4 mm²: It 44 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 28.9 A vs In 20 A: pass"
           },
           "C2": {
             "name": "Voltage drop",
@@ -984,7 +984,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 21.39 kA, ip 32.66 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 21.39 kA, ip 32.66 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -999,7 +999,7 @@
           "C6": {
             "name": "Regional minimum size",
             "state": "pass",
-            "detail": "1 x 4 mm² vs DEWA minimum 1 x 4 mm² for 16 A"
+            "detail": "1 x 4 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
           },
           "C7": {
             "name": "Switchboard / busbar withstand",
@@ -1104,7 +1104,7 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 32,
           "poles": "3P",
           "breakingCapacityKa": 25
@@ -1142,7 +1142,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 21.39 kA, ip 32.66 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 21.39 kA, ip 32.66 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -1255,10 +1255,10 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
-          "ratingA": 6,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "3P",
-          "breakingCapacityKa": 6
+          "breakingCapacityKa": 25
         },
         "cable": {
           "runs": 1,
@@ -1268,7 +1268,7 @@
           "lengthM": 18
         },
         "designCurrentA": 5.09,
-        "ratedCurrentA": 6,
+        "ratedCurrentA": 20,
         "capacityA": 28.86,
         "voltageDropPct": {
           "feeder": 0.23,
@@ -1283,7 +1283,7 @@
           "C1": {
             "name": "Current-carrying capacity",
             "state": "pass",
-            "detail": "1 x 4 mm²: It 44 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 28.9 A vs In 6 A: pass"
+            "detail": "1 x 4 mm²: It 44 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 28.9 A vs In 20 A: pass"
           },
           "C2": {
             "name": "Voltage drop",
@@ -1293,7 +1293,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 1.98 kA, ip 2.85 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.98 kA, ip 2.85 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -1308,7 +1308,7 @@
           "C6": {
             "name": "Regional minimum size",
             "state": "pass",
-            "detail": "1 x 4 mm² vs DEWA minimum 1 x 4 mm² for 6 A (next table entry, interim)"
+            "detail": "1 x 4 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
           },
           "C7": {
             "name": "Switchboard / busbar withstand",
@@ -1406,10 +1406,10 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 20,
           "poles": "3P",
-          "breakingCapacityKa": 6
+          "breakingCapacityKa": 25
         },
         "cable": {
           "runs": 1,
@@ -1444,7 +1444,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 1.98 kA, ip 2.85 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.98 kA, ip 2.85 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -1571,7 +1571,7 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 63,
           "poles": "3P",
           "breakingCapacityKa": 25
@@ -1609,7 +1609,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 21.39 kA, ip 32.66 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 21.39 kA, ip 32.66 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -1969,7 +1969,7 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 50,
           "poles": "3P",
           "breakingCapacityKa": 25
@@ -2007,7 +2007,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 21.88 kA, ip 33.57 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 21.88 kA, ip 33.57 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -2110,7 +2110,7 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 20,
           "poles": "3P",
           "breakingCapacityKa": 25
@@ -2148,7 +2148,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 21.88 kA, ip 33.57 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 21.88 kA, ip 33.57 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -2251,10 +2251,10 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 20,
           "poles": "4P",
-          "breakingCapacityKa": 10
+          "breakingCapacityKa": 25
         },
         "cable": {
           "runs": 1,
@@ -2289,7 +2289,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 4.79 kA, ip 11.82 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 4.79 kA, ip 11.82 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -2392,10 +2392,10 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 20,
           "poles": "4P",
-          "breakingCapacityKa": 6
+          "breakingCapacityKa": 25
         },
         "cable": {
           "runs": 1,
@@ -2430,7 +2430,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 3.13 kA, ip 4.66 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 3.13 kA, ip 4.66 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -2539,8 +2539,8 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
-          "ratingA": 16,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "3P",
           "breakingCapacityKa": 25
         },
@@ -2552,7 +2552,7 @@
           "lengthM": 6.34
         },
         "designCurrentA": 10.19,
-        "ratedCurrentA": 16,
+        "ratedCurrentA": 20,
         "capacityA": 28.86,
         "voltageDropPct": {
           "feeder": 0.16,
@@ -2567,7 +2567,7 @@
           "C1": {
             "name": "Current-carrying capacity",
             "state": "pass",
-            "detail": "1 x 4 mm²: It 44 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 28.9 A vs In 16 A: pass"
+            "detail": "1 x 4 mm²: It 44 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 28.9 A vs In 20 A: pass"
           },
           "C2": {
             "name": "Voltage drop",
@@ -2577,7 +2577,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 21.39 kA, ip 32.66 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 21.39 kA, ip 32.66 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -2592,7 +2592,7 @@
           "C6": {
             "name": "Regional minimum size",
             "state": "pass",
-            "detail": "1 x 4 mm² vs DEWA minimum 1 x 4 mm² for 16 A"
+            "detail": "1 x 4 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
           },
           "C7": {
             "name": "Switchboard / busbar withstand",
@@ -2686,7 +2686,7 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 32,
           "poles": "3P",
           "breakingCapacityKa": 25
@@ -2724,7 +2724,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 21.39 kA, ip 32.66 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 21.39 kA, ip 32.66 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -2857,7 +2857,7 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 63,
           "poles": "3P",
           "breakingCapacityKa": 25
@@ -2895,7 +2895,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 21.39 kA, ip 32.66 kA at the breaker: MCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 21.39 kA, ip 32.66 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -2983,10 +2983,10 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
-          "ratingA": 6,
+          "type": "MCCB",
+          "ratingA": 20,
           "poles": "3P",
-          "breakingCapacityKa": 6
+          "breakingCapacityKa": 25
         },
         "cable": {
           "runs": 1,
@@ -2996,7 +2996,7 @@
           "lengthM": 18
         },
         "designCurrentA": 5.09,
-        "ratedCurrentA": 6,
+        "ratedCurrentA": 20,
         "capacityA": 28.86,
         "voltageDropPct": {
           "feeder": 0.23,
@@ -3011,7 +3011,7 @@
           "C1": {
             "name": "Current-carrying capacity",
             "state": "pass",
-            "detail": "1 x 4 mm²: It 44 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 28.9 A vs In 6 A: pass"
+            "detail": "1 x 4 mm²: It 44 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 28.9 A vs In 20 A: pass"
           },
           "C2": {
             "name": "Voltage drop",
@@ -3021,7 +3021,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 1.98 kA, ip 2.85 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.98 kA, ip 2.85 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",
@@ -3036,7 +3036,7 @@
           "C6": {
             "name": "Regional minimum size",
             "state": "pass",
-            "detail": "1 x 4 mm² vs DEWA minimum 1 x 4 mm² for 6 A (next table entry, interim)"
+            "detail": "1 x 4 mm² vs DEWA minimum 1 x 4 mm² for 20 A"
           },
           "C7": {
             "name": "Switchboard / busbar withstand",
@@ -3109,10 +3109,10 @@
         "errors": [],
         "sizedBy": "C6",
         "device": {
-          "type": "MCB",
+          "type": "MCCB",
           "ratingA": 20,
           "poles": "3P",
-          "breakingCapacityKa": 6
+          "breakingCapacityKa": 25
         },
         "cable": {
           "runs": 1,
@@ -3147,7 +3147,7 @@
           "C3": {
             "name": "Breaking / making capacity",
             "state": "pass",
-            "detail": "Ik\"max 1.98 kA, ip 2.85 kA at the breaker: MCB Icu 6 kA, Icm >= 9.0 kA (IEC 60947-2 minimum until OI-03)"
+            "detail": "Ik\"max 1.98 kA, ip 2.85 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
             "name": "Thermal withstand",

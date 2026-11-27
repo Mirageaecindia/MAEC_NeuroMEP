@@ -30,7 +30,7 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
     expect(d.ibCase).toBe('three-phase');
     expect(d.ibA).toBeCloseTo(34.0, 1);
     expect(d.neutralA).toBeCloseTo(0, 6);
-    expect(d.device).toMatchObject({ ratingA: 40, type: 'MCB', poles: '3P', imA: null, iaA: null });
+    expect(d.device).toMatchObject({ ratingA: 40, type: 'MCCB', poles: '3P', imA: null, iaA: null });
     expect(d.status).toBe('provisional');
     expect(d.errors).toEqual([]);
   });
@@ -126,7 +126,8 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
     expect(d.errors).toEqual([]);
     expect(d.ibCase).toBe('three-phase');
     expect(d.ibA).toBeCloseTo((1.5 * kvar * 1000) / (Math.sqrt(3) * 400), 9);
-    expect(d.device?.ratingA).toBe(10);
+    // Smallest rating 20 A; a PFC bank always gets an MCCB (27 Nov 2026).
+    expect(d.device).toMatchObject({ ratingA: 20, type: 'MCCB' });
     expect(d.trace.map((t) => t.step)).toContain('PFC');
     // The Technical Lead's target (override) is used: pf 1.0 needs the whole reactive power.
     p.calculation.defaultOverrides.targetPowerFactor = 1;

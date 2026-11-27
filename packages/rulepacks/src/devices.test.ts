@@ -6,7 +6,9 @@ const d = rulePackForRegion('dubai')!.devices;
 
 describe('#TASK-29 Dubai rule pack v1 device data (Appendix B, 10.5)', () => {
   it('holds the Appendix B lists', () => {
-    expect(d.breakerRatingsA).toHaveLength(34);
+    // 20 A is the smallest rating (user decision 27 Nov 2026).
+    expect(d.breakerRatingsA).toHaveLength(31);
+    expect(d.breakerRatingsA[0]).toBe(20);
     expect(d.cableSizesMm2).toEqual([
       1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120, 150, 185, 240, 300, 400, 500, 630,
     ]);
@@ -14,13 +16,17 @@ describe('#TASK-29 Dubai rule pack v1 device data (Appendix B, 10.5)', () => {
   });
 
   it('picks the lowest standard rating >= Ib, none above 10000 A (E2001)', () => {
+    expect(standardRating(d, 6)).toBe(20);
+    expect(standardRating(d, 13)).toBe(20);
     expect(standardRating(d, 63)).toBe(63);
     expect(standardRating(d, 64)).toBe(80);
     expect(standardRating(d, 10001)).toBeNull();
   });
 
-  it('types breakers: MCB to 63 A (interim), MCCB below 800 A, ACB from 800 A', () => {
-    expect(breakerTypeFor(d, 63)).toMatchObject({ type: 'MCB', interim: true });
+  it('types breakers: no MCB; MCCB below 800 A, ACB from 800 A (27 Nov 2026)', () => {
+    expect(d.breakerTypes.map((t) => t.type)).toEqual(['MCCB', 'ACB']);
+    expect(breakerTypeFor(d, 20)).toMatchObject({ type: 'MCCB', interim: false });
+    expect(breakerTypeFor(d, 63)?.type).toBe('MCCB');
     expect(breakerTypeFor(d, 80)?.type).toBe('MCCB');
     expect(breakerTypeFor(d, 630)?.type).toBe('MCCB');
     expect(breakerTypeFor(d, 800)?.type).toBe('ACB');
@@ -35,8 +41,8 @@ describe('#TASK-29 Dubai rule pack v1 device data (Appendix B, 10.5)', () => {
   });
 
   it('selects the lowest breaking capacity >= Ik, moving up a type, none above 85 kA (E2002)', () => {
-    expect(breakingCapacity(d, 'MCB', 9)).toEqual({ type: 'MCB', ratingKa: 10 });
-    expect(breakingCapacity(d, 'MCB', 30)).toEqual({ type: 'MCCB', ratingKa: 36 });
+    expect(breakingCapacity(d, 'MCCB', 9)).toEqual({ type: 'MCCB', ratingKa: 25 });
+    expect(breakingCapacity(d, 'MCCB', 30)).toEqual({ type: 'MCCB', ratingKa: 36 });
     expect(breakingCapacity(d, 'MCCB', 70)).toEqual({ type: 'ACB', ratingKa: 85 });
     expect(breakingCapacity(d, 'ACB', 86)).toBeNull();
   });
