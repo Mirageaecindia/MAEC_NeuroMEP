@@ -1474,15 +1474,15 @@
         "status": "final",
         "provisionalReasons": [],
         "errors": [],
-        "sizedBy": "C6",
+        "sizedBy": "C2",
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 63 A: pass"
+            "detail": "2 x 16 mm² (star-delta: each cable on Ib / 3, Iz counted x 1.5 per run): It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 194.8 A vs In 63 A: pass"
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 2.500 mV/A/m, 25.0 m: Vc 0.87 %, total 2.33 % vs 4 %"
+            "detail": "Vu 2.500 mV/A/m, 25.0 m: Vc 0.29 %, total 1.75 % vs 4 %"
           },
           "C3": {
             "state": "pass",
@@ -1490,7 +1490,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 2 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
@@ -1498,7 +1498,7 @@
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 16 mm² vs DEWA minimum 1 x 16 mm² for 63 A"
+            "detail": "2 x 16 mm² vs DEWA minimum 1 x 16 mm² for 63 A"
           },
           "C7": {
             "state": "not-required",
@@ -1514,7 +1514,7 @@
           }
         },
         "size": {
-          "runs": 1,
+          "runs": 2,
           "cores": "4C",
           "sizeMm2": 16,
           "eccMm2": 16,
@@ -1538,11 +1538,11 @@
         "values": {
           "ibA": 55.372468272662324,
           "inA": 63,
-          "izA": 64.944,
-          "vdOwnPct": 0.8651948167603489,
-          "vdTotalPct": 2.3267928380230565,
+          "izA": 194.832,
+          "vdOwnPct": 0.2883982722534496,
+          "vdTotalPct": 1.749996293516157,
           "ikMaxKa": 8.930741071179789,
-          "ikMinKa": 2.058051287682008,
+          "ikMinKa": 2.5111891266409283,
           "ipKa": 12.91659021301167,
           "zsMohm": null
         },
@@ -1557,11 +1557,12 @@
           "vuMvAm": 2.5,
           "vdrMvAm": null,
           "vdxMvAm": null,
-          "rkMohm": 28.625,
-          "xkMohm": 2.5,
+          "rkMohm": 14.3125,
+          "xkMohm": 1.25,
+          "starDelta": true,
           "rktMohm": 23.04777142857143,
           "xktMohm": 11.72555088438208,
-          "vdOwnV": 3.4607792670413957,
+          "vdOwnV": 1.1535930890137984,
           "vdUpstreamPct": 1.4615980212627075,
           "vdLimitPct": 4,
           "busbarA": null,
@@ -1569,6 +1570,10 @@
           "loadFactorK": null
         },
         "trace": [
+          {
+            "step": "Load",
+            "detail": "Star-delta starter: 2 cables, each sized on Ib / 3 (27 Nov 2026)."
+          },
           {
             "step": "Load",
             "detail": "Demand 10.9 / 10.9 / 10.9 kW (L1 / L2 / L3), pf 0.85"
@@ -1587,11 +1592,11 @@
           },
           {
             "step": "C1",
-            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 63 A: pass"
+            "detail": "2 x 16 mm² (star-delta: each cable on Ib / 3, Iz counted x 1.5 per run): It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 194.8 A vs In 63 A: pass"
           },
           {
             "step": "C2",
-            "detail": "Vu 2.500 mV/A/m, 25.0 m: Vc 0.87 %, total 2.33 % vs 4 %"
+            "detail": "Vu 2.500 mV/A/m, 25.0 m: Vc 0.29 %, total 1.75 % vs 4 %"
           },
           {
             "step": "C3",
@@ -1607,15 +1612,15 @@
           },
           {
             "step": "ECC",
-            "detail": "1 x 16 mm² Cu/PVC (CPC table for 16 mm²)"
+            "detail": "2 x 16 mm² Cu/PVC (CPC table for 16 mm²)"
           },
           {
             "step": "C4",
-            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 2 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           {
             "step": "Sizing",
-            "detail": "Sized by C6."
+            "detail": "Sized by C2."
           }
         ],
         "runId": "cross-check-CC-02",
@@ -2424,15 +2429,15 @@
         "status": "final",
         "provisionalReasons": [],
         "errors": [],
-        "sizedBy": "C6",
+        "sizedBy": "C2",
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 63 A: pass"
+            "detail": "2 x 16 mm² (star-delta: each cable on Ib / 3, Iz counted x 1.5 per run): It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 194.8 A vs In 63 A: pass"
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 2.500 mV/A/m, 25.0 m: Vc 0.87 %, total 2.33 % vs 4 %"
+            "detail": "Vu 2.500 mV/A/m, 25.0 m: Vc 0.29 %, total 1.75 % vs 4 %"
           },
           "C3": {
             "state": "pass",
@@ -2440,7 +2445,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 2 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
@@ -2448,7 +2453,7 @@
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 16 mm² vs DEWA minimum 1 x 16 mm² for 63 A"
+            "detail": "2 x 16 mm² vs DEWA minimum 1 x 16 mm² for 63 A"
           },
           "C7": {
             "state": "not-required",
@@ -2464,7 +2469,7 @@
           }
         },
         "size": {
-          "runs": 1,
+          "runs": 2,
           "cores": "4C",
           "sizeMm2": 16,
           "eccMm2": 16,
@@ -2488,11 +2493,11 @@
         "values": {
           "ibA": 55.372468272662324,
           "inA": 63,
-          "izA": 64.944,
-          "vdOwnPct": 0.8651948167603489,
-          "vdTotalPct": 2.3267928380230565,
+          "izA": 194.832,
+          "vdOwnPct": 0.2883982722534496,
+          "vdTotalPct": 1.749996293516157,
           "ikMaxKa": 8.930741071179789,
-          "ikMinKa": 2.058051287682008,
+          "ikMinKa": 2.5111891266409283,
           "ipKa": 12.91659021301167,
           "zsMohm": null
         },
@@ -2507,11 +2512,12 @@
           "vuMvAm": 2.5,
           "vdrMvAm": null,
           "vdxMvAm": null,
-          "rkMohm": 28.625,
-          "xkMohm": 2.5,
+          "rkMohm": 14.3125,
+          "xkMohm": 1.25,
+          "starDelta": true,
           "rktMohm": 23.04777142857143,
           "xktMohm": 11.72555088438208,
-          "vdOwnV": 3.4607792670413957,
+          "vdOwnV": 1.1535930890137984,
           "vdUpstreamPct": 1.4615980212627075,
           "vdLimitPct": 4,
           "busbarA": null,
@@ -2519,6 +2525,10 @@
           "loadFactorK": null
         },
         "trace": [
+          {
+            "step": "Load",
+            "detail": "Star-delta starter: 2 cables, each sized on Ib / 3 (27 Nov 2026)."
+          },
           {
             "step": "Load",
             "detail": "Demand 10.9 / 10.9 / 10.9 kW (L1 / L2 / L3), pf 0.85"
@@ -2537,11 +2547,11 @@
           },
           {
             "step": "C1",
-            "detail": "1 x 16 mm²: It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 64.9 A vs In 63 A: pass"
+            "detail": "2 x 16 mm² (star-delta: each cable on Ib / 3, Iz counted x 1.5 per run): It 99 A x K1 0.820 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 194.8 A vs In 63 A: pass"
           },
           {
             "step": "C2",
-            "detail": "Vu 2.500 mV/A/m, 25.0 m: Vc 0.87 %, total 2.33 % vs 4 %"
+            "detail": "Vu 2.500 mV/A/m, 25.0 m: Vc 0.29 %, total 1.75 % vs 4 %"
           },
           {
             "step": "C3",
@@ -2557,15 +2567,15 @@
           },
           {
             "step": "ECC",
-            "detail": "1 x 16 mm² Cu/PVC (CPC table for 16 mm²)"
+            "detail": "2 x 16 mm² Cu/PVC (CPC table for 16 mm²)"
           },
           {
             "step": "C4",
-            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 2 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           {
             "step": "Sizing",
-            "detail": "Sized by C6."
+            "detail": "Sized by C2."
           }
         ],
         "runId": "cross-check-CC-02",

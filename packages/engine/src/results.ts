@@ -117,6 +117,7 @@ function feederResult(
       vdrMvAm: f.drop?.vdrMvAm ?? null,
       vdxMvAm: f.drop?.vdxMvAm ?? null,
       ...cableRx(project, f),
+      ...(f.starDelta ? { starDelta: true } : {}),
       rktMohm: f.faultAtBreaker?.rMax ?? null,
       xktMohm: f.faultAtBreaker?.xMax ?? null,
       vdOwnV: f.drop?.vcV ?? null,

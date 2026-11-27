@@ -62,6 +62,11 @@ export function sizeCables(project: Project): SizingRun {
   };
   const cables = new Map(project.model.cables.map((c) => [c.id, c]));
 
+  /** Star-delta (A-36): 2 cables each on Ib / 3 - the current is shared by 1.5 x runs. */
+  const shareOf = (f: FeederCheck, runs: number) => (f.starDelta ? runs * 1.5 : runs);
+  /** Runs step: star-delta cables come in pairs. */
+  const stepOf = (f: FeederCheck) => (f.starDelta ? 2 : 1);
+
   /** Candidates from `from` upwards: sizes ascending, then one more run, never below C6. */
   const search = (f: FeederCheck, from: Sizes): Search => {
     const cable = cables.get(f.cableId)!;
@@ -76,11 +81,11 @@ export function sizeCables(project: Project): SizingRun {
     // A construction with no rated size at all cannot be sized by adding runs (E2101).
     const rated = sizes.some((sz) => cableRating(cable.construction, phases, sz, 1, site).ok);
     if (!rated) return out;
-    for (let runs = from.runs; runs <= Math.max(maxRuns, from.runs); runs++) {
+    for (let runs = from.runs; runs <= Math.max(maxRuns, from.runs); runs += stepOf(f)) {
       for (const sizeMm2 of sizes) {
         if (runs === from.runs && sizeMm2 < from.sizeMm2) continue;
         if (sizeMm2 * runs < minArea) continue;
-        const r = cableRating(cable.construction, phases, sizeMm2, runs, site);
+        const r = cableRating(cable.construction, phases, sizeMm2, shareOf(f, runs), site);
         if (!r.ok) {
           if (r.code === 'E2101') continue; // size not made in this construction
           return out; // missing input: sizing cannot help
@@ -90,7 +95,15 @@ export function sizeCables(project: Project): SizingRun {
         if (r.izA < f.device!.ratingA) continue;
         out.c1 ??= s;
         if (c2Unreachable) return out;
-        const v = voltageDrop(cable.construction, phases, sizeMm2, runs, f.ibA!, f.pf!, f.lengthM);
+        const v = voltageDrop(
+          cable.construction,
+          phases,
+          sizeMm2,
+          shareOf(f, runs),
+          f.ibA!,
+          f.pf!,
+          f.lengthM,
+        );
         // A size whose voltage drop cannot be worked out (e.g. PVC above 240 mm�) is not chosen
         // while a verifiable one exists; it stays the C1 fallback only.
         if (!v.ok) continue;
@@ -120,15 +133,27 @@ export function sizeCables(project: Project): SizingRun {
     const ins = cable.construction.insulation === 'PVC' ? 'PVC' : 'XLPE';
     let fit: Sizes | null = null;
     let best: { s: Sizes; pct: number } | null = null;
-    for (let runs = cur.runs; runs <= Math.min(cur.runs + 1, Math.max(maxRuns, cur.runs)); runs++) {
+    for (
+      let runs = cur.runs;
+      runs <= Math.min(cur.runs + stepOf(f), Math.max(maxRuns, cur.runs));
+      runs += stepOf(f)
+    ) {
       for (const sizeMm2 of sizes) {
         if (runs === cur.runs && sizeMm2 <= cur.sizeMm2) continue;
         if (sizeMm2 * runs < minArea) continue;
-        const r = cableRating(cable.construction, phases, sizeMm2, runs, site);
+        const r = cableRating(cable.construction, phases, sizeMm2, shareOf(f, runs), site);
         if (!r.ok || r.izA < f.device!.ratingA) continue;
         const ecc = tableValue('CPC', { size: sizeMm2, PHCON: 'CU', PHINS: ins, CPCINS: 'PVC' });
         if (!ecc.found || typeof ecc.value !== 'number') continue;
-        const v = voltageDrop(cable.construction, phases, sizeMm2, runs, f.ibA!, f.pf!, f.lengthM);
+        const v = voltageDrop(
+          cable.construction,
+          phases,
+          sizeMm2,
+          shareOf(f, runs),
+          f.ibA!,
+          f.pf!,
+          f.lengthM,
+        );
         if (!v.ok || v.vcPct >= f.drop!.vcPct) continue;
         if (!fit && v.vcPct <= maxPct) fit = { sizeMm2, runs };
         if (!best || v.vcPct < best.pct) best = { s: { sizeMm2, runs }, pct: v.vcPct };
@@ -142,8 +167,16 @@ export function sizeCables(project: Project): SizingRun {
     const phases = f.ibCase === 'single-phase' ? 1 : 3;
     const runs = f.size!.runs;
     for (const sizeMm2 of [...sizes].reverse()) {
-      if (!cableRating(cable.construction, phases, sizeMm2, runs, site).ok) continue;
-      const v = voltageDrop(cable.construction, phases, sizeMm2, runs, f.ibA!, f.pf!, f.lengthM);
+      if (!cableRating(cable.construction, phases, sizeMm2, shareOf(f, runs), site).ok) continue;
+      const v = voltageDrop(
+        cable.construction,
+        phases,
+        sizeMm2,
+        shareOf(f, runs),
+        f.ibA!,
+        f.pf!,
+        f.lengthM,
+      );
       if (v.ok) return v.vcPct;
     }
     return 0;

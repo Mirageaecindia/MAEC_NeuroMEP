@@ -1112,6 +1112,11 @@ export const SECTIONS: GuideSection[] = [
             sized on (see Breaker / Cable Sizing Criteria). One formula only (27 Nov 2026).
           </li>
           <li>
+            <Term>Star-delta starter</Term> (on the load, or on the equipment linked to its
+            isolator): the feeder is 2 cables, each sized on Ib / 3 - current-carrying capacity and
+            voltage drop use Ib / 3 per cable; the breaker stays on Ib (27 Nov 2026).
+          </li>
+          <li>
             <Term>Motor-driven equipment</Term> (Mechanical / PHE equipment on an isolator): its
             load is the input kW = rated kW / efficiency (efficiency required with a starter,
             E2003); the efficiency is not used again in Ib.

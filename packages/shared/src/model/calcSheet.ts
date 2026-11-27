@@ -326,7 +326,11 @@ function formulas(cable: Cable, r: ElementResult | undefined): CalcRow {
     const ib = r.values.ibA;
     if (ib !== null && typeof c.vdOwnV === 'number') {
       const v = phases === 1 ? 230 : 400;
-      out.vdFormula = `Vd = Vu x Ib x L / (1000 x N) = ${n(c.vuMvAm, 3)} x ${n(ib, 2)} x ${n(size.lengthM, 2)} / (1000 x ${size.runs}) = ${n(c.vdOwnV, 2)} V = ${n((c.vdOwnV / v) * 100, 2)} % of ${v} V`;
+      // Star-delta (A-36): 2 cables, each carrying Ib / 3 - the current is divided by 3.
+      const share = c.starDelta ? size.runs * 1.5 : size.runs;
+      out.vdFormula = c.starDelta
+        ? `Vd = Vu x (Ib / 3) x L / 1000 per cable (star-delta, ${size.runs} cables) = ${n(c.vuMvAm, 3)} x ${n(ib, 2)} x ${n(size.lengthM, 2)} / (1000 x ${n(share, 1)}) = ${n(c.vdOwnV, 2)} V = ${n((c.vdOwnV / v) * 100, 2)} % of ${v} V`
+        : `Vd = Vu x Ib x L / (1000 x N) = ${n(c.vuMvAm, 3)} x ${n(ib, 2)} x ${n(size.lengthM, 2)} / (1000 x ${size.runs}) = ${n(c.vdOwnV, 2)} V = ${n((c.vdOwnV / v) * 100, 2)} % of ${v} V`;
     }
   }
   const parts: string[] = [];

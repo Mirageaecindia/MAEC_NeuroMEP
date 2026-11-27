@@ -143,6 +143,8 @@ export const ElementResultSchema = z.object({
       /** This cable's Rk / Xk (mOhm, cold) for the short circuit; added 26 Nov 2026. */
       rkMohm: z.number().nullable().optional(),
       xkMohm: z.number().nullable().optional(),
+      /** Star-delta starter on the load: 2 cables, each sized on Ib / 3 (A-36, 27 Nov 2026). */
+      starDelta: z.boolean().optional(),
       /** R / X totals from the source to the breaker (mOhm, max scenario): Ik"max; 27 Nov 2026. */
       rktMohm: z.number().nullable().optional(),
       xktMohm: z.number().nullable().optional(),

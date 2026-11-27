@@ -60,6 +60,11 @@ export interface FeederDesign {
   demandKw: { L1: number; L2: number; L3: number };
   pf: number | null;
   ibA: number | null;
+  /**
+   * Star-delta starter on the load (its own starter, or equipment linked to it): 2 cables, each
+   * sized on Ib / 3 (user decision 27 Nov 2026, A-36).
+   */
+  starDelta?: boolean;
   ibCase: IbCase | null;
   /** Neutral current of an unbalanced load (10.4, V-05); 0 when balanced. */
   neutralA: number | null;
@@ -154,7 +159,20 @@ export function designFeeders(project: Project): FeederDesign[] {
     }
     const d = sized?.ok ? sized.kw : s.demand;
     const phases = [d.L1, d.L2, d.L3].filter((p) => p > 0).length;
+    // A-36: a star-delta starter on the load, or on equipment linked to it (isolator).
+    const starDelta =
+      ('starter' in to && to.starter === 'star-delta') ||
+      project.model.elements.some(
+        (e) => e.kind === 'equipment' && e.fedFromId === to.id && e.starter === 'star-delta',
+      );
+    if (starDelta) {
+      trace.push({
+        step: 'Load',
+        detail: 'Star-delta starter: 2 cables, each sized on Ib / 3 (27 Nov 2026).',
+      });
+    }
     const base = {
+      starDelta,
       cableId: cable.id,
       toId: to.id,
       demandKw: d,

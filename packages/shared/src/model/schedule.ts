@@ -242,13 +242,21 @@ const polesOf = (e: Element | undefined): 'SP' | 'TP' =>
   e && 'poles' in e && e.poles === 'SPN' ? 'SP' : 'TP';
 
 /** Remarks of a circuit (Section 14): earth leakage of the fed component, motor starter. */
-function remarksOf(e: Element | undefined): string {
+function remarksOf(e: Element | undefined, elements?: readonly Element[]): string {
   const parts: string[] = [];
   if (e && 'earthLeakage' in e && e.earthLeakage && e.earthLeakage !== 'none') {
     parts.push(e.earthLeakage);
   }
-  if (e?.kind === 'motor' && e.starter) {
-    parts.push(e.starter === 'star-delta' ? 'Star-delta (two cable sets)' : e.starter);
+  // The starter of the load (motor, isolator, connection unit); equipment's starter on its isolator.
+  const linked = e
+    ? elements?.find(
+        (x): x is Extract<Element, { kind: 'equipment' }> =>
+          x.kind === 'equipment' && x.fedFromId === e.id && x.starter !== null,
+      )
+    : undefined;
+  const starter = (e && 'starter' in e ? e.starter : null) ?? linked?.starter ?? null;
+  if (starter) {
+    parts.push(starter === 'star-delta' ? 'Star-delta (2 cables, each on Ib / 3)' : starter);
   }
   return parts.join('; ');
 }
@@ -347,7 +355,7 @@ export function boardSchedule(
         poles: polesOf(child),
         ...cols,
         ...loadColumns(p, summaries.get(c.to.elementId)),
-        remarks: [remarksOf(child), acb].filter(Boolean).join('; '),
+        remarks: [remarksOf(child, elements), acb].filter(Boolean).join('; '),
         meters: metersOn(elements, child?.id),
         childId: child?.id ?? null,
       };
@@ -407,7 +415,7 @@ export function busbarSchedule(
       poles: polesOf(b),
       ...cols,
       ...loadColumns(p, summaries.get(b.id)),
-      remarks: remarksOf(b),
+      remarks: remarksOf(b, elements),
       meters: metersOn(elements, b.id),
       childId: b.id,
     };

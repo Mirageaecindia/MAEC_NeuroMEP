@@ -1318,15 +1318,15 @@
         "status": "final",
         "provisionalReasons": [],
         "errors": [],
-        "sizedBy": "C1",
+        "sizedBy": "C2",
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 16 mm²: It 61 A x K1 0.710 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 34.6 A vs In 32 A: pass"
+            "detail": "2 x 6 mm² (star-delta: each cable on Ib / 3, Iz counted x 1.5 per run): It 33 A x K1 0.710 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 56.2 A vs In 32 A: pass"
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 2.400 mV/A/m, 25.0 m: Vc 0.42 %, total 1.69 % vs 4 %"
+            "detail": "Vu 6.400 mV/A/m, 25.0 m: Vc 0.37 %, total 1.64 % vs 4 %"
           },
           "C3": {
             "state": "pass",
@@ -1334,15 +1334,15 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Phase: S1 = 4.50 kA x sqrt(0.05 s) / 115 = 8.7 mm² vs 1 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+            "detail": "Phase: S1 = 4.50 kA x sqrt(0.05 s) / 115 = 8.7 mm² vs 2 x 6 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
-            "detail": "No table value for X(MAT=CU, CORE=4C, INS=PVC, ARM=NO, size=16)."
+            "detail": "No table value for X(MAT=CU, CORE=4C, INS=PVC, ARM=NO, size=6)."
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 16 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
+            "detail": "2 x 6 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
           },
           "C7": {
             "state": "not-required",
@@ -1358,10 +1358,10 @@
           }
         },
         "size": {
-          "runs": 1,
+          "runs": 2,
           "cores": "4C",
-          "sizeMm2": 16,
-          "eccMm2": 16,
+          "sizeMm2": 6,
+          "eccMm2": 6,
           "lengthM": 25
         },
         "device": {
@@ -1382,30 +1382,31 @@
         "values": {
           "ibA": 27.990478467499635,
           "inA": 32,
-          "izA": 34.647999999999996,
-          "vdOwnPct": 0.4198571770124945,
-          "vdTotalPct": 1.6864392636944547,
+          "izA": 56.232,
+          "vdOwnPct": 0.3732063795666618,
+          "vdTotalPct": 1.639788466248622,
           "ikMaxKa": 4.499909821787075,
-          "ikMinKa": 1.9322490560808365,
+          "ikMinKa": 1.7433206761810995,
           "ipKa": 6.491129973558127,
           "zsMohm": null
         },
         "calc": {
           "ibCase": "three-phase",
           "pf": 0.85,
-          "itA": 61,
+          "itA": 33,
           "k1": 0.71,
           "k2": 0.8,
           "kr": 1,
           "k3": 1,
-          "vuMvAm": 2.4,
+          "vuMvAm": 6.4,
           "vdrMvAm": null,
           "vdxMvAm": null,
-          "rkMohm": 28.625,
-          "xkMohm": 2.5,
+          "rkMohm": 38.166666666666664,
+          "xkMohm": 1.25,
+          "starDelta": true,
           "rktMohm": 49.93811729323308,
           "xktMohm": 11.833632525536771,
-          "vdOwnV": 1.679428708049978,
+          "vdOwnV": 1.4928255182666472,
           "vdUpstreamPct": 1.2665820866819602,
           "vdLimitPct": 4,
           "busbarA": null,
@@ -1413,6 +1414,10 @@
           "loadFactorK": null
         },
         "trace": [
+          {
+            "step": "Load",
+            "detail": "Star-delta starter: 2 cables, each sized on Ib / 3 (27 Nov 2026)."
+          },
           {
             "step": "Load",
             "detail": "Demand 5.5 / 5.5 / 5.5 kW (L1 / L2 / L3), pf 0.85"
@@ -1431,11 +1436,11 @@
           },
           {
             "step": "C1",
-            "detail": "1 x 16 mm²: It 61 A x K1 0.710 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 34.6 A vs In 32 A: pass"
+            "detail": "2 x 6 mm² (star-delta: each cable on Ib / 3, Iz counted x 1.5 per run): It 33 A x K1 0.710 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 56.2 A vs In 32 A: pass"
           },
           {
             "step": "C2",
-            "detail": "Vu 2.400 mV/A/m, 25.0 m: Vc 0.42 %, total 1.69 % vs 4 %"
+            "detail": "Vu 6.400 mV/A/m, 25.0 m: Vc 0.37 %, total 1.64 % vs 4 %"
           },
           {
             "step": "C3",
@@ -1451,15 +1456,15 @@
           },
           {
             "step": "ECC",
-            "detail": "1 x 16 mm² Cu/PVC (CPC table for 16 mm²)"
+            "detail": "2 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
           },
           {
             "step": "C4",
-            "detail": "Phase: S1 = 4.50 kA x sqrt(0.05 s) / 115 = 8.7 mm² vs 1 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+            "detail": "Phase: S1 = 4.50 kA x sqrt(0.05 s) / 115 = 8.7 mm² vs 2 x 6 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           {
             "step": "Sizing",
-            "detail": "Sized by C1."
+            "detail": "Sized by C2."
           }
         ],
         "runId": "cross-check-CC-03",
@@ -2435,15 +2440,15 @@
         "status": "final",
         "provisionalReasons": [],
         "errors": [],
-        "sizedBy": "C1",
+        "sizedBy": "C2",
         "checks": {
           "C1": {
             "state": "pass",
-            "detail": "1 x 16 mm²: It 61 A x K1 0.710 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 34.6 A vs In 32 A: pass"
+            "detail": "2 x 6 mm² (star-delta: each cable on Ib / 3, Iz counted x 1.5 per run): It 33 A x K1 0.710 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 56.2 A vs In 32 A: pass"
           },
           "C2": {
             "state": "pass",
-            "detail": "Vu 2.400 mV/A/m, 25.0 m: Vc 0.42 %, total 1.69 % vs 4 %"
+            "detail": "Vu 6.400 mV/A/m, 25.0 m: Vc 0.37 %, total 1.64 % vs 4 %"
           },
           "C3": {
             "state": "pass",
@@ -2451,15 +2456,15 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Phase: S1 = 4.50 kA x sqrt(0.05 s) / 115 = 8.7 mm² vs 1 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+            "detail": "Phase: S1 = 4.50 kA x sqrt(0.05 s) / 115 = 8.7 mm² vs 2 x 6 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
-            "detail": "No table value for X(MAT=CU, CORE=4C, INS=PVC, ARM=NO, size=16)."
+            "detail": "No table value for X(MAT=CU, CORE=4C, INS=PVC, ARM=NO, size=6)."
           },
           "C6": {
             "state": "pass",
-            "detail": "1 x 16 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
+            "detail": "2 x 6 mm² vs DEWA minimum 1 x 6 mm² for 32 A"
           },
           "C7": {
             "state": "not-required",
@@ -2475,10 +2480,10 @@
           }
         },
         "size": {
-          "runs": 1,
+          "runs": 2,
           "cores": "4C",
-          "sizeMm2": 16,
-          "eccMm2": 16,
+          "sizeMm2": 6,
+          "eccMm2": 6,
           "lengthM": 25
         },
         "device": {
@@ -2499,30 +2504,31 @@
         "values": {
           "ibA": 27.990478467499635,
           "inA": 32,
-          "izA": 34.647999999999996,
-          "vdOwnPct": 0.4198571770124945,
-          "vdTotalPct": 1.6864392636944547,
+          "izA": 56.232,
+          "vdOwnPct": 0.3732063795666618,
+          "vdTotalPct": 1.639788466248622,
           "ikMaxKa": 4.499909821787075,
-          "ikMinKa": 1.9322490560808365,
+          "ikMinKa": 1.7433206761810995,
           "ipKa": 6.491129973558127,
           "zsMohm": null
         },
         "calc": {
           "ibCase": "three-phase",
           "pf": 0.85,
-          "itA": 61,
+          "itA": 33,
           "k1": 0.71,
           "k2": 0.8,
           "kr": 1,
           "k3": 1,
-          "vuMvAm": 2.4,
+          "vuMvAm": 6.4,
           "vdrMvAm": null,
           "vdxMvAm": null,
-          "rkMohm": 28.625,
-          "xkMohm": 2.5,
+          "rkMohm": 38.166666666666664,
+          "xkMohm": 1.25,
+          "starDelta": true,
           "rktMohm": 49.93811729323308,
           "xktMohm": 11.833632525536771,
-          "vdOwnV": 1.679428708049978,
+          "vdOwnV": 1.4928255182666472,
           "vdUpstreamPct": 1.2665820866819602,
           "vdLimitPct": 4,
           "busbarA": null,
@@ -2530,6 +2536,10 @@
           "loadFactorK": null
         },
         "trace": [
+          {
+            "step": "Load",
+            "detail": "Star-delta starter: 2 cables, each sized on Ib / 3 (27 Nov 2026)."
+          },
           {
             "step": "Load",
             "detail": "Demand 5.5 / 5.5 / 5.5 kW (L1 / L2 / L3), pf 0.85"
@@ -2548,11 +2558,11 @@
           },
           {
             "step": "C1",
-            "detail": "1 x 16 mm²: It 61 A x K1 0.710 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 34.6 A vs In 32 A: pass"
+            "detail": "2 x 6 mm² (star-delta: each cable on Ib / 3, Iz counted x 1.5 per run): It 33 A x K1 0.710 x K2 0.8 x Kr 1.000 x K3 1.000 = Iz 56.2 A vs In 32 A: pass"
           },
           {
             "step": "C2",
-            "detail": "Vu 2.400 mV/A/m, 25.0 m: Vc 0.42 %, total 1.69 % vs 4 %"
+            "detail": "Vu 6.400 mV/A/m, 25.0 m: Vc 0.37 %, total 1.64 % vs 4 %"
           },
           {
             "step": "C3",
@@ -2568,15 +2578,15 @@
           },
           {
             "step": "ECC",
-            "detail": "1 x 16 mm² Cu/PVC (CPC table for 16 mm²)"
+            "detail": "2 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
           },
           {
             "step": "C4",
-            "detail": "Phase: S1 = 4.50 kA x sqrt(0.05 s) / 115 = 8.7 mm² vs 1 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+            "detail": "Phase: S1 = 4.50 kA x sqrt(0.05 s) / 115 = 8.7 mm² vs 2 x 6 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           {
             "step": "Sizing",
-            "detail": "Sized by C1."
+            "detail": "Sized by C2."
           }
         ],
         "runId": "cross-check-CC-03",

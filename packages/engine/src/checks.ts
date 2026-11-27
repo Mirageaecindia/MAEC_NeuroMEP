@@ -352,12 +352,15 @@ export function checkNetworkFeeders(
     const locked = cable.locks.sizeMm2;
     const dewa = dewaMinimum(pack.devices, d.device.ratingA);
     const chosen = sized.get(d.cableId);
+    // A-36: a star-delta feeder is 2 cables (an even number of runs), each carrying Ib / 3.
+    const sd = d.starDelta === true;
+    const even = (r: number) => (sd ? Math.max(2, r + (r % 2)) : r);
     result.size = locked
-      ? { sizeMm2: locked, runs: cable.locks.runs ?? 1, from: 'locked' }
+      ? { sizeMm2: locked, runs: cable.locks.runs ?? (sd ? 2 : 1), from: 'locked' }
       : chosen
         ? { ...chosen, from: 'sized' }
         : dewa
-          ? { sizeMm2: dewa.sizeMm2, runs: dewa.runs, from: 'dewa-minimum' }
+          ? { sizeMm2: dewa.sizeMm2, runs: even(dewa.runs), from: 'dewa-minimum' }
           : null;
     if (!result.size) {
       block(
@@ -368,8 +371,10 @@ export function checkNetworkFeeders(
     }
     const { sizeMm2, runs } = result.size;
     const phases = d.ibCase === 'single-phase' ? 1 : 3;
+    // Star-delta: each of the 2 cables carries Ib / 3, i.e. the current is shared by 3 (1.5 x runs).
+    const share = sd ? runs * 1.5 : runs;
 
-    const rating = cableRating(cable.construction, phases, sizeMm2, runs, site);
+    const rating = cableRating(cable.construction, phases, sizeMm2, share, site);
     if (!rating.ok) block(rating, 'c1');
     else {
       result.rating = rating;
@@ -379,7 +384,7 @@ export function checkNetworkFeeders(
       result.c1 = rating.izA >= d.device.ratingA ? 'pass' : 'fail';
       result.trace.push({
         step: 'C1',
-        detail: `${runs} x ${sizeMm2} mm²: It ${rating.itA} A x K1 ${rating.k1.toFixed(3)} x K2 ${rating.k2} x Kr ${rating.kr.toFixed(3)} x K3 ${rating.k3.toFixed(3)} = Iz ${rating.izA.toFixed(1)} A vs In ${d.device.ratingA} A: ${result.c1}`,
+        detail: `${runs} x ${sizeMm2} mm²${sd ? ' (star-delta: each cable on Ib / 3, Iz counted x 1.5 per run)' : ''}: It ${rating.itA} A x K1 ${rating.k1.toFixed(3)} x K2 ${rating.k2} x Kr ${rating.kr.toFixed(3)} x K3 ${rating.k3.toFixed(3)} = Iz ${rating.izA.toFixed(1)} A vs In ${d.device.ratingA} A: ${result.c1}`,
       });
       for (const n of rating.notes) result.trace.push({ step: 'C1', detail: n });
     }
@@ -388,7 +393,7 @@ export function checkNetworkFeeders(
       cable.construction,
       phases,
       sizeMm2,
-      runs,
+      share,
       d.ibA,
       d.pf,
       result.lengthM,
