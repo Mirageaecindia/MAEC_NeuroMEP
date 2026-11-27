@@ -395,3 +395,108 @@ a {
   border-radius: var(--radius);
   font: inherit;
 }
+
+/* ----- Dark appearance (user report 27 Nov 2026) ---------------------------------------------
+   1. Panels that keep their light (Figma / paper) colours in dark mode: the light theme's tokens
+      inside them, so their text and fields stay dark on light - the Building tab and Building
+      Summary, the plan viewer, the Schematic / Output drawing area (schedules, single-line
+      diagrams), the project cards. */
+:root[data-theme='dark']
+  :is(.building-tab, .building-summary, .viewer-canvas, .drawing-area, .project-card) {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --surface-muted: #f1f4f8;
+  --border: #e3e8ef;
+  --border-strong: #cfd6e1;
+  --text: #111827;
+  --text-muted: #4b5563;
+  --text-faint: #6b7280;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --primary-soft: #e8efff;
+  --danger-soft: #fdecec;
+  --warning-soft: #fff4e0;
+  --success-soft: #e7f6ec;
+  color-scheme: light;
+  color: var(--text);
+}
+/* 2. Fixed light controls on dark panels: dark versions with light text. */
+:root[data-theme='dark'] .pill-input {
+  background: var(--surface-muted);
+  color: var(--text);
+}
+:root[data-theme='dark'] .tool:hover:not(:disabled) {
+  background: var(--surface-muted);
+}
+:root[data-theme='dark'] .tool.pressed {
+  background: var(--border-strong);
+}
+:root[data-theme='dark'] .issue {
+  background: var(--warning-soft);
+  border-color: #7c4a14;
+  border-left-color: #f97316;
+  color: var(--text);
+}
+:root[data-theme='dark'] .issue:hover,
+:root[data-theme='dark'] .issue:focus-visible {
+  background: #4a3517;
+}
+:root[data-theme='dark'] .issue-code {
+  color: #fb923c;
+}
+:root[data-theme='dark'] .issue-text {
+  color: var(--text-muted);
+}
+:root[data-theme='dark'] .issue.error {
+  background: var(--danger-soft);
+  border-color: #7f1d1d;
+  border-left-color: #ef4444;
+}
+:root[data-theme='dark'] .issue.error:hover,
+:root[data-theme='dark'] .issue.error:focus-visible {
+  background: #4a2224;
+}
+:root[data-theme='dark'] .issue.error .issue-code {
+  color: #f87171;
+}
+:root[data-theme='dark'] .loaded-badge {
+  background: var(--success-soft);
+  color: #4ade80;
+}
+:root[data-theme='dark'] .loaded-badge.over {
+  background: var(--warning-soft);
+  color: #fb923c;
+}
+:root[data-theme='dark'] .capacity-checks li.over,
+:root[data-theme='dark'] .calc-changed {
+  color: #fb923c;
+}
+:root[data-theme='dark'] .lock-chip {
+  background: var(--danger-soft);
+}
+:root[data-theme='dark'] .save-status.unsaved span {
+  color: #fbbf24;
+}
+:root[data-theme='dark'] .save-status.saved span {
+  color: #4ade80;
+}
+/* Inside the light panels the issue boxes keep their light colours (dark codes on light). */
+:root[data-theme='dark']
+  :is(.building-tab, .building-summary, .viewer-canvas, .drawing-area, .project-card)
+  .issue-code {
+  color: #c2410c;
+}
+:root[data-theme='dark']
+  :is(.building-tab, .building-summary, .viewer-canvas, .drawing-area, .project-card)
+  .issue.error
+  .issue-code {
+  color: #b91c1c;
+}
+:root[data-theme='dark']
+  :is(.building-tab, .building-summary, .viewer-canvas, .drawing-area, .project-card)
+  :is(.issue:hover, .issue:focus-visible) {
+  background: #ffedd5;
+}
+:root[data-theme='dark'] .theme-toggle {
+  color: #92400e;
+}

@@ -992,3 +992,8 @@ svg.drawing-feeder {
 .issue.static {
   cursor: default;
 }
+
+/* Muted text on the grey Building Summary: dark enough to read (27 Nov 2026). */
+.building-summary .muted {
+  color: #374151;
+}
