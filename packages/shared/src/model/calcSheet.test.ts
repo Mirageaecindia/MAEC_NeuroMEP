@@ -130,6 +130,14 @@ describe('#TASK-31 calculation sheet (WBS 1.7.3, Section 14 "Cable schedule")', 
     expect(row.scFormula).toContain(
       'Rk = 18.32 x L / (A x N) = 18.32 x 15.00 / (300 x 1) = 0.916 mOhm; Xk = 0.09 x L / N = 0.09 x 15.00 / 1 = 1.350 mOhm',
     );
+    // An older result of a 300 mm² cable without VDr / VDx: no table claim, run Cable Size again.
+    const old: ElementResult = {
+      ...big,
+      calc: { ...big.calc!, vdrMvAm: undefined, vdxMvAm: undefined },
+    };
+    expect(rowOf(old).vuFormula).toMatch(
+      /not kept by this older Cable Size result - press Cable Size/,
+    );
     // Below 25 mm² the unit drop comes from the table (no VDr / VDx).
     expect(rowOf(small).vuFormula).toMatch(
       /^Vu = 9\.500 mV\/A\/m from the VU table \(4 mm², 3-phase\)/,

@@ -316,8 +316,12 @@ function formulas(cable: Cable, r: ElementResult | undefined): CalcRow {
     if (typeof c.vdrMvAm === 'number' && typeof c.vdxMvAm === 'number' && c.pf) {
       const sin = Math.sin(Math.acos(c.pf));
       out.vuFormula = `Vu = VDr x cos phi + VDx x sin phi = ${n(c.vdrMvAm, 3)} x ${n(c.pf, 3)} + ${n(c.vdxMvAm, 3)} x ${n(sin, 3)} = ${n(c.vuMvAm, 3)} mV/A/m`;
-    } else {
+    } else if (size.sizeMm2 < 25) {
       out.vuFormula = `Vu = ${n(c.vuMvAm, 3)} mV/A/m from the VU table (${size.sizeMm2} mm², ${phases}-phase): below 25 mm² the tables give no VDr / VDx (CableSizer)`;
+    } else {
+      // 25 mm² and above Vu is always VDr cos + VDx sin; a result from before 26 Nov 2026 did not
+      // keep VDr / VDx - the next Cable Size run fills them in.
+      out.vuFormula = `Vu = VDr x cos phi + VDx x sin phi = ${n(c.vuMvAm, 3)} mV/A/m (${size.sizeMm2} mm²): VDr / VDx were not kept by this older Cable Size result - press Cable Size (or Download) to show them`;
     }
     const ib = r.values.ibA;
     if (ib !== null && typeof c.vdOwnV === 'number') {

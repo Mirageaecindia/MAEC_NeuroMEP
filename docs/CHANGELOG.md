@@ -4,6 +4,7 @@ Record every change to the design document, CLAUDE.md decisions or reference dat
 
 | Date | Version | Change | Affects |
 |---|---|---|---|
+| 2026-11-27 | Calc sheet (user report) | Unit drop formula decides by size: below 25 mm² the VU table; from 25 mm² VDr cos + VDx sin - and for a result stored before VDr / VDx were kept it says to run Cable Size again instead of naming the table. | shared |
 | 2026-11-27 | Engine + calc sheet (user request) | Calculation sheet: worked-formula columns with each row's own numbers - Unit drop formula (Vu = VDr cos + VDx sin, or the VU table below 25 mm²), Feeder drop formula (Vd = Vu x Ib x L / (1000 x N), % of 400 / 230 V), Short-circuit formula (Ik"max at the breaker = 400 / (1.732 x sqrt(Rkt² + Xkt²)), and Rk / Xk of the cable). Engine stores Rkt / Xkt at the breaker (`calc.rktMohm` / `xktMohm`, max scenario). Preview wraps them; Excel / PDF include them. | engine, shared, web |
 | 2026-11-27 | Doc A-35 + web (user decision, briefing) | Schedules: no meter inputs in the Output preview - per-way meter boxes and the Type of Meter dropdown / CT ratio removed; meter columns from the plan's Meter components only; the type-of-meter line is the briefing's fixed reference text in preview, Excel and PDF. | web, docs |
 | 2026-11-27 | Web (user report) | Dark appearance: every editable field (text, number, dropdown) shows its box - darker fill and a visible border - also where the panel behind has the same colour (Engineering Property). | web |
