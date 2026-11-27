@@ -167,12 +167,12 @@ describe('#TASK-26 result status (10.13)', () => {
       expect(f).toMatchObject({ status: 'final', provisionalReasons: [] });
   });
 
-  it('Provisional while a ticked check waits for breaker data (W2402)', () => {
+  it('C4 no longer waits for breaker data: the clearing times come from the rule pack (0.05 s)', () => {
     const b = simple();
     b.project.calculation.checks.letThroughEnergy = true;
     const f = feederTo(b, 'db');
-    expect(f.status).toBe('provisional');
-    expect(f.provisionalReasons).toContain('device-data-required');
+    expect(['pass', 'fail', 'not-calculated']).toContain(f.c4.state);
+    expect(f.provisionalReasons).not.toContain('device-data-required');
   });
 
   it('Provisional with TBC demand factors (W1901)', () => {

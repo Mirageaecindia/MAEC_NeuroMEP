@@ -598,6 +598,7 @@ export function ImportFileForm(props: CardProps & { plans?: ReactNode }) {
 
         {pack && <LoadPowerFactorGrid {...props} pack={pack} />}
         <SizingCriteriaGrid {...props} />
+        {pack && <ClearingTimes {...props} pack={pack} />}
 
         <div
           className="disciplines"
@@ -807,6 +808,87 @@ function SizingCriteriaGrid(props: CardProps) {
         the total connected load; User-defined on the connected load x the factor (0 - 1).
       </p>
     </div>
+  );
+}
+
+/**
+ * Let-through check (C4) clearing times t1 (phase fault) and t2 (earth fault), CableSizer manual
+ * 3.5: S1 = Isc x sqrt(t1) / k1, S2 = Ief x sqrt(t2) / k2. Rule-pack values (0.05 s, user decision
+ * 26 Nov 2026) unless the Lead types another; empty returns to the rule-pack value. C4 is a
+ * warning only until the breaker let-through data exists (OI-03).
+ */
+const CLEARING_TIMES = [
+  ['clearingTimePhaseS', 'Phase fault clearing time t1 (s)'],
+  ['clearingTimeEarthS', 'Earth fault clearing time t2 (s)'],
+] as const;
+
+function ClearingTimes(props: CardProps & { pack: RulePack }) {
+  const { project, dispatch, user, pack } = props;
+  return (
+    <div className="sizing-criteria" aria-label="Let-through check clearing times">
+      <h3>Let-through Check (C4) Clearing Times</h3>
+      <table>
+        <tbody>
+          {CLEARING_TIMES.map(([key, label]) => {
+            const rule = pack.calculationDefaults.find((d) => d.key === key);
+            const own = project.calculation.defaultOverrides[key];
+            const value = typeof own === 'number' ? own : ((rule?.value as number | null) ?? null);
+            return (
+              <tr key={key} title={rule?.note}>
+                <th scope="row">{label}</th>
+                <td>
+                  <TimeField
+                    label={label}
+                    value={value}
+                    disabled={props.readOnly}
+                    onCommit={(v) =>
+                      dispatch({
+                        type: 'defaultOverride',
+                        key,
+                        value: v ?? undefined,
+                        ruleValue: rule?.value ?? null,
+                        audit: newAudit(user),
+                      })
+                    }
+                  />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <p className="muted">
+        Used only when Let through energy is ticked: S1 = Isc x sqrt(t1) / k1 (phase), S2 = Ief x
+        sqrt(t2) / k2 (earth conductor). A cable below S1 / S2 is shown as a warning; it does not
+        block downloads or change sizes.
+      </p>
+    </div>
+  );
+}
+
+/** A clearing time above 0 and at most 5 s; empty returns to the rule-pack value. */
+function TimeField(props: {
+  label: string;
+  value: number | null;
+  disabled: boolean;
+  onCommit: (v: number | null) => void;
+}) {
+  const [bad, setBad] = useState(false);
+  return (
+    <NumberInput
+      ariaLabel={props.label}
+      className="pill-input df-input"
+      value={props.value}
+      placeholder="s"
+      commit="blur"
+      disabled={props.disabled}
+      invalid={bad}
+      onChange={(v) => {
+        const ok = v === null || (v > 0 && v <= 5);
+        setBad(!ok);
+        if (ok) props.onCommit(v);
+      }}
+    />
   );
 }
 

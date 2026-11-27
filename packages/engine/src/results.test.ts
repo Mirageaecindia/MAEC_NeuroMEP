@@ -60,7 +60,13 @@ describe('#TASK-26 / #TASK-27 Cable Size results as stored (WBS 1.7.1)', () => {
       detail: 'Not calculated - not selected on Page 1',
     });
     expect(r.checks.C5?.detail).toBe('Not calculated - not selected on Page 1');
-    expect(r.checks.C4?.detail).toMatch(/^Device data required \(W2402\)/);
+    expect(r.checks.C4?.detail).toMatch(/S1 = [\d.]+ kA x sqrt\(0\.05 s\) \/ 143 =/);
+    // A C4 failure is stored as a warning (orange, does not block downloads; 26 Nov 2026).
+    expect(['pass', 'warning', 'not-calculated']).toContain(r.checks.C4?.state);
+    b.project.calculation.defaultOverrides.clearingTimePhaseS = 10;
+    const slow = elementResults(b.project, cableSize(b.project)).find((x) => x.elementId === 'db')!;
+    expect(slow.checks.C4?.state).toBe('warning');
+    expect(slow.checks.C4?.detail).toMatch(/: fail\./);
   });
 });
 

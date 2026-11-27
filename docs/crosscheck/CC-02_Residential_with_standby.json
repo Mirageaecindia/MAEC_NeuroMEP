@@ -861,8 +861,8 @@
             "detail": "Ik\"max 33.69 kA, ip 74.45 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 1.002e+8 A²s, withstands 33.69 kA for 0.088 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
+            "state": "pass",
+            "detail": "Phase: S1 = 33.69 kA x sqrt(0.05 s) / 143 = 52.7 mm² vs 1 x 70 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 14.34 mOhm = 16.04 kA; S2 = 16.04 kA x sqrt(0.05 s) / 115 = 31.2 mm² vs 1 x 35 mm²: pass."
           },
           "C5": {
             "state": "not-calculated",
@@ -984,6 +984,10 @@
             "detail": "1 x 35 mm² Cu/PVC (CPC table for 70 mm²)"
           },
           {
+            "step": "C4",
+            "detail": "Phase: S1 = 33.69 kA x sqrt(0.05 s) / 143 = 52.7 mm² vs 1 x 70 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 14.34 mOhm = 16.04 kA; S2 = 16.04 kA x sqrt(0.05 s) / 115 = 31.2 mm² vs 1 x 35 mm²: pass."
+          },
+          {
             "step": "Sizing",
             "detail": "Sized by C6."
           }
@@ -1018,8 +1022,8 @@
             "detail": "Ik\"max 22.61 kA, ip 36.62 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 22.61 kA for 0.049 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 22.61 kA x sqrt(0.05 s) / 143 = 35.4 mm² vs 1 x 35 mm²: fail. ECC: Ief = 230 V / Zs(20 deg C) 40.13 mOhm = 5.73 kA; S2 = 5.73 kA x sqrt(0.05 s) / 115 = 11.1 mm² vs 1 x 16 mm²: pass."
           },
           "C5": {
             "state": "not-calculated",
@@ -1133,6 +1137,10 @@
             "detail": "1 x 16 mm² Cu/PVC (CPC table for 35 mm²)"
           },
           {
+            "step": "C4",
+            "detail": "Phase: S1 = 22.61 kA x sqrt(0.05 s) / 143 = 35.4 mm² vs 1 x 35 mm²: fail. ECC: Ief = 230 V / Zs(20 deg C) 40.13 mOhm = 5.73 kA; S2 = 5.73 kA x sqrt(0.05 s) / 115 = 11.1 mm² vs 1 x 16 mm²: pass."
+          },
+          {
             "step": "Sizing",
             "detail": "Sized by C6."
           }
@@ -1145,13 +1153,9 @@
       },
       {
         "elementId": "c-g-1-ats-1",
-        "status": "provisional",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "status": "final",
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "checks": {
           "C1": {
@@ -1168,7 +1172,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 5.13 kA for 0.952 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Phase: S1 = 5.13 kA x sqrt(0.05 s) / 143 = 8.0 mm² vs 1 x 35 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
@@ -1274,6 +1278,10 @@
             "detail": "1 x 16 mm² Cu/PVC (CPC table for 35 mm²)"
           },
           {
+            "step": "C4",
+            "detail": "Phase: S1 = 5.13 kA x sqrt(0.05 s) / 143 = 8.0 mm² vs 1 x 35 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+          },
+          {
             "step": "Sizing",
             "detail": "Sized by C6."
           }
@@ -1286,13 +1294,9 @@
       },
       {
         "elementId": "c-ats-1-esmdb-1",
-        "status": "provisional",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "status": "final",
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "checks": {
           "C1": {
@@ -1309,7 +1313,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 11.97 kA for 0.175 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Phase: S1 = 11.97 kA x sqrt(0.05 s) / 143 = 18.7 mm² vs 1 x 35 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
@@ -1427,6 +1431,10 @@
             "detail": "1 x 16 mm² Cu/PVC (CPC table for 35 mm²)"
           },
           {
+            "step": "C4",
+            "detail": "Phase: S1 = 11.97 kA x sqrt(0.05 s) / 143 = 18.7 mm² vs 1 x 35 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+          },
+          {
             "step": "Sizing",
             "detail": "Sized by C6."
           }
@@ -1439,13 +1447,9 @@
       },
       {
         "elementId": "c-esmdb-1-iso-fp",
-        "status": "provisional",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "status": "final",
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "checks": {
           "C1": {
@@ -1462,7 +1466,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 5.235e+6 A²s, withstands 8.93 kA for 0.066 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
@@ -1576,6 +1580,10 @@
             "detail": "1 x 16 mm² Cu/PVC (CPC table for 16 mm²)"
           },
           {
+            "step": "C4",
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+          },
+          {
             "step": "Sizing",
             "detail": "Sized by C6."
           }
@@ -1588,13 +1596,9 @@
       },
       {
         "elementId": "c-esmdb-1-db-el",
-        "status": "provisional",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "status": "final",
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C2",
         "checks": {
           "C1": {
@@ -1610,8 +1614,8 @@
             "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 8.93 kA for 0.009 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 6 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
@@ -1725,6 +1729,10 @@
             "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
           },
           {
+            "step": "C4",
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 6 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+          },
+          {
             "step": "Sizing",
             "detail": "Sized by C2."
           }
@@ -1737,13 +1745,9 @@
       },
       {
         "elementId": "c-esmdb-1-db-ll",
-        "status": "provisional",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "status": "final",
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C2",
         "checks": {
           "C1": {
@@ -1759,8 +1763,8 @@
             "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 2.045e+6 A²s, withstands 8.93 kA for 0.026 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 10 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
@@ -1874,6 +1878,10 @@
             "detail": "1 x 10 mm² Cu/PVC (CPC table for 10 mm²)"
           },
           {
+            "step": "C4",
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 10 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+          },
+          {
             "step": "Sizing",
             "detail": "Sized by C2."
           }
@@ -1908,8 +1916,8 @@
             "detail": "Ik\"max 33.69 kA, ip 74.45 kA at the breaker: MCCB Icu 36 kA, Icm >= 75.6 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 1.002e+8 A²s, withstands 33.69 kA for 0.088 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
+            "state": "pass",
+            "detail": "Phase: S1 = 33.69 kA x sqrt(0.05 s) / 143 = 52.7 mm² vs 1 x 70 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 14.34 mOhm = 16.04 kA; S2 = 16.04 kA x sqrt(0.05 s) / 115 = 31.2 mm² vs 1 x 35 mm²: pass."
           },
           "C5": {
             "state": "not-calculated",
@@ -2031,6 +2039,10 @@
             "detail": "1 x 35 mm² Cu/PVC (CPC table for 70 mm²)"
           },
           {
+            "step": "C4",
+            "detail": "Phase: S1 = 33.69 kA x sqrt(0.05 s) / 143 = 52.7 mm² vs 1 x 70 mm²: pass. ECC: Ief = 230 V / Zs(20 deg C) 14.34 mOhm = 16.04 kA; S2 = 16.04 kA x sqrt(0.05 s) / 115 = 31.2 mm² vs 1 x 35 mm²: pass."
+          },
+          {
             "step": "Sizing",
             "detail": "Sized by C6."
           }
@@ -2065,8 +2077,8 @@
             "detail": "Ik\"max 22.61 kA, ip 36.62 kA at the breaker: MCCB Icu 25 kA, Icm >= 52.5 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 22.61 kA for 0.049 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 22.61 kA x sqrt(0.05 s) / 143 = 35.4 mm² vs 1 x 35 mm²: fail. ECC: Ief = 230 V / Zs(20 deg C) 40.13 mOhm = 5.73 kA; S2 = 5.73 kA x sqrt(0.05 s) / 115 = 11.1 mm² vs 1 x 16 mm²: pass."
           },
           "C5": {
             "state": "not-calculated",
@@ -2180,6 +2192,10 @@
             "detail": "1 x 16 mm² Cu/PVC (CPC table for 35 mm²)"
           },
           {
+            "step": "C4",
+            "detail": "Phase: S1 = 22.61 kA x sqrt(0.05 s) / 143 = 35.4 mm² vs 1 x 35 mm²: fail. ECC: Ief = 230 V / Zs(20 deg C) 40.13 mOhm = 5.73 kA; S2 = 5.73 kA x sqrt(0.05 s) / 115 = 11.1 mm² vs 1 x 16 mm²: pass."
+          },
+          {
             "step": "Sizing",
             "detail": "Sized by C6."
           }
@@ -2192,13 +2208,9 @@
       },
       {
         "elementId": "esmdb-1",
-        "status": "provisional",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "status": "final",
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "checks": {
           "C1": {
@@ -2215,7 +2227,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 11.97 kA for 0.175 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Phase: S1 = 11.97 kA x sqrt(0.05 s) / 143 = 18.7 mm² vs 1 x 35 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
@@ -2333,6 +2345,10 @@
             "detail": "1 x 16 mm² Cu/PVC (CPC table for 35 mm²)"
           },
           {
+            "step": "C4",
+            "detail": "Phase: S1 = 11.97 kA x sqrt(0.05 s) / 143 = 18.7 mm² vs 1 x 35 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+          },
+          {
             "step": "Sizing",
             "detail": "Sized by C6."
           }
@@ -2345,13 +2361,9 @@
       },
       {
         "elementId": "iso-fp",
-        "status": "provisional",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "status": "final",
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "checks": {
           "C1": {
@@ -2368,7 +2380,7 @@
           },
           "C4": {
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 5.235e+6 A²s, withstands 8.93 kA for 0.066 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
@@ -2482,6 +2494,10 @@
             "detail": "1 x 16 mm² Cu/PVC (CPC table for 16 mm²)"
           },
           {
+            "step": "C4",
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 16 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+          },
+          {
             "step": "Sizing",
             "detail": "Sized by C6."
           }
@@ -2494,13 +2510,9 @@
       },
       {
         "elementId": "db-el",
-        "status": "provisional",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "status": "final",
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C2",
         "checks": {
           "C1": {
@@ -2516,8 +2528,8 @@
             "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 8.93 kA for 0.009 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 6 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
@@ -2631,6 +2643,10 @@
             "detail": "1 x 6 mm² Cu/PVC (CPC table for 6 mm²)"
           },
           {
+            "step": "C4",
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 6 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
+          },
+          {
             "step": "Sizing",
             "detail": "Sized by C2."
           }
@@ -2643,13 +2659,9 @@
       },
       {
         "elementId": "db-ll",
-        "status": "provisional",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "status": "final",
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C2",
         "checks": {
           "C1": {
@@ -2665,8 +2677,8 @@
             "detail": "Ik\"max 8.93 kA, ip 12.92 kA at the breaker: MCB Icu 10 kA, Icm >= 17.0 kA (IEC 60947-2 minimum until OI-03)"
           },
           "C4": {
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 2.045e+6 A²s, withstands 8.93 kA for 0.026 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 10 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "state": "not-calculated",
@@ -2778,6 +2790,10 @@
           {
             "step": "ECC",
             "detail": "1 x 10 mm² Cu/PVC (CPC table for 10 mm²)"
+          },
+          {
+            "step": "C4",
+            "detail": "Phase: S1 = 8.93 kA x sqrt(0.05 s) / 143 = 14.0 mm² vs 1 x 10 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           {
             "step": "Sizing",

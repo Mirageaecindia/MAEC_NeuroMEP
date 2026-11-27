@@ -106,15 +106,19 @@ describe('#TASK-24 / #TASK-25 protection checks C4 - C6 (10.9 - 10.11)', () => {
     expect(d.c5.detail).toBe(d.c4.detail);
   });
 
-  it('C4 gives the cable withstand and waits for the breaker let-through (W2402)', () => {
+  it('C4 adiabatic: S1 = Isc x sqrt(t) / k1 and S2 = Ief x sqrt(t) / k2 at t1 = t2 = 0.05 s (26 Nov 2026)', () => {
     const d = toDb(network());
-    expect(d.c4.state).toBe('device-data-required');
-    const ik = d.faultAtBreaker!.ikMaxKa * 1000;
-    const seconds = (143 * 10) ** 2 / (ik * ik);
-    expect(d.c4.detail).toContain(`for ${seconds.toFixed(3)} s`);
-    expect(d.errors).toContain('W2402');
-    const main = checkAll(network()).find((c) => c.toId === 'mdb')!;
-    expect(main.c4.detail).toMatch(/MV protection time \(OI-31\)/);
+    const isc = d.faultAtBreaker!.ikMaxKa * 1000;
+    const s1 = (isc * Math.sqrt(0.05)) / 143;
+    expect(d.c4.detail).toContain(`= ${s1.toFixed(1)} mm² vs 1 x 10 mm²`);
+    expect(d.c4.detail).toMatch(
+      /ECC: Ief = 230 V \/ Zs\(20 deg C\) [\d.]+ mOhm = [\d.]+ kA; S2 = .* \/ 115 = /,
+    );
+    expect(d.c4.state).toBe(10 >= s1 ? 'pass' : 'fail');
+    // A longer clearing time (Lead override) asks for more copper.
+    const p = network();
+    p.calculation.defaultOverrides.clearingTimePhaseS = 5;
+    expect(toDb(p).c4.detail).toContain(`= ${((isc * Math.sqrt(5)) / 143).toFixed(1)} mm²`);
   });
 
   it('C5 works out Zs (hot) along the path and the trip current it allows', () => {
@@ -205,7 +209,7 @@ describe('#TASK-24 / #TASK-25 protection checks C4 - C6 (10.9 - 10.11)', () => {
   it('fire-rated cable uses its XLPE-type data; aluminium earth-loop data is not in the tables', () => {
     const p = network();
     p.model.cables[1]!.construction = { ...TRAY, insulation: 'FR' };
-    expect(toDb(p).c4.detail).toMatch(/Phase k 143/);
+    expect(toDb(p).c4.detail).toMatch(/sqrt\(0\.05 s\) \/ 143 =/);
     p.model.cables[1]!.construction = { ...TRAY, conductor: 'Al' };
     const al = toDb(p);
     expect(al.c5.detail).toBe('Earth conductor and loop tables cover copper cables only.');

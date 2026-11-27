@@ -529,6 +529,11 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
     const grid = await screen.findByRole('generic', { name: 'Breaker / Cable Sizing Criteria' });
     expect(within(grid).getByLabelText('Incomer to LV Panel / MDB: Demand load')).toBeChecked();
     expect(within(grid).getByLabelText('Incomer to LV Panel / MDB: Calculated')).toBeChecked();
+    const t1 = screen.getByLabelText('Phase fault clearing time t1 (s)');
+    expect(t1).toHaveValue('0.05');
+    expect(screen.getByLabelText('Earth fault clearing time t2 (s)')).toHaveValue('0.05');
+    await userEvent.clear(t1);
+    await userEvent.type(t1, '0.02{Enter}');
     await userEvent.click(within(grid).getByLabelText('Busbar risers: Connected load'));
     expect(within(grid).getByLabelText('Busbar risers: Calculated')).toBeDisabled();
     await userEvent.click(within(grid).getByLabelText('Incomer to SMDB: User-defined'));
@@ -544,6 +549,9 @@ describe('#TASK-03 / #TASK-04 Import File (Figma screen 2)', () => {
         smdb: { basis: 'demand', mode: 'user', factor: 0.8 },
       }),
     );
+    expect(
+      (await api.getProject('p-1')).project.calculation.defaultOverrides.clearingTimePhaseS,
+    ).toBe(0.02);
   });
 
   it('Next on an incomplete project shows inline errors and keeps Floor Setup closed', async () => {

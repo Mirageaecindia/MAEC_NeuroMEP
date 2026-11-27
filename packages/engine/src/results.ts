@@ -51,7 +51,11 @@ function feederResult(
       C1: fromState(f.c1, lastOf(f, 'C1')),
       C2: fromState(f.c2, lastOf(f, 'C2')),
       C3: ticked.shortCircuit ? fromState(f.c3, lastOf(f, 'C3')) : NOT_SELECTED,
-      C4: fromState(f.c4.state, f.c4.detail),
+      // C4 is a warning until the breaker let-through data exists (user decision 26 Nov 2026).
+      C4:
+        f.c4.state === 'fail'
+          ? { state: 'warning', detail: f.c4.detail }
+          : fromState(f.c4.state, f.c4.detail),
       C5: fromState(f.c5.state, f.c5.detail),
       C6: fromState(f.c6.state, f.c6.detail),
       C7: !ticked.shortCircuit

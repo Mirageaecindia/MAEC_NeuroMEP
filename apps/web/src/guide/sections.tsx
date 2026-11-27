@@ -348,6 +348,13 @@ export const SECTIONS: GuideSection[] = [
             the Lead may change them).
           </li>
           <li>
+            <Term>Let-through Check (C4) Clearing Times</Term> - t1 (phase fault) and t2 (earth
+            fault), 0.05 s each unless the Lead changes them. Used when Let through energy is
+            ticked: S1 = Isc x sqrt(t1) / k1 for the phase conductor, S2 = Ief x sqrt(t2) / k2 for
+            the earth conductor (Ief from the earth-fault loop at 20 °C). A cable smaller than S1 or
+            S2 is shown as a warning (orange); it does not block downloads or enlarge cables.
+          </li>
+          <li>
             <Term>Breaker / Cable Sizing Criteria</Term> - for each level (incomer to LV Panel /
             MDB, busbar risers, incomer to SMDB, to MCC, to DBs / control panels / isolators): size
             the breaker and cable on the <em>Demand</em> load or the <em>Connected</em> load (TCL).

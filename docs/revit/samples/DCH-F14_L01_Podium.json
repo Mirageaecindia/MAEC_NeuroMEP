@@ -212,16 +212,12 @@
       },
       "pfc": null,
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCCB",
@@ -266,8 +262,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 33.69 kA for 0.022 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 33.69 kA x sqrt(0.05 s) / 143 = 52.7 mm² vs 1 x 35 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -360,16 +356,12 @@
         ]
       },
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -414,8 +406,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 2.045e+6 A²s, withstands 21.88 kA for 0.004 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 21.88 kA x sqrt(0.05 s) / 143 = 34.2 mm² vs 1 x 10 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -547,16 +539,12 @@
       },
       "pfc": null,
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -601,8 +589,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 3.272e+5 A²s, withstands 21.88 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 21.88 kA x sqrt(0.05 s) / 143 = 34.2 mm² vs 1 x 4 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -694,16 +682,12 @@
       },
       "pfc": null,
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -748,8 +732,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 3.272e+5 A²s, withstands 3.13 kA for 0.033 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 3.13 kA x sqrt(0.05 s) / 143 = 4.9 mm² vs 1 x 4 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -954,16 +938,12 @@
       },
       "pfc": null,
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -1008,8 +988,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 3.272e+5 A²s, withstands 21.39 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 21.39 kA x sqrt(0.05 s) / 143 = 33.5 mm² vs 1 x 4 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -1116,16 +1096,12 @@
       },
       "pfc": null,
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -1170,8 +1146,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 21.39 kA for 0.002 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 21.39 kA x sqrt(0.05 s) / 143 = 33.5 mm² vs 1 x 6 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -1271,16 +1247,12 @@
       },
       "pfc": null,
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -1326,7 +1298,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 3.272e+5 A²s, withstands 1.98 kA for 0.084 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Phase: S1 = 1.98 kA x sqrt(0.05 s) / 143 = 3.1 mm² vs 1 x 4 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -1426,16 +1398,12 @@
       },
       "pfc": null,
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -1481,7 +1449,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 3.272e+5 A²s, withstands 1.98 kA for 0.084 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Phase: S1 = 1.98 kA x sqrt(0.05 s) / 143 = 3.1 mm² vs 1 x 4 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -1595,16 +1563,12 @@
       },
       "pfc": null,
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -1649,8 +1613,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 5.235e+6 A²s, withstands 21.39 kA for 0.011 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 21.39 kA x sqrt(0.05 s) / 143 = 33.5 mm² vs 1 x 16 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -1856,16 +1820,12 @@
       "busbar": null,
       "description": "1 x 1C 35 mm² Cu/XLPE/AWA/PVC + 1C 16 mm² ECC",
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCCB",
@@ -1910,8 +1870,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 2.505e+7 A²s, withstands 33.69 kA for 0.022 s; ECC k 115. Needs the MV protection time (OI-31) and breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 33.69 kA x sqrt(0.05 s) / 143 = 52.7 mm² vs 1 x 35 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -2001,16 +1961,12 @@
       "busbar": null,
       "description": "1 x 4C 10 mm² Cu/XLPE/SWA/PVC + 1C 10 mm² ECC",
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -2055,8 +2011,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 2.045e+6 A²s, withstands 21.88 kA for 0.004 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 21.88 kA x sqrt(0.05 s) / 143 = 34.2 mm² vs 1 x 10 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -2146,16 +2102,12 @@
       "busbar": null,
       "description": "1 x 4C 4 mm² Cu/XLPE/SWA/PVC + 1C 4 mm² ECC",
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -2200,8 +2152,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 3.272e+5 A²s, withstands 21.88 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 21.88 kA x sqrt(0.05 s) / 143 = 34.2 mm² vs 1 x 4 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -2291,16 +2243,12 @@
       "busbar": null,
       "description": "1 x 4C 4 mm² Cu/FR/LSZH + 1C 4 mm² ECC",
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -2345,8 +2293,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 3.272e+5 A²s, withstands 4.79 kA for 0.014 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 4.79 kA x sqrt(0.05 s) / 143 = 7.5 mm² vs 1 x 4 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -2436,16 +2384,12 @@
       "busbar": null,
       "description": "1 x 4C 4 mm² Cu/FR/LSZH + 1C 4 mm² ECC",
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -2490,8 +2434,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 3.272e+5 A²s, withstands 3.13 kA for 0.033 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 3.13 kA x sqrt(0.05 s) / 143 = 4.9 mm² vs 1 x 4 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -2587,16 +2531,12 @@
       "busbar": null,
       "description": "1 x 4C 4 mm² Cu/XLPE/SWA/PVC + 1C 4 mm² ECC",
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -2641,8 +2581,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 3.272e+5 A²s, withstands 21.39 kA for 0.001 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 21.39 kA x sqrt(0.05 s) / 143 = 33.5 mm² vs 1 x 4 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -2738,16 +2678,12 @@
       "busbar": null,
       "description": "1 x 4C 6 mm² Cu/XLPE/SWA/PVC + 1C 6 mm² ECC",
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -2792,8 +2728,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 7.362e+5 A²s, withstands 21.39 kA for 0.002 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 21.39 kA x sqrt(0.05 s) / 143 = 33.5 mm² vs 1 x 6 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -2913,16 +2849,12 @@
       "busbar": null,
       "description": "1 x 4C 16 mm² Cu/XLPE/SWA/PVC + 1C 16 mm² ECC",
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -2967,8 +2899,8 @@
           },
           "C4": {
             "name": "Thermal withstand",
-            "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 5.235e+6 A²s, withstands 21.39 kA for 0.011 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "state": "warning",
+            "detail": "Phase: S1 = 21.39 kA x sqrt(0.05 s) / 143 = 33.5 mm² vs 1 x 16 mm²: fail. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -3043,16 +2975,12 @@
       "busbar": null,
       "description": "1 x 4C 4 mm² Cu/FR/LSZH + 1C 4 mm² ECC",
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -3098,7 +3026,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 3.272e+5 A²s, withstands 1.98 kA for 0.084 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Phase: S1 = 1.98 kA x sqrt(0.05 s) / 143 = 3.1 mm² vs 1 x 4 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -3173,16 +3101,12 @@
       "busbar": null,
       "description": "1 x 4C 4 mm² Cu/XLPE/SWA/PVC + 1C 4 mm² ECC",
       "result": {
-        "status": "provisional",
+        "status": "final",
         "outOfDate": false,
         "runId": "revit-sample-revit-sample-L01",
         "ranAt": "2026-11-12T08:00:00.000Z",
-        "provisionalReasons": [
-          "device-data-required"
-        ],
-        "errors": [
-          "W2402"
-        ],
+        "provisionalReasons": [],
+        "errors": [],
         "sizedBy": "C6",
         "device": {
           "type": "MCB",
@@ -3228,7 +3152,7 @@
           "C4": {
             "name": "Thermal withstand",
             "state": "not-calculated",
-            "detail": "Device data required (W2402). Phase k 143: k²S² 3.272e+5 A²s, withstands 1.98 kA for 0.084 s; ECC k 115. Needs the breaker let-through I²t (OI-03)."
+            "detail": "Phase: S1 = 1.98 kA x sqrt(0.05 s) / 143 = 3.1 mm² vs 1 x 4 mm²: pass. ECC: earth-fault current unknown (loop upstream not known) - not checked."
           },
           "C5": {
             "name": "Earth-fault loop / disconnection",
@@ -3357,8 +3281,8 @@
     "feeders": 10,
     "risers": 1,
     "results": {
-      "final": 1,
-      "provisional": 19,
+      "final": 20,
+      "provisional": 0,
       "awaitingLoad": 0,
       "blocked": 0,
       "outOfDate": 0,

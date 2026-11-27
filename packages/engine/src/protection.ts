@@ -41,11 +41,15 @@ const DISCONNECT_S = 5;
 
 const phaseIns = (ins: string) => (ins === 'PVC' ? 'PVC' : 'XLPE');
 
-/** Loop impedance per metre of one run, hot (10.10, V-25): Rc + (Recc // Ra), Xc + Xp. */
+/**
+ * Loop impedance per metre of one run (10.10, V-25): Rc + (Recc // Ra), Xc + Xp - hot (fault
+ * temperature, C5) or at 20 deg C (the maximum earth-fault current Ief for C4, manual 3.4 / 3.5).
+ */
 function loopPerMetre(
   f: DutyCheck,
   c: Project['model']['cables'][number]['construction'],
   eccMm2: number,
+  hot = true,
 ): number | string {
   const size = f.size!.sizeMm2;
   const rc = tableValue('Rs', { size });
@@ -72,10 +76,10 @@ function loopPerMetre(
   if (!ra.found) return ra.detail;
   if (!x.found) return x.detail;
   const kArm = tableValue('FactorRa', { INS: phaseIns(c.insulation), ARM: c.armour });
-  const raHot = ra.value * (kArm.found ? kArm.value : 1);
-  const reccHot = recc.value * kEcc.value;
+  const raHot = ra.value * (hot && kArm.found ? kArm.value : 1);
+  const reccHot = recc.value * (hot ? kEcc.value : 1);
   const rp = raHot > 0 ? (reccHot * raHot) / (reccHot + raHot) : reccHot;
-  return Math.hypot(rc.value * kPhase.value + rp, x.value);
+  return Math.hypot(rc.value * (hot ? kPhase.value : 1) + rp, x.value);
 }
 
 /** C1 - C3, C7 (checkNetwork), then the earth conductor and C4 - C6 on every feeder. */
@@ -99,6 +103,15 @@ export function checkAll(project: Project, sized?: ReadonlyMap<string, Sizes>): 
     }
   }
 
+  /** Earth-fault loop (mOhm) at the end of each feeder: hot (C5) and at 20 deg C (Ief, C4). */
+  const loopHot = new Map<string, number | null>();
+  const loopCold = new Map<string, number | null>();
+  const calcDefault = (key: string): number | null => {
+    const o = project.calculation.defaultOverrides[key];
+    if (typeof o === 'number') return o;
+    const v = pack.calculationDefaults.find((x) => x.key === key)?.value;
+    return typeof v === 'number' ? v : null;
+  };
   const done = new Map<string, FullCheck>();
   const check = (d: DutyCheck): FullCheck => {
     const seen = done.get(d.cableId);
@@ -164,37 +177,71 @@ export function checkAll(project: Project, sized?: ReadonlyMap<string, Sizes>): 
       detail: `${runs} x ${ecc.value} mm² Cu/PVC (CPC table for ${sizeMm2} mm²)`,
     });
 
-    // C4 (10.9): the cable withstands k²S² (A²s); the device energy / time needs the catalogue.
+    // Earth-fault loop to the end of this feeder (C4 and C5): source loop + this run's loop.
+    if (ticked.letThroughEnergy || ticked.earthFaultLoopImpedance) {
+      const upstream = from && byTo.get(from.id);
+      if (upstream) check(upstream);
+      const atSource = from && sources.has(from.id) ? sources.get(from.id)! : null;
+      const up = (m: Map<string, number | null>) =>
+        atSource ?? (upstream ? (m.get(upstream.cableId) ?? null) : null);
+      const hot = loopPerMetre(d, c, ecc.value);
+      const cold = loopPerMetre(d, c, ecc.value, false);
+      const zHot = up(loopHot);
+      const zCold = up(loopCold);
+      loopHot.set(
+        d.cableId,
+        typeof hot === 'number' && zHot !== null ? zHot + (hot * d.lengthM) / runs : null,
+      );
+      loopCold.set(
+        d.cableId,
+        typeof cold === 'number' && zCold !== null ? zCold + (cold * d.lengthM) / runs : null,
+      );
+    }
+
+    // C4 (10.9, CableSizer manual 3.5, adiabatic): S1 = Isc x sqrt(t) / k1 for the phase and
+    // S2 = Ief x sqrt(t2) / k2 for the ECC; t1 / t2 = clearing times (rule pack 0.05 s, Lead may
+    // change them in Import File; user decision 26 Nov 2026 until the breaker let-through data,
+    // OI-03). Pass when the installed areas reach them; a failure is a warning (results.ts).
     if (ticked.letThroughEnergy) {
       const k = tableValue('FactorK', { size: sizeMm2, CON: 'CU', INS: phaseIns(c.insulation) });
       const kE = tableValue('FactorK', { size: ecc.value, CON: 'CU', INS: 'PVC' });
-      if (k.found && kE.found && d.faultAtBreaker) {
-        const k2s2 = (k.value * sizeMm2 * runs) ** 2;
-        const ik = d.faultAtBreaker.ikMaxKa * 1000;
-        const withstandS = k2s2 / (ik * ik);
-        const mv = from?.kind === 'transformer' ? ' MV protection time (OI-31) and' : '';
+      const t = calcDefault('clearingTimePhaseS');
+      const t2 = calcDefault('clearingTimeEarthS');
+      if (!k.found || !kE.found) {
+        result.c4 = { state: 'not-calculated', detail: 'k factor not in the FactorK table.' };
+      } else if (t === null || t2 === null) {
         result.c4 = {
-          state: 'device-data-required',
-          detail: `Phase k ${k.value}: k²S² ${k2s2.toExponential(3)} A²s, withstands ${d.faultAtBreaker.ikMaxKa.toFixed(2)} kA for ${withstandS.toFixed(3)} s; ECC k ${kE.value}. Needs the${mv} breaker let-through I²t (OI-03).`,
+          state: 'not-calculated',
+          detail: 'No breaker clearing time in the rule pack.',
         };
-        if (!result.errors.includes('W2402')) result.errors.push('W2402');
+      } else if (!d.faultAtBreaker) {
+        result.c4 = { state: 'not-calculated', detail: 'No fault level at the breaker.' };
+      } else {
+        const isc = d.faultAtBreaker.ikMaxKa * 1000;
+        const s1 = (isc * Math.sqrt(t)) / k.value;
+        const phaseOk = sizeMm2 * runs >= s1;
+        const zc = loopCold.get(d.cableId) ?? null;
+        const ief = zc ? (U0 / zc) * 1000 : null; // V / mOhm = kA
+        const s2 = ief === null ? null : (ief * Math.sqrt(t2)) / kE.value;
+        const eccOk = s2 === null ? null : ecc.value * runs >= s2;
+        const phase = `Phase: S1 = ${(isc / 1000).toFixed(2)} kA x sqrt(${t} s) / ${k.value} = ${s1.toFixed(1)} mm² vs ${runs} x ${sizeMm2} mm²: ${phaseOk ? 'pass' : 'fail'}.`;
+        const earth =
+          s2 === null
+            ? ' ECC: earth-fault current unknown (loop upstream not known) - not checked.'
+            : ` ECC: Ief = ${U0} V / Zs(20 deg C) ${zc!.toFixed(2)} mOhm = ${(ief! / 1000).toFixed(2)} kA; S2 = ${(ief! / 1000).toFixed(2)} kA x sqrt(${t2} s) / ${kE.value} = ${s2.toFixed(1)} mm² vs ${runs} x ${ecc.value} mm²: ${eccOk ? 'pass' : 'fail'}.`;
+        result.c4 = {
+          state: !phaseOk || eccOk === false ? 'fail' : eccOk === null ? 'not-calculated' : 'pass',
+          detail: phase + earth,
+        };
       }
+      result.trace.push({ step: 'C4', detail: result.c4.detail ?? '' });
     }
 
     // C5 (10.10): not required behind an ELCB; else Zs(hot) <= 0.95 x 230 / Ia.
     if (ticked.earthFaultLoopImpedance) {
       const elcb = 'earthLeakage' in to && to.earthLeakage?.startsWith('ELCB');
       const perM = loopPerMetre(d, c, ecc.value);
-      const upstream = from && byTo.get(from.id);
-      const zUp =
-        from && sources.has(from.id)
-          ? sources.get(from.id)!
-          : upstream
-            ? check(upstream).zsHotMohm
-            : null;
-      if (typeof perM === 'number' && zUp !== null) {
-        result.zsHotMohm = zUp + (perM * d.lengthM) / runs;
-      }
+      result.zsHotMohm = loopHot.get(d.cableId) ?? null;
       if (elcb) {
         result.c5 = {
           state: 'not-required',

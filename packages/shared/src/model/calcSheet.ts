@@ -35,7 +35,7 @@ export const CHECK_HINTS: Record<string, string> = {
   C1: 'C1 Current-carrying capacity: the corrected cable rating Iz (It x K1 x K2 x Kr x K3, x runs) must be at least the breaker rating In.',
   C2: 'C2 Voltage drop: the total drop from the source to the end of this feeder must be within the limit of the board it feeds.',
   C3: 'C3 Breaking capacity: the breaker Icu must be at least Ik" max at its board, and its making capacity at least the peak ip.',
-  C4: 'C4 Thermal withstand (let-through energy): the cable must withstand the fault until the breaker clears it (k²S² >= I²t). Only when ticked on Page 1; needs breaker data.',
+  C4: 'C4 Let-through energy (adiabatic): phase S1 = Isc x sqrt(t1) / k1 and earth conductor S2 = Ief x sqrt(t2) / k2 must not exceed the installed areas; t1 / t2 = clearing times from Import File (0.05 s). A shortfall is a warning only. Only when ticked on Page 1.',
   C5: 'C5 Earth-fault loop: Zs must be low enough for the breaker to disconnect in time (Zs <= 0.95 x 230 / Ia). Only when ticked on Page 1; not required behind an ELCB.',
   C6: 'C6 Minimum size: size x runs must be at least the DEWA minimum cable for the breaker rating.',
   C7: 'C7 Board / busbar withstand: the board or busbar fed must withstand the fault there (Icw >= Ik" max, Ipk >= ip).',

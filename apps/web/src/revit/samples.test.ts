@@ -13,7 +13,8 @@ describe('#TASK-33 Revit exchange samples on the DCH-F14 sheets (user request 12
     const items = [...exchange.components, ...exchange.feeders];
     const bad = items.flatMap((x) =>
       Object.entries(x.result?.checks ?? {})
-        .filter(([, c]) => c.state === 'fail' || c.state === 'warning')
+        // C4 shortfalls are warnings by design (A-31: fixed 0.05 s clearing time, no catalogue).
+        .filter(([code, c]) => c.state === 'fail' || (c.state === 'warning' && code !== 'C4'))
         .map(([code]) => `${x.tag} ${code}`),
     );
     expect(bad).toEqual([]);

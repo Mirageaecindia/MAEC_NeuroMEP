@@ -231,6 +231,24 @@
       "note": "100 % unless the user asks for less (manager 3 Nov 2026)"
     },
     {
+      "key": "clearingTimePhaseS",
+      "group": "Disconnection times",
+      "label": "Phase fault clearing time t1 (let-through, C4)",
+      "unit": "s",
+      "type": "number",
+      "value": 0.05,
+      "note": "C4 phase: S1 = Isc x sqrt(t1) / k1 (CableSizer manual 3.5). User decision 26 Nov 2026, Lead may change per project in Import File; C4 is a warning until the breaker let-through data (OI-03)"
+    },
+    {
+      "key": "clearingTimeEarthS",
+      "group": "Disconnection times",
+      "label": "Earth fault clearing time t2 (let-through, C4)",
+      "unit": "s",
+      "type": "number",
+      "value": 0.05,
+      "note": "C4 ECC: S2 = Ief x sqrt(t2) / k2 (CableSizer manual 3.5). User decision 26 Nov 2026, Lead may change per project in Import File; C4 is a warning until the breaker let-through data (OI-03)"
+    },
+    {
       "key": "generatorSpareCapacityPct",
       "group": "Sources",
       "label": "Generator spare capacity",
