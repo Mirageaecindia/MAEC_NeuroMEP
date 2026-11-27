@@ -339,3 +339,19 @@
   background: var(--surface);
   color: inherit;
 }
+
+/* Calculation sheet breaker type dropdown (A-34, 27 Nov 2026): orange when changed (W2004). */
+.calc-select {
+  font: inherit;
+  font-size: inherit;
+  padding: 0 2px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--surface);
+  color: inherit;
+}
+.calc-changed {
+  background: rgb(234 88 12 / 0.16);
+  color: #c2410c;
+  font-weight: 600;
+}

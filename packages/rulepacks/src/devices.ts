@@ -11,7 +11,7 @@ export function standardRating(d: Devices, ibA: number): number | null {
   return d.breakerRatingsA.find((r) => r >= ibA) ?? null;
 }
 
-/** Breaker type by rating (10.5): MCB / MCCB below 800 A, ACB at 800 A and above. */
+/** Breaker type by rating (10.5, A-33): MCCB below 800 A, ACB at 800 A and above. */
 export function breakerTypeFor(d: Devices, ratingA: number) {
   return d.breakerTypes.find((t) => ratingA <= t.maxRatingA) ?? null;
 }

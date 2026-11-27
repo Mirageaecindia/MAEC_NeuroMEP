@@ -116,5 +116,11 @@ export const CableSchema = z.object({
   /** Cable construction (also kept while the feeder is a busbar). */
   construction: CableConstructionSchema,
   locks: CableLocksSchema,
+  /**
+   * Breaker type chosen by the engineer in the calculation sheet (27 Nov 2026, A-34); null or
+   * missing = the default logic (MCCB below 800 A, ACB from 800 A, PFC MCCB). A different choice
+   * is flagged W2004 and never moved up automatically.
+   */
+  breakerType: z.enum(['MCCB', 'ACB']).nullable().optional(),
 });
 export type Cable = z.infer<typeof CableSchema>;

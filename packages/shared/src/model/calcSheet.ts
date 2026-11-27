@@ -213,6 +213,8 @@ function figures(found: ReturnType<typeof resultOf>): CalcRow {
     ibA: r.values.ibA,
     inA: r.values.inA,
     device: r.device?.type ?? null,
+    // Not columns: the default logic's type when the engineer chose another (A-34, W2004).
+    'device:default': r.device?.defaultType ?? null,
     poles: r.device?.poles ?? null,
     icuKa: r.device?.faultRatingKa ?? null,
     sizeMm2: r.size?.sizeMm2 ?? null,
@@ -308,6 +310,9 @@ function cableRow(
   const load = summaries.get(cable.to.elementId);
   const supply = supplyOf(p, cable.to.elementId, summaries);
   return {
+    // Not columns: the feeder and the engineer's breaker choice, for the dropdown (A-34).
+    cableId: cable.id,
+    'device:chosen': cable.breakerType ?? null,
     ref: cable.tag,
     kind: busbar ? 'Busbar feeder' : 'Cable',
     from: byId.get(cable.from.elementId)?.tag ?? '-',

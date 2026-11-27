@@ -47,6 +47,10 @@ export interface DeviceSelection {
   /** Magnetic threshold and trip current: from the breaker catalogue (OI-03), null until then. */
   imA: number | null;
   iaA: number | null;
+  /** The type the default logic gives by rating (PFC: MCCB). */
+  defaultType: BreakerType;
+  /** True when the engineer chose the type in the calculation sheet (A-34). */
+  chosen: boolean;
 }
 
 export interface FeederDesign {
@@ -188,9 +192,13 @@ export function designFeeders(project: Project): FeederDesign[] {
           ? (pack.devices.breakerTypes.find((t) => t.type === 'MCCB') ??
             breakerTypeFor(pack.devices, ratingA)!)
           : breakerTypeFor(pack.devices, ratingA)!;
+      // The engineer's choice in the calculation sheet wins (A-34); the default is kept to compare.
+      const pick = cable.breakerType ?? null;
       const device: DeviceSelection = {
         ratingA,
-        type: type.type,
+        type: pick ?? type.type,
+        defaultType: type.type,
+        chosen: pick !== null,
         poles: poles(from, to!, phases),
         interim: type.interim,
         imA: null,

@@ -86,6 +86,9 @@ function feederResult(
           ratingA: f.device.ratingA,
           poles: f.device.poles,
           faultRatingKa: f.duty?.icuKa ?? null,
+          ...(f.device.chosen && f.defaultType && f.defaultType !== f.device.type
+            ? { defaultType: f.defaultType }
+            : {}),
         }
       : null,
     load: s

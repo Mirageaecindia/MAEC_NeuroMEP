@@ -29,9 +29,12 @@ export function breakerDuty(
   type: BreakerType,
   ikMaxKa: number,
   ipKa: number,
+  /** A type chosen by the engineer (A-34) is checked as it is, never moved up. */
+  sameTypeOnly = false,
 ): BreakerDuty | null {
   const from = devices.breakerTypes.findIndex((t) => t.type === type);
-  for (const t of devices.breakerTypes.slice(Math.max(0, from))) {
+  const types = devices.breakerTypes.slice(Math.max(0, from));
+  for (const t of sameTypeOnly ? types.slice(0, 1) : types) {
     for (const icu of [...t.faultRatingsKa].sort((a, b) => a - b)) {
       const icm = icu * makingFactor(icu);
       if (icu >= ikMaxKa && icm >= ipKa) return { type: t.type, icuKa: icu, icmKa: icm };
@@ -73,6 +76,8 @@ export interface DutyCheck extends FeederCheck {
   c7: Withstand | null;
   /** A busbar feeder's own short-time withstand (C7) at the fault level where it starts. */
   busbarWithstand: Withstand | null;
+  /** Breaker type the default logic gives (moved up for the fault level when known), A-34. */
+  defaultType: BreakerType | null;
 }
 
 /** C1 / C2 (checks.ts), then the fault levels at the sizes found and C3 / C7 on every feeder. */
@@ -133,6 +138,7 @@ export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes
       c3: 'not-calculated',
       c7: null,
       busbarWithstand: null,
+      defaultType: f.device?.defaultType ?? null,
     };
     for (const n of new Set(at.flatMap((x) => x.notes)))
       result.trace.push({ step: 'C3', detail: n });
@@ -143,11 +149,21 @@ export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes
     const fault = result.faultAtBreaker;
     const pfc = elements.get(f.toId)?.kind === 'pfc-bank';
     if (fault && f.device) {
-      result.duty = breakerDuty(pack.devices, f.device.type, fault.ikMaxKa, fault.ipKa);
+      const chosen = f.device.chosen;
+      result.duty = breakerDuty(pack.devices, f.device.type, fault.ikMaxKa, fault.ipKa, chosen);
       result.c3 = result.duty ? 'pass' : 'fail';
-      if (!result.duty) {
+      // The default logic's final type (moved up for the fault level) - to flag a different choice.
+      const byDefault = breakerDuty(pack.devices, f.device.defaultType, fault.ikMaxKa, fault.ipKa);
+      result.defaultType = byDefault?.type ?? f.device.defaultType;
+      if (!result.duty && !chosen) {
         result.errors.push('E2002');
         result.status = 'blocked';
+      }
+      if (!result.duty && chosen) {
+        result.trace.push({
+          step: 'C3',
+          detail: `No ${f.device.type} breaking capacity reaches Ik"max ${fault.ikMaxKa.toFixed(2)} kA: the chosen type fails C3 (choose another type).`,
+        });
       }
       result.trace.push({
         step: 'C3',
@@ -156,6 +172,14 @@ export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes
             ? `${result.duty.type} Icu ${result.duty.icuKa} kA, Icm >= ${result.duty.icmKa.toFixed(1)} kA (IEC 60947-2 minimum until OI-03)`
             : 'above the highest rating (85 kA)'
         }`,
+      });
+    }
+    // A-34: a type chosen by the engineer that differs from the default is flagged (W2004).
+    if (f.device?.chosen && result.defaultType && f.device.type !== result.defaultType) {
+      result.errors.push('W2004');
+      result.trace.push({
+        step: 'Device',
+        detail: `Breaker type ${f.device.type} chosen by the engineer; the default is ${result.defaultType} (W2004).`,
       });
     }
     // A PFC bank is fed through an MCCB; only a fault level above every MCCB rating moves it to an

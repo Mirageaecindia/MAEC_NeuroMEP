@@ -97,6 +97,8 @@ export const ElementResultSchema = z.object({
       ratingA: z.number().positive(),
       poles: z.enum(['1P', '3P', '4P']),
       faultRatingKa: z.number().positive().nullable(),
+      /** The type the default logic gives, when the engineer chose another (A-34, W2004). */
+      defaultType: z.enum(['MCB', 'MCCB', 'ACB']).optional(),
     })
     .nullable(),
   /** Connected and maximum-demand load (kW) per phase. */

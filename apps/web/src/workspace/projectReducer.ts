@@ -77,6 +77,8 @@ export type ProjectAction =
     }
   | { type: 'secondLevelFactor'; value: number | null; audit: AuditMeta }
   | { type: 'busbarMaker'; maker: Project['calculation']['busbarMaker'] }
+  /** Breaker type of a feeder chosen in the calculation sheet; null = default logic (A-34). */
+  | { type: 'cableBreakerType'; cableId: string; value: 'MCCB' | 'ACB' | null }
   /** Breaker / Cable Sizing Criteria of one level (A-30). */
   | { type: 'sizingCriterion'; level: SizingLevel; value: SizingCriterion }
   | {
@@ -249,6 +251,16 @@ export function projectReducer(p: Project, a: ProjectAction): Project {
       };
     case 'busbarMaker':
       return { ...p, calculation: { ...p.calculation, busbarMaker: a.maker } };
+    case 'cableBreakerType':
+      return {
+        ...p,
+        model: {
+          ...p.model,
+          cables: p.model.cables.map((c) =>
+            c.id === a.cableId ? { ...c, breakerType: a.value } : c,
+          ),
+        },
+      };
     case 'sizingCriterion':
       return {
         ...p,

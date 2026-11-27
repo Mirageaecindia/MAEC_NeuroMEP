@@ -785,7 +785,12 @@ export const SECTIONS: GuideSection[] = [
             short circuit, checks). A row the engine could not size keeps its voltage and phases
             (from its load) and says why in <Term>Why not sized</Term>; a box above the sheet lists
             the components to fix. One missing power factor or motor efficiency blocks every feeder
-            above that load, and a board with no load waits (Awaiting load).
+            above that load, and a board with no load waits (Awaiting load). The{' '}
+            <Term>Breaker type</Term> of each feeder is a dropdown (MCCB / ACB) showing the default
+            logic (MCCB below 800 A, ACB from 800 A, PFC bank MCCB). Another choice is kept and used
+            by Cable Size, shown orange and flagged <Term>W2004</Term>; it is never moved up
+            automatically, so a type too weak for the fault level fails C3. Choosing the default
+            again clears the flag. The change marks results out of date (Download runs Cable Size).
           </li>
           <li>
             <Term>Generator Load Analysis</Term> - the one editable report: demand factors per load

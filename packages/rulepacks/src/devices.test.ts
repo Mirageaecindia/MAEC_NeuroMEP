@@ -23,7 +23,7 @@ describe('#TASK-29 Dubai rule pack v1 device data (Appendix B, 10.5)', () => {
     expect(standardRating(d, 10001)).toBeNull();
   });
 
-  it('types breakers: no MCB; MCCB below 800 A, ACB from 800 A (27 Nov 2026)', () => {
+  it('types breakers: no MCB; MCCB below 800 A, ACB from 800 A (A-33)', () => {
     expect(d.breakerTypes.map((t) => t.type)).toEqual(['MCCB', 'ACB']);
     expect(breakerTypeFor(d, 20)).toMatchObject({ type: 'MCCB', interim: false });
     expect(breakerTypeFor(d, 63)?.type).toBe('MCCB');

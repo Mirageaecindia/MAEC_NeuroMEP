@@ -30,7 +30,13 @@ describe('#TASK-19 / #TASK-20 design current and protective devices (10.3 - 10.5
     expect(d.ibCase).toBe('three-phase');
     expect(d.ibA).toBeCloseTo(34.0, 1);
     expect(d.neutralA).toBeCloseTo(0, 6);
-    expect(d.device).toMatchObject({ ratingA: 40, type: 'MCCB', poles: '3P', imA: null, iaA: null });
+    expect(d.device).toMatchObject({
+      ratingA: 40,
+      type: 'MCCB',
+      poles: '3P',
+      imA: null,
+      iaA: null,
+    });
     expect(d.status).toBe('provisional');
     expect(d.errors).toEqual([]);
   });

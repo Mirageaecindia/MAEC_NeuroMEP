@@ -25,6 +25,7 @@ const APPENDIX_D = [
   'W1901',
   'E2001',
   'E2002',
+  'W2004',
   'E2101',
   'E2102',
   'E2301',
@@ -49,7 +50,7 @@ describe('#TASK-32 error catalogue', () => {
     }
   });
 
-  it('contains the 27 engineer-facing errors of Appendix D (22 + 5 added by A-16)', () => {
+  it('contains the 28 engineer-facing errors of Appendix D (22 + 5 by A-16 + W2004 by A-34)', () => {
     expect(ERROR_CATALOGUE.filter((x) => x.appendixD).map((x) => x.code)).toEqual(APPENDIX_D);
   });
 
@@ -59,7 +60,8 @@ describe('#TASK-32 error catalogue', () => {
     expect(currentCode('E2003')).toBe('E2003'); // an error keeps its code
     expect(isWarningCode('E1901')).toBe(true);
     expect(isWarningCode('E2102')).toBe(false);
-    expect(Object.keys(CODE_ALIASES)).toHaveLength(15);
+    // 15 renamed warnings (A-26); W2004 (A-34) is new, its E form is kept as an alias too.
+    expect(Object.keys(CODE_ALIASES)).toHaveLength(16);
   });
 
   it('formats a message with its code', () => {

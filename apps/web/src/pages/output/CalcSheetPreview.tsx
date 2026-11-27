@@ -1,8 +1,22 @@
 import { CALC_COLUMNS, CHECK_STATES, type CalcSheet } from '@neuromep/shared';
 import { calcSteps, calcText } from './calcSheetFiles';
 
-/** Read-only preview of the calculation sheet (WBS 1.7.3): a row per cable, busbar feeder, riser. */
-export function CalcSheetPreview({ sheet }: { sheet: CalcSheet }) {
+type BreakerChoice = 'MCCB' | 'ACB';
+const BREAKER_TYPES: BreakerChoice[] = ['MCCB', 'ACB'];
+
+/**
+ * Preview of the calculation sheet (WBS 1.7.3): a row per cable, busbar feeder, riser. Read-only
+ * except the Breaker type of each feeder (A-34, 27 Nov 2026): a dropdown MCCB / ACB showing
+ * the default logic's type; another choice is kept, shown orange and flagged W2004.
+ */
+export function CalcSheetPreview({
+  sheet,
+  onBreakerType,
+}: {
+  sheet: CalcSheet;
+  /** Given when the user may edit the electrical layer; null = back to the default. */
+  onBreakerType?: (cableId: string, type: BreakerChoice | null) => void;
+}) {
   return (
     <div className="calc-sheet" aria-label="Calculation sheet">
       <p className="calc-sheet-title">
@@ -38,6 +52,48 @@ export function CalcSheetPreview({ sheet }: { sheet: CalcSheet }) {
               <tr key={`${String(r.ref)}-${i}`}>
                 {CALC_COLUMNS.map((c) => {
                   const text = calcText(c, r[c.key]);
+                  if (c.key === 'device' && typeof r.cableId === 'string') {
+                    const chosen = (r['device:chosen'] as BreakerChoice | null) ?? null;
+                    const shown = (chosen ?? r.device ?? null) as BreakerChoice | null;
+                    // The default logic's type: stored when the engineer chose another, else the
+                    // last result's own type (a result from before the choice).
+                    const def = ((r['device:default'] as BreakerChoice | null) ??
+                      r.device ??
+                      null) as BreakerChoice | null;
+                    const changed = chosen !== null && def !== null && chosen !== def;
+                    return (
+                      <td
+                        key={c.key}
+                        className={changed ? 'calc-changed' : undefined}
+                        title={
+                          changed
+                            ? `Changed from the default ${def} (W2004): checked as ${chosen}, never moved up automatically. Choose ${def} to go back to the default.`
+                            : 'Default breaker type: MCCB below 800 A, ACB from 800 A, PFC bank MCCB. Choose another type if needed (it will be flagged).'
+                        }
+                      >
+                        {onBreakerType ? (
+                          <select
+                            className="calc-select"
+                            aria-label={`${String(r.ref)} breaker type`}
+                            value={shown ?? ''}
+                            onChange={(e) => {
+                              const v = e.target.value as BreakerChoice;
+                              onBreakerType(r.cableId as string, v === def ? null : v);
+                            }}
+                          >
+                            {shown === null && <option value="">-</option>}
+                            {BREAKER_TYPES.map((t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          (shown ?? '-')
+                        )}
+                      </td>
+                    );
+                  }
                   return (
                     <td
                       key={c.key}

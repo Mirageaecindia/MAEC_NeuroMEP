@@ -284,6 +284,14 @@ export const ERROR_CATALOGUE = [
     'Enter the missing value on the load, or wait for the confirmed default (OI-30).',
   ),
   e(
+    'W2004',
+    'Breaker type changed by the engineer',
+    'warning',
+    'The breaker type was chosen in the calculation sheet and differs from the default (MCCB below 800 A, ACB from 800 A, PFC MCCB). It is checked as chosen and never moved up automatically.',
+    'Make sure the chosen type suits the rating and fault level (C3); choose the default again to clear the flag.',
+    true,
+  ),
+  e(
     'E2101',
     'Cable size outside the table',
     'blocks',

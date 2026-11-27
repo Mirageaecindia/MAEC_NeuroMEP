@@ -473,7 +473,15 @@ export function OutputPage() {
                 Figures come from Cable Size; Download runs it on the whole project first.
               </p>
             )}
-            <CalcSheetPreview sheet={calc} />
+            <CalcSheetPreview
+              sheet={calc}
+              {...(editor.layers.includes('electrical')
+                ? {
+                    onBreakerType: (cableId: string, value: 'MCCB' | 'ACB' | null) =>
+                      editor.dispatch({ type: 'cableBreakerType', cableId, value }),
+                  }
+                : {})}
+            />
           </>
         )}
         {generators.length > 0 && (

@@ -308,7 +308,7 @@ function breaker(): WorkedExample {
     source: source('CC-01', `feeder ${cable.tag} SMDB-1F > DB-1F-P`),
     method: [
       'In = the lowest standard breaker rating at or above Ib (rule pack list).',
-      'Type by rating: MCB up to 63 A, MCCB up to 630 A, ACB from 800 A (interim until the breaker catalogue, OI-03).',
+      'Type by rating: MCCB below 800 A, ACB from 800 A, a PFC bank MCCB; never below 20 A. The engineer may choose another type in the calculation sheet (flagged W2004).',
       'Poles: 4P from sources and into main panels, else by the phases of the load.',
     ],
     inputs: [{ label: 'Ib', how: 'from the load', value: ib, unit: 'A', digits: 2 }],
