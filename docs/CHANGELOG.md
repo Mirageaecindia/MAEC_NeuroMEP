@@ -4,6 +4,7 @@ Record every change to the design document, CLAUDE.md decisions or reference dat
 
 | Date | Version | Change | Affects |
 |---|---|---|---|
+| 2026-11-27 | Engine + schedules (user decision, reverts the MCCB-only rule above 65 kA) | PFC bank breaker: MCCB, but above 65 kA it moves to an ACB like any breaker; the engine trace and the schedule remarks say 'Breaker changed to ACB: fault level x kA is above the highest MCCB breaking capacity (65 kA)'. | engine, shared, docs |
 | 2026-11-27 | Engine (user decision) | PFC bank breaker stays MCCB at any fault level: `breakerDuty` same-type-only for PFC feeders; above 65 kA C3 fails (E2002) instead of moving to an ACB. | engine, docs |
 | 2026-11-27 | Doc A-33 + rule pack + engine (user decision) | Breakers: no MCB (MCCB below 800 A, ACB from 800 A), PFC bank feeder always MCCB, smallest rating 20 A (6 / 10 / 16 A removed). Tests, guide; cross-check pack and Revit samples rebuilt. | rulepacks, engine, web, docs |
 | 2026-11-27 | Doc A-32 + engine (user decision) | Load current: Ib = MD x 1000 / (sqrt3 x 400 x pf) for every load (single-phase, unbalanced, motor, risers, tap-offs, live load table); largest-phase / 230 V and motor-efficiency formulas removed (engine `design.ts`, `checks.ts`, shared `loads.ts`, Python checker). Tests, guide (Ib section and examples) updated; cross-check pack and Revit samples rebuilt. | engine, shared, web, docs |

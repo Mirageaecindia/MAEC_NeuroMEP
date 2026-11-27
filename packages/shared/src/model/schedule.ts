@@ -203,7 +203,7 @@ function feederColumns(p: Project, cable: Cable, length: LengthRule, key: string
     eccMm2: r?.size?.eccMm2 ?? null,
     lengthM: round2(cableLength(cable, length).totalM),
   };
-  return { cols, pending: pending || (!busbar && !r?.size), problem };
+  return { cols, pending: pending || (!busbar && !r?.size), problem, result: r };
 }
 
 /** A tap-off box: its breaker, no cable (Section 14 "outgoing ratings from tap-off boxes"). */
@@ -332,8 +332,14 @@ export function boardSchedule(
     .sort((a, b) => a.circuitRef.localeCompare(b.circuitRef, undefined, { numeric: true }))
     .map((c): ScheduleRow => {
       const child = elements.find((e) => e.id === c.to.elementId);
-      const { cols, pending: wait, problem } = feederColumns(p, c, length, key);
+      const { cols, pending: wait, problem, result } = feederColumns(p, c, length, key);
       pending ||= wait;
+      // A PFC bank is fed through an MCCB; an ACB only when the fault level is above every MCCB
+      // breaking capacity - said in the remarks (user decision 27 Nov 2026).
+      const acb =
+        child?.kind === 'pfc-bank' && result?.device?.type === 'ACB'
+          ? `Breaker changed to ACB: fault level ${result.values.ikMaxKa?.toFixed(2) ?? '-'} kA is above the highest MCCB breaking capacity (65 kA)`
+          : '';
       return {
         problem,
         feeder: child?.tag ?? '?',
@@ -341,7 +347,7 @@ export function boardSchedule(
         poles: polesOf(child),
         ...cols,
         ...loadColumns(p, summaries.get(c.to.elementId)),
-        remarks: remarksOf(child),
+        remarks: [remarksOf(child), acb].filter(Boolean).join('; '),
         meters: metersOn(elements, child?.id),
         childId: child?.id ?? null,
       };

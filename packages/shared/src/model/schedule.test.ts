@@ -128,6 +128,61 @@ describe('#TASK-30 / #TASK-31 schematic tree and panel schedules (Section 14)', 
     expect(row.mdKw).toBeCloseTo((4.51 + 3.3) * 3 * 0.65, 2);
   });
 
+  it('a PFC bank breaker moved to ACB says why in the remarks (27 Nov 2026)', () => {
+    const p = modelledProject();
+    const f = p.building.floors.find((x) => x.code === 'GF')!.id;
+    const tx = { ...testElement('transformer', 'tx', f), tag: 'TX-1' };
+    const mdb = { ...testElement('mdb', 'mdb', f), tag: 'MDB-1' };
+    const pfc = {
+      ...testElement('mdb', 'pfc', f),
+      kind: 'pfc-bank',
+      tag: 'PFC-1',
+      incomerDevice: 'MCCB',
+      detuned: false,
+    } as unknown as ReturnType<typeof testElement>;
+    p.model.elements = [tx, mdb, pfc];
+    const feed = testCable(mdb, pfc);
+    p.model.cables = [testCable(tx, mdb), feed];
+    p.model.risers = [];
+    const result = (type: 'MCCB' | 'ACB'): ElementResult => ({
+      elementId: feed.id,
+      status: 'final',
+      provisionalReasons: [],
+      errors: [],
+      sizedBy: null,
+      checks: {},
+      size: null,
+      device: { type, ratingA: 125, poles: '3P', faultRatingKa: type === 'ACB' ? 85 : 50 },
+      load: null,
+      values: {
+        ibA: 100,
+        inA: 125,
+        izA: null,
+        vdOwnPct: null,
+        vdTotalPct: null,
+        ikMaxKa: type === 'ACB' ? 70.4 : 40,
+        ikMinKa: null,
+        ipKa: null,
+        zsMohm: null,
+      },
+      trace: [],
+    });
+    const run = (type: 'MCCB' | 'ACB') => {
+      p.model.results = mergeRun(p, { kind: 'project' }, [result(type)], {
+        runId: 'r',
+        at: '2026-11-27T08:00:00.000Z',
+        engineVersion: '0.1.0',
+        inputsKey: inputsKey(p),
+      });
+      return boardSchedule(p, 'mdb', loadSummaries(p, 0.9), { allowancePct: 0, additionM: 5 })!
+        .ways[0]!;
+    };
+    expect(run('MCCB').remarks).toBe('');
+    expect(run('ACB').remarks).toBe(
+      'Breaker changed to ACB: fault level 70.40 kA is above the highest MCCB breaking capacity (65 kA)',
+    );
+  });
+
   it('fills a schedule from the model; sizes wait for Cable Size', () => {
     const p = network();
     const s = boardSchedule(p, 'smdb', loadSummaries(p, 0.9), { allowancePct: 0, additionM: 5 })!;

@@ -29,12 +29,9 @@ export function breakerDuty(
   type: BreakerType,
   ikMaxKa: number,
   ipKa: number,
-  /** Keep the type (a PFC bank is always MCCB, 27 Nov 2026): never move up to the next type. */
-  sameTypeOnly = false,
 ): BreakerDuty | null {
   const from = devices.breakerTypes.findIndex((t) => t.type === type);
-  const types = devices.breakerTypes.slice(Math.max(0, from));
-  for (const t of sameTypeOnly ? types.slice(0, 1) : types) {
+  for (const t of devices.breakerTypes.slice(Math.max(0, from))) {
     for (const icu of [...t.faultRatingsKa].sort((a, b) => a - b)) {
       const icm = icu * makingFactor(icu);
       if (icu >= ikMaxKa && icm >= ipKa) return { type: t.type, icuKa: icu, icmKa: icm };
@@ -144,9 +141,9 @@ export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes
       if (!result.errors.includes(blockedAt.code)) result.errors.push(blockedAt.code);
     }
     const fault = result.faultAtBreaker;
+    const pfc = elements.get(f.toId)?.kind === 'pfc-bank';
     if (fault && f.device) {
-      const pfc = elements.get(f.toId)?.kind === 'pfc-bank';
-      result.duty = breakerDuty(pack.devices, f.device.type, fault.ikMaxKa, fault.ipKa, pfc);
+      result.duty = breakerDuty(pack.devices, f.device.type, fault.ikMaxKa, fault.ipKa);
       result.c3 = result.duty ? 'pass' : 'fail';
       if (!result.duty) {
         result.errors.push('E2002');
@@ -157,10 +154,16 @@ export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes
         detail: `Ik"max ${fault.ikMaxKa.toFixed(2)} kA, ip ${fault.ipKa.toFixed(2)} kA at the breaker: ${
           result.duty
             ? `${result.duty.type} Icu ${result.duty.icuKa} kA, Icm >= ${result.duty.icmKa.toFixed(1)} kA (IEC 60947-2 minimum until OI-03)`
-            : pfc
-              ? `above the highest ${f.device.type} rating (${Math.max(...(pack.devices.breakerTypes.find((t) => t.type === f.device!.type)?.faultRatingsKa ?? [0]))} kA): a PFC bank stays ${f.device.type} (27 Nov 2026)`
-              : 'above the highest rating (85 kA)'
+            : 'above the highest rating (85 kA)'
         }`,
+      });
+    }
+    // A PFC bank is fed through an MCCB; only a fault level above every MCCB rating moves it to an
+    // ACB, and the schedule says so in its remarks (user decision 27 Nov 2026).
+    if (fault && f.device && result.duty && pfc && result.duty.type !== f.device.type) {
+      result.trace.push({
+        step: 'C3',
+        detail: `PFC bank: breaker changed from ${f.device.type} to ${result.duty.type} - Ik"max ${fault.ikMaxKa.toFixed(2)} kA is above the highest ${f.device.type} breaking capacity.`,
       });
     }
     // C7 of a busbar feeder itself: its Icw / Ipk against the fault where it starts.
