@@ -500,3 +500,19 @@ a {
 :root[data-theme='dark'] .theme-toggle {
   color: #92400e;
 }
+/* 3. Every field that can be changed shows its box: a darker fill and a visible border, also
+      where the panel behind it has the same colour (Engineering Property, 27 Nov 2026). */
+:root[data-theme='dark']
+  :is(
+    input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):not(
+        [type='color']
+      ),
+    select,
+    textarea
+  ) {
+  background-color: var(--bg);
+  border: 1px solid var(--border-strong);
+}
+:root[data-theme='dark'] :is(input, select, textarea):disabled {
+  border-color: var(--border);
+}
