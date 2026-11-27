@@ -811,9 +811,10 @@ export const SECTIONS: GuideSection[] = [
           Choose the <Term>Format</Term> (Excel or PDF) and press <Term>Download</Term>. NeuroMEP
           first runs Cable Size on the whole project. Schedules need a logo and the planned
           completion date (asked in the preview each time); the generator analysis asks for its
-          title block. The meter columns (1-PH, 3-PH, LV/HV) come from the Meter components on the
-          plans; on a way with no meter placed you may type the numbers, and the type of meter is
-          optional - neither is needed to download.
+          title block. The meter columns (1-PH, 3-PH, LV/HV) come only from the Meter components
+          placed on the floor plans (a way feeding a board shows that board&apos;s total); they are
+          not typed in the preview. The type-of-meter line is a fixed reference, as in the briefing
+          format. Meters are never needed to download.
         </p>
         <Rule>
           Schedules are blocked (E3101) while a row is out of date, not calculated, blocked or has a

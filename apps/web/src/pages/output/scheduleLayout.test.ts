@@ -46,9 +46,6 @@ describe('scheduleLayout remarks (editable, 26 Nov 2026)', () => {
       client: '',
       meters: {
         B1: {
-          type: '',
-          ctRatio: '',
-          ways: {},
           remarks: { 'in:0': 'Main incomer from LV-1', '1RYB': 'Spare for future kitchen' },
         },
       },

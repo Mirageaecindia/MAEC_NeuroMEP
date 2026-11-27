@@ -1,5 +1,5 @@
 import type { BoardSchedule } from '@neuromep/shared';
-import { meterCells, type BoardMeters } from './ScheduleSheet';
+import { meterCells } from './ScheduleSheet';
 
 /** 1-Ph, 3-Ph, LV/HV meter counts. */
 export type MeterTriple = [number, number, number];
@@ -7,7 +7,7 @@ export type MeterTriple = [number, number, number];
 export interface BoardMeterTotals {
   /**
    * Ways feeding a board that has meters: that board's total (accumulated down the chain), shown
-   * read-only on the way. Other ways keep their own meters (placed or typed).
+   * read-only on the way. Other ways keep the meters placed on the plan for them.
    */
   accumulated: Record<string, { cells: MeterTriple; board: string }>;
   /** The footer TOTAL: incomer meters + every way (accumulated where it feeds a board). */
@@ -27,10 +27,7 @@ const any = (t: MeterTriple) => t[0] + t[1] + t[2] > 0;
  * so the totals accumulate up to the main panel. `all` must hold the schedules of every board,
  * not only the ones shown, so a board below is counted even when its level is not ticked.
  */
-export function meterTotals(
-  all: readonly BoardSchedule[],
-  typed: Record<string, BoardMeters>,
-): Map<string, BoardMeterTotals> {
+export function meterTotals(all: readonly BoardSchedule[]): Map<string, BoardMeterTotals> {
   const boards = new Map(all.filter((s) => s.kind === 'board').map((s) => [s.id, s]));
   const out = new Map<string, BoardMeterTotals>();
   const visiting = new Set<string>();
@@ -41,7 +38,7 @@ export function meterTotals(
     visiting.add(s.id);
     const accumulated: BoardMeterTotals['accumulated'] = {};
     let total: MeterTriple = [0, 0, 0];
-    for (const i of s.incomers) total = add(total, meterCells(i, undefined));
+    for (const i of s.incomers) total = add(total, meterCells(i));
     for (const w of s.ways) {
       const child = w.childId ? boards.get(w.childId) : undefined;
       const below = child && !visiting.has(child.id) ? totalOf(child).total : null;
@@ -49,7 +46,7 @@ export function meterTotals(
         accumulated[w.wayNo] = { cells: below, board: child!.tag };
         total = add(total, below);
       } else {
-        total = add(total, meterCells(w, typed[s.id]?.ways[w.wayNo]));
+        total = add(total, meterCells(w));
       }
     }
     visiting.delete(s.id);
@@ -69,7 +66,7 @@ export function meterTotals(
       if (below && any(below)) {
         accumulated[w.wayNo] = { cells: below, board: child!.tag };
         total = add(total, below);
-      } else total = add(total, meterCells(w, typed[s.id]?.ways[w.wayNo]));
+      } else total = add(total, meterCells(w));
     }
     out.set(s.id, { accumulated, total });
   }

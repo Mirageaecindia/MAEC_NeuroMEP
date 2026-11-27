@@ -122,15 +122,6 @@
   outline: 2px solid #f59e0b;
   outline-offset: 1px;
 }
-.meter-input {
-  width: 32px;
-  font-size: 9px;
-  text-align: center;
-}
-.meter-type select,
-.meter-type input {
-  font-size: 9px;
-}
 .schedule-sheet .logo img {
   max-height: 34px;
   max-width: 120px;

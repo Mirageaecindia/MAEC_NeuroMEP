@@ -1458,7 +1458,13 @@ describe('#TASK-30 / #TASK-31 Schematic and Output (Figma 4, 5)', () => {
     expect(within(sheet).getAllByTitle(/0 x 1-Ph, 1 x 3-Ph, 0 x LV\/HV/)).toHaveLength(3);
     const download = screen.getByRole('button', { name: 'Download' });
     expect(download).toBeDisabled();
-    // Meters and the type of meter are optional (user decision 10 Nov 2026).
+    // Meters are not typed in the preview: plan meters only, and the briefing's type-of-meter
+    // reference line (user decision 27 Nov 2026).
+    expect(within(sheet).queryByRole('textbox', { name: /meters$/ })).not.toBeInTheDocument();
+    expect(
+      within(sheet).queryByRole('combobox', { name: /type of meter/ }),
+    ).not.toBeInTheDocument();
+    expect(sheet).toHaveTextContent('Type of Meter (Rating of Incomer): (1) Upto 60A (1 Phase)');
     await userEvent.type(screen.getByLabelText('Planned completion date'), '2027-06-30');
     expect(download).toBeDisabled(); // the logo is still missing
     await userEvent.upload(screen.getByLabelText('Logo'), PNG_LOGO);

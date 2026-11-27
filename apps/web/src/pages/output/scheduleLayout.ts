@@ -1,6 +1,6 @@
 import type { BoardSchedule, ScheduleRow } from '@neuromep/shared';
 import type { BoardMeterTotals } from './meterTotals';
-import { meterCells, METER_TYPES, remarkOf, type BoardMeters } from './ScheduleSheet';
+import { meterCells, METER_REFERENCE, remarkOf, type BoardMeters } from './ScheduleSheet';
 
 /** The inputs asked at every download (decision 2 Nov 2026), shared by the Excel and PDF files. */
 export interface ScheduleInputs {
@@ -86,7 +86,6 @@ export function scheduleLayout(s: BoardSchedule, inputs: ScheduleInputs): Schedu
   const m = inputs.meters[s.id];
   const mt = inputs.meterTotals?.get(s.id);
   const t = s.totals;
-  const meter = METER_TYPES.find((x) => x.value === m?.type)?.label ?? '-';
   return {
     title: `PROJECT : ${s.project}\nPLANNED COMPLETION DATE : ${inputs.completionDate || '-'}\n\n${s.description ?? s.tag}`,
     heading: 'DETAILS OF CONNECTED LOAD, MAX. DEMAND & kWHR METERING',
@@ -96,14 +95,14 @@ export function scheduleLayout(s: BoardSchedule, inputs: ScheduleInputs): Schedu
       i.feeder,
       '-',
       ...rowValues(i),
-      ...meterCells(i, undefined),
+      ...meterCells(i),
       remarkOf(m, `in:${n}`, i.remarks),
     ]),
     ways: s.ways.map((w) => [
       w.feeder,
       w.wayNo,
       ...rowValues(w),
-      ...(mt?.accumulated[w.wayNo]?.cells ?? meterCells(w, m?.ways[w.wayNo])),
+      ...(mt?.accumulated[w.wayNo]?.cells ?? meterCells(w)),
       remarkOf(m, w.wayNo, w.remarks),
     ]),
     emptyWays: s.ways.length === 0 ? `No outgoing feeders from ${s.tag}.` : null,
@@ -112,7 +111,7 @@ export function scheduleLayout(s: BoardSchedule, inputs: ScheduleInputs): Schedu
     meterTotals: mt?.total ?? [0, 0, 0],
     demand: `DEMAND FACTOR: ${s.demandFactor === null ? '-' : s.demandFactor.toFixed(2)} - MAX. DEMAND: ${t.mdKw.toFixed(2)} kW`,
     tcl: `* OVERALL TOTAL CONNECTED / INSTALLED LOAD (TCL): ${t.tclKw.toFixed(2)} kW`,
-    meter: `Type of Meter (rating of incomer): ${meter}${m?.type === 'lv-ct' ? ` - CT ratio ${m.ctRatio}` : ''}`,
+    meter: METER_REFERENCE,
   };
 }
 

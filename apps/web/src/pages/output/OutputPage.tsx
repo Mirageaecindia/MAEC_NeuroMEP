@@ -112,8 +112,8 @@ type Format = keyof typeof FORMATS;
 /**
  * Output (Figma screen 5): Report Library, schedule previews from the model, and the inputs the
  * sheet needs before download (logo, planned completion date) - asked at every download and not
- * stored (decision 2 Nov 2026). Meters come from the Meter components on the plans; typing them
- * and the type of meter are optional (user decision 10 Nov 2026). Download (WBS 1.7.2) runs Cable Size
+ * stored (decision 2 Nov 2026). Meters come only from the Meter components on the plans and the
+ * type of meter is a fixed reference line (user decision 27 Nov 2026). Download (WBS 1.7.2) runs Cable Size
  * first (FR-21), stops on results that are blocked or failing (E3101), then saves the file in the
  * chosen format: one Excel workbook `<project>_Schedules_v<n>.xlsx` (a sheet per board) or one
  * PDF `<project>_Schedules_v<n>.pdf` (a page per board), each numbered on its own, never
@@ -190,7 +190,7 @@ export function OutputPage() {
         .map((b) => boardSchedule(p, b.id, summaries, length)!),
       ...p.model.risers.map((r) => busbarSchedule(p, r.id, summaries)!),
     ].filter(Boolean);
-    return meterTotals(all, meters);
+    return meterTotals(all);
   }
   const shownTotals = schedules.length
     ? meterTotalsOf(project)
