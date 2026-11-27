@@ -29,9 +29,12 @@ export function breakerDuty(
   type: BreakerType,
   ikMaxKa: number,
   ipKa: number,
+  /** Keep the type (a PFC bank is always MCCB, 27 Nov 2026): never move up to the next type. */
+  sameTypeOnly = false,
 ): BreakerDuty | null {
   const from = devices.breakerTypes.findIndex((t) => t.type === type);
-  for (const t of devices.breakerTypes.slice(Math.max(0, from))) {
+  const types = devices.breakerTypes.slice(Math.max(0, from));
+  for (const t of sameTypeOnly ? types.slice(0, 1) : types) {
     for (const icu of [...t.faultRatingsKa].sort((a, b) => a - b)) {
       const icm = icu * makingFactor(icu);
       if (icu >= ikMaxKa && icm >= ipKa) return { type: t.type, icuKa: icu, icmKa: icm };
@@ -142,7 +145,8 @@ export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes
     }
     const fault = result.faultAtBreaker;
     if (fault && f.device) {
-      result.duty = breakerDuty(pack.devices, f.device.type, fault.ikMaxKa, fault.ipKa);
+      const pfc = elements.get(f.toId)?.kind === 'pfc-bank';
+      result.duty = breakerDuty(pack.devices, f.device.type, fault.ikMaxKa, fault.ipKa, pfc);
       result.c3 = result.duty ? 'pass' : 'fail';
       if (!result.duty) {
         result.errors.push('E2002');
@@ -153,7 +157,9 @@ export function checkNetwork(project: Project, sized?: ReadonlyMap<string, Sizes
         detail: `Ik"max ${fault.ikMaxKa.toFixed(2)} kA, ip ${fault.ipKa.toFixed(2)} kA at the breaker: ${
           result.duty
             ? `${result.duty.type} Icu ${result.duty.icuKa} kA, Icm >= ${result.duty.icmKa.toFixed(1)} kA (IEC 60947-2 minimum until OI-03)`
-            : 'above the highest rating (85 kA)'
+            : pfc
+              ? `above the highest ${f.device.type} rating (${Math.max(...(pack.devices.breakerTypes.find((t) => t.type === f.device!.type)?.faultRatingsKa ?? [0]))} kA): a PFC bank stays ${f.device.type} (27 Nov 2026)`
+              : 'above the highest rating (85 kA)'
         }`,
       });
     }

@@ -303,6 +303,12 @@ describe('#TASK-23 fault duty C3 / C7 (V-10)', () => {
     expect(breakerDuty(devices, 'ACB', 86, 150)).toBeNull();
   });
 
+  it('a PFC bank breaker stays MCCB: no move up to ACB above 65 kA (27 Nov 2026)', () => {
+    expect(breakerDuty(devices, 'MCCB', 70, 100)).toMatchObject({ type: 'ACB' });
+    expect(breakerDuty(devices, 'MCCB', 70, 100, true)).toBeNull();
+    expect(breakerDuty(devices, 'MCCB', 40, 60, true)).toMatchObject({ type: 'MCCB', icuKa: 50 });
+  });
+
   it('switchboard withstand: Icw >= max(Ik", 40 kA), Ipk >= ip; asks for Icw / Ipk when missing', () => {
     const board = { ...testElement('lv-panel', 'b', 'f'), icwKa: null, ipkKa: null } as Element;
     expect(boardWithstand(board, 30, 60).state).toBe('not-calculated');
