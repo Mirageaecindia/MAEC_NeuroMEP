@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { completeProject, sequentialIds, testCable, testElement } from '../testing.js';
-import { copyComponents, floorComponents, sheetMapping } from './copy.js';
+import {
+  cloneComponents,
+  copyComponents,
+  downstreamOf,
+  floorComponents,
+  sheetMapping,
+} from './copy.js';
 
 /** An SMDB feeding a DB and an isolator with its pump (equipment link) on the Ground Floor. */
 function building() {
@@ -145,5 +151,102 @@ describe('same place on the sheet (user request 8 Nov 2026)', () => {
       { x: 10, y: 4 },
     ]);
     expect(r.cables[0]!.route[0]).toEqual(map(p.model.cables[0]!.route[0]!));
+  });
+});
+
+describe('Clone: a component and its downstream onto a floor (user request 28 Nov 2026)', () => {
+  /** MDB-GF-01 > SMDB-GF-01 > DB-GF-01 and ISO-GF-01 (pump); a DB on floor 1 fed from the SMDB. */
+  function tree() {
+    const b = building();
+    const mdb = {
+      ...testElement('mdb', 'mdb'),
+      floorId: b.gf.id,
+      tag: 'MDB-GF-01',
+      position: { x: 0, y: 0 },
+    };
+    const up = { ...b.first, id: b.first.id };
+    const db1 = {
+      ...testElement('db', 'db-1'),
+      floorId: up.id,
+      tag: 'DB-1-01',
+      position: { x: 3, y: 3 },
+    };
+    const toSmdb = { ...testCable(mdb, b.smdb), floorId: b.gf.id };
+    const toIso = { ...testCable(b.smdb, b.iso), floorId: b.gf.id };
+    const between = { ...testCable(b.smdb, db1), floorId: b.gf.id, manualLengthM: 12 };
+    b.p.model.elements.push(mdb, db1);
+    b.p.model.cables.push(toSmdb, toIso, between);
+    return { ...b, mdb, db1, between };
+  }
+
+  it('takes the component, every level below it (any floor) and the linked equipment', () => {
+    const { p } = tree();
+    expect(downstreamOf(p.model, 'smdb').sort()).toEqual(['db', 'db-1', 'iso', 'pump', 'smdb']);
+    expect(downstreamOf(p.model, 'db')).toEqual(['db']);
+  });
+
+  it('copies them onto the chosen floor with new ids, the floor tags and the feeders between them', () => {
+    const { p, first } = tree();
+    const r = cloneComponents(p, {
+      rootId: 'smdb',
+      targetFloorId: first.id,
+      layers: ['electrical', 'mechanical', 'phe'],
+      withFeeders: true,
+      newId: sequentialIds('c'),
+    });
+    expect(r.elements.map((e) => e.tag).sort()).toEqual([
+      'DB-1-02',
+      'DB-1-03',
+      'ISO-1-01',
+      'PHE-1-01',
+      'SMDB-1-01',
+    ]);
+    expect(
+      r.elements.every(
+        (e) => e.floorId === first.id && !['smdb', 'db', 'db-1', 'iso', 'pump'].includes(e.id),
+      ),
+    ).toBe(true);
+    // The pump stays linked to the cloned isolator; the cloned SMDB has no supply (nothing above copied).
+    const iso = r.elements.find((e) => e.tag === 'ISO-1-01')!;
+    expect(r.elements.find((e) => e.tag === 'PHE-1-01')).toMatchObject({ fedFromId: iso.id });
+    expect(r.cables).toHaveLength(3);
+    expect(
+      r.cables.some((c) => c.to.elementId === r.elements.find((e) => e.tag === 'SMDB-1-01')!.id),
+    ).toBe(false);
+    // The feeder that ran between floors is now a plan feeder on the target floor.
+    const db1 = r.elements.find((e) => e.position.x === 3 && e.position.y === 3)!;
+    const was = r.cables.find((c) => c.to.elementId === db1.id)!;
+    expect(was.manualLengthM).toBeUndefined();
+    expect(was.route).toEqual([
+      r.elements.find((e) => e.tag === 'SMDB-1-01')!.position,
+      db1.position,
+    ]);
+  });
+
+  it('copies only the layers the user may edit; feeders only with the electrical layer', () => {
+    const { p, first } = tree();
+    const r = cloneComponents(p, {
+      rootId: 'smdb',
+      targetFloorId: first.id,
+      layers: ['electrical'],
+      withFeeders: false,
+      newId: sequentialIds('c'),
+    });
+    expect(r.elements.map((e) => e.discipline).every((d) => d === 'electrical')).toBe(true);
+    expect(r.skipped).toBe(1);
+    expect(r.cables).toEqual([]);
+  });
+
+  it('onto its own floor the clone lands 2 m down and right, with the next free tags', () => {
+    const { p, gf } = tree();
+    const r = cloneComponents(p, {
+      rootId: 'db',
+      targetFloorId: gf.id,
+      layers: ['electrical'],
+      withFeeders: true,
+      newId: sequentialIds('c'),
+    });
+    expect(r.elements).toHaveLength(1);
+    expect(r.elements[0]).toMatchObject({ tag: 'DB-GF-02', position: { x: 7, y: 4 } });
   });
 });

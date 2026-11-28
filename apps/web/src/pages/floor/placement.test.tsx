@@ -227,6 +227,44 @@ describe('#TASK-13 drawing cables (WBS 1.3.2)', () => {
     await userEvent.click(within(dialog).getByRole('button', { name: 'Use this construction' }));
   }
 
+  it('Clone copies a component and its downstream onto the chosen floor (28 Nov 2026)', async () => {
+    const api = open(LEAD);
+    await planReady();
+    await placeAt('SMDB', 300, 300);
+    await placeAt('DB', 600, 450);
+    await userEvent.click(chip('Feeder'));
+    await chooseConstruction();
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 });
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 600, clientY: 450 });
+    expect(await screen.findByRole('img', { name: /^Cable FGF-1/ })).toBeInTheDocument();
+    fireEvent.mouseDown(canvasArea(), { button: 0, clientX: 300, clientY: 300 }); // the SMDB
+    const card = screen.getByRole('region', { name: 'Engineering Property' });
+    await userEvent.click(within(card).getByRole('button', { name: 'Clone' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Clone SMDB-GF-01' });
+    expect(dialog).toHaveTextContent('2 components and 1 feeder');
+    // Floors without a calibrated plan cannot be chosen; its own floor is preselected.
+    const radios = within(dialog).getAllByRole('radio');
+    expect(radios.filter((r) => !(r as HTMLInputElement).disabled)).toHaveLength(1);
+    expect(within(dialog).getByLabelText(/^Clone onto Ground Floor/)).toBeChecked();
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Clone' }));
+    expect(
+      await screen.findByText(
+        /^SMDB-GF-01 cloned onto Ground Floor: 2 components and 1 feeder - SMDB-GF-02 has no supply yet\./,
+      ),
+    ).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.saveProject).toHaveBeenCalled());
+    const saved = api.saveProject.mock.calls.at(-1)![0];
+    expect(saved.model.elements.map((e: { tag: string }) => e.tag).sort()).toEqual([
+      'DB-GF-01',
+      'DB-GF-02',
+      'SMDB-GF-01',
+      'SMDB-GF-02',
+    ]);
+    expect(new Set(saved.model.elements.map((e: { id: string }) => e.id)).size).toBe(4);
+    expect(saved.model.cables).toHaveLength(2);
+  });
+
   it('draws a right-angled cable from a board to a DB with its way, tag and length', async () => {
     open(LEAD);
     await planReady();

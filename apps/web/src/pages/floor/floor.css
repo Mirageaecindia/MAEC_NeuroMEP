@@ -997,3 +997,19 @@ svg.drawing-feeder {
 .building-summary .muted {
   color: #374151;
 }
+
+/* Clone and Delete under the Engineering Property (28 Nov 2026). */
+.property-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.clone-floors {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}

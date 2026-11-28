@@ -30,6 +30,8 @@ export function EngineeringProperty(props: {
   fedFrom: string | null;
   onChange: (patch: Record<string, unknown>) => void;
   onDelete: () => void;
+  /** Clone it and its downstream onto a floor (28 Nov 2026); absent = no Clone button. */
+  onClone?: () => void;
   /** Isolators / connection units equipment may be fed from. */
   feeders?: readonly { id: string; tag: string }[];
   /** FLS equipment it feeds while its own category is not FLS: it counts as FLS (6 Nov 2026). */
@@ -277,9 +279,20 @@ export function EngineeringProperty(props: {
         />
       )}
       {props.editable && (
-        <button className="btn btn-sm btn-danger-outline" onClick={props.onDelete}>
-          Delete component
-        </button>
+        <div className="property-actions">
+          {props.onClone && (
+            <button
+              className="btn btn-sm"
+              onClick={props.onClone}
+              title="Copy this component and everything downstream of it onto a floor"
+            >
+              Clone
+            </button>
+          )}
+          <button className="btn btn-sm btn-danger-outline" onClick={props.onDelete}>
+            Delete component
+          </button>
+        </div>
       )}
     </section>
   );

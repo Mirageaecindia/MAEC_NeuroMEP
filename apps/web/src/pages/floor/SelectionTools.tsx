@@ -1,4 +1,5 @@
 import {
+  downstreamOf,
   copyComponents,
   floorComponents,
   sheetMapping,
@@ -226,6 +227,94 @@ export function ReplicateDialog(props: {
           );
         })}
       </ul>
+    </Modal>
+  );
+}
+
+/**
+ * Clone (user request 28 Nov 2026): the component and everything downstream of it are copied onto
+ * the floor chosen here - new ids, the tags of that floor, feeders between them included. Floors
+ * without a calibrated plan, or flagged done for one of your layers, cannot be chosen.
+ */
+export function CloneDialog(props: {
+  project: Project;
+  element: Element;
+  layers: readonly Discipline[];
+  onCancel: () => void;
+  onConfirm: (floorId: string) => void;
+}) {
+  const { project, element, layers } = props;
+  const ids = downstreamOf(project.model, element.id);
+  const byId = new Map(project.model.elements.map((e) => [e.id, e]));
+  const mine = ids.filter((id) => layers.includes(byId.get(id)!.discipline));
+  const skipped = ids.length - mine.length;
+  const set = new Set(mine);
+  const feeders = layers.includes('electrical')
+    ? project.model.cables.filter((c) => set.has(c.from.elementId) && set.has(c.to.elementId))
+        .length
+    : 0;
+  const floors = [...project.building.floors].reverse();
+  const blocked = (f: Floor) =>
+    !f.plan?.calibration
+      ? 'No calibrated plan'
+      : layers.some((d) => isFlagged(project.model.floorFlags, f.id, d))
+        ? 'Flagged done (locked)'
+        : null;
+  const [target, setTarget] = useState<string>(
+    floors.find((f) => f.id === element.floorId && !blocked(f))?.id ?? '',
+  );
+  return (
+    <Modal
+      title={`Clone ${element.tag}`}
+      onClose={props.onCancel}
+      actions={
+        <>
+          <button className="btn" onClick={props.onCancel}>
+            Cancel
+          </button>
+          <button
+            className="btn btn-primary"
+            disabled={!target}
+            onClick={() => props.onConfirm(target)}
+          >
+            Clone
+          </button>
+        </>
+      }
+    >
+      <p>
+        Copies <strong>{element.tag}</strong> and everything downstream of it: {mine.length}{' '}
+        component{mine.length === 1 ? '' : 's'}
+        {feeders ? ` and ${feeders} feeder${feeders === 1 ? '' : 's'}` : ''}. New ids and the tags
+        of the floor chosen (e.g. DB-B1-01 becomes DB-GF-01); every property and load is kept. Each
+        component lands at the same place on the sheet; onto its own floor 2 m down and right.
+      </p>
+      <p className="muted">
+        The clone has no supply until you draw a feeder to the copy of {element.tag}. Risers are not
+        cloned.
+        {skipped > 0 &&
+          ` ${skipped} component${skipped === 1 ? '' : 's'} of other layers (not yours) are left out.`}
+      </p>
+      <fieldset className="clone-floors">
+        <legend>Clone onto floor</legend>
+        {floors.map((f) => {
+          const why = blocked(f);
+          return (
+            <label key={f.id} className={why ? 'muted' : undefined}>
+              <input
+                type="radio"
+                name="clone-floor"
+                aria-label={`Clone onto ${f.name}`}
+                checked={target === f.id}
+                disabled={why !== null}
+                onChange={() => setTarget(f.id)}
+              />{' '}
+              {f.name} ({f.code}){f.id === element.floorId ? ' - this floor' : ''}
+              {why ? ` - ${why}` : ''}
+            </label>
+          );
+        })}
+      </fieldset>
     </Modal>
   );
 }

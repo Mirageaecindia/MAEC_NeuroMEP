@@ -50,6 +50,8 @@ export function copyComponents(
     offset?: ModelPoint;
     /** Source metres to target metres (`sheetMapping`); the offset is added after it. */
     map?: (p: ModelPoint) => ModelPoint;
+    /** Per source floor instead of `map` (a clone gathers components from several floors). */
+    mapFor?: (floorId: string) => ((p: ModelPoint) => ModelPoint) | null;
     newId: () => string;
   },
 ): CopyResult {
@@ -57,7 +59,10 @@ export function copyComponents(
   const floor = project.building.floors.find((f) => f.id === args.targetFloorId);
   if (!floor) throw new Error(`No floor ${args.targetFloorId}`);
   const offset = args.offset ?? { x: 0, y: 0 };
-  const place = (p: ModelPoint) => shift(args.map ? args.map(p) : p, offset);
+  const place = (p: ModelPoint, fromFloorId?: string) => {
+    const m = (fromFloorId && args.mapFor?.(fromFloorId)) || args.map;
+    return shift(m ? m(p) : p, offset);
+  };
   const wanted = new Set(args.ids);
   const originals = elements.filter((e) => wanted.has(e.id));
   const idOf = new Map(originals.map((e) => [e.id, args.newId()]));
@@ -81,7 +86,7 @@ export function copyComponents(
       version: 0,
       tag,
       floorId: floor.id,
-      position: place(e.position),
+      position: place(e.position, e.floorId),
     });
   });
 
@@ -109,7 +114,7 @@ export function copyComponents(
       to: { ...c.to, elementId: to },
       circuitRef: `${way}${phasesFor(byId.get(to)!)}`,
       floorId: floor.id,
-      route: c.route.map(place),
+      route: c.route.map((pt) => place(pt, c.floorId)),
     });
     all.push(copy);
     made.push(copy);
@@ -126,4 +131,98 @@ export function floorComponents(
   return project.model.elements.filter(
     (e) => e.floorId === floorId && layers.includes(e.discipline),
   );
+}
+
+/**
+ * A component and everything downstream of it (Clone, user request 28 Nov 2026): the components
+ * its feeders reach, level after level (on any floor), and the equipment and meters linked to
+ * them. Riser tap-offs are not followed (risers are building-wide and never copied).
+ */
+export function downstreamOf(
+  model: Pick<Project['model'], 'elements' | 'cables'>,
+  rootId: string,
+): string[] {
+  const out = new Set<string>([rootId]);
+  const stack = [rootId];
+  while (stack.length) {
+    const id = stack.pop()!;
+    for (const c of model.cables) {
+      if (c.from.elementId === id && !out.has(c.to.elementId)) {
+        out.add(c.to.elementId);
+        stack.push(c.to.elementId);
+      }
+    }
+  }
+  for (const e of model.elements) {
+    const link =
+      'fedFromId' in e && e.kind === 'equipment'
+        ? e.fedFromId
+        : 'meteredId' in e
+          ? e.meteredId
+          : null;
+    if (link && out.has(link)) out.add(e.id);
+  }
+  return model.elements.filter((e) => out.has(e.id)).map((e) => e.id);
+}
+
+/**
+ * Clone (user request 28 Nov 2026): a component and its downstream onto one floor - new ids,
+ * tags of the target floor (DB-B1-01 -> DB-GF-01), every property and load kept, the feeders
+ * between them copied with new ways and tags. Each component lands at the same place on the
+ * target sheet as on its own floor (2 m down and right when cloned onto its own floor). A feeder
+ * that ran between two floors becomes a plan feeder (both ends now on one floor). The clone's
+ * top component has no supply until a feeder is drawn to it. Only the given layers are copied.
+ */
+export function cloneComponents(
+  project: Pick<Project, 'building' | 'model'>,
+  args: {
+    rootId: string;
+    targetFloorId: string;
+    layers: readonly Element['discipline'][];
+    /** Feeders need the electrical layer. */
+    withFeeders: boolean;
+    newId: () => string;
+  },
+): CopyResult & { skipped: number } {
+  const all = downstreamOf(project.model, args.rootId);
+  const byId = new Map(project.model.elements.map((e) => [e.id, e]));
+  const ids = all.filter((id) => args.layers.includes(byId.get(id)!.discipline));
+  const floors = new Map(project.building.floors.map((f) => [f.id, f]));
+  const target = floors.get(args.targetFloorId);
+  const root = byId.get(args.rootId)!;
+  const same = root.floorId === args.targetFloorId;
+  const copy = copyComponents(project, {
+    ids,
+    targetFloorId: args.targetFloorId,
+    newId: args.newId,
+    ...(same ? { offset: { x: 2, y: 2 } } : {}),
+    mapFor: (floorId) =>
+      floorId === args.targetFloorId ? null : sheetMapping(floors.get(floorId), target),
+  });
+  const placed = new Map(copy.elements.map((e) => [e.id, e.position]));
+  const cables = args.withFeeders
+    ? copy.cables.map((c) => {
+        const a = placed.get(c.from.elementId);
+        const b = placed.get(c.to.elementId);
+        // A feeder that ran between two floors (length typed in the Building tab, A-21).
+        const between = c.manualLengthM !== undefined;
+        if (!between || !a || !b) return c;
+        const {
+          manualLengthM: _m,
+          buildingPath: _p,
+          buildingRoute: _r,
+          ...rest
+        } = c as typeof c & {
+          buildingRoute?: unknown;
+        };
+        return CableSchema.parse({ ...rest, route: [a, b] });
+      })
+    : [];
+  // The copy of the clone's top component first (the one to connect a feeder to).
+  const ri = project.model.elements
+    .filter((e) => ids.includes(e.id))
+    .findIndex((e) => e.id === args.rootId);
+  const elements =
+    ri < 0 ? copy.elements : [copy.elements[ri]!, ...copy.elements.filter((_, i) => i !== ri)];
+  return { elements, cables, skipped: all.length - ids.length };
 }

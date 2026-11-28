@@ -28,6 +28,7 @@ import {
   isFlagged,
   type CableConstruction,
   type ModelPoint,
+  cloneComponents,
   copyComponents,
   drawBuildingFeeder,
   onPlanOf,
@@ -79,7 +80,7 @@ import { LoadTable } from './LoadTable';
 import { SaveBanner, useProjectToolbar, useWorkspace } from '../../workspace/ProjectWorkspace';
 import { BuildingTab } from './BuildingTab';
 import { FloorStatusDialog } from './FloorStatusDialog';
-import { ReplicateDialog, SelectionBar, replicate } from './SelectionTools';
+import { CloneDialog, ReplicateDialog, SelectionBar, replicate } from './SelectionTools';
 import './floor.css';
 import { openGuide, SECTION_OF_PAGE } from '../../guide/openGuide';
 
@@ -189,6 +190,8 @@ export function FloorSetupPage() {
   const clipboard = useRef<{ ids: string[]; floorId: string; pasted: number } | null>(null);
   const [clipCount, setClipCount] = useState(0);
   const [replicating, setReplicating] = useState(false);
+  /** Component whose Clone dialog is open (28 Nov 2026). */
+  const [cloning, setCloning] = useState<string | null>(null);
   /** A plan just uploaded on a typical floor: offer it to the whole typical set. */
   const [sharePlan, setSharePlan] = useState<{
     floor: Floor;
@@ -607,6 +610,7 @@ export function FloorSetupPage() {
             editor.dispatch({ type: 'removeElements', ids: [el.id] });
             setSelectedId(null);
           }}
+          onClone={() => setCloning(el.id)}
         />
       )
     );
@@ -1174,6 +1178,44 @@ export function FloorSetupPage() {
           onClose={() => setStatusOpen(false)}
         />
       )}
+      {cloning &&
+        (() => {
+          const el = project.model.elements.find((e) => e.id === cloning);
+          if (!el) return null;
+          return (
+            <CloneDialog
+              project={project}
+              element={el}
+              layers={editor.layers}
+              onCancel={() => setCloning(null)}
+              onConfirm={(targetFloorId) => {
+                const r = cloneComponents(project, {
+                  rootId: el.id,
+                  targetFloorId,
+                  layers: editor.layers,
+                  withFeeders: editor.layers.includes('electrical'),
+                  newId: () => crypto.randomUUID(),
+                });
+                editor.dispatch({
+                  type: 'pasteComponents',
+                  elements: r.elements,
+                  cables: r.cables,
+                });
+                setCloning(null);
+                const to = project.building.floors.find((f) => f.id === targetFloorId);
+                const n = r.elements.length;
+                notice(
+                  `${el.tag} cloned onto ${to?.name ?? 'the floor'}: ${n} component${n === 1 ? '' : 's'}` +
+                    (r.cables.length
+                      ? ` and ${r.cables.length} feeder${r.cables.length === 1 ? '' : 's'}`
+                      : '') +
+                    (r.elements[0] ? ` - ${r.elements[0].tag} has no supply yet.` : '.'),
+                );
+                if (floor && targetFloorId === floor.id) setSelection(r.elements.map((e) => e.id));
+              }}
+            />
+          );
+        })()}
       {replicating && floor && (
         <ReplicateDialog
           project={project}

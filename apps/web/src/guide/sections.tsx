@@ -482,6 +482,15 @@ export const SECTIONS: GuideSection[] = [
             results are not copied: connect the copies to their riser in the Building tab and press
             Cable Size.
           </li>
+          <li>
+            <Term>Clone</Term> (Engineering Property of a selected component) copies the component
+            and everything downstream of it - every board, load point and DB its feeders reach, on
+            any floor, with linked equipment and meters - onto the floor you choose (floors with a
+            calibrated plan). The copies get new ids and the tags of that floor (DB-B1-01 becomes
+            DB-GF-01), keep every property and load, and the feeders between them are copied with
+            new tags; feeders that ran between floors become plan feeders. The top copy has no
+            supply until you draw a feeder to it. Only your layers are copied; risers are not.
+          </li>
         </ul>
         <h3>3. Draw feeders</h3>
         <ol>
